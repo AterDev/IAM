@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <Nullable>enable</Nullable>
+        <NoWarn>1701;1702;1591</NoWarn>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\CommonMod\CommonMod.csproj" />
+        <ProjectReference Include="..\..\Ater\Ater.Web.Extension\Ater.Web.Extension.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <Folder Include="Managers\" />
+        <Folder Include="Models\" />
+    </ItemGroup>
+</Project>
