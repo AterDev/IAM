@@ -1,7 +1,6 @@
 using CommonMod.Managers;
 using CommonMod.Models.SystemSettingDtos;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 
 namespace ApiService.Controllers;
 
@@ -21,7 +20,9 @@ public class CommonSettingsController(
     /// <param name="filter">Filter criteria</param>
     /// <returns>Paged list of settings</returns>
     [HttpGet]
-    public async Task<ActionResult<PageList<SystemSettingItemDto>>> GetSettings([FromQuery] SystemSettingFilterDto filter)
+    public async Task<ActionResult<PageList<SystemSettingItemDto>>> GetSettings(
+        [FromQuery] SystemSettingFilterDto filter
+    )
     {
         var result = await _manager.GetPageAsync(filter);
         return Ok(result);
@@ -48,11 +49,9 @@ public class CommonSettingsController(
     public async Task<ActionResult<SystemSettingDetailDto>> GetDetail(Guid id)
     {
         var result = await _manager.GetDetailAsync(id);
-        if (result == null)
-        {
-            return NotFound("Setting not found");
-        }
-        return Ok(result);
+        return result == null
+            ? (ActionResult<SystemSettingDetailDto>)NotFound("Setting not found")
+            : (ActionResult<SystemSettingDetailDto>)Ok(result);
     }
 
     /// <summary>
@@ -64,11 +63,9 @@ public class CommonSettingsController(
     public async Task<ActionResult<SystemSettingDetailDto>> GetByKey(string key)
     {
         var result = await _manager.GetByKeyAsync(key);
-        if (result == null)
-        {
-            return NotFound("Setting not found");
-        }
-        return Ok(result);
+        return result == null
+            ? (ActionResult<SystemSettingDetailDto>)NotFound("Setting not found")
+            : (ActionResult<SystemSettingDetailDto>)Ok(result);
     }
 
     /// <summary>
@@ -77,14 +74,15 @@ public class CommonSettingsController(
     /// <param name="dto">Setting data</param>
     /// <returns>Created setting detail</returns>
     [HttpPost]
-    public async Task<ActionResult<SystemSettingDetailDto>> CreateSetting([FromBody] SystemSettingAddDto dto)
+    public async Task<ActionResult<SystemSettingDetailDto>> CreateSetting(
+        [FromBody] SystemSettingAddDto dto
+    )
     {
         var result = await _manager.AddAsync(dto);
-        if (result == null)
-        {
-            return BadRequest(_manager.ErrorMsg);
-        }
-        return CreatedAtAction(nameof(GetDetail), new { id = result.Id }, result);
+        return result == null
+            ? (ActionResult<SystemSettingDetailDto>)BadRequest(_manager.ErrorMsg)
+            : (ActionResult<SystemSettingDetailDto>)
+                CreatedAtAction(nameof(GetDetail), new { id = result.Id }, result);
     }
 
     /// <summary>
@@ -94,14 +92,15 @@ public class CommonSettingsController(
     /// <param name="dto">Update data</param>
     /// <returns>Updated setting detail</returns>
     [HttpPut("{id}")]
-    public async Task<ActionResult<SystemSettingDetailDto>> UpdateSetting(Guid id, [FromBody] SystemSettingUpdateDto dto)
+    public async Task<ActionResult<SystemSettingDetailDto>> UpdateSetting(
+        Guid id,
+        [FromBody] SystemSettingUpdateDto dto
+    )
     {
         var result = await _manager.UpdateAsync(id, dto);
-        if (result == null)
-        {
-            return BadRequest(_manager.ErrorMsg);
-        }
-        return Ok(result);
+        return result == null
+            ? (ActionResult<SystemSettingDetailDto>)BadRequest(_manager.ErrorMsg)
+            : (ActionResult<SystemSettingDetailDto>)Ok(result);
     }
 
     /// <summary>
@@ -113,10 +112,6 @@ public class CommonSettingsController(
     public async Task<ActionResult> DeleteSetting(Guid id)
     {
         var success = await _manager.DeleteAsync(id);
-        if (!success)
-        {
-            return BadRequest(_manager.ErrorMsg);
-        }
-        return NoContent();
+        return !success ? BadRequest(_manager.ErrorMsg) : NoContent();
     }
 }

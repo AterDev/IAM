@@ -1,4 +1,5 @@
 using CommonMod.Models.SystemSettingDtos;
+using Entity;
 using EntityFramework.DBProvider;
 
 namespace CommonMod.Managers;
@@ -6,10 +7,8 @@ namespace CommonMod.Managers;
 /// <summary>
 /// Manager for system setting operations
 /// </summary>
-public class SystemSettingManager(
-    DefaultDbContext dbContext,
-    ILogger<SystemSettingManager> logger
-) : ManagerBase<DefaultDbContext, SystemSetting>(dbContext, logger)
+public class SystemSettingManager(DefaultDbContext dbContext, ILogger<SystemSettingManager> logger)
+    : ManagerBase<DefaultDbContext, SystemSetting>(dbContext, logger)
 {
     /// <summary>
     /// Get paged system settings
@@ -19,10 +18,10 @@ public class SystemSettingManager(
     public async Task<PageList<SystemSettingItemDto>> GetPageAsync(SystemSettingFilterDto filter)
     {
         Queryable = Queryable
-            .WhereIf(filter.Key != null, q => q.Key.Contains(filter.Key!))
-            .WhereIf(filter.Category != null, q => q.Category == filter.Category)
-            .WhereIf(filter.IsPublic != null, q => q.IsPublic == filter.IsPublic)
-            .WhereIf(filter.IsEditable != null, q => q.IsEditable == filter.IsEditable);
+            .WhereNotNull(filter.Key != null, q => q.Key.Contains(filter.Key!))
+            .WhereNotNull(filter.Category != null, q => q.Category == filter.Category)
+            .WhereNotNull(filter.IsPublic != null, q => q.IsPublic == filter.IsPublic)
+            .WhereNotNull(filter.IsEditable != null, q => q.IsEditable == filter.IsEditable);
 
         return await ToPageAsync<SystemSettingFilterDto, SystemSettingItemDto>(filter);
     }
@@ -68,16 +67,11 @@ public class SystemSettingManager(
             Description = dto.Description,
             Category = dto.Category,
             IsEditable = dto.IsEditable,
-            IsPublic = dto.IsPublic
+            IsPublic = dto.IsPublic,
         };
 
         var success = await AddAsync(entity);
-        if (!success)
-        {
-            return null;
-        }
-
-        return await GetDetailAsync(entity.Id);
+        return !success ? null : await GetDetailAsync(entity.Id);
     }
 
     /// <summary>
@@ -105,12 +99,7 @@ public class SystemSettingManager(
         entity.Description = dto.Description ?? entity.Description;
 
         var success = await UpdateAsync(entity);
-        if (!success)
-        {
-            return null;
-        }
-
-        return await GetDetailAsync(id);
+        return !success ? null : await GetDetailAsync(id);
     }
 
     /// <summary>

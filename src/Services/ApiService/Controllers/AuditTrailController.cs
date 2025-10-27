@@ -1,6 +1,5 @@
 using CommonMod.Managers;
 using CommonMod.Models.AuditLogDtos;
-using Microsoft.AspNetCore.Mvc;
 
 namespace ApiService.Controllers;
 
@@ -20,7 +19,9 @@ public class AuditTrailController(
     /// <param name="filter">Filter criteria</param>
     /// <returns>Paged list of audit logs</returns>
     [HttpGet]
-    public async Task<ActionResult<PageList<AuditLogItemDto>>> GetAuditLogs([FromQuery] AuditLogFilterDto filter)
+    public async Task<ActionResult<PageList<AuditLogItemDto>>> GetAuditLogs(
+        [FromQuery] AuditLogFilterDto filter
+    )
     {
         var result = await _manager.GetPageAsync(filter);
         return Ok(result);
@@ -35,10 +36,8 @@ public class AuditTrailController(
     public async Task<ActionResult<AuditLogDetailDto>> GetDetail(Guid id)
     {
         var result = await _manager.GetDetailAsync(id);
-        if (result == null)
-        {
-            return NotFound("Audit log not found");
-        }
-        return Ok(result);
+        return result == null
+            ? (ActionResult<AuditLogDetailDto>)NotFound("Audit log not found")
+            : (ActionResult<AuditLogDetailDto>)Ok(result);
     }
 }

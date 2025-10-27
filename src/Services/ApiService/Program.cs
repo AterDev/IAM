@@ -26,7 +26,7 @@ builder
     );
 
 // Managers, auto generate by source generator
-builder.Services.AddManagers();
+//builder.Services.AddManagers();
 
 // Modules, auto generate by source generator
 //builder.AddModules();

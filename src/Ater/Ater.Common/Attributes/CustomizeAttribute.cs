@@ -1,4 +1,5 @@
 namespace Ater.Common.Attributes;
+
 /// <summary>
 /// 模块标记
 /// </summary>
