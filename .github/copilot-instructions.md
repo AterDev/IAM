@@ -29,7 +29,16 @@
 * `src/Modules/XXXMod/Models`: 各模块下，Dto模型定义，按实体目录组织
 * `src/Services/ApiService`: 是接口服务项目，基于ASP.NET Core Web API。
 * `src/Services/AdminService`: 后台管理服务接口项目
+* `src/ClientApp/WebApp`: Angular前端项目，管理后台
 </structure>
+
+<modules>
+
+解决方案分成了三个模块:
+- CommonMod: 提供通用功能支持，用来复用，被其他模块引用
+- IdentityMod: 实现身份认证与授权相关功能，可参考[OpenIdDict](https://github.com/openiddict/openiddict-core)的Ouath2/OpenID Connect实现。
+- AccountMod: 实现用户/角色/权限/组织管理相关功能
+</modules>
 
 <Instructions>
 1. 按照指令执行，非必要情况下，不要中断。
