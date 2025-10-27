@@ -8,6 +8,7 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
     public DbSet<Tenant> Tenants { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<SystemSetting> SystemSettings { get; set; }
+    public DbSet<SigningKey> SigningKeys { get; set; }
 
     // Identity entities
     public DbSet<User> Users { get; set; }
@@ -35,8 +36,20 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        ConfigureCommonEntities(builder);
         ConfigureIdentityEntities(builder);
         ConfigureAccessEntities(builder);
+    }
+
+    private void ConfigureCommonEntities(ModelBuilder builder)
+    {
+        // SigningKey configuration
+        builder.Entity<SigningKey>(entity =>
+        {
+            entity.HasIndex(e => e.KeyId).IsUnique();
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.TenantId);
+        });
     }
 
     private void ConfigureIdentityEntities(ModelBuilder builder)
