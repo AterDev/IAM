@@ -1,5 +1,6 @@
 using Ater.Web.Convention;
 using CommonMod;
+using IdentityMod;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,9 @@ builder.AddFrameworkServices();
 
 // 添加CommonMod服务
 builder.AddCommonMod();
+
+// 添加IdentityMod服务
+builder.AddIdentityModMod();
 
 // Web中间件服务:route, openapi, jwt, cors, auth, rateLimiter etc.
 builder.AddMiddlewareServices();
