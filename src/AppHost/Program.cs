@@ -68,21 +68,16 @@ if (aspireSetting.EnableQdrant)
 
 var migration = builder.AddProject<Projects.MigrationService>("MigrationService");
 var apiService = builder.AddProject<Projects.ApiService>("ApiService").WaitForCompletion(migration);
-var adminService = builder
-    .AddProject<Projects.AdminService>("AdminService")
-    .WaitForCompletion(migration);
 
 if (database != null)
 {
     migration.WithReference(database).WaitFor(database);
     apiService.WithReference(database);
-    adminService.WithReference(database);
 }
 if (cache != null)
 {
     migration.WithReference(cache).WaitFor(cache);
     apiService.WithReference(cache);
-    adminService.WithReference(cache);
 }
 
 builder.Build().Run();

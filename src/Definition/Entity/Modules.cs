@@ -12,5 +12,9 @@ public class Modules
     /// access management module
     /// </summary>
     public const string Access = "AccessMod";
+    /// <summary>
+    /// common module
+    /// </summary>
+    public const string Common = "CommonMod";
 
 }

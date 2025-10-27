@@ -1,4 +1,5 @@
 using Ater.Web.Convention;
+using CommonMod;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +8,9 @@ builder.AddServiceDefaults();
 
 // 框架依赖服务:options, cache, dbContext
 builder.AddFrameworkServices();
+
+// 添加CommonMod服务
+builder.AddCommonMod();
 
 // Web中间件服务:route, openapi, jwt, cors, auth, rateLimiter etc.
 builder.AddMiddlewareServices();
@@ -22,7 +26,7 @@ builder
     );
 
 // Managers, auto generate by source generator
-builder.Services.AddManagers();
+//builder.Services.AddManagers();
 
 // Modules, auto generate by source generator
 //builder.AddModules();
