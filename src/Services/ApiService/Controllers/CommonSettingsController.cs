@@ -49,9 +49,7 @@ public class CommonSettingsController(
     public async Task<ActionResult<SystemSettingDetailDto>> GetDetail(Guid id)
     {
         var result = await _manager.GetDetailAsync(id);
-        return result == null
-            ? (ActionResult<SystemSettingDetailDto>)NotFound("Setting not found")
-            : (ActionResult<SystemSettingDetailDto>)Ok(result);
+        return result == null ? NotFound("Setting not found") : Ok(result);
     }
 
     /// <summary>
@@ -63,9 +61,7 @@ public class CommonSettingsController(
     public async Task<ActionResult<SystemSettingDetailDto>> GetByKey(string key)
     {
         var result = await _manager.GetByKeyAsync(key);
-        return result == null
-            ? (ActionResult<SystemSettingDetailDto>)NotFound("Setting not found")
-            : (ActionResult<SystemSettingDetailDto>)Ok(result);
+        return result == null ? NotFound("Setting not found") : Ok(result);
     }
 
     /// <summary>
@@ -80,9 +76,8 @@ public class CommonSettingsController(
     {
         var result = await _manager.AddAsync(dto);
         return result == null
-            ? (ActionResult<SystemSettingDetailDto>)BadRequest(_manager.ErrorMsg)
-            : (ActionResult<SystemSettingDetailDto>)
-                CreatedAtAction(nameof(GetDetail), new { id = result.Id }, result);
+            ? BadRequest(_manager.ErrorMsg)
+            : CreatedAtAction(nameof(GetDetail), new { id = result.Id }, result);
     }
 
     /// <summary>
@@ -98,9 +93,7 @@ public class CommonSettingsController(
     )
     {
         var result = await _manager.UpdateAsync(id, dto);
-        return result == null
-            ? (ActionResult<SystemSettingDetailDto>)BadRequest(_manager.ErrorMsg)
-            : (ActionResult<SystemSettingDetailDto>)Ok(result);
+        return result == null ? BadRequest(_manager.ErrorMsg) : Ok(result);
     }
 
     /// <summary>

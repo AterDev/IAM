@@ -36,8 +36,6 @@ public class AuditTrailController(
     public async Task<ActionResult<AuditLogDetailDto>> GetDetail(Guid id)
     {
         var result = await _manager.GetDetailAsync(id);
-        return result == null
-            ? (ActionResult<AuditLogDetailDto>)NotFound("Audit log not found")
-            : (ActionResult<AuditLogDetailDto>)Ok(result);
+        return result == null ? NotFound("Audit log not found") : Ok(result);
     }
 }
