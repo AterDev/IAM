@@ -7,7 +7,7 @@
   </Folder>
   <Folder Name="/docs/">
     <File Path="docs/docs.md" />
-    <File Path="/docs/IAM解决方案设计文档.md" />
+    <File Path="docs/IAM解决方案设计文档.md" />
     <File Path="README.md" />
   </Folder>
   <Folder Name="/scripts/">

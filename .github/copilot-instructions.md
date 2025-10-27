@@ -20,7 +20,7 @@
 </preferences>
 
 <structure>
-* `src/Ater/Ater.Common`: 基础类库，提供基础帮助类。
+* `src/Ater/Ater.Common`: 基础类库，提供基础帮助类和扩展方法。
 * `src/Definition/ServiceDefaults`: 是提供基础的服务注入的项目。
 * `src/Definition/Entity`: 包含所有的实体模型，按模块目录组织。
 * `src/Definition/EntityFramework`: 基于Entity Framework Core的数据库上下文
@@ -48,6 +48,7 @@
 </Instructions>
 
 <code>
+- 不要面向接口编程，除非确认会有多个实现，才定义接口。
 - 实现具体业务时，遵循 实体定义->Dto模型->业务逻辑实现->控制器接口的流程和结构。
 - 实体定义，要使用[Modules]特性标签来指定所属模块，并继承EntityBase类。
 - Dto需要定义在模块的Models目录下，如User实体，要创建UserDtos目录，通常包括UserDetailDto,UserAddDto,UserUpdateDto,UserItemDto,UserFilterDto.
