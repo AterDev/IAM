@@ -230,7 +230,7 @@ var newKeyId = await _keyManagementService.RotateKeyAsync();
 
 ## 参考文档
 
-- [IAM Development Plan](tasks/iam-development-plan.md#b3-common-服务实现密码-加密-token-工具)
+- [IAM Development Plan - B3](tasks/iam-development-plan.md)
 - [PBKDF2 Specification](https://tools.ietf.org/html/rfc2898)
 - [JWT Specification](https://tools.ietf.org/html/rfc7519)
 - [JSON Web Key (JWK)](https://tools.ietf.org/html/rfc7517)
