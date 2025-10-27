@@ -111,18 +111,17 @@ public class TokenGenerationTests
     // Helper methods matching implementations in managers
     private string GenerateAuthorizationCode()
     {
-        var bytes = new byte[32];
-        using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
-        rng.GetBytes(bytes);
-        return Convert.ToBase64String(bytes)
-            .TrimEnd('=')
-            .Replace('+', '-')
-            .Replace('/', '_');
+        return GenerateUrlSafeBase64(32);
     }
 
     private string GenerateTokenReference()
     {
-        var bytes = new byte[32];
+        return GenerateUrlSafeBase64(32);
+    }
+
+    private string GenerateUrlSafeBase64(int byteCount)
+    {
+        var bytes = new byte[byteCount];
         using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
         rng.GetBytes(bytes);
         return Convert.ToBase64String(bytes)
