@@ -1,4 +1,5 @@
 using CommonMod.Models.AuditLogDtos;
+using Entity;
 using EntityFramework.DBProvider;
 
 namespace CommonMod.Managers;
@@ -6,10 +7,8 @@ namespace CommonMod.Managers;
 /// <summary>
 /// Manager for audit log operations
 /// </summary>
-public class AuditLogManager(
-    DefaultDbContext dbContext,
-    ILogger<AuditLogManager> logger
-) : ManagerBase<DefaultDbContext, AuditLog>(dbContext, logger)
+public class AuditLogManager(DefaultDbContext dbContext, ILogger<AuditLogManager> logger)
+    : ManagerBase<DefaultDbContext, AuditLog>(dbContext, logger)
 {
     /// <summary>
     /// Get paged audit logs
@@ -19,11 +18,11 @@ public class AuditLogManager(
     public async Task<PageList<AuditLogItemDto>> GetPageAsync(AuditLogFilterDto filter)
     {
         Queryable = Queryable
-            .WhereIf(filter.Category != null, q => q.Category == filter.Category)
-            .WhereIf(filter.Event != null, q => q.Event == filter.Event)
-            .WhereIf(filter.SubjectId != null, q => q.SubjectId == filter.SubjectId)
-            .WhereIf(filter.StartDate != null, q => q.CreatedTime >= filter.StartDate)
-            .WhereIf(filter.EndDate != null, q => q.CreatedTime <= filter.EndDate);
+            .WhereNotNull(filter.Category != null, q => q.Category == filter.Category)
+            .WhereNotNull(filter.Event != null, q => q.Event == filter.Event)
+            .WhereNotNull(filter.SubjectId != null, q => q.SubjectId == filter.SubjectId)
+            .WhereNotNull(filter.StartDate != null, q => q.CreatedTime >= filter.StartDate)
+            .WhereNotNull(filter.EndDate != null, q => q.CreatedTime <= filter.EndDate);
 
         return await ToPageAsync<AuditLogFilterDto, AuditLogItemDto>(filter);
     }
@@ -64,7 +63,7 @@ public class AuditLogManager(
             SubjectId = subjectId,
             Payload = payload,
             IpAddress = ipAddress,
-            UserAgent = userAgent
+            UserAgent = userAgent,
         };
 
         return await AddAsync(auditLog);
