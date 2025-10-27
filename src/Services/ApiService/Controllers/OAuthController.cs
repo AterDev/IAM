@@ -265,29 +265,28 @@ public class OAuthController : ControllerBase
     /// </summary>
     private string BuildRedirectUri(string baseUri, AuthorizeResponseDto response, string? responseMode)
     {
-        var uriBuilder = new UriBuilder(baseUri);
-        var query = System.Web.HttpUtility.ParseQueryString(uriBuilder.Query);
+        var parameters = new List<string>();
 
         if (!string.IsNullOrEmpty(response.Code))
         {
-            query["code"] = response.Code;
+            parameters.Add($"code={Uri.EscapeDataString(response.Code)}");
         }
 
         if (!string.IsNullOrEmpty(response.State))
         {
-            query["state"] = response.State;
+            parameters.Add($"state={Uri.EscapeDataString(response.State)}");
         }
 
         if (!string.IsNullOrEmpty(response.Error))
         {
-            query["error"] = response.Error;
+            parameters.Add($"error={Uri.EscapeDataString(response.Error)}");
             if (!string.IsNullOrEmpty(response.ErrorDescription))
             {
-                query["error_description"] = response.ErrorDescription;
+                parameters.Add($"error_description={Uri.EscapeDataString(response.ErrorDescription)}");
             }
         }
 
-        uriBuilder.Query = query.ToString();
-        return uriBuilder.ToString();
+        var separator = baseUri.Contains('?') ? "&" : "?";
+        return $"{baseUri}{separator}{string.Join("&", parameters)}";
     }
 }
