@@ -129,12 +129,7 @@ public class PkceTests
         }
         else if (method == "S256")
         {
-            using var sha256 = SHA256.Create();
-            var hash = sha256.ComputeHash(Encoding.ASCII.GetBytes(verifier));
-            var computed = Convert.ToBase64String(hash)
-                .TrimEnd('=')
-                .Replace('+', '-')
-                .Replace('/', '_');
+            var computed = ComputeS256Challenge(verifier);
             return computed == challenge;
         }
 
@@ -145,7 +140,12 @@ public class PkceTests
     {
         using var sha256 = SHA256.Create();
         var hash = sha256.ComputeHash(Encoding.ASCII.GetBytes(verifier));
-        return Convert.ToBase64String(hash)
+        return ToUrlSafeBase64(hash);
+    }
+
+    private string ToUrlSafeBase64(byte[] data)
+    {
+        return Convert.ToBase64String(data)
             .TrimEnd('=')
             .Replace('+', '-')
             .Replace('/', '_');
