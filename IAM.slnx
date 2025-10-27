@@ -1,0 +1,40 @@
+<Solution>
+  <Folder Name="/config/">
+    <File Path=".config/dotnet-tools.json" />
+    <File Path=".editorconfig" />
+    <File Path=".github/copilot-instructions.md" />
+    <File Path="Directory.Packages.props" />
+  </Folder>
+  <Folder Name="/docs/">
+    <File Path="docs/docs.md" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/scripts/">
+    <File Path="scripts/EFMigrations.ps1" />
+    <File Path="scripts/UpdateMenus.ps1" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/AppHost/AppHost.csproj" />
+  </Folder>
+  <Folder Name="/src/Definition/">
+    <Project Path="src/Definition/Entity/Entity.csproj" />
+    <Project Path="src/Definition/EntityFramework/EntityFramework.csproj" />
+    <Project Path="src/Definition/ServiceDefaults/ServiceDefaults.csproj" />
+    <Project Path="src/Definition/Share/Share.csproj" />
+  </Folder>
+  <Folder Name="/src/Ater/" Id="9048eb7f-3875-a59e-e36b-5bd4c6f2a282">
+    <Project Path="src/Ater/Ater.Common/Ater.Common.csproj" Id="6dc54fab-dd8b-9dc2-0bda-1d394ca66e08" />
+    <Project Path="src/Ater/Ater.Web.Convention/Ater.Web.Convention.csproj" />
+    <Project Path="src/Ater/Ater.Web.Extension/Ater.Web.Extension.csproj" />
+    <Project Path="src/Ater/Ater.Web.SourceGeneration/Ater.Web.SourceGeneration.csproj" Id="2100e1d1-be4d-45d4-ada2-87bf36ae67f7" />
+  </Folder>
+  <Folder Name="/src/Modules/">
+    <Project Path="src/Modules/AccessMod/AccessMod.csproj" />
+    <Project Path="src/Modules/CommonMod/CommonMod.csproj" Id="f2def1d4-f065-d84e-4e7b-454a998f4dfc" />
+    <Project Path="src/Modules/IdentityMod/IdentityMod.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/" Id="02ea681e-c7d8-13c7-8484-4ac65e1b71e8">
+    <Project Path="src/Services/ApiService/ApiService.csproj" />
+    <Project Path="src/Services/MigrationService/MigrationService.csproj" />
+  </Folder>
+</Solution>
