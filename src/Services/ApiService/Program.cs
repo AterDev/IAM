@@ -1,4 +1,5 @@
 using Ater.Web.Convention;
+using CommonMod;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
