@@ -8,6 +8,9 @@ builder.AddServiceDefaults();
 // 框架依赖服务:options, cache, dbContext
 builder.AddFrameworkServices();
 
+// 添加CommonMod服务
+builder.AddCommonMod();
+
 // Web中间件服务:route, openapi, jwt, cors, auth, rateLimiter etc.
 builder.AddMiddlewareServices();
 
