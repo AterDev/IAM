@@ -1,0 +1,67 @@
+<div class="authorize-container">
+  <mat-card class="authorize-card">
+    <mat-card-header>
+      <mat-card-title>{{ 'authorize.title' | translate }}</mat-card-title>
+    </mat-card-header>
+    
+    <mat-card-content>
+      @if (errorMessage()) {
+        <div class="error-message">{{ errorMessage() }}</div>
+      }
+
+      <div class="client-info">
+        <mat-icon class="client-icon">apps</mat-icon>
+        <div class="client-details">
+          <h3>{{ clientName() }}</h3>
+          <p>{{ clientDescription() }}</p>
+        </div>
+      </div>
+
+      <div class="consent-message">
+        <p>{{ 'authorize.consentMessage' | translate }}</p>
+      </div>
+
+      <div class="scopes-section">
+        <h4>{{ 'authorize.requestedPermissions' | translate }}</h4>
+        <mat-list>
+          @for (scope of scopes(); track scope.name) {
+            <mat-list-item>
+              <mat-icon matListItemIcon>check_circle</mat-icon>
+              <div matListItemTitle>{{ scope.description }}</div>
+              @if (scope.required) {
+                <span matListItemMeta class="required-badge">{{ 'authorize.required' | translate }}</span>
+              }
+            </mat-list-item>
+          }
+        </mat-list>
+      </div>
+
+      <div class="user-info">
+        <p class="info-text">
+          <mat-icon>info</mat-icon>
+          {{ 'authorize.accountInfo' | translate: { username: username() } }}
+        </p>
+      </div>
+
+      <div class="button-group">
+        <button 
+          mat-raised-button 
+          color="primary" 
+          (click)="allowAccess()" 
+          [disabled]="isLoading()">
+          {{ 'authorize.allow' | translate }}
+        </button>
+        <button 
+          mat-raised-button 
+          (click)="denyAccess()" 
+          [disabled]="isLoading()">
+          {{ 'authorize.deny' | translate }}
+        </button>
+      </div>
+
+      <div class="privacy-notice">
+        <p>{{ 'authorize.privacyNotice' | translate }}</p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
