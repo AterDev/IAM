@@ -118,7 +118,10 @@ public class RolesController(
         [FromBody] RoleGrantPermissionDto dto
     )
     {
-        var success = await _manager.GrantPermissionsAsync(id, dto);
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
+        
+        var success = await _manager.GrantPermissionsAsync(id, dto, ipAddress, userAgent);
         return !success ? BadRequest(_manager.ErrorMsg) : NoContent();
     }
 
