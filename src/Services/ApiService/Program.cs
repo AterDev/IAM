@@ -1,3 +1,4 @@
+using ApiService.Extension;
 using Ater.Web.Convention;
 using CommonMod;
 using IdentityMod;
@@ -30,10 +31,10 @@ builder
     );
 
 // Managers, auto generate by source generator
-//builder.Services.AddManagers();
+builder.Services.AddManagers();
 
 // Modules, auto generate by source generator
-//builder.AddModules();
+builder.AddModules();
 
 WebApplication app = builder.Build();
 
