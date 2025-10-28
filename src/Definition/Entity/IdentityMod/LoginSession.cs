@@ -1,4 +1,4 @@
-namespace Entity.Identity;
+namespace Entity.IdentityMod;
 
 /// <summary>
 /// Login session entity for tracking user sessions

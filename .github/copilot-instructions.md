@@ -13,11 +13,13 @@
 </summary>
 
 <preferences>
-* 使用可空类型
+* 支持可空类型
 * 优先使用主构造函数
-* 使用[]来表示数据集合的默认值
+* 优先使用 GlobalUsings.cs来引用共用的命名空间
+* 优先使用[]来表示数据集合的默认值
 * if for 等语句必须使用大括号
 * 优先使用模式匹配
+* 谨慎使用EF Core Include，优先使用Select查询
 </preferences>
 
 <structure>

@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Hosting;
-namespace AccessModMod;
+namespace AccessMod;
 
 public static class ModuleExtensions
 {

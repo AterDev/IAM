@@ -1,5 +1,3 @@
-using Entity.Identity;
-using EntityFramework.DBProvider;
 using IdentityMod.Models.UserDtos;
 
 namespace IdentityMod.Managers;
@@ -8,7 +6,7 @@ namespace IdentityMod.Managers;
 /// Manager for user operations
 /// </summary>
 public class UserManager(
-    DefaultDbContext dbContext, 
+    DefaultDbContext dbContext,
     ILogger<UserManager> logger,
     IPasswordHasher passwordHasher)
     : ManagerBase<DefaultDbContext, User>(dbContext, logger)

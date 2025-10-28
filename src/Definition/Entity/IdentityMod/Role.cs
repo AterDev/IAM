@@ -1,4 +1,4 @@
-namespace Entity.Identity;
+namespace Entity.IdentityMod;
 
 /// <summary>
 /// Role entity for identity management

@@ -20,9 +20,4 @@
     <ItemGroup>
         <ProjectReference Include="..\..\Ater\Ater.Common\Ater.Common.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="AccessMod\" />
-      <Folder Include="IdentityMod\" />
-    </ItemGroup>
 </Project>

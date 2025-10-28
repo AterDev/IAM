@@ -1,4 +1,4 @@
-namespace Entity.Identity;
+namespace Entity.IdentityMod;
 
 /// <summary>
 /// User token entity for storing authentication tokens

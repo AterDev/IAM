@@ -1,6 +1,4 @@
 using CommonMod.Models.SystemSettingDtos;
-using Entity;
-using EntityFramework.DBProvider;
 
 namespace CommonMod.Managers;
 

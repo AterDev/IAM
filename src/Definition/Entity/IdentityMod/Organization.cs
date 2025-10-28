@@ -1,4 +1,4 @@
-namespace Entity.Identity;
+namespace Entity.IdentityMod;
 
 /// <summary>
 /// Organization entity for hierarchical structure

@@ -1,4 +1,8 @@
 
+using Entity.AccessMod;
+using Entity.CommonMod;
+using Entity.IdentityMod;
+
 namespace EntityFramework.DBProvider;
 
 public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options)

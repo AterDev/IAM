@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Entity.CommonMod;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Share.Services;
@@ -32,7 +33,7 @@ public class AuditTrailService : IAuditTrailService
             using var scope = _serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<DefaultDbContext>();
 
-            var auditLog = new Entity.AuditLog
+            var auditLog = new AuditLog
             {
                 Category = category,
                 Event = eventName,

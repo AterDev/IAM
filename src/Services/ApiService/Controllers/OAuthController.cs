@@ -1,7 +1,7 @@
 using IdentityMod.Managers;
 using IdentityMod.Models.OAuthDtos;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authentication;
 
 namespace ApiService.Controllers;
 
