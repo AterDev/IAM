@@ -1,4 +1,4 @@
-namespace Entity;
+namespace Entity.Access;
 
 /// <summary>
 /// API scope entity

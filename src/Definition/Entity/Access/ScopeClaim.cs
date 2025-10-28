@@ -1,4 +1,4 @@
-namespace Entity;
+namespace Entity.Access;
 
 /// <summary>
 /// Scope claim entity

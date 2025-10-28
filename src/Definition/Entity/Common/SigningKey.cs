@@ -1,4 +1,4 @@
-namespace Entity;
+namespace Entity.Common;
 
 /// <summary>
 /// Signing key entity for JWT key management

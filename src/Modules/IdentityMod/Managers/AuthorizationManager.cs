@@ -22,7 +22,6 @@ public class AuthorizationManager : ManagerBase<DefaultDbContext>
     {
         // Validate client
         var client = await _dbContext.Clients
-            .Include(c => c.RedirectUris)
             .Include(c => c.ClientScopes)
                 .ThenInclude(cs => cs.Scope)
             .FirstOrDefaultAsync(c => c.ClientId == request.ClientId);
@@ -33,8 +32,7 @@ public class AuthorizationManager : ManagerBase<DefaultDbContext>
         }
 
         // Validate redirect URI
-        var redirectUri = client.RedirectUris.FirstOrDefault(r => r.Uri == request.RedirectUri);
-        if (redirectUri == null)
+        if (!client.RedirectUris.Contains(request.RedirectUri))
         {
             return (false, "invalid_request", client);
         }
