@@ -38,7 +38,6 @@
 - 项目目录: `src/ClientApp/WebApp`
 - 在`app/services`目录下，提供对后端API的调用封装服务，包括类型定义。
 - 不再使用ngModules，改用独立组件.
-
 </frontend>
 
 <modules>
