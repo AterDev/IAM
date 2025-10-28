@@ -24,6 +24,8 @@
     "systemUser": "Account",
     "organization": "Organization",
     "scope": "Scope",
+    "sessions": "Sessions",
+    "auditLogs": "Audit Logs",
     "systemLogs": "Logs",
     "systemConfig": "Settings"
   },
@@ -44,7 +46,8 @@
     "noData": "No data",
     "createdTime": "Created Time",
     "updatedTime": "Updated Time",
-    "clearFilters": "Clear Filters"
+    "clearFilters": "Clear Filters",
+    "refresh": "Refresh"
   },
   "user": {
     "userName": "Username",
@@ -150,5 +153,61 @@
       "audit": "Audit Log",
       "system": "System Settings"
     }
+  },
+  "session": {
+    "sessionId": "Session ID",
+    "ipAddress": "IP Address",
+    "device": "Device",
+    "loginTime": "Login Time",
+    "lastActivity": "Last Activity",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "revoke": "Revoke",
+    "revokeSelected": "Revoke Selected",
+    "revokeConfirmTitle": "Revoke Session",
+    "revokeConfirmMessage": "Are you sure you want to revoke this session?",
+    "revokeBatchConfirmTitle": "Revoke Sessions",
+    "revokeBatchConfirmMessage": "Are you sure you want to revoke {{count}} session(s)?",
+    "revokeSuccess": "Session revoked successfully",
+    "revokeBatchSuccess": "Successfully revoked {{count}} session(s)",
+    "revokeBatchPartial": "Revoked {{success}} session(s), {{failed}} failed",
+    "searchPlaceholder": "Search by Session ID",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "startAutoRefresh": "Auto Refresh",
+    "stopAutoRefresh": "Stop Refresh"
+  },
+  "auditLog": {
+    "id": "ID",
+    "category": "Category",
+    "event": "Event",
+    "subjectId": "Subject ID",
+    "ipAddress": "IP Address",
+    "userAgent": "User Agent",
+    "createdTime": "Time",
+    "payload": "Payload",
+    "detailTitle": "Audit Log Detail",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "export": "Export",
+    "exportNotImplemented": "Export feature not yet implemented",
+    "startAutoRefresh": "Auto Refresh",
+    "stopAutoRefresh": "Stop Refresh"
+  },
+  "error": {
+    "loadSessionsFailed": "Failed to load sessions",
+    "revokeSessionFailed": "Failed to revoke session",
+    "loadAuditLogsFailed": "Failed to load audit logs",
+    "loadAuditLogDetailFailed": "Failed to load audit log detail",
+    "loadRolesFailed": "Failed to load roles",
+    "loadPermissionsFailed": "Failed to load permissions",
+    "savePermissionsFailed": "Failed to save permissions",
+    "createRoleFailed": "Failed to create role",
+    "updateRoleFailed": "Failed to update role",
+    "deleteRoleFailed": "Failed to delete role",
+    "batchDeletePartialFailed": "Some roles failed to delete",
+    "loadRoleDetailFailed": "Failed to load role detail",
+    "loadScopesFailed": "Failed to load scopes"
   }
 }

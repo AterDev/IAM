@@ -72,7 +72,14 @@ export const routes: Routes = [
         path: 'resource/:id',
         loadComponent: () => import('./pages/resource/resource-detail').then(m => m.ResourceDetailComponent)
       },
-      // TODO: Implement system-logs pages
+      {
+        path: 'security/sessions',
+        loadComponent: () => import('./pages/security/session-list').then(m => m.SessionListComponent)
+      },
+      {
+        path: 'security/audit-logs',
+        loadComponent: () => import('./pages/security/audit-log-list').then(m => m.AuditLogListComponent)
+      }
     ],
   },
   
