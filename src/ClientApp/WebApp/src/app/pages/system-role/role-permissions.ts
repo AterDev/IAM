@@ -6,6 +6,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatChipsModule } from '@angular/material/chips';
 import { FormsModule } from '@angular/forms';
+import { TranslateService } from '@ngx-translate/core';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { RoleItemDto } from 'src/app/services/api/models/identity-mod/role-item-dto.model';
 import { PermissionClaim } from 'src/app/services/api/models/identity-mod/permission-claim.model';
@@ -57,6 +58,7 @@ export class RolePermissionsComponent implements OnInit {
     private api: ApiClient,
     private dialogRef: MatDialogRef<RolePermissionsComponent>,
     private snackBar: MatSnackBar,
+    private translate: TranslateService,
     @Inject(MAT_DIALOG_DATA) public data: RoleItemDto
   ) {}
 
@@ -84,7 +86,11 @@ export class RolePermissionsComponent implements OnInit {
       },
       error: (error) => {
         console.error('Failed to load permissions:', error);
-        this.snackBar.open('加载权限失败', '关闭', { duration: 3000 });
+        this.snackBar.open(
+          this.translate.instant('error.loadPermissionsFailed'),
+          this.translate.instant('common.close'),
+          { duration: 3000 }
+        );
         this.isLoading = false;
       }
     });
@@ -175,16 +181,7 @@ export class RolePermissionsComponent implements OnInit {
   }
 
   getCategoryLabel(category: string): string {
-    const labels: { [key: string]: string } = {
-      'users': '用户管理',
-      'roles': '角色管理',
-      'organizations': '组织管理',
-      'clients': '客户端管理',
-      'scopes': '作用域管理',
-      'audit': '审计日志',
-      'system': '系统设置'
-    };
-    return labels[category] || category;
+    return this.translate.instant(`permission.category.${category}`) || category;
   }
 
   onSave(): void {
@@ -206,12 +203,20 @@ export class RolePermissionsComponent implements OnInit {
     
     this.api.roles.grantPermissions(this.data.id, data).subscribe({
       next: () => {
-        this.snackBar.open('权限已保存', '关闭', { duration: 3000 });
+        this.snackBar.open(
+          this.translate.instant('success.permissionsSaved'),
+          this.translate.instant('common.close'),
+          { duration: 3000 }
+        );
         this.dialogRef.close(true);
       },
       error: (error) => {
         console.error('Failed to save permissions:', error);
-        this.snackBar.open('保存权限失败', '关闭', { duration: 3000 });
+        this.snackBar.open(
+          this.translate.instant('error.savePermissionsFailed'),
+          this.translate.instant('common.close'),
+          { duration: 3000 }
+        );
         this.isSaving = false;
       }
     });

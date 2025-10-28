@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModules, BaseMatModules, CommonFormModules } from 'src/app/share/shared-modules';
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
@@ -13,6 +13,7 @@ import { PageList } from 'src/app/services/api/models/ater/page-list.model';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { TranslateService } from '@ngx-translate/core';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { RoleEditComponent } from './role-edit';
 import { RoleAddComponent } from './role-add';
@@ -67,7 +68,8 @@ export class RoleListComponent implements OnInit {
     private api: ApiClient,
     private router: Router,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -92,7 +94,11 @@ export class RoleListComponent implements OnInit {
       },
       error: (error) => {
         console.error('Failed to load roles:', error);
-        this.snackBar.open('加载角色列表失败', '关闭', { duration: 3000 });
+        this.snackBar.open(
+          this.translate.instant('error.loadRolesFailed'),
+          this.translate.instant('common.close'),
+          { duration: 3000 }
+        );
         this.isLoading = false;
       }
     });
@@ -183,8 +189,8 @@ export class RoleListComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
-        title: '确认删除',
-        message: '确定要删除该角色吗？此操作不可撤销。'
+        title: this.translate.instant('dialog.confirmDelete.title'),
+        message: this.translate.instant('dialog.confirmDelete.message')
       }
     });
 
@@ -192,12 +198,20 @@ export class RoleListComponent implements OnInit {
       if (result) {
         this.api.roles.deleteRole(id, false).subscribe({
           next: () => {
-            this.snackBar.open('角色已删除', '关闭', { duration: 3000 });
+            this.snackBar.open(
+              this.translate.instant('success.roleDeleted'),
+              this.translate.instant('common.close'),
+              { duration: 3000 }
+            );
             this.loadData();
           },
           error: (error) => {
             console.error('Failed to delete role:', error);
-            this.snackBar.open('删除角色失败', '关闭', { duration: 3000 });
+            this.snackBar.open(
+              this.translate.instant('error.deleteRoleFailed'),
+              this.translate.instant('common.close'),
+              { duration: 3000 }
+            );
           }
         });
       }
@@ -213,8 +227,8 @@ export class RoleListComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
-        title: '确认批量删除',
-        message: `确定要删除选中的 ${selected.size} 个角色吗？此操作不可撤销。`
+        title: this.translate.instant('dialog.confirmBatchDelete.title'),
+        message: this.translate.instant('dialog.confirmBatchDelete.message', { count: selected.size })
       }
     });
 
@@ -228,7 +242,11 @@ export class RoleListComponent implements OnInit {
             next: () => {
               deletedCount++;
               if (deletedCount === totalCount) {
-                this.snackBar.open(`成功删除 ${deletedCount} 个角色`, '关闭', { duration: 3000 });
+                this.snackBar.open(
+                  this.translate.instant('success.rolesBatchDeleted', { count: deletedCount }),
+                  this.translate.instant('common.close'),
+                  { duration: 3000 }
+                );
                 this.selectedIds.set(new Set());
                 this.loadData();
               }
@@ -237,7 +255,11 @@ export class RoleListComponent implements OnInit {
               console.error('Failed to delete role:', error);
               deletedCount++;
               if (deletedCount === totalCount) {
-                this.snackBar.open(`部分角色删除失败`, '关闭', { duration: 3000 });
+                this.snackBar.open(
+                  this.translate.instant('error.batchDeletePartialFailed'),
+                  this.translate.instant('common.close'),
+                  { duration: 3000 }
+                );
                 this.selectedIds.set(new Set());
                 this.loadData();
               }

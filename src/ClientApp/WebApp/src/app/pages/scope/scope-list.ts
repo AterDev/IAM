@@ -5,6 +5,7 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatChipsModule } from '@angular/material/chips';
 import { FormsModule } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { TranslateService } from '@ngx-translate/core';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { ScopeItemDto } from 'src/app/services/api/models/access-mod/scope-item-dto.model';
 import { PageList } from 'src/app/services/api/models/ater/page-list.model';
@@ -37,7 +38,8 @@ export class ScopeListComponent implements OnInit {
 
   constructor(
     private api: ApiClient,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -62,7 +64,11 @@ export class ScopeListComponent implements OnInit {
       },
       error: (error) => {
         console.error('Failed to load scopes:', error);
-        this.snackBar.open('加载作用域列表失败', '关闭', { duration: 3000 });
+        this.snackBar.open(
+          this.translate.instant('error.loadScopesFailed'),
+          this.translate.instant('common.close'),
+          { duration: 3000 }
+        );
         this.isLoading = false;
       }
     });

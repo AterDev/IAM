@@ -3,6 +3,7 @@ import { CommonModules, CommonFormModules } from 'src/app/share/shared-modules';
 import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatDialogRef, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { TranslateService } from '@ngx-translate/core';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { RoleItemDto } from 'src/app/services/api/models/identity-mod/role-item-dto.model';
 import { RoleUpdateDto } from 'src/app/services/api/models/identity-mod/role-update-dto.model';
@@ -26,6 +27,7 @@ export class RoleEditComponent implements OnInit {
     private api: ApiClient,
     private dialogRef: MatDialogRef<RoleEditComponent>,
     private snackBar: MatSnackBar,
+    private translate: TranslateService,
     @Inject(MAT_DIALOG_DATA) public data: RoleItemDto
   ) {}
 
@@ -55,12 +57,20 @@ export class RoleEditComponent implements OnInit {
 
       this.api.roles.updateRole(this.data.id, updateData).subscribe({
         next: () => {
-          this.snackBar.open('角色更新成功', '关闭', { duration: 3000 });
+          this.snackBar.open(
+            this.translate.instant('success.roleUpdated'),
+            this.translate.instant('common.close'),
+            { duration: 3000 }
+          );
           this.dialogRef.close(true);
         },
         error: (error) => {
           console.error('Failed to update role:', error);
-          this.snackBar.open('更新角色失败', '关闭', { duration: 3000 });
+          this.snackBar.open(
+            this.translate.instant('error.updateRoleFailed'),
+            this.translate.instant('common.close'),
+            { duration: 3000 }
+          );
           this.isSubmitting = false;
         }
       });
