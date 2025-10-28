@@ -33,6 +33,14 @@
 * `src/ClientApp/WebApp`: Angular前端项目，管理后台
 </structure>
 
+<frontend>
+前端使用Angular 20+，基于Angular Material组件库实现.
+- 项目目录: `src/ClientApp/WebApp`
+- 在`app/services`目录下，提供对后端API的调用封装服务，包括类型定义。
+- 不再使用ngModules，改用独立组件.
+
+</frontend>
+
 <modules>
 解决方案分成了三个模块:
 - CommonMod: 提供通用功能支持，用来复用，被其他模块引用
