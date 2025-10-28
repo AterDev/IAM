@@ -1,4 +1,4 @@
-namespace Entity;
+namespace Entity.Access;
 
 /// <summary>
 /// OAuth/OIDC client entity
@@ -69,14 +69,14 @@ public class Client : EntityBase
     public string? Settings { get; set; }
 
     /// <summary>
-    /// Redirect URIs
+    /// Redirect URIs (JSON array)
     /// </summary>
-    public List<ClientRedirectUri> RedirectUris { get; set; } = [];
+    public List<string> RedirectUris { get; set; } = [];
 
     /// <summary>
-    /// Post logout redirect URIs
+    /// Post logout redirect URIs (JSON array)
     /// </summary>
-    public List<ClientPostLogoutRedirectUri> PostLogoutRedirectUris { get; set; } = [];
+    public List<string> PostLogoutRedirectUris { get; set; } = [];
 
     /// <summary>
     /// Client scopes

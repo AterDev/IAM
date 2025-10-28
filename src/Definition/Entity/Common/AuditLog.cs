@@ -1,4 +1,4 @@
-namespace Entity;
+namespace Entity.Common;
 
 /// <summary>
 /// Audit log entity for tracking system events

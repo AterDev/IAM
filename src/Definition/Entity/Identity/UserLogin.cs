@@ -1,4 +1,4 @@
-namespace Entity;
+namespace Entity.Identity;
 
 /// <summary>
 /// User login entity for external authentication

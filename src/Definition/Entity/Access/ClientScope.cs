@@ -1,10 +1,10 @@
-namespace Entity;
+namespace Entity.Access;
 
 /// <summary>
-/// Client redirect URI entity
+/// Client scope relationship entity
 /// </summary>
 [Module(Modules.Access)]
-public class ClientRedirectUri : EntityBase
+public class ClientScope : EntityBase
 {
     /// <summary>
     /// Client ID
@@ -12,13 +12,17 @@ public class ClientRedirectUri : EntityBase
     public Guid ClientId { get; set; }
 
     /// <summary>
-    /// Redirect URI
+    /// Scope ID
     /// </summary>
-    [MaxLength(2000)]
-    public required string Uri { get; set; }
+    public Guid ScopeId { get; set; }
 
     /// <summary>
     /// Client navigation
     /// </summary>
     public Client Client { get; set; } = null!;
+
+    /// <summary>
+    /// Scope navigation
+    /// </summary>
+    public ApiScope Scope { get; set; } = null!;
 }

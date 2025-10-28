@@ -1,15 +1,15 @@
-namespace Entity;
+namespace Entity.Identity;
 
 /// <summary>
-/// Role claim entity
+/// User claim entity
 /// </summary>
 [Module(Modules.Identity)]
-public class RoleClaim : EntityBase
+public class UserClaim : EntityBase
 {
     /// <summary>
-    /// Role ID
+    /// User ID
     /// </summary>
-    public Guid RoleId { get; set; }
+    public Guid UserId { get; set; }
 
     /// <summary>
     /// Claim type
@@ -24,7 +24,7 @@ public class RoleClaim : EntityBase
     public string? ClaimValue { get; set; }
 
     /// <summary>
-    /// Role navigation
+    /// User navigation
     /// </summary>
-    public Role Role { get; set; } = null!;
+    public User User { get; set; } = null!;
 }

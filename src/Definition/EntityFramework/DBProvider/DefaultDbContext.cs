@@ -24,8 +24,6 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
 
     // Access entities
     public DbSet<Client> Clients { get; set; }
-    public DbSet<ClientRedirectUri> ClientRedirectUris { get; set; }
-    public DbSet<ClientPostLogoutRedirectUri> ClientPostLogoutRedirectUris { get; set; }
     public DbSet<ApiScope> ApiScopes { get; set; }
     public DbSet<ClientScope> ClientScopes { get; set; }
     public DbSet<ScopeClaim> ScopeClaims { get; set; }
@@ -170,26 +168,20 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
         {
             entity.HasIndex(e => e.ClientId).IsUnique();
             entity.HasIndex(e => e.TenantId);
-        });
-
-        // ClientRedirectUri configuration
-        builder.Entity<ClientRedirectUri>(entity =>
-        {
-            entity.HasIndex(e => e.ClientId);
-            entity.HasOne(e => e.Client)
-                .WithMany(c => c.RedirectUris)
-                .HasForeignKey(e => e.ClientId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
-
-        // ClientPostLogoutRedirectUri configuration
-        builder.Entity<ClientPostLogoutRedirectUri>(entity =>
-        {
-            entity.HasIndex(e => e.ClientId);
-            entity.HasOne(e => e.Client)
-                .WithMany(c => c.PostLogoutRedirectUris)
-                .HasForeignKey(e => e.ClientId)
-                .OnDelete(DeleteBehavior.Cascade);
+            
+            // Configure RedirectUris as JSON
+            entity.Property(e => e.RedirectUris)
+                .HasConversion(
+                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                    v => System.Text.Json.JsonSerializer.Deserialize<List<string>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<string>()
+                );
+            
+            // Configure PostLogoutRedirectUris as JSON
+            entity.Property(e => e.PostLogoutRedirectUris)
+                .HasConversion(
+                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                    v => System.Text.Json.JsonSerializer.Deserialize<List<string>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<string>()
+                );
         });
 
         // ApiScope configuration

@@ -1,4 +1,4 @@
-namespace Entity;
+namespace Entity.Identity;
 
 /// <summary>
 /// User role relationship entity

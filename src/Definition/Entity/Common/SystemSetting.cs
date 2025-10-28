@@ -1,4 +1,4 @@
-namespace Entity;
+namespace Entity.Common;
 
 /// <summary>
 /// System setting entity for application configuration
