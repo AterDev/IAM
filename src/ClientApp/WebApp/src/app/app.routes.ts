@@ -49,6 +49,14 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/system-role/role-detail').then(m => m.RoleDetailComponent)
       },
       {
+        path: 'client',
+        loadComponent: () => import('./pages/client/client-list').then(m => m.ClientListComponent)
+      },
+      {
+        path: 'client/:id',
+        loadComponent: () => import('./pages/client/client-detail').then(m => m.ClientDetailComponent)
+      },
+      {
         path: 'scope',
         loadComponent: () => import('./pages/scope/scope-list').then(m => m.ScopeListComponent)
       },

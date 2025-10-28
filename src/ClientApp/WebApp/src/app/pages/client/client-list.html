@@ -1,0 +1,142 @@
+<div class="client-list-container">
+  <div class="header">
+    <h2>{{ 'menu.clients' | translate }}</h2>
+    <button mat-raised-button color="primary" (click)="openAddDialog()">
+      <mat-icon>add</mat-icon>
+      {{ 'common.add' | translate }}
+    </button>
+  </div>
+
+  <div class="filter-section">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>{{ 'common.search' | translate }}</mat-label>
+      <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()" 
+             placeholder="Client ID or Display Name">
+      <button mat-icon-button matSuffix (click)="onSearch()">
+        <mat-icon>search</mat-icon>
+      </button>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'client.type' | translate }}</mat-label>
+      <mat-select [(ngModel)]="typeFilter" (selectionChange)="onFilterChange()">
+        <mat-option [value]="null">{{ 'common.all' | translate }}</mat-option>
+        <mat-option value="confidential">{{ 'client.confidential' | translate }}</mat-option>
+        <mat-option value="public">{{ 'client.public' | translate }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'client.applicationType' | translate }}</mat-label>
+      <mat-select [(ngModel)]="applicationTypeFilter" (selectionChange)="onFilterChange()">
+        <mat-option [value]="null">{{ 'common.all' | translate }}</mat-option>
+        <mat-option value="web">{{ 'client.web' | translate }}</mat-option>
+        <mat-option value="native">{{ 'client.native' | translate }}</mat-option>
+        <mat-option value="spa">{{ 'client.spa' | translate }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-button (click)="clearFilters()">
+      <mat-icon>clear</mat-icon>
+      {{ 'common.clearFilters' | translate }}
+    </button>
+  </div>
+
+  <div class="batch-actions" *ngIf="selectedIds().size > 0">
+    <span class="selection-info">{{ selectedIds().size }} {{ 'common.selected' | translate }}</span>
+    <button mat-button color="warn" (click)="deleteSelected()">
+      <mat-icon>delete</mat-icon>
+      {{ 'common.delete' | translate }}
+    </button>
+  </div>
+
+  <div class="table-container">
+    <table mat-table [dataSource]="dataSource()" class="client-table">
+      <!-- Checkbox Column -->
+      <ng-container matColumnDef="select">
+        <th mat-header-cell *matHeaderCellDef>
+          <mat-checkbox
+            [checked]="allSelected()"
+            [indeterminate]="someSelected()"
+            (change)="toggleSelectAll()">
+          </mat-checkbox>
+        </th>
+        <td mat-cell *matCellDef="let row">
+          <mat-checkbox
+            [checked]="selectedIds().has(row.id)"
+            (change)="toggleSelect(row.id)">
+          </mat-checkbox>
+        </td>
+      </ng-container>
+
+      <!-- Client ID Column -->
+      <ng-container matColumnDef="clientId">
+        <th mat-header-cell *matHeaderCellDef>{{ 'client.clientId' | translate }}</th>
+        <td mat-cell *matCellDef="let client">{{ client.clientId }}</td>
+      </ng-container>
+
+      <!-- Display Name Column -->
+      <ng-container matColumnDef="displayName">
+        <th mat-header-cell *matHeaderCellDef>{{ 'client.displayName' | translate }}</th>
+        <td mat-cell *matCellDef="let client">{{ client.displayName }}</td>
+      </ng-container>
+
+      <!-- Type Column -->
+      <ng-container matColumnDef="type">
+        <th mat-header-cell *matHeaderCellDef>{{ 'client.type' | translate }}</th>
+        <td mat-cell *matCellDef="let client">
+          <mat-chip *ngIf="client.type">{{ client.type }}</mat-chip>
+        </td>
+      </ng-container>
+
+      <!-- Application Type Column -->
+      <ng-container matColumnDef="applicationType">
+        <th mat-header-cell *matHeaderCellDef>{{ 'client.applicationType' | translate }}</th>
+        <td mat-cell *matCellDef="let client">
+          <mat-chip *ngIf="client.applicationType">{{ client.applicationType }}</mat-chip>
+        </td>
+      </ng-container>
+
+      <!-- Created Time Column -->
+      <ng-container matColumnDef="createdTime">
+        <th mat-header-cell *matHeaderCellDef>{{ 'common.createdTime' | translate }}</th>
+        <td mat-cell *matCellDef="let client">{{ client.createdTime | date:'short' }}</td>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
+        <td mat-cell *matCellDef="let client">
+          <button mat-icon-button [matMenuTriggerFor]="menu">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #menu="matMenu">
+            <button mat-menu-item (click)="viewDetail(client.id)">
+              <mat-icon>visibility</mat-icon>
+              <span>{{ 'common.view' | translate }}</span>
+            </button>
+            <button mat-menu-item (click)="deleteClient(client.id)">
+              <mat-icon>delete</mat-icon>
+              <span>{{ 'common.delete' | translate }}</span>
+            </button>
+          </mat-menu>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+
+    <div class="loading-shade" *ngIf="isLoading">
+      <mat-spinner></mat-spinner>
+    </div>
+  </div>
+
+  <mat-paginator
+    [length]="total()"
+    [pageSize]="pageSize"
+    [pageIndex]="pageIndex"
+    [pageSizeOptions]="[5, 10, 20, 50]"
+    (page)="onPageChange($event)">
+  </mat-paginator>
+</div>
