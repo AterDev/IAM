@@ -3,12 +3,17 @@ import { CommonModules, BaseMatModules, CommonFormModules } from 'src/app/share/
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatMenuModule } from '@angular/material/menu';
 import { FormsModule } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { ScopeItemDto } from 'src/app/services/api/models/access-mod/scope-item-dto.model';
 import { PageList } from 'src/app/services/api/models/ater/page-list.model';
+import { ScopeAddComponent } from './scope-add';
+import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-scope-list',
@@ -19,13 +24,14 @@ import { PageList } from 'src/app/services/api/models/ater/page-list.model';
     MatTableModule,
     MatPaginatorModule,
     MatChipsModule,
+    MatMenuModule,
     FormsModule
   ],
   templateUrl: './scope-list.html',
   styleUrls: ['./scope-list.scss']
 })
 export class ScopeListComponent implements OnInit {
-  displayedColumns: string[] = ['name', 'displayName', 'required', 'emphasize', 'description'];
+  displayedColumns: string[] = ['name', 'displayName', 'required', 'emphasize', 'description', 'actions'];
   
   dataSource = signal<ScopeItemDto[]>([]);
   total = signal(0);
@@ -39,7 +45,9 @@ export class ScopeListComponent implements OnInit {
   constructor(
     private api: ApiClient,
     private snackBar: MatSnackBar,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private dialog: MatDialog,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -95,5 +103,54 @@ export class ScopeListComponent implements OnInit {
     this.requiredFilter = null;
     this.pageIndex = 0;
     this.loadData();
+  }
+
+  viewDetail(id: string): void {
+    this.router.navigate(['/scope', id]);
+  }
+
+  openAddDialog(): void {
+    const dialogRef = this.dialog.open(ScopeAddComponent, {
+      width: '600px'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadData();
+      }
+    });
+  }
+
+  deleteScope(id: string): void {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: this.translate.instant('scope.deleteConfirmTitle'),
+        message: this.translate.instant('scope.deleteConfirmMessage')
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.api.scopes.deleteScope(id).subscribe({
+          next: () => {
+            this.snackBar.open(
+              this.translate.instant('scope.deleteSuccess'),
+              this.translate.instant('common.close'),
+              { duration: 3000 }
+            );
+            this.loadData();
+          },
+          error: (error) => {
+            console.error('Failed to delete scope:', error);
+            this.snackBar.open(
+              this.translate.instant('error.deleteScopeFailed'),
+              this.translate.instant('common.close'),
+              { duration: 3000 }
+            );
+          }
+        });
+      }
+    });
   }
 }
