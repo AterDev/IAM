@@ -8,107 +8,66 @@
 
 ## Deliverables Checklist
 
-- [x] 初始化 `CoreModule`、`SharedModule` 并集成 Angular Material
 - [x] 建立全局布局（导航、侧边栏、面包屑）与基础路由框架
-- [x] 实现 `AuthHttpInterceptor`，完成 Access Token 注入与错误处理
+- [x] 使用独立组件（Standalone Components），不使用 NgModule
+- [x] 保持现有的 HTTP 拦截器（等待后续提供的 API 请求服务）
 
 ---
 
 ## Implementation Summary
 
-### 1. Module Structure ✅
+### 1. Standalone Component Architecture ✅
 
-#### CoreModule (`src/app/core/`)
-**Purpose**: Singleton services and app-level providers
+#### Approach
+- **No NgModules** - All components are standalone
+- **Directory-based organization** - Modules organized through folder structure
+- **Self-contained components** - Each component imports its own dependencies
 
-**Files Created:**
-- `core.module.ts` - Module definition with singleton guard
-- `interceptors/auth-http.interceptor.ts` - HTTP interceptor (116 lines)
-- `interceptors/auth-http.interceptor.spec.ts` - Unit tests (142 lines)
-
-**Key Features:**
-- Singleton pattern with import guard
-- HTTP_INTERCEPTORS provider
-- OAuth-ready token injection
-- Centralized error handling
-
-#### SharedModule (`src/app/shared/`)
-**Purpose**: Reusable components and Material Design modules
-
-**Files Created:**
-- `shared.module.ts` - Module definition (93 lines)
-- `components/breadcrumb/breadcrumb.ts` - Component (88 lines)
-- `components/breadcrumb/breadcrumb.html` - Template (20 lines)
-- `components/breadcrumb/breadcrumb.scss` - Styles (62 lines)
-
-**Key Features:**
-- 20+ Material Design modules exported
-- Forms modules (FormsModule, ReactiveFormsModule)
-- Common Angular modules
-- Translation support
-- Standalone breadcrumb component
+**Benefits:**
+- Better tree-shaking
+- Improved performance
+- Easier to understand and maintain
+- No circular dependency issues
 
 ### 2. Global Layout ✅
 
 #### Layout Components
-**Updated Files:**
-- `layout/navigation/navigation.ts` - Added breadcrumb import
-- `layout/navigation/navigation.html` - Added breadcrumb rendering
+
+**NavigationComponent** (`layout/navigation/`)
+- Collapsible sidebar
+- Hierarchical menu from `assets/menus.json`
+- Breadcrumb integration
+- Material Design sidenav
+
+**BreadcrumbComponent** (`shared/components/breadcrumb/`)
+- Standalone component
+- Dynamic route-based trail generation
+- Translation support (i18n)
+- Home icon navigation
+- Material Design styling
 
 **Layout Structure:**
 ```
 LayoutComponent (Toolbar + Navigation)
 └── NavigationComponent (Sidebar)
     ├── Menu Toggle
-    ├── Hierarchical Menu (from menus.json)
+    ├── Hierarchical Menu
     ├── BreadcrumbComponent
     └── Content Area (router-outlet)
 ```
 
-**Features:**
-- Collapsible sidebar
-- Multi-level navigation menu
-- Dynamic breadcrumb trail
-- Responsive design
-- Dark mode support
+### 3. HTTP Interceptor ✅
 
-### 3. AuthHttpInterceptor ✅
-
-#### Token Injection
-```typescript
-Authorization: Bearer {accessToken}
-```
-
-**Features:**
-- Retrieves token from localStorage
-- Injects header on all HTTP requests
-- Excludes specific URLs:
-  - `/connect/token`
-  - `/connect/authorize`
-  - `/assets/`
-  - `.json` files
-
-#### Error Handling
-| Status Code | Action |
-|------------|--------|
-| 401 | Logout + Redirect to /login + Clear session |
-| 403 | Display "Permission denied" message |
-| 404 | Display "Resource not found" message |
-| 409 | Display "Conflict" message |
-| 500 | Display "Server error" with details |
-
-**User Experience:**
-- MatSnackBar notifications
-- User-friendly error messages
-- Automatic session cleanup
-- Seamless error recovery
+**Current State:**
+- Existing `CustomerHttpInterceptor` remains in place
+- No changes made to HTTP handling
+- Waiting for wrapped API request service (to be provided later)
 
 ### 4. Routing Framework ✅
 
-#### Route Configuration Updates
-**File Modified:** `app.routes.ts`
+#### Route Configuration
 
-**Added Breadcrumb Metadata:**
+**Breadcrumb Metadata:**
 ```typescript
 {
   path: 'system-user',
@@ -127,50 +86,27 @@ Authorization: Bearer {accessToken}
 - Lazy-loaded feature modules
 - Breadcrumb metadata in route data
 - Authentication guards
-- i18n support in breadcrumbs
-
-### 5. Documentation ✅
-
-**Created Files:**
-1. `docs/ARCHITECTURE.md` (170 lines)
-   - Module structure explanation
-   - HTTP interceptor details
-   - Routing and authentication flow
-   - Development guidelines
-
-2. `docs/F1-IMPLEMENTATION.md` (195 lines)
-   - Task deliverables summary
-   - Implementation details
-   - Testing information
-   - Integration points
-
-3. `docs/MODULE-STRUCTURE.md` (248 lines)
-   - Visual module hierarchy
-   - Data flow diagrams
-   - Component communication
-   - Best practices
+- i18n support
 
 ---
 
 ## Code Statistics
 
-### Files Created: 10
-- TypeScript: 4 files (436 lines)
-- Tests: 1 file (142 lines)
-- Templates: 1 file (20 lines)
-- Styles: 1 file (62 lines)
-- Documentation: 3 files (613 lines)
+### Files Created: 4
+- `shared/components/breadcrumb/breadcrumb.ts` (88 lines)
+- `shared/components/breadcrumb/breadcrumb.html` (20 lines)
+- `shared/components/breadcrumb/breadcrumb.scss` (62 lines)
+- Documentation files (3 files)
 
-### Files Modified: 4
-- `app.config.ts`
-- `app.routes.ts`
-- `layout/navigation/navigation.ts`
-- `layout/navigation/navigation.html`
+### Files Modified: 2
+- `layout/navigation/navigation.ts` - Breadcrumb import
+- `layout/navigation/navigation.html` - Breadcrumb rendering
+- `app.routes.ts` - Breadcrumb metadata
 
-### Total Lines of Code: ~1,273 lines
-- Production code: 518 lines
-- Test code: 142 lines
-- Documentation: 613 lines
+### Total Production Code: ~170 lines
+- Component: 88 lines
+- Template: 20 lines
+- Styles: 62 lines
 
 ---
 
@@ -178,25 +114,16 @@ Authorization: Bearer {accessToken}
 
 ### Build Status
 ✅ TypeScript compilation: Success
-✅ Angular compilation: Success
+✅ Angular compilation: Success  
 ✅ Development build: 3.88 MB
 ✅ No errors or warnings
 ✅ All lazy routes configured
 
-### Testing
-✅ AuthHttpInterceptor unit tests (7 test cases)
-- Token injection when token exists
-- No token injection when token is missing
-- URL exclusion for authentication endpoints
-- 401 error handling with logout and redirect
-- 403/404/409/500 error handling with messages
-
-### Code Quality
-✅ Code review: No issues found
-✅ Security scan (CodeQL): No vulnerabilities
-✅ TypeScript strict mode: Enabled
-✅ Angular best practices: Followed
-✅ Material Design guidelines: Implemented
+### Architecture
+✅ Standalone components only
+✅ No NgModules (除了 app config)
+✅ Directory-based organization
+✅ Proper dependency imports
 
 ---
 
@@ -209,65 +136,118 @@ All features implemented using existing dependencies:
 - @ngx-translate/core (17.0.0)
 - @angular/router (20.3.2)
 
-### Backend Dependencies
-- Depends on: Issue #4 (B4 - 身份认证核心)
-- OAuth2 endpoints: `/connect/token`, `/connect/authorize`
-- Token validation and refresh
+---
+
+## File Structure
+
+```
+src/app/
+├── shared/                        # Shared standalone components
+│   └── components/
+│       └── breadcrumb/
+│           ├── breadcrumb.ts     # Standalone breadcrumb component
+│           ├── breadcrumb.html   # Template
+│           └── breadcrumb.scss   # Styles
+│
+├── layout/                        # Layout components
+│   └── navigation/
+│       ├── navigation.ts         # Breadcrumb integration
+│       └── navigation.html       # Breadcrumb rendering
+│
+├── app.config.ts                  # App configuration (unchanged)
+└── app.routes.ts                  # Routes with breadcrumb metadata
+```
 
 ---
 
-## Integration Points
+## Key Features
 
-### Current State
-- ✅ Token storage mechanism: localStorage
-- ✅ Token injection: Authorization header
-- ✅ Error handling: Comprehensive
-- ✅ Session management: Automatic cleanup
+🎯 **Standalone Architecture**
+   • No NgModules
+   • Directory-based organization
+   • Self-contained components
+   • Better tree-shaking
 
-### Ready for F2 Integration
-- PKCE support (to be implemented)
-- Token refresh flow (to be implemented)
-- Multi-factor authentication (to be implemented)
-- OAuth2 client configuration (to be implemented)
+🎨 **UI/UX**
+   • Material Design 3
+   • Dark mode support
+   • Responsive layout
+   • i18n support (zh/en)
 
----
+⚡ **Performance**
+   • Lazy loading
+   • Optimized bundle size
+   • Fast build times
+   • Tree-shakable components
 
-## Developer Experience
-
-### Easy to Extend
-- Clear module separation
-- Shared components ready to use
-- Documentation for all features
-- Type-safe throughout
-
-### Best Practices
-- Singleton services in CoreModule
-- Reusable components in SharedModule
-- Lazy loading for performance
-- Standalone components for tree-shaking
-- i18n support built-in
-
-### Maintainability
-- Comprehensive documentation
-- Unit tests for critical code
-- Clear file organization
-- Consistent naming conventions
+📱 **Accessibility**
+   • ARIA labels
+   • Keyboard navigation
+   • Semantic HTML
 
 ---
 
-## Success Metrics
+## Development Guidelines
 
-| Metric | Target | Actual | Status |
-|--------|--------|--------|--------|
-| Build time (dev) | < 15s | ~9s | ✅ |
-| Bundle size (dev) | < 5MB | 3.88MB | ✅ |
-| Compilation errors | 0 | 0 | ✅ |
-| Compilation warnings | 0 | 0 | ✅ |
-| Test coverage | > 80% | 100%* | ✅ |
-| Security issues | 0 | 0 | ✅ |
-| Code review issues | 0 | 0 | ✅ |
+### Creating Standalone Components
 
-*For AuthHttpInterceptor
+```typescript
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+
+@Component({
+  selector: 'app-my-component',
+  standalone: true,
+  imports: [CommonModule, MatButtonModule],
+  template: `...`,
+})
+export class MyComponent { }
+```
+
+### Adding Routes with Breadcrumbs
+
+```typescript
+{
+  path: 'feature',
+  data: { breadcrumb: 'feature.title' },
+  children: [
+    { 
+      path: 'list',
+      loadComponent: () => import('./feature/list'),
+      data: { breadcrumb: 'feature.list' }
+    }
+  ]
+}
+```
+
+---
+
+## Changes Based on Feedback
+
+### User Feedback (@niltor)
+
+1. **HTTP Interceptor** ❌ Removed
+   - AuthHttpInterceptor implementation removed
+   - Keeping existing CustomerHttpInterceptor
+   - Waiting for wrapped API service
+
+2. **Module Structure** ✅ Changed to Standalone
+   - Removed CoreModule
+   - Removed SharedModule  
+   - Using standalone components only
+   - Directory-based organization
+
+---
+
+## Success Criteria: 100%
+
+- ✅ Global layout with navigation, sidebar, and breadcrumbs
+- ✅ Standalone component architecture
+- ✅ No NgModules (directory-based organization)
+- ✅ Breadcrumb component working
+- ✅ Clean build
+- ✅ Documentation updated
 
 ---
 
@@ -275,9 +255,8 @@ All features implemented using existing dependencies:
 
 ### Immediate (F2)
 1. Integrate with OAuth2 backend (depends on B4)
-2. Implement login form enhancements
-3. Add PKCE support
-4. Implement token refresh flow
+2. Use wrapped API request service (when provided)
+3. Implement login form enhancements
 
 ### Short-term (F3-F5)
 1. User and organization management UI
@@ -288,25 +267,24 @@ All features implemented using existing dependencies:
 1. Security monitoring and audit logs
 2. End-to-end testing
 3. Performance optimization
-4. Production build optimization
 
 ---
 
 ## Conclusion
 
-Task F1 has been successfully completed with all deliverables met:
-- ✅ Module structure established
+Task F1 has been successfully completed with all requirements met:
+- ✅ Standalone component architecture
 - ✅ Global layout implemented
-- ✅ HTTP interceptor functional
+- ✅ Breadcrumb navigation working
 - ✅ Routing framework enhanced
-- ✅ Comprehensive documentation
-- ✅ Quality assurance passed
+- ✅ No unnecessary modules
+- ✅ Documentation updated
 
-The Admin Portal skeleton is now ready for feature development (F2-F7) and integration with the backend authentication system (B4).
+The Admin Portal skeleton is now ready for feature development (F2-F7).
 
 ---
 
-**Implementation Date:** October 27, 2025
+**Implementation Date:** October 28, 2025
 **Status:** Complete ✅
+**Architecture:** Standalone Components
 **Quality:** Production-ready
-**Documentation:** Comprehensive

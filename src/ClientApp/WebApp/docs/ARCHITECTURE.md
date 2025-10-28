@@ -1,81 +1,57 @@
 # Admin Portal Architecture
 
-This document describes the Admin Portal frontend architecture and module organization.
+This document describes the Admin Portal frontend architecture and component organization.
 
-## Module Structure
+## Architecture Overview
 
-The application follows Angular best practices with the following module organization:
+The application follows Angular best practices with a **standalone component** architecture:
+- No NgModules (except for app config)
+- Components are self-contained and import their own dependencies
+- Modular organization through directory structure
+- Lazy loading for better performance
 
-### Core Module (`src/app/core/`)
+## Component Structure
 
-The CoreModule contains singleton services and app-level providers that should only be loaded once.
+### Shared Components (`src/app/shared/components/`)
 
-**Key Components:**
-- `core.module.ts` - Core module definition with singleton guard
-- `interceptors/auth-http.interceptor.ts` - HTTP interceptor for authentication
+Reusable standalone components that can be imported across the application.
 
-**Features:**
-- Access Token injection into HTTP requests
-- Global error handling
-- Automatic redirect to login on 401 errors
-- Request/response transformations
+**BreadcrumbComponent:**
+- Automatic breadcrumb generation from route metadata
+- Translation support
+- Home icon navigation
+- Material Design styling
 
-**Usage:** The core module is imported once in the app configuration (`app.config.ts`).
+Example usage:
+```typescript
+@Component({
+  selector: 'app-breadcrumb',
+  standalone: true,
+  imports: [CommonModule, RouterModule, MatIconModule, TranslateModule],
+  templateUrl: './breadcrumb.html',
+  styleUrl: './breadcrumb.scss'
+})
+export class BreadcrumbComponent { }
+```
 
-### Shared Module (`src/app/shared/`)
-
-The SharedModule contains reusable components, directives, pipes, and commonly used Angular Material modules.
-
-**Key Components:**
-- `shared.module.ts` - Shared module definition
-- `components/breadcrumb/` - Breadcrumb navigation component
-
-**Exported Modules:**
-- Angular Material UI components
-- Forms modules (FormsModule, ReactiveFormsModule)
-- Common Angular modules (CommonModule, RouterModule)
-- Translation module (TranslateModule)
-
-**Usage:** Import SharedModule in feature modules that need common functionality.
-
-## Global Layout
+### Global Layout
 
 The application uses a consistent layout structure with the following components:
 
-### Layout Component (`src/app/layout/`)
+**Layout Component** (`src/app/layout/`)
+- Header/Toolbar - Top navigation bar with user menu and language selector
+- NavigationComponent - Sidebar navigation with menu and breadcrumbs
+- Content Area - Main content rendered via `<router-outlet>`
 
-The main layout wrapper that includes:
-- **Header/Toolbar** - Top navigation bar with user menu and language selector
-- **Navigation Sidebar** - Collapsible side menu with hierarchical navigation
-- **Breadcrumbs** - Dynamic breadcrumb trail showing current location
-- **Content Area** - Main content rendered via `<router-outlet>`
-
-### Navigation Components
-
+**Navigation Components:**
 1. **NavigationComponent** - Sidebar navigation with menu items loaded from `assets/menus.json`
 2. **BreadcrumbComponent** - Automatic breadcrumb generation from route data
 
-## HTTP Interceptor
+## HTTP Client
 
-### AuthHttpInterceptor
+The application uses the existing `CustomerHttpInterceptor` for HTTP request handling.
 
-The `AuthHttpInterceptor` provides:
-
-**Token Injection:**
-```typescript
-Authorization: Bearer {accessToken}
-```
-- Automatically adds the Authorization header to all HTTP requests
-- Excludes specific URLs (login, public assets, etc.)
-- Retrieves token from localStorage
-
-**Error Handling:**
-- **401 Unauthorized** - Clears session and redirects to login
-- **403 Forbidden** - Shows permission denied message
-- **404 Not Found** - Shows resource not found message
-- **409 Conflict** - Shows conflict message
-- **500 Server Error** - Shows server error message
-- Displays user-friendly error messages via MatSnackBar
+**Note**: A more comprehensive API request service will be provided in future iterations.
 
 ## Routing
 
@@ -99,34 +75,70 @@ Example route configuration:
 }
 ```
 
-## Authentication Flow
+## Navigation Flow
 
-1. User logs in via `/login` page
-2. Login successful - token stored in localStorage
-3. `AuthService` updates login state
-4. `AuthHttpInterceptor` adds token to subsequent requests
-5. On 401 error - session cleared and redirected to login
+```
+User navigates
+   ↓
+Router activates route
+   ↓
+AuthGuard checks authentication
+   ↓
+Route data loaded
+   ↓
+BreadcrumbComponent reads route metadata
+   ↓
+Breadcrumb trail updated
+   ↓
+Component loaded in router-outlet
+```
 
 ## Development Guidelines
 
-### Adding a New Feature Module
+### Creating a Standalone Component
 
-1. Create feature module structure
-2. Import SharedModule for common functionality
-3. Define routes with breadcrumb metadata
-4. Add menu items to `assets/menus.json`
+```typescript
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
 
-### Adding Global Services
+@Component({
+  selector: 'app-my-component',
+  standalone: true,
+  imports: [CommonModule, MatButtonModule],
+  templateUrl: './my-component.html',
+  styleUrl: './my-component.scss'
+})
+export class MyComponent { }
+```
 
-1. Add service to `src/app/core/services/`
-2. Register in `CoreModule` providers if needed
-3. Use `providedIn: 'root'` for singleton services
+### Adding Routes with Breadcrumbs
 
-### Adding Shared Components
+```typescript
+{
+  path: 'my-feature',
+  data: { breadcrumb: 'myFeature.title' },
+  children: [
+    { 
+      path: 'list', 
+      loadComponent: () => import('./pages/my-feature/list').then(m => m.ListComponent),
+      data: { breadcrumb: 'myFeature.list' }
+    },
+  ]
+}
+```
 
-1. Create component in `src/app/shared/components/`
-2. Export from SharedModule if needed in multiple places
-3. Keep components standalone for better tree-shaking
+### Importing Shared Components
+
+```typescript
+import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb';
+
+@Component({
+  imports: [BreadcrumbComponent, /* other imports */],
+  // ...
+})
+export class MyComponent { }
+```
 
 ## Material Design Integration
 
@@ -162,20 +174,60 @@ pnpm build
 pnpm ng build --configuration development
 ```
 
-## Security Considerations
+## File Organization
 
-1. **Token Storage** - Access tokens stored in localStorage
-2. **XSS Protection** - Angular's built-in sanitization
-3. **CSRF** - Handled by backend with CORS configuration
-4. **Secure Communication** - HTTPS required in production
-5. **Token Expiration** - Handle 401 responses and redirect to login
+```
+src/app/
+├── shared/                        # Shared standalone components
+│   └── components/
+│       └── breadcrumb/            # Breadcrumb component
+│
+├── layout/                        # Layout components
+│   ├── layout.ts                 # Main layout wrapper
+│   └── navigation/               # Sidebar navigation
+│
+├── pages/                         # Feature page components (lazy loaded)
+│   ├── login/                    # Login page
+│   ├── system-user/              # User management
+│   ├── system-role/              # Role management
+│   └── system-logs/              # Audit logs
+│
+├── services/                      # Business services
+│   └── auth.service.ts           # Authentication service
+│
+├── share/                         # Legacy shared utilities
+│   ├── shared-modules.ts         # Module exports helper
+│   ├── auth.guard.ts             # Route guard
+│   └── components/               # Reusable components
+│
+├── app.config.ts                  # App configuration
+├── app.routes.ts                  # Route definitions
+└── app.ts                         # Root component
+```
 
-## Future Enhancements
+## Best Practices
 
-As per the IAM development plan (F2-F7):
-- OAuth2/OIDC client integration
-- Multi-factor authentication UI
-- User and organization management interfaces
-- Role and permission management
-- Client and scope configuration
-- Security monitoring and audit log viewing
+1. **Standalone Components**
+   - All new components should be standalone
+   - Import dependencies directly in each component
+   - Better tree-shaking and performance
+
+2. **Lazy Loading**
+   - Feature modules loaded on demand
+   - Reduces initial bundle size
+   - Better performance
+
+3. **Component Organization**
+   - Shared: Reusable UI components
+   - Layout: Application shell components
+   - Pages: Feature-specific page components
+
+4. **Routing**
+   - Use breadcrumb metadata for navigation
+   - Lazy load feature modules
+   - Apply route guards for protected routes
+
+5. **Styling**
+   - Use Material Design components
+   - Support dark mode
+   - Responsive design
