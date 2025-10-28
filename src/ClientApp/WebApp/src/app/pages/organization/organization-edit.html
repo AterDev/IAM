@@ -1,0 +1,39 @@
+<h2 mat-dialog-title>{{ 'organization.editOrganization' | translate }}</h2>
+
+<mat-dialog-content>
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <form [formGroup]="orgForm" class="org-form" *ngIf="!isLoading">
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'organization.name' | translate }}</mat-label>
+      <input matInput [formControl]="name" required>
+      <mat-error *ngIf="name.invalid && name.touched">
+        {{ getErrorMessage(name) }}
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'organization.description' | translate }}</mat-label>
+      <textarea matInput [formControl]="description" rows="3"></textarea>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'organization.displayOrder' | translate }}</mat-label>
+      <input matInput type="number" [formControl]="displayOrder" min="0">
+      <mat-error *ngIf="displayOrder.invalid && displayOrder.touched">
+        {{ getErrorMessage(displayOrder) }}
+      </mat-error>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()" [disabled]="isSubmitting">
+    {{ 'common.cancel' | translate }}
+  </button>
+  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="isSubmitting || isLoading">
+    {{ isSubmitting ? ('common.saving' | translate) : ('common.save' | translate) }}
+  </button>
+</mat-dialog-actions>

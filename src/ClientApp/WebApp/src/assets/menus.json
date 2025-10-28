@@ -66,6 +66,14 @@
                 "menuType": 0
             },
             {
+                "name": "menu.organization",
+                "path": "/organization",
+                "accessCode": "organization",
+                "icon": "corporate_fare",
+                "sort": 2,
+                "menuType": 0
+            },
+            {
                 "name": "menu.systemLogs",
                 "path": "/system-logs",
                 "accessCode": "system-logs",
