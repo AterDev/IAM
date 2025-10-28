@@ -7,6 +7,22 @@ namespace ApiService.Controllers;
 /// <summary>
 /// Role management controller
 /// </summary>
+/// <remarks>
+/// Manages roles and their permissions in the IAM system.
+/// 
+/// Roles are used to group permissions and assign them to users.
+/// System roles cannot be deleted but can be modified.
+/// 
+/// Key features:
+/// - Role CRUD operations
+/// - Permission assignment and management
+/// - Role-based access control (RBAC)
+/// - Audit logging for permission changes
+/// 
+/// All endpoints require appropriate administrative permissions.
+/// </remarks>
+[Produces("application/json")]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 public class RolesController(
     Share.Localizer localizer,
     RoleManager manager,
@@ -109,10 +125,39 @@ public class RolesController(
     /// <summary>
     /// Grant permissions to role
     /// </summary>
-    /// <param name="id">Role id</param>
-    /// <param name="dto">Grant permission DTO</param>
+    /// <param name="id">Role unique identifier</param>
+    /// <param name="dto">Permission grant data containing list of permissions</param>
     /// <returns>No content if successful</returns>
+    /// <response code="204">Permissions successfully granted to role</response>
+    /// <response code="400">If the grant operation fails</response>
+    /// <response code="404">If the role is not found</response>
+    /// <response code="401">If the user is not authenticated</response>
+    /// <response code="403">If the user lacks permission to grant permissions</response>
+    /// <remarks>
+    /// Grants specified permissions to the role. This operation is audited.
+    /// 
+    /// Permission format examples:
+    /// - "user.read" - Read user information
+    /// - "user.write" - Create/update users
+    /// - "role.manage" - Manage roles
+    /// 
+    /// Sample request:
+    /// 
+    ///     POST /api/roles/{id}/permissions
+    ///     {
+    ///         "permissions": [
+    ///             "user.read",
+    ///             "user.write",
+    ///             "role.read"
+    ///         ]
+    ///     }
+    /// 
+    /// </remarks>
     [HttpPost("{id}/permissions")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult> GrantPermissions(
         Guid id,
         [FromBody] RoleGrantPermissionDto dto
