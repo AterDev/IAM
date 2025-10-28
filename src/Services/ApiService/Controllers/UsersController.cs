@@ -135,7 +135,10 @@ public class UsersController(
     [HttpPost("{id}/roles")]
     public async Task<ActionResult> AssignRoles(Guid id, [FromBody] List<Guid> roleIds)
     {
-        var success = await _manager.AssignRolesAsync(id, roleIds);
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
+        
+        var success = await _manager.AssignRolesAsync(id, roleIds, ipAddress, userAgent);
         return !success ? BadRequest(_manager.ErrorMsg) : NoContent();
     }
 }
