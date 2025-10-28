@@ -1,4 +1,4 @@
-namespace Entity.Identity;
+namespace Entity.IdentityMod;
 
 /// <summary>
 /// Organization user relationship entity

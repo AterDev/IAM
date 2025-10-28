@@ -1,6 +1,4 @@
 using AccessMod.Models.ScopeDtos;
-using Entity.Access;
-using EntityFramework.DBProvider;
 using Microsoft.EntityFrameworkCore;
 
 namespace AccessMod.Managers;
@@ -104,7 +102,7 @@ public class ScopeManager(DefaultDbContext dbContext, ILogger<ScopeManager> logg
     /// <returns>Updated scope detail or null</returns>
     public async Task<ScopeDetailDto?> UpdateAsync(Guid id, ScopeUpdateDto dto)
     {
-        var entity = await _context.Set<ApiScope>()
+        var entity = await _dbContext.Set<ApiScope>()
             .Include(s => s.ScopeClaims)
             .FirstOrDefaultAsync(s => s.Id == id);
 
@@ -145,7 +143,7 @@ public class ScopeManager(DefaultDbContext dbContext, ILogger<ScopeManager> logg
             }
         }
 
-        var success = await SaveAsync() > 0;
+        var success = await SaveChangesAsync() > 0;
         return !success ? null : await GetDetailAsync(id);
     }
 

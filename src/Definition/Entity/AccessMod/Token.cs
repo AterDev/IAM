@@ -1,4 +1,4 @@
-namespace Entity.Access;
+namespace Entity.AccessMod;
 
 /// <summary>
 /// Token entity for OAuth/OIDC tokens

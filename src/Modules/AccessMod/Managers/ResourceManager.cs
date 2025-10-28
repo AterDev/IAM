@@ -1,5 +1,5 @@
 using AccessMod.Models.ResourceDtos;
-using Entity.Access;
+using Entity.AccessMod;
 using EntityFramework.DBProvider;
 
 namespace AccessMod.Managers;

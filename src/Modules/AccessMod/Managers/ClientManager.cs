@@ -1,9 +1,8 @@
-using AccessMod.Models.ClientDtos;
-using Entity.Access;
-using EntityFramework.DBProvider;
-using Microsoft.EntityFrameworkCore;
-using Share.Services;
 using System.Security.Cryptography;
+using AccessMod.Models.AuthorizationDtos;
+using AccessMod.Models.ClientDtos;
+using Share.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace AccessMod.Managers;
 
@@ -104,7 +103,7 @@ public class ClientManager(
         // Add client scopes
         if (dto.ScopeIds.Count > 0)
         {
-            var scopes = await _context.Set<ApiScope>()
+            var scopes = await _dbContext.Set<ApiScope>()
                 .Where(s => dto.ScopeIds.Contains(s.Id))
                 .ToListAsync();
 
@@ -226,7 +225,7 @@ public class ClientManager(
     /// <returns>True if successful</returns>
     public async Task<bool> AssignScopesAsync(Guid id, List<Guid> scopeIds)
     {
-        var entity = await _context.Set<Client>()
+        var entity = await _dbContext.Set<Client>()
             .Include(c => c.ClientScopes)
             .FirstOrDefaultAsync(c => c.Id == id);
 
@@ -240,7 +239,7 @@ public class ClientManager(
         entity.ClientScopes.Clear();
 
         // Add new scopes
-        var scopes = await _context.Set<ApiScope>()
+        var scopes = await _dbContext.Set<ApiScope>()
             .Where(s => scopeIds.Contains(s.Id))
             .ToListAsync();
 
@@ -253,7 +252,7 @@ public class ClientManager(
             });
         }
 
-        return await SaveAsync() > 0;
+        return await SaveChangesAsync() > 0;
     }
 
     /// <summary>
@@ -263,7 +262,7 @@ public class ClientManager(
     /// <returns>List of authorizations</returns>
     public async Task<List<AuthorizationItemDto>> GetAuthorizationsAsync(Guid id)
     {
-        var authorizations = await _context.Set<Authorization>()
+        var authorizations = await _dbContext.Set<Authorization>()
             .Where(a => a.ClientId == id)
             .OrderByDescending(a => a.CreationDate)
             .Select(a => new AuthorizationItemDto

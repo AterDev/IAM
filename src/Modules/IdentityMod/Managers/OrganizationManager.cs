@@ -1,4 +1,4 @@
-using Entity.Identity;
+using Entity.IdentityMod;
 using EntityFramework.DBProvider;
 using IdentityMod.Models.OrganizationDtos;
 

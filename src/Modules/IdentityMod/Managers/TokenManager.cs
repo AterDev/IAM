@@ -1,8 +1,6 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
-using EntityFramework.DBProvider;
 using IdentityMod.Models.OAuthDtos;
-using Share.Services;
 
 namespace IdentityMod.Managers;
 

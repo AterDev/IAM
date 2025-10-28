@@ -1,21 +1,25 @@
-namespace Entity.Access;
+namespace Entity.AccessMod;
 
 /// <summary>
-/// Scope claim entity
+/// Client scope relationship entity
 /// </summary>
 [Module(Modules.Access)]
-public class ScopeClaim : EntityBase
+public class ClientScope : EntityBase
 {
+    /// <summary>
+    /// Client ID
+    /// </summary>
+    public Guid ClientId { get; set; }
+
     /// <summary>
     /// Scope ID
     /// </summary>
     public Guid ScopeId { get; set; }
 
     /// <summary>
-    /// Claim type
+    /// Client navigation
     /// </summary>
-    [MaxLength(256)]
-    public required string Type { get; set; }
+    public Client Client { get; set; } = null!;
 
     /// <summary>
     /// Scope navigation
