@@ -1,0 +1,20 @@
+<nav class="breadcrumb-container" aria-label="breadcrumb">
+  @if (breadcrumbs.length > 0) {
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a routerLink="/">
+        <mat-icon>home</mat-icon>
+      </a>
+    </li>
+    @for (breadcrumb of breadcrumbs; track breadcrumb.url; let isLast = $last) {
+    <li class="breadcrumb-item" [class.active]="isLast">
+      @if (!isLast) {
+      <a [routerLink]="breadcrumb.url">{{ breadcrumb.label | translate }}</a>
+      } @else {
+      <span>{{ breadcrumb.label | translate }}</span>
+      }
+    </li>
+    }
+  </ol>
+  }
+</nav>

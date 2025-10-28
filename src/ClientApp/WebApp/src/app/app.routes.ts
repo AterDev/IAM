@@ -14,32 +14,40 @@ export const routes: Routes = [
     children: [
       {
         path: 'system-role',
+        data: { breadcrumb: 'systemRole.title' },
         children: [
           { path: '', redirectTo: '/system-role/index', pathMatch: 'full' },
-          { path: 'index', loadComponent: () => import('./pages/system-role/index/index').then(m => m.Index) },
+          { 
+            path: 'index', 
+            loadComponent: () => import('./pages/system-role/index/index').then(m => m.Index),
+            data: { breadcrumb: 'systemRole.list' }
+          },
         ]
       },
       {
         path: 'system-user',
+        data: { breadcrumb: 'systemUser.title' },
         children: [
           { path: '', redirectTo: '/system-user/index', pathMatch: 'full' },
-          { path: 'index', loadComponent: () => import('./pages/system-user/index/index').then(m => m.Index) },
+          { 
+            path: 'index', 
+            loadComponent: () => import('./pages/system-user/index/index').then(m => m.Index),
+            data: { breadcrumb: 'systemUser.list' }
+          },
         ]
       },
       {
         path: 'system-logs',
+        data: { breadcrumb: 'systemLogs.title' },
         children: [
           { path: '', redirectTo: '/system-logs/index', pathMatch: 'full' },
-          { path: 'index', loadComponent: () => import('./pages/system-logs/index/index').then(m => m.Index) },
+          { 
+            path: 'index', 
+            loadComponent: () => import('./pages/system-logs/index/index').then(m => m.Index),
+            data: { breadcrumb: 'systemLogs.list' }
+          },
         ]
       },
-      // {
-      //   path: 'system-config',
-      //   children: [
-      //     { path: '', redirectTo: '/system-config/index', pathMatch: 'full' },
-      //     { path: 'index', loadComponent: () => import('./pages/system-config/index/index').then(m => m.Index) },
-      //   ]
-      // },
     ],
   },
   
