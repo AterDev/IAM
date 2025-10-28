@@ -10,7 +10,7 @@
       <mat-label>{{ 'scope.displayName' | translate }}</mat-label>
       <input matInput formControlName="displayName" required>
       <mat-error *ngIf="scopeForm.get('displayName')?.invalid && scopeForm.get('displayName')?.touched">
-        {{ getErrorMessage(scopeForm.get('displayName') as FormControl) }}
+        {{ getErrorMessage(displayNameControl) }}
       </mat-error>
     </mat-form-field>
 

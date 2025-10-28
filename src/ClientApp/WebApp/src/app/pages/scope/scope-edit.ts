@@ -148,4 +148,8 @@ export class ScopeEditComponent implements OnInit {
     }
     return '';
   }
+
+  get displayNameControl() {
+    return this.scopeForm.get('displayName') as FormControl;
+  }
 }
