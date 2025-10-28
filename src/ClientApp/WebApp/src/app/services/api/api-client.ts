@@ -10,6 +10,7 @@ import { ResourcesService } from './services/resources.service';
 import { RolesService } from './services/roles.service';
 import { ScopesService } from './services/scopes.service';
 import { UsersService } from './services/users.service';
+import { SecurityService } from './services/security.service';
 @Injectable({
   providedIn: 'root'
 })
@@ -25,4 +26,5 @@ export class ApiClient {
   public roles = inject(RolesService);
   public scopes = inject(ScopesService);
   public users = inject(UsersService);
+  public security = inject(SecurityService);
 }
