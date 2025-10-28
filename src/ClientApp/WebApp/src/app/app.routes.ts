@@ -60,6 +60,10 @@ export const routes: Routes = [
         path: 'scope',
         loadComponent: () => import('./pages/scope/scope-list').then(m => m.ScopeListComponent)
       },
+      {
+        path: 'scope/:id',
+        loadComponent: () => import('./pages/scope/scope-detail').then(m => m.ScopeDetailComponent)
+      },
       // TODO: Implement system-logs pages
     ],
   },

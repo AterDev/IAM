@@ -1,0 +1,82 @@
+<div class="scope-detail-container">
+  <div class="header">
+    <button mat-icon-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h2>{{ 'scope.scopeDetail' | translate }}</h2>
+    <div class="actions">
+      <button mat-raised-button color="primary" (click)="openEditDialog()">
+        <mat-icon>edit</mat-icon>
+        {{ 'common.edit' | translate }}
+      </button>
+      <button mat-button color="warn" (click)="deleteScope()">
+        <mat-icon>delete</mat-icon>
+        {{ 'common.delete' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <mat-card *ngIf="!isLoading && scope()">
+    <mat-card-header>
+      <mat-card-title>{{ 'scope.basicInfo' | translate }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>{{ 'scope.name' | translate }}:</label>
+          <span><strong>{{ scope()!.name }}</strong></span>
+        </div>
+        <div class="info-item">
+          <label>{{ 'scope.displayName' | translate }}:</label>
+          <span>{{ scope()!.displayName }}</span>
+        </div>
+        <div class="info-item full-width" *ngIf="scope()!.description">
+          <label>{{ 'scope.description' | translate }}:</label>
+          <span>{{ scope()!.description }}</span>
+        </div>
+        <div class="info-item">
+          <label>{{ 'scope.required' | translate }}:</label>
+          <span>
+            <mat-icon [class.confirmed]="scope()!.required" [class.not-confirmed]="!scope()!.required">
+              {{ scope()!.required ? 'check_circle' : 'cancel' }}
+            </mat-icon>
+          </span>
+        </div>
+        <div class="info-item">
+          <label>{{ 'scope.emphasize' | translate }}:</label>
+          <span>
+            <mat-icon [class.confirmed]="scope()!.emphasize" [class.not-confirmed]="!scope()!.emphasize">
+              {{ scope()!.emphasize ? 'star' : 'star_border' }}
+            </mat-icon>
+          </span>
+        </div>
+        <div class="info-item">
+          <label>{{ 'common.createdTime' | translate }}:</label>
+          <span>{{ scope()!.createdTime | date:'yyyy-MM-dd HH:mm:ss' }}</span>
+        </div>
+        <div class="info-item">
+          <label>{{ 'common.updatedTime' | translate }}:</label>
+          <span>{{ scope()!.updatedTime | date:'yyyy-MM-dd HH:mm:ss' }}</span>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card *ngIf="!isLoading && scope()">
+    <mat-card-header>
+      <mat-card-title>{{ 'scope.claims' | translate }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-chip-set>
+        <mat-chip *ngFor="let claim of scope()!.claims">{{ claim }}</mat-chip>
+      </mat-chip-set>
+      <p *ngIf="scope()!.claims.length === 0" class="no-data">
+        {{ 'scope.noClaims' | translate }}
+      </p>
+    </mat-card-content>
+  </mat-card>
+</div>
