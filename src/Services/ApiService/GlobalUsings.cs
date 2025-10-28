@@ -1,4 +1,4 @@
-global using ApiService.Extension;
+global using Ater.Common.Models;
 global using Ater.Common.Utils;
 global using Ater.Web.Convention.Abstraction;
 global using Microsoft.AspNetCore.Mvc;
