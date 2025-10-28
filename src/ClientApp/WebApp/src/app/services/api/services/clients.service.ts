@@ -24,7 +24,7 @@ export class ClientsService extends BaseService {
    * @param pageSize number
    * @param orderBy Record<string, boolean>
    */
-  getClients(clientId: string | null, displayName: string | null, type: string | null, applicationClientItemDtoype: string | null, pageIndex: number | null, pageSize: number | null, orderBy: Record<string, boolean> | null): Observable<PageList<ClientItemDto>> {
+  getClients(clientId: string | null, displayName: string | null, type: string | null, applicationType: string | null, pageIndex: number | null, pageSize: number | null, orderBy: Record<string, boolean> | null): Observable<PageList<ClientItemDto>> {
     const _url = `/api/Clients?clientId=${clientId ?? ''}&displayName=${displayName ?? ''}&type=${type ?? ''}&applicationType=${applicationType ?? ''}&pageIndex=${pageIndex ?? ''}&pageSize=${pageSize ?? ''}&orderBy=${orderBy ?? ''}`;
     return this.request<PageList<ClientItemDto>>('get', _url);
   }

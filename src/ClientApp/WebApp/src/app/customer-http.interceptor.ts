@@ -1,21 +1,17 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor, HttpErrorResponse } from '@angular/common/http';
 
 import { catchError } from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Observable, throwError } from 'rxjs';
 import { Router } from '@angular/router';
-import { AuthService } from './services/auth.service';
+import { OidcAuthService } from './services/oidc-auth.service';
 
 @Injectable()
 export class CustomerHttpInterceptor implements HttpInterceptor {
-  constructor(
-    private snb: MatSnackBar,
-    private router: Router,
-    private auth: AuthService
-  ) {
-
-  }
+  private snb = inject(MatSnackBar);
+  private router = inject(Router);
+  private auth = inject(OidcAuthService);
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     return next.handle(request)
       .pipe(

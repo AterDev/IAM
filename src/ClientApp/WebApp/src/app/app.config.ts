@@ -28,6 +28,7 @@ export const appConfig: ApplicationConfig = {
     }),
     { provide: HTTP_INTERCEPTORS, useClass: CustomerHttpInterceptor, multi: true },
     { provide: 'BASE_URL', useFactory: getBaseUrl, deps: [] },
+    { provide: 'API_BASE_URL', useValue: '' },
   ],
 };
 

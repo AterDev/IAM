@@ -8,13 +8,78 @@ export const I18N_KEYS = {
     "username": "login.username",
     "password": "login.password",
     "login": "login.login",
-    "logout": "login.logout"
+    "logout": "login.logout",
+    "failed": "login.failed",
+    "error": "login.error"
+  },
+  "register": {
+    "title": "register.title",
+    "username": "register.username",
+    "email": "register.email",
+    "phoneNumber": "register.phoneNumber",
+    "password": "register.password",
+    "confirmPassword": "register.confirmPassword",
+    "submit": "register.submit",
+    "backToLogin": "register.backToLogin",
+    "success": "register.success",
+    "failed": "register.failed"
+  },
+  "forgotPassword": {
+    "title": "forgotPassword.title",
+    "enterEmail": "forgotPassword.enterEmail",
+    "resetPassword": "forgotPassword.resetPassword",
+    "email": "forgotPassword.email",
+    "emailDescription": "forgotPassword.emailDescription",
+    "code": "forgotPassword.code",
+    "codeDescription": "forgotPassword.codeDescription",
+    "newPassword": "forgotPassword.newPassword",
+    "confirmPassword": "forgotPassword.confirmPassword",
+    "sendCode": "forgotPassword.sendCode",
+    "submit": "forgotPassword.submit",
+    "cancel": "forgotPassword.cancel",
+    "codeSent": "forgotPassword.codeSent",
+    "resetSuccess": "forgotPassword.resetSuccess"
+  },
+  "deviceCode": {
+    "title": "deviceCode.title",
+    "description": "deviceCode.description",
+    "userCode": "deviceCode.userCode",
+    "invalidFormat": "deviceCode.invalidFormat",
+    "submit": "deviceCode.submit",
+    "cancel": "deviceCode.cancel",
+    "success": "deviceCode.success",
+    "invalidCode": "deviceCode.invalidCode",
+    "helpText": "deviceCode.helpText"
+  },
+  "authorize": {
+    "title": "authorize.title",
+    "consentMessage": "authorize.consentMessage",
+    "requestedPermissions": "authorize.requestedPermissions",
+    "required": "authorize.required",
+    "allow": "authorize.allow",
+    "deny": "authorize.deny",
+    "accountInfo": "authorize.accountInfo",
+    "privacyNotice": "authorize.privacyNotice",
+    "clientDescription": "authorize.clientDescription",
+    "error": "authorize.error"
+  },
+  "scopes": {
+    "openid": "scopes.openid",
+    "profile": "scopes.profile",
+    "email": "scopes.email",
+    "phone": "scopes.phone",
+    "address": "scopes.address",
+    "offline_access": "scopes.offline_access"
   },
   "language": "language",
   "validation": {
     "required": "validation.required",
     "minlength": "validation.minlength",
-    "maxlength": "validation.maxlength"
+    "maxlength": "validation.maxlength",
+    "email": "validation.email",
+    "pattern": "validation.pattern",
+    "passwordstrength": "validation.passwordstrength",
+    "passwordmismatch": "validation.passwordmismatch"
   },
   "menu": {
     "business": "menu.business",
