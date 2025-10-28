@@ -168,10 +168,61 @@ public class OAuthController : ControllerBase
     /// <summary>
     /// Token endpoint (OAuth 2.0 / OIDC)
     /// </summary>
-    /// <param name="request">Token request parameters</param>
-    /// <returns>Token response</returns>
+    /// <param name="request">Token request parameters (form-encoded)</param>
+    /// <returns>Token response with access_token, refresh_token, and token metadata</returns>
+    /// <response code="200">Returns the token response with access and refresh tokens</response>
+    /// <response code="400">If the token request is invalid or authentication fails</response>
+    /// <remarks>
+    /// Standard OAuth 2.0 token endpoint supporting multiple grant types.
+    /// 
+    /// **Authorization Code Grant** (with PKCE):
+    /// 
+    ///     POST /connect/token
+    ///     Content-Type: application/x-www-form-urlencoded
+    ///     
+    ///     grant_type=authorization_code
+    ///     &amp;code=AUTHORIZATION_CODE
+    ///     &amp;redirect_uri=https://example.com/callback
+    ///     &amp;client_id=my_client
+    ///     &amp;client_secret=my_secret (confidential clients only)
+    ///     &amp;code_verifier=CODE_VERIFIER (PKCE)
+    /// 
+    /// **Refresh Token Grant**:
+    /// 
+    ///     POST /connect/token
+    ///     Content-Type: application/x-www-form-urlencoded
+    ///     
+    ///     grant_type=refresh_token
+    ///     &amp;refresh_token=REFRESH_TOKEN
+    ///     &amp;client_id=my_client
+    ///     &amp;client_secret=my_secret (confidential clients only)
+    ///     &amp;scope=openid profile (optional, to request reduced scope)
+    /// 
+    /// **Client Credentials Grant**:
+    /// 
+    ///     POST /connect/token
+    ///     Content-Type: application/x-www-form-urlencoded
+    ///     
+    ///     grant_type=client_credentials
+    ///     &amp;client_id=my_client
+    ///     &amp;client_secret=my_secret
+    ///     &amp;scope=api.read api.write
+    /// 
+    /// **Response**:
+    /// 
+    ///     {
+    ///       "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    ///       "token_type": "Bearer",
+    ///       "expires_in": 3600,
+    ///       "refresh_token": "REFRESH_TOKEN",
+    ///       "scope": "openid profile email"
+    ///     }
+    /// 
+    /// </remarks>
     [HttpPost("token")]
     [Consumes("application/x-www-form-urlencoded")]
+    [ProducesResponseType(typeof(TokenResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(TokenResponseDto), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Token([FromForm] TokenRequestDto request)
     {
         try
