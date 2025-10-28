@@ -3,4 +3,7 @@ global using Ater.Web.Convention.Abstraction;
 global using Ater.Common.Models;
 global using Ater.Common.Options;
 global using Entity;
+global using Entity.Identity;
+global using Entity.Access;
+global using Entity.Common;
 global using Microsoft.EntityFrameworkCore;
