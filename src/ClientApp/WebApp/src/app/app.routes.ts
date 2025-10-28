@@ -64,6 +64,14 @@ export const routes: Routes = [
         path: 'scope/:id',
         loadComponent: () => import('./pages/scope/scope-detail').then(m => m.ScopeDetailComponent)
       },
+      {
+        path: 'resource',
+        loadComponent: () => import('./pages/resource/resource-list').then(m => m.ResourceListComponent)
+      },
+      {
+        path: 'resource/:id',
+        loadComponent: () => import('./pages/resource/resource-detail').then(m => m.ResourceDetailComponent)
+      },
       // TODO: Implement system-logs pages
     ],
   },

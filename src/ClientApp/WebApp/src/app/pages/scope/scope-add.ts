@@ -117,4 +117,12 @@ export class ScopeAddComponent implements OnInit {
     }
     return '';
   }
+
+  get nameControl() {
+    return this.scopeForm.get('name') as FormControl;
+  }
+
+  get displayNameControl() {
+    return this.scopeForm.get('displayName') as FormControl;
+  }
 }

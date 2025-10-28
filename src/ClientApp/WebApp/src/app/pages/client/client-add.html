@@ -7,7 +7,7 @@
         <mat-label>{{ 'client.clientId' | translate }}</mat-label>
         <input matInput formControlName="clientId" required>
         <mat-error *ngIf="clientForm.get('clientId')?.invalid && clientForm.get('clientId')?.touched">
-          {{ getErrorMessage(clientForm.get('clientId') as FormControl, 'clientId') }}
+          {{ getErrorMessage(clientIdControl, 'clientId') }}
         </mat-error>
       </mat-form-field>
 
@@ -15,7 +15,7 @@
         <mat-label>{{ 'client.displayName' | translate }}</mat-label>
         <input matInput formControlName="displayName" required>
         <mat-error *ngIf="clientForm.get('displayName')?.invalid && clientForm.get('displayName')?.touched">
-          {{ getErrorMessage(clientForm.get('displayName') as FormControl, 'displayName') }}
+          {{ getErrorMessage(displayNameControl, 'displayName') }}
         </mat-error>
       </mat-form-field>
 

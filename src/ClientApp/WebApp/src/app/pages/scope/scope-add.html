@@ -6,7 +6,7 @@
       <mat-label>{{ 'scope.name' | translate }}</mat-label>
       <input matInput formControlName="name" required>
       <mat-error *ngIf="scopeForm.get('name')?.invalid && scopeForm.get('name')?.touched">
-        {{ getErrorMessage(scopeForm.get('name') as FormControl, 'name') }}
+        {{ getErrorMessage(nameControl, 'name') }}
       </mat-error>
     </mat-form-field>
 
@@ -14,7 +14,7 @@
       <mat-label>{{ 'scope.displayName' | translate }}</mat-label>
       <input matInput formControlName="displayName" required>
       <mat-error *ngIf="scopeForm.get('displayName')?.invalid && scopeForm.get('displayName')?.touched">
-        {{ getErrorMessage(scopeForm.get('displayName') as FormControl, 'displayName') }}
+        {{ getErrorMessage(displayNameControl, 'displayName') }}
       </mat-error>
     </mat-form-field>
 

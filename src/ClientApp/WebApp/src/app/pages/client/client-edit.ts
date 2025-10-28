@@ -170,4 +170,8 @@ export class ClientEditComponent implements OnInit {
     }
     return '';
   }
+
+  get displayNameControl() {
+    return this.clientForm.get('displayName') as FormControl;
+  }
 }

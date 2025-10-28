@@ -168,4 +168,12 @@ export class ClientAddComponent implements OnInit {
     }
     return '';
   }
+
+  get clientIdControl() {
+    return this.clientForm.get('clientId') as FormControl;
+  }
+
+  get displayNameControl() {
+    return this.clientForm.get('displayName') as FormControl;
+  }
 }
