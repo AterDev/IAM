@@ -23,12 +23,11 @@ describe('ClientsService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should get clients with pagination', (done) => {
+  it('should get clients with pagination', () => {
     const mockResponse = { data: [], total: 0 };
 
     service.getClients('test-client', null, 1, 10, null).subscribe(response => {
       expect(response).toEqual(mockResponse);
-      done();
     });
 
     const expectedUrl = `/api/Clients?clientId=test-client&displayName=&pageIndex=1&pageSize=10&orderBy=`;
@@ -37,7 +36,7 @@ describe('ClientsService', () => {
     req.flush(mockResponse);
   });
 
-  it('should create a new client', (done) => {
+  it('should create a new client', () => {
     const newClient = {
       clientId: 'new-client',
       displayName: 'New Client',
@@ -47,7 +46,6 @@ describe('ClientsService', () => {
 
     service.createClient(newClient).subscribe(response => {
       expect(response).toEqual(mockResponse);
-      done();
     });
 
     const req = httpMock.expectOne('/api/Clients');
@@ -56,7 +54,7 @@ describe('ClientsService', () => {
     req.flush(mockResponse);
   });
 
-  it('should get client detail by id', (done) => {
+  it('should get client detail by id', () => {
     const clientId = '789';
     const mockClient = {
       id: clientId,
@@ -67,7 +65,6 @@ describe('ClientsService', () => {
 
     service.getDetail(clientId).subscribe(response => {
       expect(response).toEqual(mockClient);
-      done();
     });
 
     const req = httpMock.expectOne(`/api/Clients/${clientId}`);
@@ -75,7 +72,7 @@ describe('ClientsService', () => {
     req.flush(mockClient);
   });
 
-  it('should update client', (done) => {
+  it('should update client', () => {
     const clientId = '789';
     const updateData = {
       displayName: 'Updated Client',
@@ -85,7 +82,6 @@ describe('ClientsService', () => {
 
     service.updateClient(clientId, updateData).subscribe(response => {
       expect(response).toEqual(mockResponse);
-      done();
     });
 
     const req = httpMock.expectOne(`/api/Clients/${clientId}`);
@@ -94,12 +90,11 @@ describe('ClientsService', () => {
     req.flush(mockResponse);
   });
 
-  it('should delete client', (done) => {
+  it('should delete client', () => {
     const clientId = '789';
 
     service.deleteClient(clientId, false).subscribe(response => {
       expect(response).toBeTruthy();
-      done();
     });
 
     const req = httpMock.expectOne(`/api/Clients/${clientId}?hardDelete=false`);
@@ -107,3 +102,4 @@ describe('ClientsService', () => {
     req.flush({ success: true });
   });
 });
+

@@ -25,14 +25,13 @@ describe('UsersService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should get users with filters', (done) => {
+  it('should get users with filters', () => {
     const mockResponse = { data: [], total: 0 };
     const userName = 'testuser';
     const email = 'test@example.com';
 
     service.getUsers(userName, email, null, null, null, null, 1, 10, null).subscribe(response => {
       expect(response).toEqual(mockResponse);
-      done();
     });
 
     const expectedUrl = `/api/Users?userName=${userName}&email=${email}&phoneNumber=&lockoutEnabled=&startDate=&endDate=&pageIndex=1&pageSize=10&orderBy=`;
@@ -41,7 +40,7 @@ describe('UsersService', () => {
     req.flush(mockResponse);
   });
 
-  it('should create a new user', (done) => {
+  it('should create a new user', () => {
     const newUser: UserAddDto = {
       userName: 'newuser',
       email: 'newuser@example.com',
@@ -51,7 +50,6 @@ describe('UsersService', () => {
 
     service.createUser(newUser).subscribe(response => {
       expect(response).toEqual(mockResponse);
-      done();
     });
 
     const req = httpMock.expectOne('/api/Users');
@@ -60,13 +58,12 @@ describe('UsersService', () => {
     req.flush(mockResponse);
   });
 
-  it('should get user detail by id', (done) => {
+  it('should get user detail by id', () => {
     const userId = '123';
     const mockUser = { id: userId, userName: 'testuser', email: 'test@example.com' };
 
     service.getDetail(userId).subscribe(response => {
       expect(response).toEqual(mockUser);
-      done();
     });
 
     const req = httpMock.expectOne(`/api/Users/${userId}`);
@@ -74,7 +71,7 @@ describe('UsersService', () => {
     req.flush(mockUser);
   });
 
-  it('should update user', (done) => {
+  it('should update user', () => {
     const userId = '123';
     const updateData: UserUpdateDto = {
       userName: 'updateduser',
@@ -84,7 +81,6 @@ describe('UsersService', () => {
 
     service.updateUser(userId, updateData).subscribe(response => {
       expect(response).toEqual(mockResponse);
-      done();
     });
 
     const req = httpMock.expectOne(`/api/Users/${userId}`);
@@ -93,3 +89,4 @@ describe('UsersService', () => {
     req.flush(mockResponse);
   });
 });
+

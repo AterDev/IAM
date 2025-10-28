@@ -24,7 +24,7 @@ describe('OAuthService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should call token endpoint with credentials', (done) => {
+  it('should call token endpoint with credentials', () => {
     const tokenRequest = {
       grant_type: 'password',
       username: 'testuser',
@@ -45,7 +45,6 @@ describe('OAuthService', () => {
       expect(response).toEqual(mockTokenResponse);
       expect(response.accessToken).toBe('mock-access-token');
       expect(response.tokenType).toBe('Bearer');
-      done();
     });
 
     const req = httpMock.expectOne('/connect/token');
@@ -54,7 +53,7 @@ describe('OAuthService', () => {
     req.flush(mockTokenResponse);
   });
 
-  it('should call token endpoint with authorization code', (done) => {
+  it('should call token endpoint with authorization code', () => {
     const tokenRequest = {
       grant_type: 'authorization_code',
       code: 'auth-code-123',
@@ -71,7 +70,6 @@ describe('OAuthService', () => {
 
     service.token(tokenRequest).subscribe(response => {
       expect(response).toEqual(mockTokenResponse);
-      done();
     });
 
     const req = httpMock.expectOne('/connect/token');
@@ -79,7 +77,7 @@ describe('OAuthService', () => {
     req.flush(mockTokenResponse);
   });
 
-  it('should call device authorization endpoint', (done) => {
+  it('should call device authorization endpoint', () => {
     const deviceRequest = {
       client_id: 'device-client'
     };
@@ -94,7 +92,6 @@ describe('OAuthService', () => {
     service.deviceAuthorization(deviceRequest).subscribe(response => {
       expect(response).toEqual(mockDeviceResponse);
       expect(response.user_code).toBe('USER-CODE');
-      done();
     });
 
     const req = httpMock.expectOne('/connect/device');
@@ -103,3 +100,4 @@ describe('OAuthService', () => {
     req.flush(mockDeviceResponse);
   });
 });
+
