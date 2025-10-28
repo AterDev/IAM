@@ -1,0 +1,144 @@
+<div class="user-list-container">
+  <div class="header">
+    <h2>{{ 'menu.systemUser' | translate }}</h2>
+    <button mat-raised-button color="primary" (click)="openAddDialog()">
+      <mat-icon>add</mat-icon>
+      {{ 'common.add' | translate }}
+    </button>
+  </div>
+
+  <div class="filter-section">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>{{ 'common.search' | translate }}</mat-label>
+      <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()" 
+             placeholder="Username, Email or Phone">
+      <button mat-icon-button matSuffix (click)="onSearch()">
+        <mat-icon>search</mat-icon>
+      </button>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'user.status' | translate }}</mat-label>
+      <mat-select [(ngModel)]="lockoutEnabled" (selectionChange)="onSearch()">
+        <mat-option [value]="null">{{ 'common.all' | translate }}</mat-option>
+        <mat-option [value]="true">{{ 'user.locked' | translate }}</mat-option>
+        <mat-option [value]="false">{{ 'user.active' | translate }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <div class="batch-actions" *ngIf="selectedIds().size > 0">
+    <span class="selection-info">{{ selectedIds().size }} {{ 'common.selected' | translate }}</span>
+    <button mat-button (click)="batchLock()">
+      <mat-icon>lock</mat-icon>
+      {{ 'user.lock' | translate }}
+    </button>
+    <button mat-button (click)="batchUnlock()">
+      <mat-icon>lock_open</mat-icon>
+      {{ 'user.unlock' | translate }}
+    </button>
+  </div>
+
+  <div class="table-container">
+    <table mat-table [dataSource]="dataSource()" class="user-table">
+      <!-- Checkbox Column -->
+      <ng-container matColumnDef="select">
+        <th mat-header-cell *matHeaderCellDef>
+          <mat-checkbox
+            [checked]="allSelected()"
+            [indeterminate]="someSelected()"
+            (change)="toggleSelectAll()">
+          </mat-checkbox>
+        </th>
+        <td mat-cell *matCellDef="let user">
+          <mat-checkbox
+            [checked]="selectedIds().has(user.id)"
+            (change)="toggleSelect(user.id)">
+          </mat-checkbox>
+        </td>
+      </ng-container>
+
+      <!-- Username Column -->
+      <ng-container matColumnDef="userName">
+        <th mat-header-cell *matHeaderCellDef>{{ 'user.userName' | translate }}</th>
+        <td mat-cell *matCellDef="let user">{{ user.userName }}</td>
+      </ng-container>
+
+      <!-- Email Column -->
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef>{{ 'user.email' | translate }}</th>
+        <td mat-cell *matCellDef="let user">{{ user.email || '-' }}</td>
+      </ng-container>
+
+      <!-- Phone Column -->
+      <ng-container matColumnDef="phoneNumber">
+        <th mat-header-cell *matHeaderCellDef>{{ 'user.phoneNumber' | translate }}</th>
+        <td mat-cell *matCellDef="let user">{{ user.phoneNumber || '-' }}</td>
+      </ng-container>
+
+      <!-- Status Column -->
+      <ng-container matColumnDef="lockoutEnabled">
+        <th mat-header-cell *matHeaderCellDef>{{ 'user.status' | translate }}</th>
+        <td mat-cell *matCellDef="let user">
+          <mat-chip [class.locked]="user.lockoutEnabled" [class.active]="!user.lockoutEnabled">
+            {{ user.lockoutEnabled ? ('user.locked' | translate) : ('user.active' | translate) }}
+          </mat-chip>
+        </td>
+      </ng-container>
+
+      <!-- Created Time Column -->
+      <ng-container matColumnDef="createdTime">
+        <th mat-header-cell *matHeaderCellDef>{{ 'common.createdTime' | translate }}</th>
+        <td mat-cell *matCellDef="let user">{{ user.createdTime | date:'yyyy-MM-dd HH:mm' }}</td>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
+        <td mat-cell *matCellDef="let user">
+          <button mat-icon-button [matMenuTriggerFor]="menu">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #menu="matMenu">
+            <button mat-menu-item (click)="viewDetail(user)">
+              <mat-icon>visibility</mat-icon>
+              <span>{{ 'common.view' | translate }}</span>
+            </button>
+            <button mat-menu-item (click)="openEditDialog(user)">
+              <mat-icon>edit</mat-icon>
+              <span>{{ 'common.edit' | translate }}</span>
+            </button>
+            <button mat-menu-item (click)="toggleUserStatus(user)">
+              <mat-icon>{{ user.lockoutEnabled ? 'lock_open' : 'lock' }}</mat-icon>
+              <span>{{ user.lockoutEnabled ? ('user.unlock' | translate) : ('user.lock' | translate) }}</span>
+            </button>
+            <button mat-menu-item (click)="deleteUser(user)" class="danger">
+              <mat-icon>delete</mat-icon>
+              <span>{{ 'common.delete' | translate }}</span>
+            </button>
+          </mat-menu>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+          <div class="no-data">
+            {{ isLoading() ? ('common.loading' | translate) : ('common.noData' | translate) }}
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <mat-paginator
+      [length]="total()"
+      [pageSize]="pageSize()"
+      [pageIndex]="pageIndex()"
+      [pageSizeOptions]="[5, 10, 20, 50]"
+      (page)="onPageChange($event)"
+      showFirstLastButtons>
+    </mat-paginator>
+  </div>
+</div>

@@ -1,0 +1,57 @@
+<h2 mat-dialog-title>{{ 'user.addUser' | translate }}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="userForm" class="user-form">
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'user.userName' | translate }}</mat-label>
+      <input matInput formControlName="userName" required>
+      <mat-error *ngIf="userForm.get('userName')?.invalid && userForm.get('userName')?.touched">
+        {{ getErrorMessage('userName') }}
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'user.email' | translate }}</mat-label>
+      <input matInput type="email" formControlName="email">
+      <mat-error *ngIf="userForm.get('email')?.invalid && userForm.get('email')?.touched">
+        {{ getErrorMessage('email') }}
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'user.phoneNumber' | translate }}</mat-label>
+      <input matInput formControlName="phoneNumber">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'user.password' | translate }}</mat-label>
+      <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" required>
+      <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" type="button">
+        <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+      </button>
+      <mat-error *ngIf="userForm.get('password')?.invalid && userForm.get('password')?.touched">
+        {{ getErrorMessage('password') }}
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'user.confirmPassword' | translate }}</mat-label>
+      <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" formControlName="confirmPassword" required>
+      <button mat-icon-button matSuffix (click)="hideConfirmPassword = !hideConfirmPassword" type="button">
+        <mat-icon>{{ hideConfirmPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+      </button>
+      <mat-error *ngIf="userForm.get('confirmPassword')?.invalid && userForm.get('confirmPassword')?.touched">
+        {{ getErrorMessage('confirmPassword') }}
+      </mat-error>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()" [disabled]="isSubmitting">
+    {{ 'common.cancel' | translate }}
+  </button>
+  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="isSubmitting">
+    {{ isSubmitting ? ('common.saving' | translate) : ('common.save' | translate) }}
+  </button>
+</mat-dialog-actions>
