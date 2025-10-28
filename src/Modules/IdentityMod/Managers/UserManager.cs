@@ -1,5 +1,6 @@
 using CommonMod.Managers;
 using IdentityMod.Models.UserDtos;
+using System.Text.Json;
 
 namespace IdentityMod.Managers;
 
@@ -284,7 +285,7 @@ public class UserManager(
                     category: "Authorization",
                     eventName: "UserRolesChanged",
                     subjectId: userId.ToString(),
-                    payload: $"{{\"added\":[{string.Join(",", added.Select(r => $"\"{r}\""))}],\"removed\":[{string.Join(",", removed.Select(r => $"\"{r}\""))}]}}",
+                    payload: JsonSerializer.Serialize(new { added, removed }),
                     ipAddress: ipAddress,
                     userAgent: userAgent
                 );
@@ -318,7 +319,7 @@ public class UserManager(
                 category: "Authentication",
                 eventName: "LoginFailed",
                 subjectId: userName,
-                payload: $"{{\"reason\":\"UserNotFound\"}}",
+                payload: JsonSerializer.Serialize(new { reason = "UserNotFound" }),
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );
@@ -333,7 +334,7 @@ public class UserManager(
                 category: "Authentication",
                 eventName: "LoginFailed",
                 subjectId: user.Id.ToString(),
-                payload: $"{{\"reason\":\"AccountLocked\",\"lockoutEnd\":\"{user.LockoutEnd:O}\"}}",
+                payload: JsonSerializer.Serialize(new { reason = "AccountLocked", lockoutEnd = user.LockoutEnd.Value.ToString("O") }),
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );
@@ -359,7 +360,7 @@ public class UserManager(
                 category: "Authentication",
                 eventName: "LoginFailed",
                 subjectId: user.Id.ToString(),
-                payload: $"{{\"reason\":\"InvalidPassword\",\"failedCount\":{user.AccessFailedCount}}}",
+                payload: JsonSerializer.Serialize(new { reason = "InvalidPassword", failedCount = user.AccessFailedCount }),
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );
@@ -376,7 +377,7 @@ public class UserManager(
             category: "Authentication",
             eventName: "LoginSuccess",
             subjectId: user.Id.ToString(),
-            payload: $"{{\"userName\":\"{user.UserName}\"}}",
+            payload: JsonSerializer.Serialize(new { userName = user.UserName }),
             ipAddress: ipAddress,
             userAgent: userAgent
         );

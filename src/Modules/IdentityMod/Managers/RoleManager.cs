@@ -2,6 +2,7 @@ using CommonMod.Managers;
 using Entity.IdentityMod;
 using EntityFramework.DBProvider;
 using IdentityMod.Models.RoleDtos;
+using System.Text.Json;
 
 namespace IdentityMod.Managers;
 
@@ -204,7 +205,12 @@ public class RoleManager(
                 category: "Authorization",
                 eventName: "RolePermissionsChanged",
                 subjectId: roleId.ToString(),
-                payload: $"{{\"roleName\":\"{role.Name}\",\"oldCount\":{oldPermissions.Count},\"newCount\":{newPermissions.Count}}}",
+                payload: JsonSerializer.Serialize(new 
+                { 
+                    roleName = role.Name, 
+                    oldCount = oldPermissions.Count, 
+                    newCount = newPermissions.Count 
+                }),
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );

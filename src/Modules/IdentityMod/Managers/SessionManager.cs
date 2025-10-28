@@ -2,6 +2,7 @@ using CommonMod.Managers;
 using Entity.IdentityMod;
 using EntityFramework.DBProvider;
 using IdentityMod.Models.LoginSessionDtos;
+using System.Text.Json;
 
 namespace IdentityMod.Managers;
 
@@ -91,7 +92,7 @@ public class SessionManager(
             category: "Authentication",
             eventName: "SessionCreated",
             subjectId: dto.UserId.ToString(),
-            payload: $"{{\"sessionId\":\"{dto.SessionId}\",\"ipAddress\":\"{dto.IpAddress}\"}}",
+            payload: JsonSerializer.Serialize(new { sessionId = dto.SessionId, ipAddress = dto.IpAddress }),
             ipAddress: ipAddress ?? dto.IpAddress,
             userAgent: userAgent ?? dto.UserAgent
         );
@@ -146,7 +147,7 @@ public class SessionManager(
                 category: "Authentication",
                 eventName: "SessionRevoked",
                 subjectId: session.UserId.ToString(),
-                payload: $"{{\"sessionId\":\"{session.SessionId}\",\"revokedBy\":\"{revokedBy ?? "system"}\"}}",
+                payload: JsonSerializer.Serialize(new { sessionId = session.SessionId, revokedBy = revokedBy ?? "system" }),
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );
@@ -197,7 +198,7 @@ public class SessionManager(
                 category: "Authentication",
                 eventName: "BulkSessionRevoked",
                 subjectId: userId.ToString(),
-                payload: $"{{\"count\":{count},\"revokedBy\":\"{revokedBy ?? "system"}\"}}",
+                payload: JsonSerializer.Serialize(new { count, revokedBy = revokedBy ?? "system" }),
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );
