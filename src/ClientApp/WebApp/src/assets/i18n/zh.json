@@ -88,6 +88,7 @@
     "systemRole": "角色管理",
     "systemUser": "账号管理",
     "organization": "组织管理",
+    "scope": "作用域管理",
     "systemLogs": "系统日志",
     "systemConfig": "系统设置"
   },
@@ -106,7 +107,9 @@
     "selected": "已选择",
     "loading": "加载中...",
     "noData": "暂无数据",
-    "createdTime": "创建时间"
+    "createdTime": "创建时间",
+    "updatedTime": "更新时间",
+    "clearFilters": "清除筛选"
   },
   "user": {
     "userName": "用户名",
@@ -145,5 +148,72 @@
     "removeMember": "移除成员",
     "selectUser": "选择用户",
     "noData": "暂无组织数据，请先添加根组织"
+  },
+  "role": {
+    "name": "角色名称",
+    "description": "描述",
+    "namePlaceholder": "请输入角色名称",
+    "descriptionPlaceholder": "请输入角色描述（可选）",
+    "searchPlaceholder": "搜索角色名称",
+    "addRole": "添加角色",
+    "editRole": "编辑角色",
+    "roleDetail": "角色详情",
+    "basicInfo": "基本信息",
+    "permissions": "权限管理",
+    "managePermissions": "管理权限",
+    "searchPermissions": "搜索权限",
+    "allSelected": "全选",
+    "partialSelected": "部分选中",
+    "selectedCount": "已选择权限数量"
+  },
+  "scope": {
+    "title": "作用域管理",
+    "name": "作用域名称",
+    "displayName": "显示名称",
+    "description": "描述",
+    "required": "必需",
+    "optional": "可选",
+    "emphasize": "强调",
+    "searchPlaceholder": "搜索作用域名称或显示名称",
+    "requiredFilter": "是否必需"
+  },
+  "dialog": {
+    "confirmDelete": {
+      "title": "确认删除",
+      "message": "确定要删除该角色吗？此操作不可撤销。"
+    },
+    "confirmBatchDelete": {
+      "title": "确认批量删除",
+      "message": "确定要删除选中的 {{count}} 个角色吗？此操作不可撤销。"
+    }
+  },
+  "success": {
+    "roleCreated": "角色创建成功",
+    "roleUpdated": "角色更新成功",
+    "roleDeleted": "角色已删除",
+    "rolesBatchDeleted": "成功删除 {{count}} 个角色",
+    "permissionsSaved": "权限已保存"
+  },
+  "error": {
+    "loadRolesFailed": "加载角色列表失败",
+    "loadPermissionsFailed": "加载权限失败",
+    "savePermissionsFailed": "保存权限失败",
+    "createRoleFailed": "创建角色失败",
+    "updateRoleFailed": "更新角色失败",
+    "deleteRoleFailed": "删除角色失败",
+    "batchDeletePartialFailed": "部分角色删除失败",
+    "loadRoleDetailFailed": "加载角色详情失败",
+    "loadScopesFailed": "加载作用域列表失败"
+  },
+  "permission": {
+    "category": {
+      "users": "用户管理",
+      "roles": "角色管理",
+      "organizations": "组织管理",
+      "clients": "客户端管理",
+      "scopes": "作用域管理",
+      "audit": "审计日志",
+      "system": "系统设置"
+    }
   }
 }

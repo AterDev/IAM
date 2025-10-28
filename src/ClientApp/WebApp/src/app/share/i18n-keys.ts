@@ -91,6 +91,7 @@ export const I18N_KEYS = {
     "systemRole": "menu.systemRole",
     "systemUser": "menu.systemUser",
     "organization": "menu.organization",
+    "scope": "menu.scope",
     "systemLogs": "menu.systemLogs",
     "systemConfig": "menu.systemConfig"
   },
@@ -109,7 +110,9 @@ export const I18N_KEYS = {
     "selected": "common.selected",
     "loading": "common.loading",
     "noData": "common.noData",
-    "createdTime": "common.createdTime"
+    "createdTime": "common.createdTime",
+    "updatedTime": "common.updatedTime",
+    "clearFilters": "common.clearFilters"
   },
   "user": {
     "userName": "user.userName",
@@ -148,5 +151,72 @@ export const I18N_KEYS = {
     "removeMember": "organization.removeMember",
     "selectUser": "organization.selectUser",
     "noData": "organization.noData"
+  },
+  "role": {
+    "name": "role.name",
+    "description": "role.description",
+    "namePlaceholder": "role.namePlaceholder",
+    "descriptionPlaceholder": "role.descriptionPlaceholder",
+    "searchPlaceholder": "role.searchPlaceholder",
+    "addRole": "role.addRole",
+    "editRole": "role.editRole",
+    "roleDetail": "role.roleDetail",
+    "basicInfo": "role.basicInfo",
+    "permissions": "role.permissions",
+    "managePermissions": "role.managePermissions",
+    "searchPermissions": "role.searchPermissions",
+    "allSelected": "role.allSelected",
+    "partialSelected": "role.partialSelected",
+    "selectedCount": "role.selectedCount"
+  },
+  "scope": {
+    "title": "scope.title",
+    "name": "scope.name",
+    "displayName": "scope.displayName",
+    "description": "scope.description",
+    "required": "scope.required",
+    "optional": "scope.optional",
+    "emphasize": "scope.emphasize",
+    "searchPlaceholder": "scope.searchPlaceholder",
+    "requiredFilter": "scope.requiredFilter"
+  },
+  "dialog": {
+    "confirmDelete": {
+      "title": "dialog.confirmDelete.title",
+      "message": "dialog.confirmDelete.message"
+    },
+    "confirmBatchDelete": {
+      "title": "dialog.confirmBatchDelete.title",
+      "message": "dialog.confirmBatchDelete.message"
+    }
+  },
+  "success": {
+    "roleCreated": "success.roleCreated",
+    "roleUpdated": "success.roleUpdated",
+    "roleDeleted": "success.roleDeleted",
+    "rolesBatchDeleted": "success.rolesBatchDeleted",
+    "permissionsSaved": "success.permissionsSaved"
+  },
+  "error": {
+    "loadRolesFailed": "error.loadRolesFailed",
+    "loadPermissionsFailed": "error.loadPermissionsFailed",
+    "savePermissionsFailed": "error.savePermissionsFailed",
+    "createRoleFailed": "error.createRoleFailed",
+    "updateRoleFailed": "error.updateRoleFailed",
+    "deleteRoleFailed": "error.deleteRoleFailed",
+    "batchDeletePartialFailed": "error.batchDeletePartialFailed",
+    "loadRoleDetailFailed": "error.loadRoleDetailFailed",
+    "loadScopesFailed": "error.loadScopesFailed"
+  },
+  "permission": {
+    "category": {
+      "users": "permission.category.users",
+      "roles": "permission.category.roles",
+      "organizations": "permission.category.organizations",
+      "clients": "permission.category.clients",
+      "scopes": "permission.category.scopes",
+      "audit": "permission.category.audit",
+      "system": "permission.category.system"
+    }
   }
 };

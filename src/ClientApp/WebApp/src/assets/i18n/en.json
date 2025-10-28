@@ -23,6 +23,7 @@
     "systemRole": "Role",
     "systemUser": "Account",
     "organization": "Organization",
+    "scope": "Scope",
     "systemLogs": "Logs",
     "systemConfig": "Settings"
   },
@@ -41,7 +42,9 @@
     "selected": "Selected",
     "loading": "Loading...",
     "noData": "No data",
-    "createdTime": "Created Time"
+    "createdTime": "Created Time",
+    "updatedTime": "Updated Time",
+    "clearFilters": "Clear Filters"
   },
   "user": {
     "userName": "Username",
@@ -80,5 +83,72 @@
     "removeMember": "Remove Member",
     "selectUser": "Select User",
     "noData": "No organization data, please add a root organization first"
+  },
+  "role": {
+    "name": "Role Name",
+    "description": "Description",
+    "namePlaceholder": "Enter role name",
+    "descriptionPlaceholder": "Enter role description (optional)",
+    "searchPlaceholder": "Search role name",
+    "addRole": "Add Role",
+    "editRole": "Edit Role",
+    "roleDetail": "Role Detail",
+    "basicInfo": "Basic Information",
+    "permissions": "Permissions",
+    "managePermissions": "Manage Permissions",
+    "searchPermissions": "Search permissions",
+    "allSelected": "All Selected",
+    "partialSelected": "Partially Selected",
+    "selectedCount": "Selected Permissions Count"
+  },
+  "scope": {
+    "title": "Scope Management",
+    "name": "Scope Name",
+    "displayName": "Display Name",
+    "description": "Description",
+    "required": "Required",
+    "optional": "Optional",
+    "emphasize": "Emphasize",
+    "searchPlaceholder": "Search scope name or display name",
+    "requiredFilter": "Required Filter"
+  },
+  "dialog": {
+    "confirmDelete": {
+      "title": "Confirm Delete",
+      "message": "Are you sure you want to delete this role? This action cannot be undone."
+    },
+    "confirmBatchDelete": {
+      "title": "Confirm Batch Delete",
+      "message": "Are you sure you want to delete the selected {{count}} roles? This action cannot be undone."
+    }
+  },
+  "success": {
+    "roleCreated": "Role created successfully",
+    "roleUpdated": "Role updated successfully",
+    "roleDeleted": "Role deleted",
+    "rolesBatchDeleted": "Successfully deleted {{count}} roles",
+    "permissionsSaved": "Permissions saved"
+  },
+  "error": {
+    "loadRolesFailed": "Failed to load roles",
+    "loadPermissionsFailed": "Failed to load permissions",
+    "savePermissionsFailed": "Failed to save permissions",
+    "createRoleFailed": "Failed to create role",
+    "updateRoleFailed": "Failed to update role",
+    "deleteRoleFailed": "Failed to delete role",
+    "batchDeletePartialFailed": "Some roles failed to delete",
+    "loadRoleDetailFailed": "Failed to load role detail",
+    "loadScopesFailed": "Failed to load scopes"
+  },
+  "permission": {
+    "category": {
+      "users": "User Management",
+      "roles": "Role Management",
+      "organizations": "Organization Management",
+      "clients": "Client Management",
+      "scopes": "Scope Management",
+      "audit": "Audit Log",
+      "system": "System Settings"
+    }
   }
 }

@@ -74,11 +74,19 @@
                 "menuType": 0
             },
             {
+                "name": "menu.scope",
+                "path": "/scope",
+                "accessCode": "scope",
+                "icon": "vpn_key",
+                "sort": 3,
+                "menuType": 0
+            },
+            {
                 "name": "menu.systemLogs",
                 "path": "/system-logs",
                 "accessCode": "system-logs",
                 "icon": "manage_search",
-                "sort": 3,
+                "sort": 4,
                 "menuType": 0
             },
             {
@@ -86,7 +94,7 @@
                 "path": "/system-config",
                 "accessCode": "system-config",
                 "icon": "settings",
-                "sort": 4,
+                "sort": 5,
                 "menuType": 0
             }
         ]
