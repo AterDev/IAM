@@ -92,6 +92,8 @@ export const I18N_KEYS = {
     "systemUser": "menu.systemUser",
     "organization": "menu.organization",
     "scope": "menu.scope",
+    "sessions": "menu.sessions",
+    "auditLogs": "menu.auditLogs",
     "systemLogs": "menu.systemLogs",
     "systemConfig": "menu.systemConfig"
   },
@@ -112,7 +114,8 @@ export const I18N_KEYS = {
     "noData": "common.noData",
     "createdTime": "common.createdTime",
     "updatedTime": "common.updatedTime",
-    "clearFilters": "common.clearFilters"
+    "clearFilters": "common.clearFilters",
+    "refresh": "common.refresh"
   },
   "user": {
     "userName": "user.userName",
@@ -198,6 +201,10 @@ export const I18N_KEYS = {
     "permissionsSaved": "success.permissionsSaved"
   },
   "error": {
+    "loadSessionsFailed": "error.loadSessionsFailed",
+    "revokeSessionFailed": "error.revokeSessionFailed",
+    "loadAuditLogsFailed": "error.loadAuditLogsFailed",
+    "loadAuditLogDetailFailed": "error.loadAuditLogDetailFailed",
     "loadRolesFailed": "error.loadRolesFailed",
     "loadPermissionsFailed": "error.loadPermissionsFailed",
     "savePermissionsFailed": "error.savePermissionsFailed",
@@ -218,5 +225,46 @@ export const I18N_KEYS = {
       "audit": "permission.category.audit",
       "system": "permission.category.system"
     }
+  },
+  "session": {
+    "sessionId": "session.sessionId",
+    "ipAddress": "session.ipAddress",
+    "device": "session.device",
+    "loginTime": "session.loginTime",
+    "lastActivity": "session.lastActivity",
+    "status": "session.status",
+    "active": "session.active",
+    "inactive": "session.inactive",
+    "revoke": "session.revoke",
+    "revokeSelected": "session.revokeSelected",
+    "revokeConfirmTitle": "session.revokeConfirmTitle",
+    "revokeConfirmMessage": "session.revokeConfirmMessage",
+    "revokeBatchConfirmTitle": "session.revokeBatchConfirmTitle",
+    "revokeBatchConfirmMessage": "session.revokeBatchConfirmMessage",
+    "revokeSuccess": "session.revokeSuccess",
+    "revokeBatchSuccess": "session.revokeBatchSuccess",
+    "revokeBatchPartial": "session.revokeBatchPartial",
+    "searchPlaceholder": "session.searchPlaceholder",
+    "startDate": "session.startDate",
+    "endDate": "session.endDate",
+    "startAutoRefresh": "session.startAutoRefresh",
+    "stopAutoRefresh": "session.stopAutoRefresh"
+  },
+  "auditLog": {
+    "id": "auditLog.id",
+    "category": "auditLog.category",
+    "event": "auditLog.event",
+    "subjectId": "auditLog.subjectId",
+    "ipAddress": "auditLog.ipAddress",
+    "userAgent": "auditLog.userAgent",
+    "createdTime": "auditLog.createdTime",
+    "payload": "auditLog.payload",
+    "detailTitle": "auditLog.detailTitle",
+    "startDate": "auditLog.startDate",
+    "endDate": "auditLog.endDate",
+    "export": "auditLog.export",
+    "exportNotImplemented": "auditLog.exportNotImplemented",
+    "startAutoRefresh": "auditLog.startAutoRefresh",
+    "stopAutoRefresh": "auditLog.stopAutoRefresh"
   }
 };
