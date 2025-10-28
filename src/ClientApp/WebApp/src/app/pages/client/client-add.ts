@@ -55,6 +55,42 @@ export class ClientAddComponent implements OnInit {
     });
   }
 
+  get clientId() {
+    return this.clientForm.get('clientId') as FormControl;
+  }
+
+  get displayName() {
+    return this.clientForm.get('displayName') as FormControl;
+  }
+
+  get description() {
+    return this.clientForm.get('description') as FormControl;
+  }
+
+  get type() {
+    return this.clientForm.get('type') as FormControl;
+  }
+
+  get applicationType() {
+    return this.clientForm.get('applicationType') as FormControl;
+  }
+
+  get consentType() {
+    return this.clientForm.get('consentType') as FormControl;
+  }
+
+  get requirePkce() {
+    return this.clientForm.get('requirePkce') as FormControl;
+  }
+
+  get newRedirectUri() {
+    return this.clientForm.get('newRedirectUri') as FormControl;
+  }
+
+  get newPostLogoutRedirectUri() {
+    return this.clientForm.get('newPostLogoutRedirectUri') as FormControl;
+  }
+
   get redirectUris(): FormArray {
     return this.clientForm.get('redirectUris') as FormArray;
   }
@@ -64,11 +100,10 @@ export class ClientAddComponent implements OnInit {
   }
 
   addRedirectUri(): void {
-    const uriControl = this.clientForm.get('newRedirectUri');
-    const uri = uriControl?.value?.trim();
+    const uri = this.newRedirectUri.value?.trim();
     if (uri) {
       this.redirectUris.push(this.fb.control(uri));
-      uriControl?.setValue('');
+      this.newRedirectUri.setValue('');
     }
   }
 
@@ -77,11 +112,10 @@ export class ClientAddComponent implements OnInit {
   }
 
   addPostLogoutRedirectUri(): void {
-    const uriControl = this.clientForm.get('newPostLogoutRedirectUri');
-    const uri = uriControl?.value?.trim();
+    const uri = this.newPostLogoutRedirectUri.value?.trim();
     if (uri) {
       this.postLogoutRedirectUris.push(this.fb.control(uri));
-      uriControl?.setValue('');
+      this.newPostLogoutRedirectUri.setValue('');
     }
   }
 
@@ -167,13 +201,5 @@ export class ClientAddComponent implements OnInit {
       return this.translate.instant('error.minLength', { length: minLength });
     }
     return '';
-  }
-
-  get clientIdControl() {
-    return this.clientForm.get('clientId') as FormControl;
-  }
-
-  get displayNameControl() {
-    return this.clientForm.get('displayName') as FormControl;
   }
 }
