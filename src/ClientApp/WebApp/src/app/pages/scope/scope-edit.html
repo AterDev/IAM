@@ -1,0 +1,62 @@
+<h2 mat-dialog-title>{{ 'scope.editScope' | translate }}</h2>
+
+<mat-dialog-content>
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <form [formGroup]="scopeForm" class="scope-form" *ngIf="!isLoading">
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'scope.displayName' | translate }}</mat-label>
+      <input matInput formControlName="displayName" required>
+      <mat-error *ngIf="scopeForm.get('displayName')?.invalid && scopeForm.get('displayName')?.touched">
+        {{ getErrorMessage(displayNameControl) }}
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'scope.description' | translate }}</mat-label>
+      <textarea matInput formControlName="description" rows="3"></textarea>
+    </mat-form-field>
+
+    <div class="checkbox-row">
+      <mat-checkbox formControlName="required">
+        {{ 'scope.required' | translate }}
+      </mat-checkbox>
+      <mat-checkbox formControlName="emphasize">
+        {{ 'scope.emphasize' | translate }}
+      </mat-checkbox>
+    </div>
+
+    <div class="claims-section">
+      <h3>{{ 'scope.claims' | translate }}</h3>
+      <div class="claim-input-row">
+        <mat-form-field appearance="outline">
+          <mat-label>{{ 'scope.addClaim' | translate }}</mat-label>
+          <input matInput formControlName="newClaim" (keyup.enter)="addClaim()">
+        </mat-form-field>
+        <button mat-icon-button color="primary" (click)="addClaim()" type="button">
+          <mat-icon>add</mat-icon>
+        </button>
+      </div>
+      <mat-chip-set>
+        <mat-chip *ngFor="let claim of claims.controls; let i = index" 
+                  (removed)="removeClaim(i)">
+          {{ claim.value }}
+          <button matChipRemove>
+            <mat-icon>cancel</mat-icon>
+          </button>
+        </mat-chip>
+      </mat-chip-set>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()" [disabled]="isSubmitting">
+    {{ 'common.cancel' | translate }}
+  </button>
+  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="isSubmitting || isLoading">
+    {{ isSubmitting ? ('common.saving' | translate) : ('common.save' | translate) }}
+  </button>
+</mat-dialog-actions>

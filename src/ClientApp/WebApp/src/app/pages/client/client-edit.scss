@@ -1,0 +1,55 @@
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.client-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 500px;
+
+  .form-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+
+    mat-form-field {
+      flex: 1;
+    }
+
+    .pkce-checkbox {
+      flex: 1;
+    }
+  }
+
+  .uri-section {
+    margin-top: 16px;
+
+    h3 {
+      font-size: 16px;
+      font-weight: 500;
+      margin: 0 0 12px 0;
+      color: rgba(0, 0, 0, 0.87);
+    }
+
+    .uri-input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+
+      mat-form-field {
+        flex: 1;
+      }
+    }
+
+    mat-chip-set {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+  }
+}
