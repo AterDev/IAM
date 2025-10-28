@@ -89,6 +89,8 @@
     "systemUser": "账号管理",
     "organization": "组织管理",
     "scope": "作用域管理",
+    "sessions": "会话管理",
+    "auditLogs": "审计日志",
     "systemLogs": "系统日志",
     "systemConfig": "系统设置"
   },
@@ -109,7 +111,8 @@
     "noData": "暂无数据",
     "createdTime": "创建时间",
     "updatedTime": "更新时间",
-    "clearFilters": "清除筛选"
+    "clearFilters": "清除筛选",
+    "refresh": "刷新"
   },
   "user": {
     "userName": "用户名",
@@ -215,5 +218,61 @@
       "audit": "审计日志",
       "system": "系统设置"
     }
+  },
+  "session": {
+    "sessionId": "会话ID",
+    "ipAddress": "IP地址",
+    "device": "设备",
+    "loginTime": "登录时间",
+    "lastActivity": "最后活动",
+    "status": "状态",
+    "active": "活跃",
+    "inactive": "未活跃",
+    "revoke": "注销",
+    "revokeSelected": "注销选中",
+    "revokeConfirmTitle": "注销会话",
+    "revokeConfirmMessage": "确定要注销该会话吗？",
+    "revokeBatchConfirmTitle": "批量注销会话",
+    "revokeBatchConfirmMessage": "确定要注销 {{count}} 个会话吗？",
+    "revokeSuccess": "会话注销成功",
+    "revokeBatchSuccess": "成功注销 {{count}} 个会话",
+    "revokeBatchPartial": "成功注销 {{success}} 个会话，{{failed}} 个失败",
+    "searchPlaceholder": "按会话ID搜索",
+    "startDate": "开始日期",
+    "endDate": "结束日期",
+    "startAutoRefresh": "自动刷新",
+    "stopAutoRefresh": "停止刷新"
+  },
+  "auditLog": {
+    "id": "ID",
+    "category": "分类",
+    "event": "事件",
+    "subjectId": "主体ID",
+    "ipAddress": "IP地址",
+    "userAgent": "用户代理",
+    "createdTime": "时间",
+    "payload": "载荷",
+    "detailTitle": "审计日志详情",
+    "startDate": "开始日期",
+    "endDate": "结束日期",
+    "export": "导出",
+    "exportNotImplemented": "导出功能尚未实现",
+    "startAutoRefresh": "自动刷新",
+    "stopAutoRefresh": "停止刷新"
+  },
+  "error": {
+    "loadSessionsFailed": "加载会话列表失败",
+    "revokeSessionFailed": "注销会话失败",
+    "loadAuditLogsFailed": "加载审计日志失败",
+    "loadAuditLogDetailFailed": "加载审计日志详情失败",
+    "loadRolesFailed": "加载角色列表失败",
+    "loadPermissionsFailed": "加载权限失败",
+    "savePermissionsFailed": "保存权限失败",
+    "createRoleFailed": "创建角色失败",
+    "updateRoleFailed": "更新角色失败",
+    "deleteRoleFailed": "删除角色失败",
+    "batchDeletePartialFailed": "部分角色删除失败",
+    "loadRoleDetailFailed": "加载角色详情失败",
+    "loadScopesFailed": "加载作用域列表失败"
   }
 }

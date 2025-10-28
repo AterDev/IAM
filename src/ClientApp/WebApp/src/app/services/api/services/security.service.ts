@@ -4,8 +4,10 @@ import { Observable } from 'rxjs';
 import { PageList } from '../models/ater/page-list.model';
 import { LoginSessionItemDto } from '../models/identity-mod/login-session-item-dto.model';
 import { LoginSessionDetailDto } from '../models/identity-mod/login-session-detail-dto.model';
+import { LoginSessionFilterDto } from '../models/identity-mod/login-session-filter-dto.model';
 import { AuditLogItemDto } from '../models/common-mod/audit-log-item-dto.model';
 import { AuditLogDetailDto } from '../models/common-mod/audit-log-detail-dto.model';
+
 /**
  * Security controller for session and audit log management
  */
@@ -19,14 +21,25 @@ export class SecurityService extends BaseService {
    * @param isActive Filter by active status
    * @param startDate Filter by date range start
    * @param endDate Filter by date range end
-   * @param pageIndex number
-   * @param pageSize number
-   * @param orderBy Record<string, boolean>
+   * @param pageIndex Page number
+   * @param pageSize Page size
+   * @param orderBy Order by
    */
-  getSessions(userId: string | null, sessionId: string | null, ipAddress: string | null, isActive: boolean | null, startDate: Date | null, endDate: Date | null, pageIndex: number | null, pageSize: number | null, orderBy: Record<string, boolean> | null): Observable<PageList<LoginSessionItemDto>> {
+  getSessions(
+    userId: string | null,
+    sessionId: string | null,
+    ipAddress: string | null,
+    isActive: boolean | null,
+    startDate: Date | null,
+    endDate: Date | null,
+    pageIndex: number | null,
+    pageSize: number | null,
+    orderBy: Record<string, boolean> | null
+  ): Observable<PageList<LoginSessionItemDto>> {
     const _url = `/api/security/sessions?userId=${userId ?? ''}&sessionId=${sessionId ?? ''}&ipAddress=${ipAddress ?? ''}&isActive=${isActive ?? ''}&startDate=${startDate ?? ''}&endDate=${endDate ?? ''}&pageIndex=${pageIndex ?? ''}&pageSize=${pageSize ?? ''}&orderBy=${orderBy ?? ''}`;
     return this.request<PageList<LoginSessionItemDto>>('get', _url);
   }
+
   /**
    * Get login session detail by id
    * @param id Login session id
@@ -35,14 +48,16 @@ export class SecurityService extends BaseService {
     const _url = `/api/security/sessions/${id}`;
     return this.request<LoginSessionDetailDto>('get', _url);
   }
+
   /**
    * Revoke a login session
    * @param id Login session id
    */
-  revokeSession(id: string): Observable<any> {
+  revokeSession(id: string): Observable<{ message: string }> {
     const _url = `/api/security/sessions/${id}/revoke`;
-    return this.request<any>('post', _url);
+    return this.request<{ message: string }>('post', _url);
   }
+
   /**
    * Revoke all sessions for the current user
    * @param exceptCurrent Whether to keep the current session active
