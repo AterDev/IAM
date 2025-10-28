@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModules, CommonFormModules } from 'src/app/share/shared-modules';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { UsersService } from 'src/app/services/api/services/users.service';
+import { ApiClient } from 'src/app/services/api/api-client';
 import { UserAddDto } from 'src/app/services/api/models/identity-mod/user-add-dto.model';
 
 @Component({
@@ -24,7 +24,7 @@ export class UserAddComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private usersService: UsersService,
+    private api: ApiClient,
     private dialogRef: MatDialogRef<UserAddComponent>,
     private snackBar: MatSnackBar
   ) {}
@@ -37,6 +37,26 @@ export class UserAddComponent implements OnInit {
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]]
     }, { validators: this.passwordMatchValidator });
+  }
+
+  get userName() {
+    return this.userForm.get('userName') as FormControl;
+  }
+
+  get email() {
+    return this.userForm.get('email') as FormControl;
+  }
+
+  get phoneNumber() {
+    return this.userForm.get('phoneNumber') as FormControl;
+  }
+
+  get password() {
+    return this.userForm.get('password') as FormControl;
+  }
+
+  get confirmPassword() {
+    return this.userForm.get('confirmPassword') as FormControl;
   }
 
   passwordMatchValidator(group: FormGroup): { [key: string]: boolean } | null {
@@ -65,7 +85,7 @@ export class UserAddComponent implements OnInit {
       lockoutEnabled: false
     };
 
-    this.usersService.createUser(dto).subscribe({
+    this.api.users.createUser(dto).subscribe({
       next: () => {
         this.snackBar.open('User created successfully', 'Close', { duration: 3000 });
         this.dialogRef.close(true);
@@ -82,16 +102,15 @@ export class UserAddComponent implements OnInit {
     this.dialogRef.close(false);
   }
 
-  getErrorMessage(fieldName: string): string {
-    const field = this.userForm.get(fieldName);
-    if (field?.hasError('required')) {
+  getErrorMessage(control: FormControl, fieldName: string): string {
+    if (control?.hasError('required')) {
       return 'This field is required';
     }
-    if (field?.hasError('email')) {
+    if (control?.hasError('email')) {
       return 'Please enter a valid email';
     }
-    if (field?.hasError('minlength')) {
-      const minLength = field.errors?.['minlength'].requiredLength;
+    if (control?.hasError('minlength')) {
+      const minLength = control.errors?.['minlength'].requiredLength;
       return `Minimum length is ${minLength}`;
     }
     if (fieldName === 'confirmPassword' && this.userForm.hasError('passwordMismatch')) {

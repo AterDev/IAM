@@ -14,11 +14,11 @@
           <mat-card-title>{{ 'organization.tree' | translate }}</mat-card-title>
         </mat-card-header>
         <mat-card-content>
-          <div *ngIf="isLoading()" class="loading-container">
+          <div *ngIf="isLoading" class="loading-container">
             <mat-spinner diameter="40"></mat-spinner>
           </div>
 
-          <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" *ngIf="!isLoading()">
+          <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" *ngIf="!isLoading">
             <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle>
               <li class="mat-tree-node" [class.selected]="selectedNode()?.id === node.id" (click)="selectNode(node)">
                 <button mat-icon-button disabled></button>
@@ -77,7 +77,7 @@
             </mat-nested-tree-node>
           </mat-tree>
 
-          <div *ngIf="!isLoading() && dataSource.data.length === 0" class="no-data">
+          <div *ngIf="!isLoading && dataSource.data.length === 0" class="no-data">
             {{ 'organization.noData' | translate }}
           </div>
         </mat-card-content>

@@ -5,7 +5,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCardModule } from '@angular/material/card';
-import { OrganizationsService } from 'src/app/services/api/services/organizations.service';
+import { ApiClient } from 'src/app/services/api/api-client';
 import { OrganizationTreeDto } from 'src/app/services/api/models/identity-mod/organization-tree-dto.model';
 import { NestedTreeControl } from '@angular/cdk/tree';
 import { MatTreeNestedDataSource } from '@angular/material/tree';
@@ -30,11 +30,13 @@ import { OrganizationMembersComponent } from './organization-members';
 export class OrganizationListComponent implements OnInit {
   treeControl = new NestedTreeControl<OrganizationTreeDto>(node => node.children);
   dataSource = new MatTreeNestedDataSource<OrganizationTreeDto>();
-  isLoading = signal(false);
+  // Keep signals for template-reactive values
   selectedNode = signal<OrganizationTreeDto | null>(null);
+  
+  isLoading = false;
 
   constructor(
-    private organizationsService: OrganizationsService,
+    private api: ApiClient,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {}
@@ -44,16 +46,16 @@ export class OrganizationListComponent implements OnInit {
   }
 
   loadTree(): void {
-    this.isLoading.set(true);
-    this.organizationsService.getTree(null).subscribe({
+    this.isLoading = true;
+    this.api.organizations.getTree(null).subscribe({
       next: (tree) => {
         this.dataSource.data = tree;
-        this.isLoading.set(false);
+        this.isLoading = false;
         // Expand root nodes by default
         tree.forEach(node => this.treeControl.expand(node));
       },
       error: () => {
-        this.isLoading.set(false);
+        this.isLoading = false;
         this.snackBar.open('Failed to load organization tree', 'Close', { duration: 3000 });
       }
     });
@@ -111,7 +113,7 @@ export class OrganizationListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.organizationsService.deleteOrganization(node.id, false).subscribe({
+        this.api.organizations.deleteOrganization(node.id, false).subscribe({
           next: () => {
             this.snackBar.open('Organization deleted successfully', 'Close', { duration: 3000 });
             this.loadTree();

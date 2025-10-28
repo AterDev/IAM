@@ -1,10 +1,10 @@
 import { Component, OnInit, Inject } from '@angular/core';
 import { CommonModules, CommonFormModules } from 'src/app/share/shared-modules';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatDialogRef, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { OrganizationsService } from 'src/app/services/api/services/organizations.service';
+import { ApiClient } from 'src/app/services/api/api-client';
 import { OrganizationUpdateDto } from 'src/app/services/api/models/identity-mod/organization-update-dto.model';
 import { OrganizationDetailDto } from 'src/app/services/api/models/identity-mod/organization-detail-dto.model';
 
@@ -27,7 +27,7 @@ export class OrganizationEditComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private organizationsService: OrganizationsService,
+    private api: ApiClient,
     private dialogRef: MatDialogRef<OrganizationEditComponent>,
     private snackBar: MatSnackBar,
     @Inject(MAT_DIALOG_DATA) public data: { organizationId: string }
@@ -43,8 +43,20 @@ export class OrganizationEditComponent implements OnInit {
     this.loadOrganization();
   }
 
+  get name() {
+    return this.orgForm.get('name') as FormControl;
+  }
+
+  get description() {
+    return this.orgForm.get('description') as FormControl;
+  }
+
+  get displayOrder() {
+    return this.orgForm.get('displayOrder') as FormControl;
+  }
+
   loadOrganization(): void {
-    this.organizationsService.getDetail(this.data.organizationId).subscribe({
+    this.api.organizations.getDetail(this.data.organizationId).subscribe({
       next: (org) => {
         this.organization = org;
         this.orgForm.patchValue({
@@ -77,7 +89,7 @@ export class OrganizationEditComponent implements OnInit {
       displayOrder: formValue.displayOrder
     };
 
-    this.organizationsService.updateOrganization(this.data.organizationId, dto).subscribe({
+    this.api.organizations.updateOrganization(this.data.organizationId, dto).subscribe({
       next: () => {
         this.snackBar.open('Organization updated successfully', 'Close', { duration: 3000 });
         this.dialogRef.close(true);
@@ -94,16 +106,15 @@ export class OrganizationEditComponent implements OnInit {
     this.dialogRef.close(false);
   }
 
-  getErrorMessage(fieldName: string): string {
-    const field = this.orgForm.get(fieldName);
-    if (field?.hasError('required')) {
+  getErrorMessage(control: FormControl): string {
+    if (control?.hasError('required')) {
       return 'This field is required';
     }
-    if (field?.hasError('minlength')) {
-      const minLength = field.errors?.['minlength'].requiredLength;
+    if (control?.hasError('minlength')) {
+      const minLength = control.errors?.['minlength'].requiredLength;
       return `Minimum length is ${minLength}`;
     }
-    if (field?.hasError('min')) {
+    if (control?.hasError('min')) {
       return 'Value must be greater than or equal to 0';
     }
     return '';

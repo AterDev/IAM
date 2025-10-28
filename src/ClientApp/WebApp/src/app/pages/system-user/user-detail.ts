@@ -6,7 +6,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
-import { UsersService } from 'src/app/services/api/services/users.service';
+import { ApiClient } from 'src/app/services/api/api-client';
 import { UserDetailDto } from 'src/app/services/api/models/identity-mod/user-detail-dto.model';
 import { UserEditComponent } from './user-edit';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
@@ -24,14 +24,16 @@ import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/
   styleUrls: ['./user-detail.scss']
 })
 export class UserDetailComponent implements OnInit {
+  // Keep signals only for template-reactive values
   user = signal<UserDetailDto | null>(null);
-  isLoading = signal(true);
+  
+  isLoading = false;
   userId?: string;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private usersService: UsersService,
+    private api: ApiClient,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {}
@@ -44,14 +46,14 @@ export class UserDetailComponent implements OnInit {
   }
 
   loadUser(): void {
-    this.isLoading.set(true);
-    this.usersService.getDetail(this.userId!).subscribe({
+    this.isLoading = true;
+    this.api.users.getDetail(this.userId!).subscribe({
       next: (user) => {
         this.user.set(user);
-        this.isLoading.set(false);
+        this.isLoading = false;
       },
       error: () => {
-        this.isLoading.set(false);
+        this.isLoading = false;
         this.snackBar.open('Failed to load user', 'Close', { duration: 3000 });
         this.router.navigate(['/system-user']);
       }
@@ -79,7 +81,7 @@ export class UserDetailComponent implements OnInit {
 
     const lockoutEnd = user.lockoutEnabled ? null : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
     
-    this.usersService.updateStatus(this.userId!, lockoutEnd as any).subscribe({
+    this.api.users.updateStatus(this.userId!, lockoutEnd as any).subscribe({
       next: () => {
         this.snackBar.open(
           user.lockoutEnabled ? 'User unlocked successfully' : 'User locked successfully',
@@ -110,7 +112,7 @@ export class UserDetailComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.usersService.deleteUser(this.userId!, false).subscribe({
+        this.api.users.deleteUser(this.userId!, false).subscribe({
           next: () => {
             this.snackBar.open('User deleted successfully', 'Close', { duration: 3000 });
             this.router.navigate(['/system-user']);

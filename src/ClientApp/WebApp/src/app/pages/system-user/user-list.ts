@@ -6,7 +6,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
-import { UsersService } from 'src/app/services/api/services/users.service';
+import { ApiClient } from 'src/app/services/api/api-client';
 import { UserItemDto } from 'src/app/services/api/models/identity-mod/user-item-dto.model';
 import { PageList } from 'src/app/services/api/models/ater/page-list.model';
 import { Router } from '@angular/router';
@@ -35,16 +35,18 @@ import { UserAddComponent } from './user-add';
 })
 export class UserListComponent implements OnInit {
   displayedColumns: string[] = ['select', 'userName', 'email', 'phoneNumber', 'lockoutEnabled', 'createdTime', 'actions'];
+  
+  // Use signals only for reactive template values
   dataSource = signal<UserItemDto[]>([]);
   total = signal(0);
-  pageSize = signal(10);
-  pageIndex = signal(0);
-  isLoading = signal(false);
   selectedIds = signal<Set<string>>(new Set());
   
-  // Filter
-  searchText = signal('');
-  lockoutEnabled = signal<boolean | null>(null);
+  // Regular properties for non-reactive values
+  pageSize = 10;
+  pageIndex = 0;
+  isLoading = false;
+  searchText = '';
+  lockoutEnabled: boolean | null = null;
 
   // Computed
   allSelected = computed(() => {
@@ -60,7 +62,7 @@ export class UserListComponent implements OnInit {
   });
 
   constructor(
-    private usersService: UsersService,
+    private api: ApiClient,
     private router: Router,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
@@ -71,40 +73,39 @@ export class UserListComponent implements OnInit {
   }
 
   loadData(): void {
-    this.isLoading.set(true);
-    const searchText = this.searchText();
+    this.isLoading = true;
     
-    this.usersService.getUsers(
-      searchText || null,
-      searchText || null,
-      searchText || null,
-      this.lockoutEnabled(),
+    this.api.users.getUsers(
+      this.searchText || null,
+      this.searchText || null,
+      this.searchText || null,
+      this.lockoutEnabled,
       null,
       null,
-      this.pageIndex() + 1,
-      this.pageSize(),
+      this.pageIndex + 1,
+      this.pageSize,
       null
     ).subscribe({
       next: (result: PageList<UserItemDto>) => {
         this.dataSource.set(result.data);
         this.total.set(result.count);
-        this.isLoading.set(false);
+        this.isLoading = false;
       },
       error: () => {
-        this.isLoading.set(false);
+        this.isLoading = false;
         this.snackBar.open('Failed to load users', 'Close', { duration: 3000 });
       }
     });
   }
 
   onPageChange(event: PageEvent): void {
-    this.pageIndex.set(event.pageIndex);
-    this.pageSize.set(event.pageSize);
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
     this.loadData();
   }
 
   onSearch(): void {
-    this.pageIndex.set(0);
+    this.pageIndex = 0;
     this.loadData();
   }
 
@@ -158,7 +159,7 @@ export class UserListComponent implements OnInit {
   toggleUserStatus(user: UserItemDto): void {
     const lockoutEnd = user.lockoutEnabled ? null : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
     
-    this.usersService.updateStatus(user.id, lockoutEnd as any).subscribe({
+    this.api.users.updateStatus(user.id, lockoutEnd as any).subscribe({
       next: () => {
         this.snackBar.open(
           user.lockoutEnabled ? 'User unlocked successfully' : 'User locked successfully',
@@ -184,7 +185,7 @@ export class UserListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.usersService.deleteUser(user.id, false).subscribe({
+        this.api.users.deleteUser(user.id, false).subscribe({
           next: () => {
             this.snackBar.open('User deleted successfully', 'Close', { duration: 3000 });
             this.loadData();
@@ -208,7 +209,7 @@ export class UserListComponent implements OnInit {
     let completed = 0;
 
     selectedIds.forEach(id => {
-      this.usersService.updateStatus(id, lockoutEnd as any).subscribe({
+      this.api.users.updateStatus(id, lockoutEnd as any).subscribe({
         next: () => {
           completed++;
           if (completed === selectedIds.length) {
@@ -237,7 +238,7 @@ export class UserListComponent implements OnInit {
     let completed = 0;
 
     selectedIds.forEach(id => {
-      this.usersService.updateStatus(id, null as any).subscribe({
+      this.api.users.updateStatus(id, null as any).subscribe({
         next: () => {
           completed++;
           if (completed === selectedIds.length) {
