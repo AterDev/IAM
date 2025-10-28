@@ -5,3 +5,4 @@ global using Entity.Identity;
 global using Entity.Access;
 global using Entity.Common;
 global using IdentityMod.Managers;
+global using Share.Services;
