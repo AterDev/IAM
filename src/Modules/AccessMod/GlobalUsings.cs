@@ -1,17 +1,4 @@
 global using System.ComponentModel.DataAnnotations;
-global using System.Diagnostics;
-global using System.Linq.Expressions;
-// global using AccessMod.Managers;
-global using Ater.Web.Convention;
 global using Ater.Common.Models;
-global using Ater.Common.Utils;
-global using Ater.Web.Extension;
 global using Entity;
-global using Entity.AccessMod;
-global using EntityFramework;
-global using EntityFramework.DBProvider;
-global using Microsoft.AspNetCore.Authorization;
-global using Microsoft.Extensions.DependencyInjection;
-global using Microsoft.AspNetCore.Mvc;
-global using Microsoft.EntityFrameworkCore;
-global using Microsoft.Extensions.Logging;
+// global using AccessMod.Managers;
