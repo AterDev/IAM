@@ -41,6 +41,7 @@
 - 项目目录: `src/ClientApp/WebApp`
 - 在`app/services`目录下，提供对后端API的调用封装服务，包括类型定义。
 - 不再使用ngModules，改用独立组件.
+- 优先使用响应式表单(Reactive Forms). html中使用[formControl]而不是formControlName绑定控件。
 </frontend>
 
 <modules>
