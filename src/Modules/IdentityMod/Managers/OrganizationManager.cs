@@ -122,7 +122,7 @@ public class OrganizationManager(DefaultDbContext dbContext, ILogger<Organizatio
             if (await IsCircularReferenceAsync(id, dto.ParentId.Value))
             {
                 ErrorMsg = "Cannot move organization to its own descendant";
-                return false;
+                return null;
             }
 
             var parent = await FindAsync(dto.ParentId.Value);
