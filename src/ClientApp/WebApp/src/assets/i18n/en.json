@@ -111,5 +111,44 @@
     "emphasize": "Emphasize",
     "searchPlaceholder": "Search scope name or display name",
     "requiredFilter": "Required Filter"
+  },
+  "dialog": {
+    "confirmDelete": {
+      "title": "Confirm Delete",
+      "message": "Are you sure you want to delete this role? This action cannot be undone."
+    },
+    "confirmBatchDelete": {
+      "title": "Confirm Batch Delete",
+      "message": "Are you sure you want to delete the selected {{count}} roles? This action cannot be undone."
+    }
+  },
+  "success": {
+    "roleCreated": "Role created successfully",
+    "roleUpdated": "Role updated successfully",
+    "roleDeleted": "Role deleted",
+    "rolesBatchDeleted": "Successfully deleted {{count}} roles",
+    "permissionsSaved": "Permissions saved"
+  },
+  "error": {
+    "loadRolesFailed": "Failed to load roles",
+    "loadPermissionsFailed": "Failed to load permissions",
+    "savePermissionsFailed": "Failed to save permissions",
+    "createRoleFailed": "Failed to create role",
+    "updateRoleFailed": "Failed to update role",
+    "deleteRoleFailed": "Failed to delete role",
+    "batchDeletePartialFailed": "Some roles failed to delete",
+    "loadRoleDetailFailed": "Failed to load role detail",
+    "loadScopesFailed": "Failed to load scopes"
+  },
+  "permission": {
+    "category": {
+      "users": "User Management",
+      "roles": "Role Management",
+      "organizations": "Organization Management",
+      "clients": "Client Management",
+      "scopes": "Scope Management",
+      "audit": "Audit Log",
+      "system": "System Settings"
+    }
   }
 }

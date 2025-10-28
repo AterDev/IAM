@@ -3,6 +3,7 @@ import { CommonModules, BaseMatModules } from 'src/app/share/shared-modules';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
+import { TranslateService } from '@ngx-translate/core';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { RoleDetailDto } from 'src/app/services/api/models/identity-mod/role-detail-dto.model';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
@@ -29,7 +30,8 @@ export class RoleDetailComponent implements OnInit {
     private router: Router,
     private api: ApiClient,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -48,7 +50,11 @@ export class RoleDetailComponent implements OnInit {
       },
       error: (error) => {
         console.error('Failed to load role:', error);
-        this.snackBar.open('加载角色详情失败', '关闭', { duration: 3000 });
+        this.snackBar.open(
+          this.translate.instant('error.loadRoleDetailFailed'),
+          this.translate.instant('common.close'),
+          { duration: 3000 }
+        );
         this.isLoading = false;
       }
     });
@@ -100,8 +106,8 @@ export class RoleDetailComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
-        title: '确认删除',
-        message: '确定要删除该角色吗？此操作不可撤销。'
+        title: this.translate.instant('dialog.confirmDelete.title'),
+        message: this.translate.instant('dialog.confirmDelete.message')
       }
     });
 
@@ -109,12 +115,20 @@ export class RoleDetailComponent implements OnInit {
       if (result) {
         this.api.roles.deleteRole(currentRole.id, false).subscribe({
           next: () => {
-            this.snackBar.open('角色已删除', '关闭', { duration: 3000 });
+            this.snackBar.open(
+              this.translate.instant('success.roleDeleted'),
+              this.translate.instant('common.close'),
+              { duration: 3000 }
+            );
             this.router.navigate(['/system-role']);
           },
           error: (error) => {
             console.error('Failed to delete role:', error);
-            this.snackBar.open('删除角色失败', '关闭', { duration: 3000 });
+            this.snackBar.open(
+              this.translate.instant('error.deleteRoleFailed'),
+              this.translate.instant('common.close'),
+              { duration: 3000 }
+            );
           }
         });
       }

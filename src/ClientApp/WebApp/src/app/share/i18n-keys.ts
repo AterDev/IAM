@@ -179,5 +179,44 @@ export const I18N_KEYS = {
     "emphasize": "scope.emphasize",
     "searchPlaceholder": "scope.searchPlaceholder",
     "requiredFilter": "scope.requiredFilter"
+  },
+  "dialog": {
+    "confirmDelete": {
+      "title": "dialog.confirmDelete.title",
+      "message": "dialog.confirmDelete.message"
+    },
+    "confirmBatchDelete": {
+      "title": "dialog.confirmBatchDelete.title",
+      "message": "dialog.confirmBatchDelete.message"
+    }
+  },
+  "success": {
+    "roleCreated": "success.roleCreated",
+    "roleUpdated": "success.roleUpdated",
+    "roleDeleted": "success.roleDeleted",
+    "rolesBatchDeleted": "success.rolesBatchDeleted",
+    "permissionsSaved": "success.permissionsSaved"
+  },
+  "error": {
+    "loadRolesFailed": "error.loadRolesFailed",
+    "loadPermissionsFailed": "error.loadPermissionsFailed",
+    "savePermissionsFailed": "error.savePermissionsFailed",
+    "createRoleFailed": "error.createRoleFailed",
+    "updateRoleFailed": "error.updateRoleFailed",
+    "deleteRoleFailed": "error.deleteRoleFailed",
+    "batchDeletePartialFailed": "error.batchDeletePartialFailed",
+    "loadRoleDetailFailed": "error.loadRoleDetailFailed",
+    "loadScopesFailed": "error.loadScopesFailed"
+  },
+  "permission": {
+    "category": {
+      "users": "permission.category.users",
+      "roles": "permission.category.roles",
+      "organizations": "permission.category.organizations",
+      "clients": "permission.category.clients",
+      "scopes": "permission.category.scopes",
+      "audit": "permission.category.audit",
+      "system": "permission.category.system"
+    }
   }
 };
