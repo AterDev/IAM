@@ -6,48 +6,29 @@ import { AuthGuard } from './share/auth.guard';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
+  { 
+    path: 'register', 
+    loadComponent: () => import('./pages/register/register').then(m => m.Register)
+  },
+  { 
+    path: 'forgot-password', 
+    loadComponent: () => import('./pages/forgot-password/forgot-password').then(m => m.ForgotPassword)
+  },
+  { 
+    path: 'device-code', 
+    loadComponent: () => import('./pages/device-code/device-code').then(m => m.DeviceCode)
+  },
+  { 
+    path: 'authorize', 
+    loadComponent: () => import('./pages/authorize/authorize').then(m => m.Authorize)
+  },
   {
     path: '',
     component: LayoutComponent,
     canActivate: [AuthGuard],
     canActivateChild: [AuthGuard],
     children: [
-      {
-        path: 'system-role',
-        data: { breadcrumb: 'systemRole.title' },
-        children: [
-          { path: '', redirectTo: '/system-role/index', pathMatch: 'full' },
-          { 
-            path: 'index', 
-            loadComponent: () => import('./pages/system-role/index/index').then(m => m.Index),
-            data: { breadcrumb: 'systemRole.list' }
-          },
-        ]
-      },
-      {
-        path: 'system-user',
-        data: { breadcrumb: 'systemUser.title' },
-        children: [
-          { path: '', redirectTo: '/system-user/index', pathMatch: 'full' },
-          { 
-            path: 'index', 
-            loadComponent: () => import('./pages/system-user/index/index').then(m => m.Index),
-            data: { breadcrumb: 'systemUser.list' }
-          },
-        ]
-      },
-      {
-        path: 'system-logs',
-        data: { breadcrumb: 'systemLogs.title' },
-        children: [
-          { path: '', redirectTo: '/system-logs/index', pathMatch: 'full' },
-          { 
-            path: 'index', 
-            loadComponent: () => import('./pages/system-logs/index/index').then(m => m.Index),
-            data: { breadcrumb: 'systemLogs.list' }
-          },
-        ]
-      },
+      // TODO: Implement system-role, system-user, system-logs pages
     ],
   },
   
