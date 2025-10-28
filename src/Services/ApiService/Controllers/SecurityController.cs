@@ -55,16 +55,13 @@ public class SecurityController(
     {
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
         var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
-        var revokedBy = _user.UserId?.ToString();
+        var revokedBy = _user.UserId.ToString();
 
         var result = await _manager.RevokeSessionAsync(id, revokedBy, ipAddress, userAgent);
-        
-        if (!result)
-        {
-            return NotFound("Login session not found or already revoked");
-        }
 
-        return Ok(new { message = "Session revoked successfully" });
+        return !result
+            ? NotFound("Login session not found or already revoked")
+            : Ok(new { message = "Session revoked successfully" });
     }
 
     /// <summary>
@@ -75,7 +72,7 @@ public class SecurityController(
     [HttpPost("sessions/revoke-all")]
     public async Task<ActionResult> RevokeAllSessions([FromQuery] bool exceptCurrent = false)
     {
-        if (_user.UserId == null)
+        if (_user.UserId == Guid.Empty)
         {
             return Unauthorized();
         }
@@ -85,7 +82,7 @@ public class SecurityController(
         var currentSessionId = exceptCurrent ? HttpContext.User.FindFirst("sid")?.Value : null;
 
         var count = await _manager.RevokeAllUserSessionsAsync(
-            _user.UserId.Value,
+            _user.UserId,
             currentSessionId,
             _user.UserId.ToString(),
             ipAddress,

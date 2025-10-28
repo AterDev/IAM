@@ -62,11 +62,10 @@ export class SecurityService extends BaseService {
    * Revoke all sessions for the current user
    * @param exceptCurrent Whether to keep the current session active
    */
-  revokeAllSessions(exceptCurrent: boolean = false): Observable<{ message: string; count: number }> {
-    const _url = `/api/security/sessions/revoke-all?exceptCurrent=${exceptCurrent}`;
-    return this.request<{ message: string; count: number }>('post', _url);
+  revokeAllSessions(exceptCurrent: boolean | null): Observable<any> {
+    const _url = `/api/security/sessions/revoke-all?exceptCurrent=${exceptCurrent ?? ''}`;
+    return this.request<any>('post', _url);
   }
-
   /**
    * Get paged audit logs
    * @param category Filter by category
@@ -74,24 +73,14 @@ export class SecurityService extends BaseService {
    * @param subjectId Filter by subject ID
    * @param startDate Filter by date range start
    * @param endDate Filter by date range end
-   * @param pageIndex Page number
-   * @param pageSize Page size
-   * @param orderBy Order by
+   * @param pageIndex number
+   * @param pageSize number
+   * @param orderBy Record<string, boolean>
    */
-  getAuditLogs(
-    category: string | null,
-    event: string | null,
-    subjectId: string | null,
-    startDate: Date | null,
-    endDate: Date | null,
-    pageIndex: number | null,
-    pageSize: number | null,
-    orderBy: Record<string, boolean> | null
-  ): Observable<PageList<AuditLogItemDto>> {
+  getAuditLogs(category: string | null, event: string | null, subjectId: string | null, startDate: Date | null, endDate: Date | null, pageIndex: number | null, pageSize: number | null, orderBy: Record<string, boolean> | null): Observable<PageList<AuditLogItemDto>> {
     const _url = `/api/security/logs?category=${category ?? ''}&event=${event ?? ''}&subjectId=${subjectId ?? ''}&startDate=${startDate ?? ''}&endDate=${endDate ?? ''}&pageIndex=${pageIndex ?? ''}&pageSize=${pageSize ?? ''}&orderBy=${orderBy ?? ''}`;
     return this.request<PageList<AuditLogItemDto>>('get', _url);
   }
-
   /**
    * Get audit log detail by id
    * @param id Audit log id

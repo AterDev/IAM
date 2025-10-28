@@ -7,7 +7,7 @@
 - docs: 项目文档存储目录
 - scripts： 项目脚本文件目录
 - src：项目代码目录
-- test：测试项目目录
+- tests：测试项目目录
 - .config：配置文件目录
 
 ## 代码目录src
@@ -21,6 +21,18 @@
 * `src/Modules/XXXMod/Models`: 各模块下，Dto模型定义，按实体目录组织
 * `src/Services/ApiService`: 是接口服务项目，基于ASP.NET Core Web API
 * `src/Services/AdminService`: 后台管理服务接口项目
+
+## 测试目录tests
+
+* `tests/Share.Tests.csproj`: 单元测试项目，包含业务逻辑单元测试
+* `tests/Integration/`: 集成测试项目，使用TestServer进行端到端测试
+  - OAuth/OIDC认证授权流程测试
+  - 用户、角色、客户端CRUD操作测试
+  - API端点集成测试
+
+详细信息请参阅：
+- [集成测试文档](tests/Integration/README.md)
+- [API文档](docs/api-documentation.md)
 
 > [!NOTE]
 > 这里不存在基于`模块`的开发，也没有这个概念。这里的模块是基于业务上的划分，将相应的业务实现在代码上进行拆分，实现关注点分离。

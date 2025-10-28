@@ -1,8 +1,6 @@
-using CommonMod.Managers;
-using Entity.IdentityMod;
-using EntityFramework.DBProvider;
-using IdentityMod.Models.LoginSessionDtos;
 using System.Text.Json;
+using CommonMod.Managers;
+using IdentityMod.Models.LoginSessionDtos;
 
 namespace IdentityMod.Managers;
 
@@ -12,8 +10,8 @@ namespace IdentityMod.Managers;
 public class SessionManager(
     DefaultDbContext dbContext,
     ILogger<SessionManager> logger,
-    AuditLogManager auditLogManager)
-    : ManagerBase<DefaultDbContext, LoginSession>(dbContext, logger)
+    AuditLogManager auditLogManager
+) : ManagerBase<DefaultDbContext, LoginSession>(dbContext, logger)
 {
     private readonly AuditLogManager _auditLogManager = auditLogManager;
 
@@ -27,7 +25,10 @@ public class SessionManager(
         Queryable = Queryable
             .WhereNotNull(filter.UserId != null, q => q.UserId == filter.UserId)
             .WhereNotNull(filter.SessionId != null, q => q.SessionId == filter.SessionId)
-            .WhereNotNull(filter.IpAddress != null, q => q.IpAddress != null && q.IpAddress.Contains(filter.IpAddress!))
+            .WhereNotNull(
+                filter.IpAddress != null,
+                q => q.IpAddress != null && q.IpAddress.Contains(filter.IpAddress!)
+            )
             .WhereNotNull(filter.IsActive != null, q => q.IsActive == filter.IsActive)
             .WhereNotNull(filter.StartDate != null, q => q.LoginTime >= filter.StartDate)
             .WhereNotNull(filter.EndDate != null, q => q.LoginTime <= filter.EndDate);
@@ -65,7 +66,8 @@ public class SessionManager(
     public async Task<LoginSessionDetailDto?> AddAsync(
         LoginSessionAddDto dto,
         string? ipAddress = null,
-        string? userAgent = null)
+        string? userAgent = null
+    )
     {
         var loginTime = DateTimeOffset.UtcNow;
         var loginSession = new LoginSession
@@ -78,7 +80,7 @@ public class SessionManager(
             LoginTime = loginTime,
             LastActivityTime = loginTime,
             ExpirationTime = dto.ExpirationTime,
-            IsActive = true
+            IsActive = true,
         };
 
         var result = await AddAsync(loginSession);
@@ -92,7 +94,9 @@ public class SessionManager(
             category: "Authentication",
             eventName: "SessionCreated",
             subjectId: dto.UserId.ToString(),
-            payload: JsonSerializer.Serialize(new { sessionId = dto.SessionId, ipAddress = dto.IpAddress }),
+            payload: JsonSerializer.Serialize(
+                new { sessionId = dto.SessionId, ipAddress = dto.IpAddress }
+            ),
             ipAddress: ipAddress ?? dto.IpAddress,
             userAgent: userAgent ?? dto.UserAgent
         );
@@ -107,7 +111,7 @@ public class SessionManager(
     /// <returns>True if successful</returns>
     public async Task<bool> UpdateLastActivityAsync(string sessionId)
     {
-        var session = await FindAsync(q => q.SessionId == sessionId);
+        var session = await _dbSet.Where(q => q.SessionId == sessionId).FirstOrDefaultAsync();
         if (session == null || !session.IsActive)
         {
             return false;
@@ -129,9 +133,10 @@ public class SessionManager(
         Guid id,
         string? revokedBy = null,
         string? ipAddress = null,
-        string? userAgent = null)
+        string? userAgent = null
+    )
     {
-        var session = await FindAsync(q => q.Id == id);
+        var session = await GetCurrentAsync(id);
         if (session == null)
         {
             return false;
@@ -147,7 +152,9 @@ public class SessionManager(
                 category: "Authentication",
                 eventName: "SessionRevoked",
                 subjectId: session.UserId.ToString(),
-                payload: JsonSerializer.Serialize(new { sessionId = session.SessionId, revokedBy = revokedBy ?? "system" }),
+                payload: JsonSerializer.Serialize(
+                    new { sessionId = session.SessionId, revokedBy = revokedBy ?? "system" }
+                ),
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );
@@ -170,10 +177,11 @@ public class SessionManager(
         string? exceptSessionId = null,
         string? revokedBy = null,
         string? ipAddress = null,
-        string? userAgent = null)
+        string? userAgent = null
+    )
     {
         var query = _dbSet.Where(q => q.UserId == userId && q.IsActive);
-        
+
         if (!string.IsNullOrEmpty(exceptSessionId))
         {
             query = query.Where(q => q.SessionId != exceptSessionId);
