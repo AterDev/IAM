@@ -1,0 +1,115 @@
+<div class="organization-container">
+  <div class="header">
+    <h2>{{ 'menu.organization' | translate }}</h2>
+    <button mat-raised-button color="primary" (click)="openAddDialog()">
+      <mat-icon>add</mat-icon>
+      {{ 'organization.addRoot' | translate }}
+    </button>
+  </div>
+
+  <div class="content-layout">
+    <div class="tree-panel">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>{{ 'organization.tree' | translate }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div *ngIf="isLoading()" class="loading-container">
+            <mat-spinner diameter="40"></mat-spinner>
+          </div>
+
+          <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" *ngIf="!isLoading()">
+            <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle>
+              <li class="mat-tree-node" [class.selected]="selectedNode()?.id === node.id" (click)="selectNode(node)">
+                <button mat-icon-button disabled></button>
+                <span class="node-label">
+                  <mat-icon class="org-icon">business</mat-icon>
+                  {{ node.name }}
+                </span>
+                <span class="node-actions">
+                  <button mat-icon-button (click)="openAddDialog(node)" matTooltip="{{ 'organization.addChild' | translate }}">
+                    <mat-icon>add</mat-icon>
+                  </button>
+                  <button mat-icon-button (click)="openEditDialog(node, $event)" matTooltip="{{ 'common.edit' | translate }}">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button (click)="openMembersDialog(node, $event)" matTooltip="{{ 'organization.members' | translate }}">
+                    <mat-icon>people</mat-icon>
+                  </button>
+                  <button mat-icon-button (click)="deleteNode(node, $event)" matTooltip="{{ 'common.delete' | translate }}">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </span>
+              </li>
+            </mat-tree-node>
+
+            <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
+              <li>
+                <div class="mat-tree-node" [class.selected]="selectedNode()?.id === node.id" (click)="selectNode(node)">
+                  <button mat-icon-button matTreeNodeToggle>
+                    <mat-icon class="mat-icon-rtl-mirror">
+                      {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
+                    </mat-icon>
+                  </button>
+                  <span class="node-label">
+                    <mat-icon class="org-icon">business</mat-icon>
+                    {{ node.name }}
+                  </span>
+                  <span class="node-actions">
+                    <button mat-icon-button (click)="openAddDialog(node)" matTooltip="{{ 'organization.addChild' | translate }}">
+                      <mat-icon>add</mat-icon>
+                    </button>
+                    <button mat-icon-button (click)="openEditDialog(node, $event)" matTooltip="{{ 'common.edit' | translate }}">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button (click)="openMembersDialog(node, $event)" matTooltip="{{ 'organization.members' | translate }}">
+                      <mat-icon>people</mat-icon>
+                    </button>
+                    <button mat-icon-button (click)="deleteNode(node, $event)" matTooltip="{{ 'common.delete' | translate }}">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </span>
+                </div>
+                <ul [class.tree-invisible]="!treeControl.isExpanded(node)">
+                  <ng-container matTreeNodeOutlet></ng-container>
+                </ul>
+              </li>
+            </mat-nested-tree-node>
+          </mat-tree>
+
+          <div *ngIf="!isLoading() && dataSource.data.length === 0" class="no-data">
+            {{ 'organization.noData' | translate }}
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <div class="detail-panel" *ngIf="selectedNode()">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>{{ 'organization.detail' | translate }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>{{ 'organization.name' | translate }}:</label>
+              <span>{{ selectedNode()!.name }}</span>
+            </div>
+            <div class="info-item">
+              <label>{{ 'organization.level' | translate }}:</label>
+              <span>{{ selectedNode()!.level }}</span>
+            </div>
+            <div class="info-item">
+              <label>{{ 'organization.displayOrder' | translate }}:</label>
+              <span>{{ selectedNode()!.displayOrder }}</span>
+            </div>
+            <div class="info-item full-width" *ngIf="selectedNode()!.description">
+              <label>{{ 'organization.description' | translate }}:</label>
+              <span>{{ selectedNode()!.description }}</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>
