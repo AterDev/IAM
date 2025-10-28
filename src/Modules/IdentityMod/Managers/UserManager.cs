@@ -1,6 +1,6 @@
+using System.Text.Json;
 using CommonMod.Managers;
 using IdentityMod.Models.UserDtos;
-using System.Text.Json;
 
 namespace IdentityMod.Managers;
 
@@ -11,8 +11,8 @@ public class UserManager(
     DefaultDbContext dbContext,
     ILogger<UserManager> logger,
     IPasswordHasher passwordHasher,
-    AuditLogManager auditLogManager)
-    : ManagerBase<DefaultDbContext, User>(dbContext, logger)
+    AuditLogManager auditLogManager
+) : ManagerBase<DefaultDbContext, User>(dbContext, logger)
 {
     private readonly IPasswordHasher _passwordHasher = passwordHasher;
     private readonly AuditLogManager _auditLogManager = auditLogManager;
@@ -26,9 +26,18 @@ public class UserManager(
     {
         Queryable = Queryable
             .WhereNotNull(filter.UserName != null, q => q.UserName.Contains(filter.UserName!))
-            .WhereNotNull(filter.Email != null, q => q.Email != null && q.Email.Contains(filter.Email!))
-            .WhereNotNull(filter.PhoneNumber != null, q => q.PhoneNumber != null && q.PhoneNumber.Contains(filter.PhoneNumber!))
-            .WhereNotNull(filter.LockoutEnabled != null, q => q.LockoutEnabled == filter.LockoutEnabled)
+            .WhereNotNull(
+                filter.Email != null,
+                q => q.Email != null && q.Email.Contains(filter.Email!)
+            )
+            .WhereNotNull(
+                filter.PhoneNumber != null,
+                q => q.PhoneNumber != null && q.PhoneNumber.Contains(filter.PhoneNumber!)
+            )
+            .WhereNotNull(
+                filter.LockoutEnabled != null,
+                q => q.LockoutEnabled == filter.LockoutEnabled
+            )
             .WhereNotNull(filter.StartDate != null, q => q.CreatedTime >= filter.StartDate)
             .WhereNotNull(filter.EndDate != null, q => q.CreatedTime <= filter.EndDate);
 
@@ -94,7 +103,7 @@ public class UserManager(
             PhoneNumberConfirmed = dto.PhoneNumberConfirmed,
             LockoutEnabled = dto.LockoutEnabled,
             SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString()
+            ConcurrencyStamp = Guid.NewGuid().ToString(),
         };
 
         // Hash password if provided
@@ -237,7 +246,8 @@ public class UserManager(
         Guid userId,
         List<Guid> roleIds,
         string? ipAddress = null,
-        string? userAgent = null)
+        string? userAgent = null
+    )
     {
         var user = await FindAsync(userId);
         if (user == null)
@@ -264,11 +274,7 @@ public class UserManager(
         var toAdd = roleIds.Where(rid => !existingRoleIds.Contains(rid)).ToList();
         foreach (var roleId in toAdd)
         {
-            user.UserRoles.Add(new UserRole
-            {
-                UserId = userId,
-                RoleId = roleId
-            });
+            user.UserRoles.Add(new UserRole { UserId = userId, RoleId = roleId });
         }
 
         var result = await SaveChangesAsync() > 0;
@@ -278,7 +284,7 @@ public class UserManager(
             // Write audit log for role assignment changes
             var removed = oldRoleIds.Except(roleIds).ToList();
             var added = roleIds.Except(oldRoleIds).ToList();
-            
+
             if (removed.Any() || added.Any())
             {
                 await _auditLogManager.AddAuditLogAsync(
@@ -307,10 +313,13 @@ public class UserManager(
         string userName,
         string password,
         string? ipAddress = null,
-        string? userAgent = null)
+        string? userAgent = null
+    )
     {
         var normalizedUserName = userName.ToUpperInvariant();
-        var user = await FindAsync(q => q.NormalizedUserName == normalizedUserName);
+        var user = await _dbSet
+            .Where(q => q.NormalizedUserName == normalizedUserName)
+            .SingleOrDefaultAsync();
 
         if (user == null)
         {
@@ -334,7 +343,13 @@ public class UserManager(
                 category: "Authentication",
                 eventName: "LoginFailed",
                 subjectId: user.Id.ToString(),
-                payload: JsonSerializer.Serialize(new { reason = "AccountLocked", lockoutEnd = user.LockoutEnd.Value.ToString("O") }),
+                payload: JsonSerializer.Serialize(
+                    new
+                    {
+                        reason = "AccountLocked",
+                        lockoutEnd = user.LockoutEnd.Value.ToString("O"),
+                    }
+                ),
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );
@@ -343,24 +358,29 @@ public class UserManager(
         }
 
         // Verify password
-        if (string.IsNullOrEmpty(user.PasswordHash) || !_passwordHasher.VerifyPassword(password, user.PasswordHash))
+        if (
+            string.IsNullOrEmpty(user.PasswordHash)
+            || !_passwordHasher.VerifyPassword(password, user.PasswordHash)
+        )
         {
             // Increment access failed count
             user.AccessFailedCount++;
-            
+
             // Lock account after too many failed attempts (e.g., 5)
             if (user.LockoutEnabled && user.AccessFailedCount >= 5)
             {
                 user.LockoutEnd = DateTimeOffset.UtcNow.AddMinutes(30);
             }
-            
+
             await UpdateAsync(user);
 
             await _auditLogManager.AddAuditLogAsync(
                 category: "Authentication",
                 eventName: "LoginFailed",
                 subjectId: user.Id.ToString(),
-                payload: JsonSerializer.Serialize(new { reason = "InvalidPassword", failedCount = user.AccessFailedCount }),
+                payload: JsonSerializer.Serialize(
+                    new { reason = "InvalidPassword", failedCount = user.AccessFailedCount }
+                ),
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );
