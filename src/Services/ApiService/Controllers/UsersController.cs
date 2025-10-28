@@ -1,0 +1,141 @@
+using IdentityMod.Managers;
+using IdentityMod.Models.UserDtos;
+using Microsoft.AspNetCore.Authorization;
+
+namespace ApiService.Controllers;
+
+/// <summary>
+/// User management controller
+/// </summary>
+public class UsersController(
+    Share.Localizer localizer,
+    UserManager manager,
+    IUserContext user,
+    ILogger<UsersController> logger
+) : RestControllerBase<UserManager>(localizer, manager, user, logger)
+{
+    /// <summary>
+    /// Get paged users
+    /// </summary>
+    /// <param name="filter">Filter criteria</param>
+    /// <returns>Paged list of users</returns>
+    [HttpGet]
+    public async Task<ActionResult<PageList<UserItemDto>>> GetUsers(
+        [FromQuery] UserFilterDto filter
+    )
+    {
+        var result = await _manager.GetPageAsync(filter);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Get user detail by id
+    /// </summary>
+    /// <param name="id">User id</param>
+    /// <returns>User detail</returns>
+    [HttpGet("{id}")]
+    public async Task<ActionResult<UserDetailDto>> GetDetail(Guid id)
+    {
+        var result = await _manager.GetDetailAsync(id);
+        return result == null ? NotFound("User not found") : Ok(result);
+    }
+
+    /// <summary>
+    /// Get user by username
+    /// </summary>
+    /// <param name="username">Username</param>
+    /// <returns>User detail</returns>
+    [HttpGet("username/{username}")]
+    public async Task<ActionResult<UserDetailDto>> GetByUserName(string username)
+    {
+        var result = await _manager.GetByUserNameAsync(username);
+        return result == null ? NotFound("User not found") : Ok(result);
+    }
+
+    /// <summary>
+    /// Create new user
+    /// </summary>
+    /// <param name="dto">User data</param>
+    /// <returns>Created user detail</returns>
+    [HttpPost]
+    public async Task<ActionResult<UserDetailDto>> CreateUser([FromBody] UserAddDto dto)
+    {
+        var result = await _manager.AddAsync(dto);
+        return result == null
+            ? BadRequest(_manager.ErrorMsg)
+            : CreatedAtAction(nameof(GetDetail), new { id = result.Id }, result);
+    }
+
+    /// <summary>
+    /// Update user
+    /// </summary>
+    /// <param name="id">User id</param>
+    /// <param name="dto">Update data</param>
+    /// <returns>Updated user detail</returns>
+    [HttpPut("{id}")]
+    public async Task<ActionResult<UserDetailDto>> UpdateUser(
+        Guid id,
+        [FromBody] UserUpdateDto dto
+    )
+    {
+        var result = await _manager.UpdateAsync(id, dto);
+        return result == null ? BadRequest(_manager.ErrorMsg) : Ok(result);
+    }
+
+    /// <summary>
+    /// Update user status (lock/unlock)
+    /// </summary>
+    /// <param name="id">User id</param>
+    /// <param name="lockoutEnd">Lockout end date (null to unlock)</param>
+    /// <returns>No content if successful</returns>
+    [HttpPatch("{id}/status")]
+    public async Task<ActionResult> UpdateStatus(Guid id, [FromBody] DateTimeOffset? lockoutEnd)
+    {
+        var success = await _manager.SetLockoutAsync(id, lockoutEnd);
+        return !success ? BadRequest(_manager.ErrorMsg) : NoContent();
+    }
+
+    /// <summary>
+    /// Delete user
+    /// </summary>
+    /// <param name="id">User id</param>
+    /// <param name="hardDelete">Perform hard delete (default false)</param>
+    /// <returns>No content if successful</returns>
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> DeleteUser(Guid id, [FromQuery] bool hardDelete = false)
+    {
+        var success = await _manager.DeleteAsync(id, !hardDelete);
+        return !success ? BadRequest(_manager.ErrorMsg) : NoContent();
+    }
+
+    /// <summary>
+    /// Change user password
+    /// </summary>
+    /// <param name="id">User id</param>
+    /// <param name="newPassword">New password</param>
+    /// <returns>No content if successful</returns>
+    [HttpPost("{id}/password")]
+    public async Task<ActionResult> ChangePassword(Guid id, [FromBody] string newPassword)
+    {
+        if (string.IsNullOrWhiteSpace(newPassword))
+        {
+            return BadRequest("Password cannot be empty");
+        }
+
+        var success = await _manager.ChangePasswordAsync(id, newPassword);
+        return !success ? BadRequest(_manager.ErrorMsg) : NoContent();
+    }
+
+    /// <summary>
+    /// Assign roles to user
+    /// </summary>
+    /// <param name="id">User id</param>
+    /// <param name="roleIds">Role ids to assign</param>
+    /// <returns>No content if successful</returns>
+    [HttpPost("{id}/roles")]
+    public async Task<ActionResult> AssignRoles(Guid id, [FromBody] List<Guid> roleIds)
+    {
+        var success = await _manager.AssignRolesAsync(id, roleIds);
+        return !success ? BadRequest(_manager.ErrorMsg) : NoContent();
+    }
+}
