@@ -7,7 +7,25 @@ namespace ApiService.Controllers;
 /// <summary>
 /// OAuth/OIDC client management controller
 /// </summary>
+/// <remarks>
+/// Manages OAuth 2.0 and OpenID Connect client applications.
+/// 
+/// Client types supported:
+/// - Confidential: Server-side applications with secure secret storage
+/// - Public: Single-page applications (SPAs) and mobile apps without secrets
+/// 
+/// Features:
+/// - Client registration and configuration
+/// - Secret rotation for security
+/// - Scope assignment for access control
+/// - Authorization tracking
+/// - PKCE configuration for public clients
+/// 
+/// All endpoints require appropriate administrative permissions.
+/// </remarks>
 [Route("api/[controller]")]
+[Produces("application/json")]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 public class ClientsController(
     Share.Localizer localizer,
     ClientManager manager,
@@ -93,9 +111,27 @@ public class ClientsController(
     /// <summary>
     /// Rotate client secret
     /// </summary>
-    /// <param name="id">Client id</param>
-    /// <returns>New client secret</returns>
+    /// <param name="id">Client unique identifier</param>
+    /// <returns>New client secret (store securely, won't be shown again)</returns>
+    /// <response code="200">Returns the new client secret</response>
+    /// <response code="400">If the secret rotation fails</response>
+    /// <response code="404">If the client is not found</response>
+    /// <response code="401">If the user is not authenticated</response>
+    /// <response code="403">If the user lacks permission to rotate secrets</response>
+    /// <remarks>
+    /// IMPORTANT: The new secret is only shown once. Store it securely immediately.
+    /// The old secret will be invalidated and cannot be recovered.
+    /// 
+    /// This operation should be performed:
+    /// - Regularly as a security best practice
+    /// - When a secret may have been compromised
+    /// - When rotating credentials for compliance
+    /// </remarks>
     [HttpPost("{id}/secret:rotate")]
+    [ProducesResponseType(typeof(ClientSecretDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ClientSecretDto>> RotateSecret(Guid id)
     {
         var newSecret = await _manager.RotateSecretAsync(id);
