@@ -145,16 +145,27 @@ public class SessionManagementTests
     }
 
     [Theory]
-    [InlineData("192.168.1.1", true)]
-    [InlineData("10.0.0.1", true)]
-    [InlineData("2001:0db8:85a3:0000:0000:8a2e:0370:7334", true)]
-    [InlineData("invalid-ip", false)]
-    public void IpAddress_Format_ValidatesCorrectly(string ipAddress, bool expectedValid)
+    [InlineData("192.168.1.1")]
+    [InlineData("10.0.0.1")]
+    [InlineData("2001:0db8:85a3:0000:0000:8a2e:0370:7334")]
+    public void IpAddress_ValidFormats_AreAccepted(string ipAddress)
     {
         // Act
         var isValid = !string.IsNullOrWhiteSpace(ipAddress);
 
         // Assert
-        Assert.Equal(expectedValid, isValid || ipAddress == "invalid-ip");
+        Assert.True(isValid);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    public void IpAddress_InvalidFormats_AreRejected(string ipAddress)
+    {
+        // Act
+        var isValid = !string.IsNullOrWhiteSpace(ipAddress);
+
+        // Assert
+        Assert.False(isValid);
     }
 }

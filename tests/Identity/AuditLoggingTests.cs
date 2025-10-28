@@ -224,10 +224,14 @@ public class AuditLoggingTests
         // Arrange
         var payload = "{\"key\":\"value\",\"number\":123,\"array\":[1,2,3]}";
 
-        // Act
-        var isValidJson = payload.StartsWith("{") && payload.EndsWith("}");
+        // Act - Simple validation that it looks like JSON
+        var looksLikeJson = !string.IsNullOrWhiteSpace(payload) 
+            && payload.TrimStart().StartsWith("{") 
+            && payload.TrimEnd().EndsWith("}");
 
         // Assert
-        Assert.True(isValidJson);
+        Assert.True(looksLikeJson);
+        Assert.Contains("key", payload);
+        Assert.Contains("value", payload);
     }
 }
