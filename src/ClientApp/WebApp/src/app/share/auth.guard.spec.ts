@@ -6,23 +6,27 @@ import { OidcAuthService } from '../services/oidc-auth.service';
 describe('AuthGuard', () => {
   let guard: AuthGuard;
   let router: Router;
-  let authService: jasmine.SpyObj<OidcAuthService>;
+  let authService: OidcAuthService;
 
   beforeEach(() => {
-    const authServiceSpy = jasmine.createSpyObj('OidcAuthService', ['isAuthenticated']);
-    const routerSpy = jasmine.createSpyObj('Router', ['parseUrl']);
+    const authServiceMock = {
+      isAuthenticated: jest.fn()
+    };
+    const routerMock = {
+      parseUrl: jest.fn()
+    };
 
     TestBed.configureTestingModule({
       providers: [
         AuthGuard,
-        { provide: OidcAuthService, useValue: authServiceSpy },
-        { provide: Router, useValue: routerSpy }
+        { provide: OidcAuthService, useValue: authServiceMock },
+        { provide: Router, useValue: routerMock }
       ]
     });
 
     guard = TestBed.inject(AuthGuard);
-    authService = TestBed.inject(OidcAuthService) as jasmine.SpyObj<OidcAuthService>;
-    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+    authService = TestBed.inject(OidcAuthService);
+    router = TestBed.inject(Router);
   });
 
   it('should be created', () => {
@@ -39,7 +43,7 @@ describe('AuthGuard', () => {
   });
 
   it('should allow access when user is authenticated', () => {
-    authService.isAuthenticated.and.returnValue(true);
+    (authService.isAuthenticated as jest.Mock).mockReturnValue(true);
     const route = {} as ActivatedRouteSnapshot;
     const state = { url: '/dashboard' } as RouterStateSnapshot;
 
@@ -50,9 +54,9 @@ describe('AuthGuard', () => {
   });
 
   it('should redirect to login when user is not authenticated', () => {
-    authService.isAuthenticated.and.returnValue(false);
+    (authService.isAuthenticated as jest.Mock).mockReturnValue(false);
     const loginUrl = {} as UrlTree;
-    (router.parseUrl as jasmine.Spy).and.returnValue(loginUrl);
+    (router.parseUrl as jest.Mock).mockReturnValue(loginUrl);
     
     const route = {} as ActivatedRouteSnapshot;
     const state = { url: '/dashboard' } as RouterStateSnapshot;
@@ -65,7 +69,7 @@ describe('AuthGuard', () => {
   });
 
   it('should handle canActivateChild the same as canActivate', () => {
-    authService.isAuthenticated.and.returnValue(true);
+    (authService.isAuthenticated as jest.Mock).mockReturnValue(true);
     const route = {} as ActivatedRouteSnapshot;
     const state = { url: '/dashboard' } as RouterStateSnapshot;
 
@@ -74,3 +78,4 @@ describe('AuthGuard', () => {
     expect(result).toBe(true);
   });
 });
+

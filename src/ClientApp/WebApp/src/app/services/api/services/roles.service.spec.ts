@@ -25,13 +25,12 @@ describe('RolesService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should get roles with pagination', (done) => {
+  it('should get roles with pagination', () => {
     const mockResponse = { data: [], total: 0 };
     const name = 'admin';
 
     service.getRoles(name, 1, 10, null).subscribe(response => {
       expect(response).toEqual(mockResponse);
-      done();
     });
 
     const expectedUrl = `/api/Roles?name=${name}&pageIndex=1&pageSize=10&orderBy=`;
@@ -40,7 +39,7 @@ describe('RolesService', () => {
     req.flush(mockResponse);
   });
 
-  it('should create a new role', (done) => {
+  it('should create a new role', () => {
     const newRole: RoleAddDto = {
       name: 'NewRole',
       description: 'Test role description'
@@ -49,7 +48,6 @@ describe('RolesService', () => {
 
     service.createRole(newRole).subscribe(response => {
       expect(response).toEqual(mockResponse);
-      done();
     });
 
     const req = httpMock.expectOne('/api/Roles');
@@ -58,13 +56,12 @@ describe('RolesService', () => {
     req.flush(mockResponse);
   });
 
-  it('should get role detail by id', (done) => {
+  it('should get role detail by id', () => {
     const roleId = '456';
     const mockRole = { id: roleId, name: 'Admin', description: 'Administrator role' };
 
     service.getDetail(roleId).subscribe(response => {
       expect(response).toEqual(mockRole);
-      done();
     });
 
     const req = httpMock.expectOne(`/api/Roles/${roleId}`);
@@ -72,7 +69,7 @@ describe('RolesService', () => {
     req.flush(mockRole);
   });
 
-  it('should update role', (done) => {
+  it('should update role', () => {
     const roleId = '456';
     const updateData: RoleUpdateDto = {
       name: 'UpdatedRole',
@@ -82,7 +79,6 @@ describe('RolesService', () => {
 
     service.updateRole(roleId, updateData).subscribe(response => {
       expect(response).toEqual(mockResponse);
-      done();
     });
 
     const req = httpMock.expectOne(`/api/Roles/${roleId}`);
@@ -91,12 +87,11 @@ describe('RolesService', () => {
     req.flush(mockResponse);
   });
 
-  it('should delete role', (done) => {
+  it('should delete role', () => {
     const roleId = '456';
 
     service.deleteRole(roleId, false).subscribe(response => {
       expect(response).toBeTruthy();
-      done();
     });
 
     const req = httpMock.expectOne(`/api/Roles/${roleId}?hardDelete=false`);
@@ -104,3 +99,4 @@ describe('RolesService', () => {
     req.flush({ success: true });
   });
 });
+
