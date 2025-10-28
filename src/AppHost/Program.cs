@@ -7,7 +7,6 @@ var aspireSetting = AppSettingsHelper.LoadAspireSettings(builder.Configuration);
 IResourceBuilder<IResourceWithConnectionString>? database = null;
 IResourceBuilder<IResourceWithConnectionString>? cache = null;
 IResourceBuilder<IResourceWithConnectionString>? nats = null;
-
 IResourceBuilder<IResourceWithConnectionString>? qdrant = null;
 
 // if you have exist resource, you can set connection string here, without create container

@@ -8,13 +8,10 @@ namespace IdentityMod.Managers;
 /// <summary>
 /// Manager for OAuth device flow operations
 /// </summary>
-public class DeviceFlowManager : ManagerBase<DefaultDbContext>
+public class DeviceFlowManager(DefaultDbContext dbContext, ILogger<DeviceFlowManager> logger) : ManagerBase<DefaultDbContext>(dbContext, logger)
 {
     private const int DeviceCodeExpirationSeconds = 600; // 10 minutes
     private const int PollingIntervalSeconds = 5;
-
-    public DeviceFlowManager(DefaultDbContext dbContext, ILogger<DeviceFlowManager> logger)
-        : base(dbContext, logger) { }
 
     /// <summary>
     /// Initiate device authorization

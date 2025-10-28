@@ -20,6 +20,7 @@
 * if for 等语句必须使用大括号
 * 优先使用模式匹配
 * 谨慎使用EF Core Include，优先使用Select查询
+* 定义实体和DTO时，在必要的属性上要添加xml summary注释
 </preferences>
 
 <structure>

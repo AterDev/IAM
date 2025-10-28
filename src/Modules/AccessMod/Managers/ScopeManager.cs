@@ -1,5 +1,4 @@
 using AccessMod.Models.ScopeDtos;
-using Microsoft.EntityFrameworkCore;
 
 namespace AccessMod.Managers;
 

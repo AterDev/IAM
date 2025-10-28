@@ -9,10 +9,8 @@ namespace IdentityMod.Managers;
 /// <summary>
 /// Manager for OAuth/OIDC authorization operations
 /// </summary>
-public class AuthorizationManager : ManagerBase<DefaultDbContext>
+public class AuthorizationManager(DefaultDbContext dbContext, ILogger<AuthorizationManager> logger) : ManagerBase<DefaultDbContext>(dbContext, logger)
 {
-    public AuthorizationManager(DefaultDbContext dbContext, ILogger<AuthorizationManager> logger)
-        : base(dbContext, logger) { }
 
     /// <summary>
     /// Validate authorization request
