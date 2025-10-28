@@ -1,0 +1,90 @@
+<h2 mat-dialog-title>{{ 'client.editClient' | translate }}</h2>
+
+<mat-dialog-content>
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <form [formGroup]="clientForm" class="client-form" *ngIf="!isLoading">
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'client.displayName' | translate }}</mat-label>
+      <input matInput formControlName="displayName" required>
+      <mat-error *ngIf="clientForm.get('displayName')?.invalid && clientForm.get('displayName')?.touched">
+        {{ getErrorMessage(displayNameControl) }}
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'client.description' | translate }}</mat-label>
+      <textarea matInput formControlName="description" rows="3"></textarea>
+    </mat-form-field>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline">
+        <mat-label>{{ 'client.consentType' | translate }}</mat-label>
+        <mat-select formControlName="consentType">
+          <mat-option value="explicit">{{ 'client.explicit' | translate }}</mat-option>
+          <mat-option value="implicit">{{ 'client.implicit' | translate }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-checkbox formControlName="requirePkce" class="pkce-checkbox">
+        {{ 'client.requirePkce' | translate }}
+      </mat-checkbox>
+    </div>
+
+    <div class="uri-section">
+      <h3>{{ 'client.redirectUris' | translate }}</h3>
+      <div class="uri-input-row">
+        <mat-form-field appearance="outline">
+          <mat-label>{{ 'client.addRedirectUri' | translate }}</mat-label>
+          <input matInput formControlName="newRedirectUri" (keyup.enter)="addRedirectUri()">
+        </mat-form-field>
+        <button mat-icon-button color="primary" (click)="addRedirectUri()" type="button">
+          <mat-icon>add</mat-icon>
+        </button>
+      </div>
+      <mat-chip-set>
+        <mat-chip *ngFor="let uri of redirectUris.controls; let i = index" 
+                  (removed)="removeRedirectUri(i)">
+          {{ uri.value }}
+          <button matChipRemove>
+            <mat-icon>cancel</mat-icon>
+          </button>
+        </mat-chip>
+      </mat-chip-set>
+    </div>
+
+    <div class="uri-section">
+      <h3>{{ 'client.postLogoutRedirectUris' | translate }}</h3>
+      <div class="uri-input-row">
+        <mat-form-field appearance="outline">
+          <mat-label>{{ 'client.addPostLogoutRedirectUri' | translate }}</mat-label>
+          <input matInput formControlName="newPostLogoutRedirectUri" (keyup.enter)="addPostLogoutRedirectUri()">
+        </mat-form-field>
+        <button mat-icon-button color="primary" (click)="addPostLogoutRedirectUri()" type="button">
+          <mat-icon>add</mat-icon>
+        </button>
+      </div>
+      <mat-chip-set>
+        <mat-chip *ngFor="let uri of postLogoutRedirectUris.controls; let i = index" 
+                  (removed)="removePostLogoutRedirectUri(i)">
+          {{ uri.value }}
+          <button matChipRemove>
+            <mat-icon>cancel</mat-icon>
+          </button>
+        </mat-chip>
+      </mat-chip-set>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()" [disabled]="isSubmitting">
+    {{ 'common.cancel' | translate }}
+  </button>
+  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="isSubmitting || isLoading">
+    <mat-spinner *ngIf="isSubmitting" diameter="20"></mat-spinner>
+    <span *ngIf="!isSubmitting">{{ 'common.save' | translate }}</span>
+  </button>
+</mat-dialog-actions>

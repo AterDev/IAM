@@ -1,0 +1,144 @@
+<div *ngIf="!clientSecret">
+  <h2 mat-dialog-title>{{ 'client.addClient' | translate }}</h2>
+
+  <mat-dialog-content>
+    <form [formGroup]="clientForm" class="client-form">
+      <mat-form-field appearance="outline">
+        <mat-label>{{ 'client.clientId' | translate }}</mat-label>
+        <input matInput formControlName="clientId" required>
+        <mat-error *ngIf="clientForm.get('clientId')?.invalid && clientForm.get('clientId')?.touched">
+          {{ getErrorMessage(clientIdControl, 'clientId') }}
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ 'client.displayName' | translate }}</mat-label>
+        <input matInput formControlName="displayName" required>
+        <mat-error *ngIf="clientForm.get('displayName')?.invalid && clientForm.get('displayName')?.touched">
+          {{ getErrorMessage(displayNameControl, 'displayName') }}
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ 'client.description' | translate }}</mat-label>
+        <textarea matInput formControlName="description" rows="3"></textarea>
+      </mat-form-field>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>{{ 'client.type' | translate }}</mat-label>
+          <mat-select formControlName="type">
+            <mat-option value="confidential">{{ 'client.confidential' | translate }}</mat-option>
+            <mat-option value="public">{{ 'client.public' | translate }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>{{ 'client.applicationType' | translate }}</mat-label>
+          <mat-select formControlName="applicationType">
+            <mat-option value="web">{{ 'client.web' | translate }}</mat-option>
+            <mat-option value="native">{{ 'client.native' | translate }}</mat-option>
+            <mat-option value="spa">{{ 'client.spa' | translate }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>{{ 'client.consentType' | translate }}</mat-label>
+          <mat-select formControlName="consentType">
+            <mat-option value="explicit">{{ 'client.explicit' | translate }}</mat-option>
+            <mat-option value="implicit">{{ 'client.implicit' | translate }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-checkbox formControlName="requirePkce" class="pkce-checkbox">
+          {{ 'client.requirePkce' | translate }}
+        </mat-checkbox>
+      </div>
+
+      <div class="uri-section">
+        <h3>{{ 'client.redirectUris' | translate }}</h3>
+        <div class="uri-input-row">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ 'client.addRedirectUri' | translate }}</mat-label>
+            <input matInput formControlName="newRedirectUri" (keyup.enter)="addRedirectUri()">
+          </mat-form-field>
+          <button mat-icon-button color="primary" (click)="addRedirectUri()" type="button">
+            <mat-icon>add</mat-icon>
+          </button>
+        </div>
+        <mat-chip-set>
+          <mat-chip *ngFor="let uri of redirectUris.controls; let i = index" 
+                    (removed)="removeRedirectUri(i)">
+            {{ uri.value }}
+            <button matChipRemove>
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </mat-chip>
+        </mat-chip-set>
+      </div>
+
+      <div class="uri-section">
+        <h3>{{ 'client.postLogoutRedirectUris' | translate }}</h3>
+        <div class="uri-input-row">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ 'client.addPostLogoutRedirectUri' | translate }}</mat-label>
+            <input matInput formControlName="newPostLogoutRedirectUri" (keyup.enter)="addPostLogoutRedirectUri()">
+          </mat-form-field>
+          <button mat-icon-button color="primary" (click)="addPostLogoutRedirectUri()" type="button">
+            <mat-icon>add</mat-icon>
+          </button>
+        </div>
+        <mat-chip-set>
+          <mat-chip *ngFor="let uri of postLogoutRedirectUris.controls; let i = index" 
+                    (removed)="removePostLogoutRedirectUri(i)">
+            {{ uri.value }}
+            <button matChipRemove>
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </mat-chip>
+        </mat-chip-set>
+      </div>
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()" [disabled]="isSubmitting">
+      {{ 'common.cancel' | translate }}
+    </button>
+    <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="isSubmitting">
+      <mat-spinner *ngIf="isSubmitting" diameter="20"></mat-spinner>
+      <span *ngIf="!isSubmitting">{{ 'common.save' | translate }}</span>
+    </button>
+  </mat-dialog-actions>
+</div>
+
+<div *ngIf="clientSecret" class="secret-display">
+  <h2 mat-dialog-title>{{ 'client.secretTitle' | translate }}</h2>
+  
+  <mat-dialog-content>
+    <div class="warning-message">
+      <mat-icon color="warn">warning</mat-icon>
+      <p>{{ 'client.secretWarning' | translate }}</p>
+    </div>
+
+    <div class="secret-container">
+      <mat-form-field appearance="outline" class="secret-field">
+        <mat-label>{{ 'client.clientSecret' | translate }}</mat-label>
+        <input matInput [value]="clientSecret" readonly>
+      </mat-form-field>
+      <button mat-icon-button color="primary" (click)="copySecret()" matTooltip="{{ 'common.copy' | translate }}">
+        <mat-icon>{{ secretCopied ? 'check' : 'content_copy' }}</mat-icon>
+      </button>
+    </div>
+
+    <p class="secret-note">{{ 'client.secretNote' | translate }}</p>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-raised-button color="primary" (click)="onClose()">
+      {{ 'common.close' | translate }}
+    </button>
+  </mat-dialog-actions>
+</div>

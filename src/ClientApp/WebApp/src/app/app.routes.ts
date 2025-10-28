@@ -49,8 +49,28 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/system-role/role-detail').then(m => m.RoleDetailComponent)
       },
       {
+        path: 'client',
+        loadComponent: () => import('./pages/client/client-list').then(m => m.ClientListComponent)
+      },
+      {
+        path: 'client/:id',
+        loadComponent: () => import('./pages/client/client-detail').then(m => m.ClientDetailComponent)
+      },
+      {
         path: 'scope',
         loadComponent: () => import('./pages/scope/scope-list').then(m => m.ScopeListComponent)
+      },
+      {
+        path: 'scope/:id',
+        loadComponent: () => import('./pages/scope/scope-detail').then(m => m.ScopeDetailComponent)
+      },
+      {
+        path: 'resource',
+        loadComponent: () => import('./pages/resource/resource-list').then(m => m.ResourceListComponent)
+      },
+      {
+        path: 'resource/:id',
+        loadComponent: () => import('./pages/resource/resource-detail').then(m => m.ResourceDetailComponent)
       },
       // TODO: Implement system-logs pages
     ],
