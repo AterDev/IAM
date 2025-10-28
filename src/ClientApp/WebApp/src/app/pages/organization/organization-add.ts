@@ -1,9 +1,9 @@
 import { Component, OnInit, Inject } from '@angular/core';
 import { CommonModules, CommonFormModules } from 'src/app/share/shared-modules';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatDialogRef, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { OrganizationsService } from 'src/app/services/api/services/organizations.service';
+import { ApiClient } from 'src/app/services/api/api-client';
 import { OrganizationAddDto } from 'src/app/services/api/models/identity-mod/organization-add-dto.model';
 
 @Component({
@@ -22,7 +22,7 @@ export class OrganizationAddComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private organizationsService: OrganizationsService,
+    private api: ApiClient,
     private dialogRef: MatDialogRef<OrganizationAddComponent>,
     private snackBar: MatSnackBar,
     @Inject(MAT_DIALOG_DATA) public data: { parentId: string | null }
@@ -34,6 +34,18 @@ export class OrganizationAddComponent implements OnInit {
       description: [''],
       displayOrder: [0, [Validators.min(0)]]
     });
+  }
+
+  get name() {
+    return this.orgForm.get('name') as FormControl;
+  }
+
+  get description() {
+    return this.orgForm.get('description') as FormControl;
+  }
+
+  get displayOrder() {
+    return this.orgForm.get('displayOrder') as FormControl;
   }
 
   onSubmit(): void {
@@ -53,7 +65,7 @@ export class OrganizationAddComponent implements OnInit {
       displayOrder: formValue.displayOrder
     };
 
-    this.organizationsService.createOrganization(dto).subscribe({
+    this.api.organizations.createOrganization(dto).subscribe({
       next: () => {
         this.snackBar.open('Organization created successfully', 'Close', { duration: 3000 });
         this.dialogRef.close(true);
@@ -70,16 +82,15 @@ export class OrganizationAddComponent implements OnInit {
     this.dialogRef.close(false);
   }
 
-  getErrorMessage(fieldName: string): string {
-    const field = this.orgForm.get(fieldName);
-    if (field?.hasError('required')) {
+  getErrorMessage(control: FormControl): string {
+    if (control?.hasError('required')) {
       return 'This field is required';
     }
-    if (field?.hasError('minlength')) {
-      const minLength = field.errors?.['minlength'].requiredLength;
+    if (control?.hasError('minlength')) {
+      const minLength = control.errors?.['minlength'].requiredLength;
       return `Minimum length is ${minLength}`;
     }
-    if (field?.hasError('min')) {
+    if (control?.hasError('min')) {
       return 'Value must be greater than or equal to 0';
     }
     return '';

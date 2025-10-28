@@ -126,7 +126,7 @@
       <tr class="mat-row" *matNoDataRow>
         <td class="mat-cell" [attr.colspan]="displayedColumns.length">
           <div class="no-data">
-            {{ isLoading() ? ('common.loading' | translate) : ('common.noData' | translate) }}
+            {{ isLoading ? ('common.loading' | translate) : ('common.noData' | translate) }}
           </div>
         </td>
       </tr>
@@ -134,8 +134,8 @@
 
     <mat-paginator
       [length]="total()"
-      [pageSize]="pageSize()"
-      [pageIndex]="pageIndex()"
+      [pageSize]="pageSize"
+      [pageIndex]="pageIndex"
       [pageSizeOptions]="[5, 10, 20, 50]"
       (page)="onPageChange($event)"
       showFirstLastButtons>

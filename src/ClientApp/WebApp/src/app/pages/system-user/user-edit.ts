@@ -1,10 +1,10 @@
 import { Component, OnInit, Inject } from '@angular/core';
 import { CommonModules, CommonFormModules } from 'src/app/share/shared-modules';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatDialogRef, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { UsersService } from 'src/app/services/api/services/users.service';
+import { ApiClient } from 'src/app/services/api/api-client';
 import { UserUpdateDto } from 'src/app/services/api/models/identity-mod/user-update-dto.model';
 import { UserDetailDto } from 'src/app/services/api/models/identity-mod/user-detail-dto.model';
 
@@ -27,7 +27,7 @@ export class UserEditComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private usersService: UsersService,
+    private api: ApiClient,
     private dialogRef: MatDialogRef<UserEditComponent>,
     private snackBar: MatSnackBar,
     @Inject(MAT_DIALOG_DATA) public data: { userId: string }
@@ -42,8 +42,16 @@ export class UserEditComponent implements OnInit {
     this.loadUser();
   }
 
+  get email() {
+    return this.userForm.get('email') as FormControl;
+  }
+
+  get phoneNumber() {
+    return this.userForm.get('phoneNumber') as FormControl;
+  }
+
   loadUser(): void {
-    this.usersService.getDetail(this.data.userId).subscribe({
+    this.api.users.getDetail(this.data.userId).subscribe({
       next: (user) => {
         this.user = user;
         this.userForm.patchValue({
@@ -74,7 +82,7 @@ export class UserEditComponent implements OnInit {
       phoneNumber: formValue.phoneNumber || null
     };
 
-    this.usersService.updateUser(this.data.userId, dto).subscribe({
+    this.api.users.updateUser(this.data.userId, dto).subscribe({
       next: () => {
         this.snackBar.open('User updated successfully', 'Close', { duration: 3000 });
         this.dialogRef.close(true);
@@ -91,16 +99,15 @@ export class UserEditComponent implements OnInit {
     this.dialogRef.close(false);
   }
 
-  getErrorMessage(fieldName: string): string {
-    const field = this.userForm.get(fieldName);
-    if (field?.hasError('required')) {
+  getErrorMessage(control: FormControl): string {
+    if (control?.hasError('required')) {
       return 'This field is required';
     }
-    if (field?.hasError('email')) {
+    if (control?.hasError('email')) {
       return 'Please enter a valid email';
     }
-    if (field?.hasError('minlength')) {
-      const minLength = field.errors?.['minlength'].requiredLength;
+    if (control?.hasError('minlength')) {
+      const minLength = control.errors?.['minlength'].requiredLength;
       return `Minimum length is ${minLength}`;
     }
     return '';
