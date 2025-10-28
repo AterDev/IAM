@@ -1,16 +1,14 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
-import { AuthService } from '../services/auth.service';
+import { OidcAuthService } from '../services/oidc-auth.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthGuard implements CanActivate {
-  constructor(
-    private router: Router,
-    private auth: AuthService,
-  ) {
-  }
+  private router = inject(Router);
+  private auth = inject(OidcAuthService);
+
   canActivate(
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot): boolean | UrlTree {
@@ -19,12 +17,14 @@ export class AuthGuard implements CanActivate {
     if (url.startsWith('/index')) {
       return true;
     }
-    if (this.auth.isLogin) {
+    
+    if (this.auth.isAuthenticated()) {
       return true;
     }
-    return this.router.parseUrl('/index');
-
+    
+    return this.router.parseUrl('/login');
   }
+  
   canActivateChild(
     next: ActivatedRouteSnapshot,
     state: RouterStateSnapshot): boolean | UrlTree {

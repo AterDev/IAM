@@ -1,0 +1,56 @@
+<div class="device-code-container">
+  <mat-card class="device-code-card">
+    <mat-card-header>
+      <mat-card-title>{{ 'deviceCode.title' | translate }}</mat-card-title>
+    </mat-card-header>
+    
+    <mat-card-content>
+      @if (successMessage()) {
+        <div class="success-message">{{ successMessage() }}</div>
+      }
+      
+      @if (errorMessage()) {
+        <div class="error-message">{{ errorMessage() }}</div>
+      }
+
+      <p class="description">{{ 'deviceCode.description' | translate }}</p>
+
+      <form [formGroup]="deviceCodeForm" (ngSubmit)="submitCode()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>{{ 'deviceCode.userCode' | translate }}</mat-label>
+          <input 
+            matInput 
+            formControlName="userCode" 
+            type="text" 
+            placeholder="XXXX-XXXX"
+            (input)="formatUserCode($event)"
+            maxlength="9">
+          @if (userCode.invalid && userCode.touched) {
+            <mat-error>{{ 'deviceCode.invalidFormat' | translate }}</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="button-group">
+          <button 
+            mat-raised-button 
+            color="primary" 
+            type="submit" 
+            [disabled]="isLoading() || deviceCodeForm.invalid">
+            @if (isLoading()) {
+              <mat-spinner diameter="20"></mat-spinner>
+            } @else {
+              {{ 'deviceCode.submit' | translate }}
+            }
+          </button>
+          <button mat-button type="button" (click)="cancel()">
+            {{ 'deviceCode.cancel' | translate }}
+          </button>
+        </div>
+      </form>
+
+      <div class="help-text">
+        <p>{{ 'deviceCode.helpText' | translate }}</p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
