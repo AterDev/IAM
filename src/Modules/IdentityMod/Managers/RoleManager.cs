@@ -1,15 +1,21 @@
+using CommonMod.Managers;
 using Entity.IdentityMod;
 using EntityFramework.DBProvider;
 using IdentityMod.Models.RoleDtos;
+using System.Text.Json;
 
 namespace IdentityMod.Managers;
 
 /// <summary>
 /// Manager for role operations
 /// </summary>
-public class RoleManager(DefaultDbContext dbContext, ILogger<RoleManager> logger)
+public class RoleManager(
+    DefaultDbContext dbContext,
+    ILogger<RoleManager> logger,
+    AuditLogManager auditLogManager)
     : ManagerBase<DefaultDbContext, Role>(dbContext, logger)
 {
+    private readonly AuditLogManager _auditLogManager = auditLogManager;
     /// <summary>
     /// Get paged roles
     /// </summary>
@@ -144,8 +150,14 @@ public class RoleManager(DefaultDbContext dbContext, ILogger<RoleManager> logger
     /// </summary>
     /// <param name="roleId">Role id</param>
     /// <param name="dto">Grant permission DTO</param>
+    /// <param name="ipAddress">IP address for audit log</param>
+    /// <param name="userAgent">User agent for audit log</param>
     /// <returns>True if successful</returns>
-    public async Task<bool> GrantPermissionsAsync(Guid roleId, RoleGrantPermissionDto dto)
+    public async Task<bool> GrantPermissionsAsync(
+        Guid roleId,
+        RoleGrantPermissionDto dto,
+        string? ipAddress = null,
+        string? userAgent = null)
     {
         var role = await FindAsync(roleId);
         if (role == null)
@@ -156,6 +168,11 @@ public class RoleManager(DefaultDbContext dbContext, ILogger<RoleManager> logger
 
         // Load current claims
         await LoadManyAsync(role, r => r.RoleClaims);
+
+        // Track changes for audit
+        var oldPermissions = role.RoleClaims
+            .Select(rc => $"{rc.ClaimType}:{rc.ClaimValue}")
+            .ToList();
 
         // Remove all existing permission claims
         var existingClaims = role.RoleClaims.ToList();
@@ -175,7 +192,31 @@ public class RoleManager(DefaultDbContext dbContext, ILogger<RoleManager> logger
             });
         }
 
-        return await SaveChangesAsync() > 0;
+        var result = await SaveChangesAsync() > 0;
+
+        if (result)
+        {
+            // Write audit log for permission changes
+            var newPermissions = dto.Permissions
+                .Select(p => $"{p.ClaimType}:{p.ClaimValue}")
+                .ToList();
+            
+            await _auditLogManager.AddAuditLogAsync(
+                category: "Authorization",
+                eventName: "RolePermissionsChanged",
+                subjectId: roleId.ToString(),
+                payload: JsonSerializer.Serialize(new 
+                { 
+                    roleName = role.Name, 
+                    oldCount = oldPermissions.Count, 
+                    newCount = newPermissions.Count 
+                }),
+                ipAddress: ipAddress,
+                userAgent: userAgent
+            );
+        }
+
+        return result;
     }
 
     /// <summary>

@@ -1,4 +1,6 @@
+using CommonMod.Managers;
 using IdentityMod.Models.UserDtos;
+using System.Text.Json;
 
 namespace IdentityMod.Managers;
 
@@ -8,10 +10,12 @@ namespace IdentityMod.Managers;
 public class UserManager(
     DefaultDbContext dbContext,
     ILogger<UserManager> logger,
-    IPasswordHasher passwordHasher)
+    IPasswordHasher passwordHasher,
+    AuditLogManager auditLogManager)
     : ManagerBase<DefaultDbContext, User>(dbContext, logger)
 {
     private readonly IPasswordHasher _passwordHasher = passwordHasher;
+    private readonly AuditLogManager _auditLogManager = auditLogManager;
 
     /// <summary>
     /// Get paged users
@@ -226,8 +230,14 @@ public class UserManager(
     /// </summary>
     /// <param name="userId">User id</param>
     /// <param name="roleIds">Role ids to assign</param>
+    /// <param name="ipAddress">IP address for audit log</param>
+    /// <param name="userAgent">User agent for audit log</param>
     /// <returns>True if successful</returns>
-    public async Task<bool> AssignRolesAsync(Guid userId, List<Guid> roleIds)
+    public async Task<bool> AssignRolesAsync(
+        Guid userId,
+        List<Guid> roleIds,
+        string? ipAddress = null,
+        string? userAgent = null)
     {
         var user = await FindAsync(userId);
         if (user == null)
@@ -238,6 +248,9 @@ public class UserManager(
 
         // Load current roles
         await LoadManyAsync(user, u => u.UserRoles);
+
+        // Track changes for audit
+        var oldRoleIds = user.UserRoles.Select(ur => ur.RoleId).ToList();
 
         // Remove old roles not in the new list
         var toRemove = user.UserRoles.Where(ur => !roleIds.Contains(ur.RoleId)).ToList();
@@ -258,6 +271,117 @@ public class UserManager(
             });
         }
 
-        return await SaveChangesAsync() > 0;
+        var result = await SaveChangesAsync() > 0;
+
+        if (result)
+        {
+            // Write audit log for role assignment changes
+            var removed = oldRoleIds.Except(roleIds).ToList();
+            var added = roleIds.Except(oldRoleIds).ToList();
+            
+            if (removed.Any() || added.Any())
+            {
+                await _auditLogManager.AddAuditLogAsync(
+                    category: "Authorization",
+                    eventName: "UserRolesChanged",
+                    subjectId: userId.ToString(),
+                    payload: JsonSerializer.Serialize(new { added, removed }),
+                    ipAddress: ipAddress,
+                    userAgent: userAgent
+                );
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Validate user credentials
+    /// </summary>
+    /// <param name="userName">User name</param>
+    /// <param name="password">Password to verify</param>
+    /// <param name="ipAddress">IP address for audit log</param>
+    /// <param name="userAgent">User agent for audit log</param>
+    /// <returns>User detail if valid, null otherwise</returns>
+    public async Task<UserDetailDto?> ValidateCredentialsAsync(
+        string userName,
+        string password,
+        string? ipAddress = null,
+        string? userAgent = null)
+    {
+        var normalizedUserName = userName.ToUpperInvariant();
+        var user = await FindAsync(q => q.NormalizedUserName == normalizedUserName);
+
+        if (user == null)
+        {
+            // Write audit log for failed login - user not found
+            await _auditLogManager.AddAuditLogAsync(
+                category: "Authentication",
+                eventName: "LoginFailed",
+                subjectId: userName,
+                payload: JsonSerializer.Serialize(new { reason = "UserNotFound" }),
+                ipAddress: ipAddress,
+                userAgent: userAgent
+            );
+            ErrorMsg = "Invalid username or password";
+            return null;
+        }
+
+        // Check if user is locked out
+        if (user.LockoutEnd != null && user.LockoutEnd > DateTimeOffset.UtcNow)
+        {
+            await _auditLogManager.AddAuditLogAsync(
+                category: "Authentication",
+                eventName: "LoginFailed",
+                subjectId: user.Id.ToString(),
+                payload: JsonSerializer.Serialize(new { reason = "AccountLocked", lockoutEnd = user.LockoutEnd.Value.ToString("O") }),
+                ipAddress: ipAddress,
+                userAgent: userAgent
+            );
+            ErrorMsg = "Account is locked";
+            return null;
+        }
+
+        // Verify password
+        if (string.IsNullOrEmpty(user.PasswordHash) || !_passwordHasher.VerifyPassword(password, user.PasswordHash))
+        {
+            // Increment access failed count
+            user.AccessFailedCount++;
+            
+            // Lock account after too many failed attempts (e.g., 5)
+            if (user.LockoutEnabled && user.AccessFailedCount >= 5)
+            {
+                user.LockoutEnd = DateTimeOffset.UtcNow.AddMinutes(30);
+            }
+            
+            await UpdateAsync(user);
+
+            await _auditLogManager.AddAuditLogAsync(
+                category: "Authentication",
+                eventName: "LoginFailed",
+                subjectId: user.Id.ToString(),
+                payload: JsonSerializer.Serialize(new { reason = "InvalidPassword", failedCount = user.AccessFailedCount }),
+                ipAddress: ipAddress,
+                userAgent: userAgent
+            );
+            ErrorMsg = "Invalid username or password";
+            return null;
+        }
+
+        // Reset access failed count on successful login
+        user.AccessFailedCount = 0;
+        await UpdateAsync(user);
+
+        // Write audit log for successful login
+        await _auditLogManager.AddAuditLogAsync(
+            category: "Authentication",
+            eventName: "LoginSuccess",
+            subjectId: user.Id.ToString(),
+            payload: JsonSerializer.Serialize(new { userName = user.UserName }),
+            ipAddress: ipAddress,
+            userAgent: userAgent
+        );
+
+        return await GetDetailAsync(user.Id);
     }
 }
