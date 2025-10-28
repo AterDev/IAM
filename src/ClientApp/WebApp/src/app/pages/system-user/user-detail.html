@@ -1,0 +1,84 @@
+<div class="user-detail-container">
+  <div class="header">
+    <button mat-icon-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h2>{{ 'user.userDetail' | translate }}</h2>
+    <div class="actions">
+      <button mat-raised-button color="primary" (click)="openEditDialog()">
+        <mat-icon>edit</mat-icon>
+        {{ 'common.edit' | translate }}
+      </button>
+      <button mat-button (click)="toggleUserStatus()" *ngIf="user()">
+        <mat-icon>{{ user()!.lockoutEnabled ? 'lock_open' : 'lock' }}</mat-icon>
+        {{ user()!.lockoutEnabled ? ('user.unlock' | translate) : ('user.lock' | translate) }}
+      </button>
+      <button mat-button color="warn" (click)="deleteUser()">
+        <mat-icon>delete</mat-icon>
+        {{ 'common.delete' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <mat-card *ngIf="!isLoading && user()">
+    <mat-card-header>
+      <mat-card-title>{{ 'user.basicInfo' | translate }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>{{ 'user.userName' | translate }}:</label>
+          <span>{{ user()!.userName }}</span>
+        </div>
+        <div class="info-item">
+          <label>{{ 'user.email' | translate }}:</label>
+          <span>{{ user()!.email || '-' }}</span>
+        </div>
+        <div class="info-item">
+          <label>{{ 'user.phoneNumber' | translate }}:</label>
+          <span>{{ user()!.phoneNumber || '-' }}</span>
+        </div>
+        <div class="info-item">
+          <label>{{ 'user.status' | translate }}:</label>
+          <span>
+            <mat-chip [class.locked]="user()!.lockoutEnabled" [class.active]="!user()!.lockoutEnabled">
+              {{ user()!.lockoutEnabled ? ('user.locked' | translate) : ('user.active' | translate) }}
+            </mat-chip>
+          </span>
+        </div>
+        <div class="info-item">
+          <label>{{ 'user.emailConfirmed' | translate }}:</label>
+          <span>
+            <mat-icon [class.confirmed]="user()!.emailConfirmed" [class.not-confirmed]="!user()!.emailConfirmed">
+              {{ user()!.emailConfirmed ? 'check_circle' : 'cancel' }}
+            </mat-icon>
+          </span>
+        </div>
+        <div class="info-item">
+          <label>{{ 'user.phoneNumberConfirmed' | translate }}:</label>
+          <span>
+            <mat-icon [class.confirmed]="user()!.phoneNumberConfirmed" [class.not-confirmed]="!user()!.phoneNumberConfirmed">
+              {{ user()!.phoneNumberConfirmed ? 'check_circle' : 'cancel' }}
+            </mat-icon>
+          </span>
+        </div>
+        <div class="info-item">
+          <label>{{ 'user.twoFactorEnabled' | translate }}:</label>
+          <span>
+            <mat-icon [class.confirmed]="user()!.isTwoFactorEnabled" [class.not-confirmed]="!user()!.isTwoFactorEnabled">
+              {{ user()!.isTwoFactorEnabled ? 'check_circle' : 'cancel' }}
+            </mat-icon>
+          </span>
+        </div>
+        <div class="info-item">
+          <label>{{ 'common.createdTime' | translate }}:</label>
+          <span>{{ user()!.createdTime | date:'yyyy-MM-dd HH:mm:ss' }}</span>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

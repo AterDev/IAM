@@ -1,0 +1,42 @@
+mat-dialog-content {
+  min-width: 600px;
+  padding: 20px 0;
+
+  .add-member-section {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    padding: 0 24px;
+
+    .user-select {
+      flex: 1;
+      margin-bottom: 0;
+    }
+
+    button {
+      margin-top: 8px;
+    }
+  }
+
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+  }
+
+  .members-table {
+    width: 100%;
+
+    .no-data {
+      text-align: center;
+      padding: 40px;
+      color: rgba(0, 0, 0, 0.54);
+    }
+  }
+}
+
+mat-dialog-actions {
+  padding: 16px 24px;
+}

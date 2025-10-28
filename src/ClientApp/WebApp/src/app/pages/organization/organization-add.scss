@@ -1,0 +1,37 @@
+mat-dialog-content {
+  .org-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 400px;
+    padding: 20px 0;
+
+    mat-form-field {
+      width: 100%;
+    }
+
+    .info-text {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      background-color: #e3f2fd;
+      border-radius: 4px;
+      color: #1976d2;
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+
+      span {
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+mat-dialog-actions {
+  padding: 16px 24px;
+}

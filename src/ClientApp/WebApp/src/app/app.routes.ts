@@ -28,7 +28,19 @@ export const routes: Routes = [
     canActivate: [AuthGuard],
     canActivateChild: [AuthGuard],
     children: [
-      // TODO: Implement system-role, system-user, system-logs pages
+      {
+        path: 'system-user',
+        loadComponent: () => import('./pages/system-user/user-list').then(m => m.UserListComponent)
+      },
+      {
+        path: 'system-user/:id',
+        loadComponent: () => import('./pages/system-user/user-detail').then(m => m.UserDetailComponent)
+      },
+      {
+        path: 'organization',
+        loadComponent: () => import('./pages/organization/organization-list').then(m => m.OrganizationListComponent)
+      },
+      // TODO: Implement system-role, system-logs pages
     ],
   },
   

@@ -1,0 +1,24 @@
+mat-dialog-content {
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+  }
+
+  .org-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 400px;
+    padding: 20px 0;
+
+    mat-form-field {
+      width: 100%;
+    }
+  }
+}
+
+mat-dialog-actions {
+  padding: 16px 24px;
+}
