@@ -1,0 +1,111 @@
+<div class="scope-list-container">
+  <div class="header">
+    <h2>{{ 'scope.title' | translate }}</h2>
+    
+    <div class="filters">
+      <mat-form-field class="search-field">
+        <mat-label>{{ 'common.search' | translate }}</mat-label>
+        <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()" [placeholder]="'scope.searchPlaceholder' | translate">
+        <button mat-icon-button matSuffix (click)="onSearch()">
+          <mat-icon>search</mat-icon>
+        </button>
+      </mat-form-field>
+      
+      <mat-form-field class="filter-field">
+        <mat-label>{{ 'scope.requiredFilter' | translate }}</mat-label>
+        <mat-select [(ngModel)]="requiredFilter" (selectionChange)="onFilterChange()">
+          <mat-option [value]="null">{{ 'common.all' | translate }}</mat-option>
+          <mat-option [value]="true">{{ 'scope.required' | translate }}</mat-option>
+          <mat-option [value]="false">{{ 'scope.optional' | translate }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      
+      <button mat-stroked-button (click)="clearFilters()">
+        <mat-icon>clear</mat-icon>
+        {{ 'common.clearFilters' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table mat-table [dataSource]="dataSource()" class="data-table">
+      <!-- Name Column -->
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>{{ 'scope.name' | translate }}</th>
+        <td mat-cell *matCellDef="let scope">
+          <strong>{{ scope.name }}</strong>
+        </td>
+      </ng-container>
+
+      <!-- Display Name Column -->
+      <ng-container matColumnDef="displayName">
+        <th mat-header-cell *matHeaderCellDef>{{ 'scope.displayName' | translate }}</th>
+        <td mat-cell *matCellDef="let scope">
+          {{ scope.displayName }}
+        </td>
+      </ng-container>
+
+      <!-- Required Column -->
+      <ng-container matColumnDef="required">
+        <th mat-header-cell *matHeaderCellDef>{{ 'scope.required' | translate }}</th>
+        <td mat-cell *matCellDef="let scope">
+          @if (scope.required) {
+            <mat-chip class="required-chip">{{ 'scope.required' | translate }}</mat-chip>
+          } @else {
+            <mat-chip class="optional-chip">{{ 'scope.optional' | translate }}</mat-chip>
+          }
+        </td>
+      </ng-container>
+
+      <!-- Emphasize Column -->
+      <ng-container matColumnDef="emphasize">
+        <th mat-header-cell *matHeaderCellDef>{{ 'scope.emphasize' | translate }}</th>
+        <td mat-cell *matCellDef="let scope">
+          @if (scope.emphasize) {
+            <mat-icon class="emphasize-icon">star</mat-icon>
+          } @else {
+            <span>-</span>
+          }
+        </td>
+      </ng-container>
+
+      <!-- Description Column -->
+      <ng-container matColumnDef="description">
+        <th mat-header-cell *matHeaderCellDef>{{ 'scope.description' | translate }}</th>
+        <td mat-cell *matCellDef="let scope">
+          {{ scope.description || '-' }}
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+      @if (dataSource().length === 0 && !isLoading) {
+        <tr class="mat-row no-data-row">
+          <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+            <div class="no-data">
+              <mat-icon>inbox</mat-icon>
+              <p>{{ 'common.noData' | translate }}</p>
+            </div>
+          </td>
+        </tr>
+      }
+    </table>
+
+    @if (isLoading) {
+      <div class="loading-spinner">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>{{ 'common.loading' | translate }}</p>
+      </div>
+    }
+
+    <mat-paginator
+      [length]="total()"
+      [pageSize]="pageSize"
+      [pageIndex]="pageIndex"
+      [pageSizeOptions]="[5, 10, 20, 50]"
+      (page)="onPageChange($event)"
+      showFirstLastButtons>
+    </mat-paginator>
+  </div>
+</div>

@@ -1,0 +1,84 @@
+<h2 mat-dialog-title>{{ 'role.managePermissions' | translate }}: {{ data.name }}</h2>
+
+<mat-dialog-content>
+  @if (isLoading) {
+    <div class="loading-spinner">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>{{ 'common.loading' | translate }}</p>
+    </div>
+  }
+
+  @if (!isLoading) {
+    <div class="permissions-container">
+      <!-- Search bar -->
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>{{ 'common.search' | translate }}</mat-label>
+        <input matInput [(ngModel)]="searchText" [placeholder]="'role.searchPermissions' | translate">
+        <mat-icon matPrefix>search</mat-icon>
+      </mat-form-field>
+
+      <!-- Permission groups -->
+      <mat-accordion multi>
+        @for (group of getFilteredGroups(); track group.category) {
+          <mat-expansion-panel>
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-checkbox
+                  [checked]="group.allSelected"
+                  [indeterminate]="group.someSelected"
+                  (change)="toggleGroupPermissions(group)"
+                  (click)="$event.stopPropagation()">
+                  {{ getCategoryLabel(group.category) }}
+                </mat-checkbox>
+              </mat-panel-title>
+              <mat-panel-description>
+                @if (group.allSelected) {
+                  <mat-chip class="selected-chip">{{ 'role.allSelected' | translate }}</mat-chip>
+                } @else if (group.someSelected) {
+                  <mat-chip class="partial-chip">{{ 'role.partialSelected' | translate }}</mat-chip>
+                }
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+
+            <div class="permission-list">
+              @for (permission of group.permissions; track permission.claimValue) {
+                <mat-checkbox
+                  class="permission-checkbox"
+                  [checked]="isPermissionSelected(permission)"
+                  (change)="togglePermission(permission)">
+                  <span class="permission-label">
+                    {{ getPermissionLabel(permission.claimValue) }}
+                  </span>
+                  <span class="permission-value">{{ permission.claimValue }}</span>
+                </mat-checkbox>
+              }
+            </div>
+          </mat-expansion-panel>
+        }
+
+        @if (getFilteredGroups().length === 0) {
+          <div class="no-results">
+            <mat-icon>search_off</mat-icon>
+            <p>{{ 'common.noData' | translate }}</p>
+          </div>
+        }
+      </mat-accordion>
+
+      <!-- Summary -->
+      <div class="summary">
+        <mat-chip-set>
+          <mat-chip>
+            {{ 'role.selectedCount' | translate }}: {{ selectedPermissions().size }}
+          </mat-chip>
+        </mat-chip-set>
+      </div>
+    </div>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">{{ 'common.cancel' | translate }}</button>
+  <button mat-raised-button color="primary" (click)="onSave()" [disabled]="isLoading || isSaving">
+    {{ isSaving ? ('common.saving' | translate) : ('common.save' | translate) }}
+  </button>
+</mat-dialog-actions>

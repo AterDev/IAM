@@ -40,7 +40,19 @@ export const routes: Routes = [
         path: 'organization',
         loadComponent: () => import('./pages/organization/organization-list').then(m => m.OrganizationListComponent)
       },
-      // TODO: Implement system-role, system-logs pages
+      {
+        path: 'system-role',
+        loadComponent: () => import('./pages/system-role/role-list').then(m => m.RoleListComponent)
+      },
+      {
+        path: 'system-role/:id',
+        loadComponent: () => import('./pages/system-role/role-detail').then(m => m.RoleDetailComponent)
+      },
+      {
+        path: 'scope',
+        loadComponent: () => import('./pages/scope/scope-list').then(m => m.ScopeListComponent)
+      },
+      // TODO: Implement system-logs pages
     ],
   },
   

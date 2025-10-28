@@ -1,0 +1,127 @@
+import { Component, OnInit, signal } from '@angular/core';
+import { CommonModules, BaseMatModules } from 'src/app/share/shared-modules';
+import { ActivatedRoute, Router } from '@angular/router';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
+import { ApiClient } from 'src/app/services/api/api-client';
+import { RoleDetailDto } from 'src/app/services/api/models/identity-mod/role-detail-dto.model';
+import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
+import { RoleEditComponent } from './role-edit';
+import { RolePermissionsComponent } from './role-permissions';
+import { MatCardModule } from '@angular/material/card';
+
+@Component({
+  selector: 'app-role-detail',
+  imports: [
+    ...CommonModules,
+    ...BaseMatModules,
+    MatCardModule
+  ],
+  templateUrl: './role-detail.html',
+  styleUrls: ['./role-detail.scss']
+})
+export class RoleDetailComponent implements OnInit {
+  role = signal<RoleDetailDto | null>(null);
+  isLoading = true;
+
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private api: ApiClient,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
+  ) {}
+
+  ngOnInit(): void {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.loadRole(id);
+    }
+  }
+
+  loadRole(id: string): void {
+    this.isLoading = true;
+    this.api.roles.getDetail(id).subscribe({
+      next: (data) => {
+        this.role.set(data);
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Failed to load role:', error);
+        this.snackBar.open('加载角色详情失败', '关闭', { duration: 3000 });
+        this.isLoading = false;
+      }
+    });
+  }
+
+  openEditDialog(): void {
+    const currentRole = this.role();
+    if (!currentRole) {
+      return;
+    }
+
+    const dialogRef = this.dialog.open(RoleEditComponent, {
+      width: '500px',
+      data: currentRole
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadRole(currentRole.id);
+      }
+    });
+  }
+
+  openPermissionsDialog(): void {
+    const currentRole = this.role();
+    if (!currentRole) {
+      return;
+    }
+
+    const dialogRef = this.dialog.open(RolePermissionsComponent, {
+      width: '700px',
+      maxHeight: '80vh',
+      data: currentRole
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadRole(currentRole.id);
+      }
+    });
+  }
+
+  deleteRole(): void {
+    const currentRole = this.role();
+    if (!currentRole) {
+      return;
+    }
+
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: '确认删除',
+        message: '确定要删除该角色吗？此操作不可撤销。'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.api.roles.deleteRole(currentRole.id, false).subscribe({
+          next: () => {
+            this.snackBar.open('角色已删除', '关闭', { duration: 3000 });
+            this.router.navigate(['/system-role']);
+          },
+          error: (error) => {
+            console.error('Failed to delete role:', error);
+            this.snackBar.open('删除角色失败', '关闭', { duration: 3000 });
+          }
+        });
+      }
+    });
+  }
+
+  goBack(): void {
+    this.router.navigate(['/system-role']);
+  }
+}
