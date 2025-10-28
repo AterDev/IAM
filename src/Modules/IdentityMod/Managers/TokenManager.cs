@@ -7,22 +7,15 @@ namespace IdentityMod.Managers;
 /// <summary>
 /// Manager for OAuth/OIDC token operations
 /// </summary>
-public class TokenManager : ManagerBase<DefaultDbContext>
+public class TokenManager(
+    DefaultDbContext dbContext,
+    ILogger<TokenManager> logger,
+    IJwtTokenService jwtTokenService,
+    IPasswordHasher passwordHasher
+    ) : ManagerBase<DefaultDbContext>(dbContext, logger)
 {
-    private readonly IJwtTokenService _jwtTokenService;
-    private readonly IPasswordHasher _passwordHasher;
-
-    public TokenManager(
-        DefaultDbContext dbContext,
-        ILogger<TokenManager> logger,
-        IJwtTokenService jwtTokenService,
-        IPasswordHasher passwordHasher
-    )
-        : base(dbContext, logger)
-    {
-        _jwtTokenService = jwtTokenService;
-        _passwordHasher = passwordHasher;
-    }
+    private readonly IJwtTokenService _jwtTokenService = jwtTokenService;
+    private readonly IPasswordHasher _passwordHasher = passwordHasher;
 
     /// <summary>
     /// Process token request (authorization_code, refresh_token, client_credentials, password)
