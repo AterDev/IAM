@@ -15,6 +15,9 @@ public static class ModuleExtensions
         builder.Services.AddScoped<AuthorizationManager>();
         builder.Services.AddScoped<TokenManager>();
         builder.Services.AddScoped<DeviceFlowManager>();
+        builder.Services.AddScoped<UserManager>();
+        builder.Services.AddScoped<RoleManager>();
+        builder.Services.AddScoped<OrganizationManager>();
 
         return builder;
     }
