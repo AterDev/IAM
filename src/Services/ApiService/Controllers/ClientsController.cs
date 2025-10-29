@@ -25,7 +25,6 @@ namespace ApiService.Controllers;
 /// </remarks>
 [Route("api/[controller]")]
 [Produces("application/json")]
-[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 public class ClientsController(
     Share.Localizer localizer,
     ClientManager manager,

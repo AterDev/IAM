@@ -1,6 +1,11 @@
 {
   "/api/": {
-    "target": "https://localhost:17001",
+    "target": "https://localhost:7000",
+      "changeOrigin": true,
+        "secure": false
+  },
+  "/connect/": {
+    "target": "https://localhost:7000",
       "changeOrigin": true,
         "secure": false
   },

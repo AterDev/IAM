@@ -1,7 +1,7 @@
 using IdentityMod.Managers;
 using IdentityMod.Models.OAuthDtos;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ApiService.Controllers;
 
@@ -28,25 +28,17 @@ namespace ApiService.Controllers;
 [Route("connect")]
 [AllowAnonymous]
 [Produces("application/json")]
-public class OAuthController : ControllerBase
+public class OAuthController(
+    AuthorizationManager authorizationManager,
+    TokenManager tokenManager,
+    DeviceFlowManager deviceFlowManager,
+    ILogger<OAuthController> logger
+    ) : ControllerBase
 {
-    private readonly AuthorizationManager _authorizationManager;
-    private readonly TokenManager _tokenManager;
-    private readonly DeviceFlowManager _deviceFlowManager;
-    private readonly ILogger<OAuthController> _logger;
-
-    public OAuthController(
-        AuthorizationManager authorizationManager,
-        TokenManager tokenManager,
-        DeviceFlowManager deviceFlowManager,
-        ILogger<OAuthController> logger
-    )
-    {
-        _authorizationManager = authorizationManager;
-        _tokenManager = tokenManager;
-        _deviceFlowManager = deviceFlowManager;
-        _logger = logger;
-    }
+    private readonly AuthorizationManager _authorizationManager = authorizationManager;
+    private readonly TokenManager _tokenManager = tokenManager;
+    private readonly DeviceFlowManager _deviceFlowManager = deviceFlowManager;
+    private readonly ILogger<OAuthController> _logger = logger;
 
     /// <summary>
     /// Authorization endpoint (OAuth 2.0 / OIDC)

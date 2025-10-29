@@ -40,4 +40,5 @@
     <Project Path="src/Services/ApiService/ApiService.csproj" />
     <Project Path="src/Services/MigrationService/MigrationService.csproj" />
   </Folder>
+  <Folder Name="/tests/" />
 </Solution>

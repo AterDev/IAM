@@ -3,7 +3,7 @@
  */
 export interface TokenResponseDto {
   /** Access token */
-  accessToken?: string | null;
+  accessToken: string;
   /** Token type (usually "Bearer") */
   tokenType?: string | null;
   /** Expires in seconds */

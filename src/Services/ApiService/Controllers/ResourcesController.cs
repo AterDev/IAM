@@ -6,7 +6,6 @@ namespace ApiService.Controllers;
 /// <summary>
 /// API resource management controller
 /// </summary>
-[Route("api/[controller]")]
 public class ResourcesController(
     Share.Localizer localizer,
     ResourceManager manager,

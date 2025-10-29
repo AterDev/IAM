@@ -8,7 +8,6 @@ namespace ApiService.Controllers;
 /// <summary>
 /// Security controller for session and audit log management
 /// </summary>
-[Route("api/security")]
 public class SecurityController(
     Share.Localizer localizer,
     SessionManager sessionManager,

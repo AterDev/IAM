@@ -86,18 +86,6 @@ export class ResourceAddComponent implements OnInit {
     this.dialogRef.close(false);
   }
 
-  get name() {
-    return this.resourceForm.get('name') as FormControl;
-  }
-
-  get displayName() {
-    return this.resourceForm.get('displayName') as FormControl;
-  }
-
-  get description() {
-    return this.resourceForm.get('description') as FormControl;
-  }
-
   getErrorMessage(control: FormControl | null, fieldName: string): string {
     if (!control) {
       return '';
