@@ -4,30 +4,30 @@
   <form [formGroup]="scopeForm" class="scope-form">
     <mat-form-field appearance="outline">
       <mat-label>{{ 'scope.name' | translate }}</mat-label>
-      <input matInput formControlName="name" required>
-      <mat-error *ngIf="scopeForm.get('name')?.invalid && scopeForm.get('name')?.touched">
-        {{ getErrorMessage(nameControl, 'name') }}
+      <input matInput [formControl]="name" required>
+      <mat-error *ngIf="name.invalid && name.touched">
+        {{ getErrorMessage(name, 'name') }}
       </mat-error>
     </mat-form-field>
 
     <mat-form-field appearance="outline">
       <mat-label>{{ 'scope.displayName' | translate }}</mat-label>
-      <input matInput formControlName="displayName" required>
-      <mat-error *ngIf="scopeForm.get('displayName')?.invalid && scopeForm.get('displayName')?.touched">
-        {{ getErrorMessage(displayNameControl, 'displayName') }}
+      <input matInput [formControl]="displayName" required>
+      <mat-error *ngIf="displayName.invalid && displayName.touched">
+        {{ getErrorMessage(displayName, 'displayName') }}
       </mat-error>
     </mat-form-field>
 
     <mat-form-field appearance="outline">
       <mat-label>{{ 'scope.description' | translate }}</mat-label>
-      <textarea matInput formControlName="description" rows="3"></textarea>
+      <textarea matInput [formControl]="description" rows="3"></textarea>
     </mat-form-field>
 
     <div class="checkbox-row">
-      <mat-checkbox formControlName="required">
+      <mat-checkbox [formControl]="required">
         {{ 'scope.required' | translate }}
       </mat-checkbox>
-      <mat-checkbox formControlName="emphasize">
+      <mat-checkbox [formControl]="emphasize">
         {{ 'scope.emphasize' | translate }}
       </mat-checkbox>
     </div>
@@ -37,7 +37,7 @@
       <div class="claim-input-row">
         <mat-form-field appearance="outline">
           <mat-label>{{ 'scope.addClaim' | translate }}</mat-label>
-          <input matInput formControlName="newClaim" (keyup.enter)="addClaim()">
+          <input matInput [formControl]="newClaim" (keyup.enter)="addClaim()">
         </mat-form-field>
         <button mat-icon-button color="primary" (click)="addClaim()" type="button">
           <mat-icon>add</mat-icon>

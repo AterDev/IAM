@@ -283,9 +283,24 @@ public class HashCrypto
 /// <summary>
 /// hash type
 /// </summary>
+/// <summary>
+/// 哈希算法类型
+/// </summary>
 public enum HashType
 {
+    /// <summary>
+    /// MD5哈希算法
+    /// </summary>
+    [Description("MD5")]
     MD5,
+    /// <summary>
+    /// SHA256哈希算法
+    /// </summary>
+    [Description("SHA256")]
     SHA256,
+    /// <summary>
+    /// SHA512哈希算法
+    /// </summary>
+    [Description("SHA512")]
     SHA512,
 }
