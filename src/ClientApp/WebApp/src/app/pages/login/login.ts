@@ -102,11 +102,8 @@ export class Login implements OnInit, AfterViewInit {
     const { username, password } = this.loginForm.value;
 
     try {
-      const success = await this.authService.loginWithPassword(
-        username,
-        password,
-        this.CLIENT_ID
-      );
+      // Use direct admin login instead of OAuth flow
+      const success = await this.authService.adminLogin(username, password);
 
       if (success) {
         this.router.navigate(['/']);

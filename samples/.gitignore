@@ -1,0 +1,29 @@
+# Node modules
+node_modules/
+npm-debug.log
+package-lock.json
+
+# Angular
+.angular/
+dist/
+tmp/
+out-tsc/
+bazel-out/
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.userprefs
+.vs/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
