@@ -2,7 +2,6 @@ using System.Security.Claims;
 using IdentityMod.Managers;
 using IdentityMod.Models.AdminAuthDtos;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Share.Services;
 
@@ -61,12 +60,9 @@ public class AdminAuthController(
 
             // Load user roles
             await _userManager.LoadManyAsync(user, u => u.UserRoles);
-            
+
             var roleIds = user.UserRoles.Select(ur => ur.RoleId).ToList();
-            var roles = await _roleManager.Command
-                .Where(r => roleIds.Contains(r.Id))
-                .Select(r => r.Name)
-                .ToListAsync();
+            var roles = await _roleManager.GetRoleNamesByIdsAsync(roleIds);
 
             // Generate JWT claims
             var claims = new List<Claim>
@@ -140,12 +136,9 @@ public class AdminAuthController(
 
         // Load user roles
         await _userManager.LoadManyAsync(user, u => u.UserRoles);
-        
+
         var roleIds = user.UserRoles.Select(ur => ur.RoleId).ToList();
-        var roles = await _roleManager.Command
-            .Where(r => roleIds.Contains(r.Id))
-            .Select(r => r.Name)
-            .ToListAsync();
+        var roles = await _roleManager.GetRoleNamesByIdsAsync(roleIds);
 
         var userInfo = new AdminUserInfo
         {

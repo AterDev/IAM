@@ -360,7 +360,7 @@ public class UserManager(
         // Verify password
         if (
             string.IsNullOrEmpty(user.PasswordHash)
-            || !_passwordHasher.VerifyPassword(password, user.PasswordHash)
+            || !_passwordHasher.VerifyPassword(user.PasswordHash, password)
         )
         {
             // Increment access failed count
