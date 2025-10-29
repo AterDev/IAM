@@ -1,13 +1,13 @@
 import { Injectable, inject } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
-import { OidcAuthService } from '../services/oidc-auth.service';
+import { AuthService } from '../services/auth.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthGuard implements CanActivate {
   private router = inject(Router);
-  private auth = inject(OidcAuthService);
+  private auth = inject(AuthService);
 
   canActivate(
     route: ActivatedRouteSnapshot,
@@ -18,7 +18,7 @@ export class AuthGuard implements CanActivate {
       return true;
     }
     
-    if (this.auth.isAuthenticated()) {
+    if (this.auth.isLogin) {
       return true;
     }
     

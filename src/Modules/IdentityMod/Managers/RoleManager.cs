@@ -249,4 +249,17 @@ public class RoleManager(
     {
         return await ToListAsync<RoleItemDto>();
     }
+
+    /// <summary>
+    /// Get role names by IDs
+    /// </summary>
+    /// <param name="roleIds">List of role IDs</param>
+    /// <returns>List of role names</returns>
+    public async Task<List<string>> GetRoleNamesByIdsAsync(List<Guid> roleIds)
+    {
+        return await Queryable
+            .Where(r => roleIds.Contains(r.Id))
+            .Select(r => r.Name)
+            .ToListAsync();
+    }
 }

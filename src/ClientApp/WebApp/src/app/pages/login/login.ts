@@ -7,9 +7,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
-import { OidcAuthService } from 'src/app/services/oidc-auth.service';
+import { AuthService } from 'src/app/services/auth.service';
 import { I18N_KEYS } from 'src/app/share/i18n-keys';
 import { initStarfield } from './starfield';
+import { ApiClient } from 'src/app/services/api/api-client';
+import { AdminLoginResponseDto } from 'src/app/services/api/models/identity-mod/admin-login-response-dto.model';
+import { AdminLoginDto } from 'src/app/services/api/models/identity-mod/admin-login-dto.model';
 
 @Component({
   selector: 'app-login',
@@ -27,7 +30,8 @@ import { initStarfield } from './starfield';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Login implements OnInit, AfterViewInit {
-  private authService = inject(OidcAuthService);
+  private authService = inject(AuthService);
+  private apiClient = inject(ApiClient);
   private router = inject(Router);
   private translate = inject(TranslateService);
 
@@ -35,9 +39,6 @@ export class Login implements OnInit, AfterViewInit {
   i18nKeys = I18N_KEYS;
   isLoading = false;
   errorMessage = '';
-
-  // Default client ID for the admin portal
-  private readonly CLIENT_ID = 'admin-portal';
 
   ngAfterViewInit(): void {
     const canvas = document.getElementById('starfield') as HTMLCanvasElement | null;
@@ -55,8 +56,8 @@ export class Login implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    // Check if already authenticated
-    if (this.authService.isAuthenticated()) {
+    this.authService.updateUserLoginState();
+    if (this.authService.isLogin) {
       this.router.navigate(['/']);
     }
 
@@ -95,17 +96,22 @@ export class Login implements OnInit, AfterViewInit {
     if (this.loginForm.invalid) {
       return;
     }
-
     this.isLoading = true;
     this.errorMessage = '';
-
     const { username, password } = this.loginForm.value;
 
     try {
-      // Use direct admin login instead of OAuth flow
-      const success = await this.authService.adminLogin(username, password);
+      const dto: AdminLoginDto = { userName: username, password };
+      const response = await new Promise<AdminLoginResponseDto>((resolve, reject) => {
+        this.apiClient.adminAuth.login(dto).subscribe({
+          next: (res) => resolve(res),
+          error: (err) => reject(err)
+        });
+      });
 
-      if (success) {
+      // Save login state via AuthService
+      if (response && response.accessToken) {
+        this.authService.saveLoginState(response.user?.userName || username, response.accessToken);
         this.router.navigate(['/']);
       } else {
         this.errorMessage = this.translate.instant('login.failed');
