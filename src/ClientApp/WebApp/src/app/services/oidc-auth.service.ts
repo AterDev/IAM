@@ -252,6 +252,57 @@ export class OidcAuthService {
   }
 
   /**
+   * Admin login - direct authentication for management portal (not OAuth)
+   */
+  async adminLogin(username: string, password: string): Promise<boolean> {
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ userName: username, password: password })
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Login failed' }));
+        console.error('Admin login failed:', error);
+        return false;
+      }
+
+      const data = await response.json();
+      
+      // Set authentication state from admin login response
+      const expiresAt = Date.now() + (data.expiresIn * 1000);
+      const user: UserInfo = {
+        sub: data.user.id,
+        name: data.user.userName,
+        email: data.user.email,
+        preferred_username: data.user.userName,
+        roles: data.user.roles
+      };
+
+      const newState: AuthState = {
+        isAuthenticated: true,
+        user: user,
+        accessToken: data.accessToken,
+        refreshToken: null,
+        idToken: null,
+        expiresAt: expiresAt
+      };
+
+      this.authState.set(newState);
+      this.saveStateToStorage(newState);
+      this.scheduleTokenRefresh();
+      
+      return true;
+    } catch (error) {
+      console.error('Admin login error:', error);
+      return false;
+    }
+  }
+
+  /**
    * Refresh access token
    */
   async refreshAccessToken(): Promise<boolean> {
