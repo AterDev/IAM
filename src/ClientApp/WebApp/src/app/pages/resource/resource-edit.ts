@@ -101,6 +101,14 @@ export class ResourceEditComponent implements OnInit {
     this.dialogRef.close(false);
   }
 
+  get displayName() {
+    return this.resourceForm.get('displayName') as FormControl;
+  }
+
+  get description() {
+    return this.resourceForm.get('description') as FormControl;
+  }
+
   getErrorMessage(control: FormControl | null): string {
     if (!control) {
       return '';
@@ -109,9 +117,5 @@ export class ResourceEditComponent implements OnInit {
       return this.translate.instant('error.required');
     }
     return '';
-  }
-
-  get displayNameControl() {
-    return this.resourceForm.get('displayName') as FormControl;
   }
 }

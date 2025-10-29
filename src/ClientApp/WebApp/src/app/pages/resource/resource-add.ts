@@ -37,6 +37,18 @@ export class ResourceAddComponent implements OnInit {
     });
   }
 
+  get name() {
+    return this.resourceForm.get('name') as FormControl;
+  }
+
+  get displayName() {
+    return this.resourceForm.get('displayName') as FormControl;
+  }
+
+  get description() {
+    return this.resourceForm.get('description') as FormControl;
+  }
+
   onSubmit(): void {
     if (this.resourceForm.invalid) {
       Object.keys(this.resourceForm.controls).forEach(key => {
@@ -74,6 +86,18 @@ export class ResourceAddComponent implements OnInit {
     this.dialogRef.close(false);
   }
 
+  get name() {
+    return this.resourceForm.get('name') as FormControl;
+  }
+
+  get displayName() {
+    return this.resourceForm.get('displayName') as FormControl;
+  }
+
+  get description() {
+    return this.resourceForm.get('description') as FormControl;
+  }
+
   getErrorMessage(control: FormControl | null, fieldName: string): string {
     if (!control) {
       return '';
@@ -86,13 +110,5 @@ export class ResourceAddComponent implements OnInit {
       return this.translate.instant('error.minLength', { length: minLength });
     }
     return '';
-  }
-
-  get nameControl() {
-    return this.resourceForm.get('name') as FormControl;
-  }
-
-  get displayNameControl() {
-    return this.resourceForm.get('displayName') as FormControl;
   }
 }

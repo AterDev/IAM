@@ -47,16 +47,39 @@ export class ScopeAddComponent implements OnInit {
     });
   }
 
+  get name() {
+    return this.scopeForm.get('name') as FormControl;
+  }
+
+  get displayName() {
+    return this.scopeForm.get('displayName') as FormControl;
+  }
+
+  get description() {
+    return this.scopeForm.get('description') as FormControl;
+  }
+
+  get required() {
+    return this.scopeForm.get('required') as FormControl;
+  }
+
+  get emphasize() {
+    return this.scopeForm.get('emphasize') as FormControl;
+  }
+
+  get newClaim() {
+    return this.scopeForm.get('newClaim') as FormControl;
+  }
+
   get claims(): FormArray {
     return this.scopeForm.get('claims') as FormArray;
   }
 
   addClaim(): void {
-    const claimControl = this.scopeForm.get('newClaim');
-    const claim = claimControl?.value?.trim();
+    const claim = this.newClaim.value?.trim();
     if (claim) {
       this.claims.push(this.fb.control(claim));
-      claimControl?.setValue('');
+      this.newClaim.setValue('');
     }
   }
 
@@ -116,13 +139,5 @@ export class ScopeAddComponent implements OnInit {
       return this.translate.instant('error.minLength', { length: minLength });
     }
     return '';
-  }
-
-  get nameControl() {
-    return this.scopeForm.get('name') as FormControl;
-  }
-
-  get displayNameControl() {
-    return this.scopeForm.get('displayName') as FormControl;
   }
 }

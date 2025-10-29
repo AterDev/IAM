@@ -5,29 +5,29 @@
     <form [formGroup]="clientForm" class="client-form">
       <mat-form-field appearance="outline">
         <mat-label>{{ 'client.clientId' | translate }}</mat-label>
-        <input matInput formControlName="clientId" required>
-        <mat-error *ngIf="clientForm.get('clientId')?.invalid && clientForm.get('clientId')?.touched">
-          {{ getErrorMessage(clientIdControl, 'clientId') }}
+        <input matInput [formControl]="clientId" required>
+        <mat-error *ngIf="clientId.invalid && clientId.touched">
+          {{ getErrorMessage(clientId, 'clientId') }}
         </mat-error>
       </mat-form-field>
 
       <mat-form-field appearance="outline">
         <mat-label>{{ 'client.displayName' | translate }}</mat-label>
-        <input matInput formControlName="displayName" required>
-        <mat-error *ngIf="clientForm.get('displayName')?.invalid && clientForm.get('displayName')?.touched">
-          {{ getErrorMessage(displayNameControl, 'displayName') }}
+        <input matInput [formControl]="displayName" required>
+        <mat-error *ngIf="displayName.invalid && displayName.touched">
+          {{ getErrorMessage(displayName, 'displayName') }}
         </mat-error>
       </mat-form-field>
 
       <mat-form-field appearance="outline">
         <mat-label>{{ 'client.description' | translate }}</mat-label>
-        <textarea matInput formControlName="description" rows="3"></textarea>
+        <textarea matInput [formControl]="description" rows="3"></textarea>
       </mat-form-field>
 
       <div class="form-row">
         <mat-form-field appearance="outline">
           <mat-label>{{ 'client.type' | translate }}</mat-label>
-          <mat-select formControlName="type">
+          <mat-select [formControl]="type">
             <mat-option value="confidential">{{ 'client.confidential' | translate }}</mat-option>
             <mat-option value="public">{{ 'client.public' | translate }}</mat-option>
           </mat-select>
@@ -35,7 +35,7 @@
 
         <mat-form-field appearance="outline">
           <mat-label>{{ 'client.applicationType' | translate }}</mat-label>
-          <mat-select formControlName="applicationType">
+          <mat-select [formControl]="applicationType">
             <mat-option value="web">{{ 'client.web' | translate }}</mat-option>
             <mat-option value="native">{{ 'client.native' | translate }}</mat-option>
             <mat-option value="spa">{{ 'client.spa' | translate }}</mat-option>
@@ -46,13 +46,13 @@
       <div class="form-row">
         <mat-form-field appearance="outline">
           <mat-label>{{ 'client.consentType' | translate }}</mat-label>
-          <mat-select formControlName="consentType">
+          <mat-select [formControl]="consentType">
             <mat-option value="explicit">{{ 'client.explicit' | translate }}</mat-option>
             <mat-option value="implicit">{{ 'client.implicit' | translate }}</mat-option>
           </mat-select>
         </mat-form-field>
 
-        <mat-checkbox formControlName="requirePkce" class="pkce-checkbox">
+        <mat-checkbox [formControl]="requirePkce" class="pkce-checkbox">
           {{ 'client.requirePkce' | translate }}
         </mat-checkbox>
       </div>
@@ -62,7 +62,7 @@
         <div class="uri-input-row">
           <mat-form-field appearance="outline">
             <mat-label>{{ 'client.addRedirectUri' | translate }}</mat-label>
-            <input matInput formControlName="newRedirectUri" (keyup.enter)="addRedirectUri()">
+            <input matInput [formControl]="newRedirectUri" (keyup.enter)="addRedirectUri()">
           </mat-form-field>
           <button mat-icon-button color="primary" (click)="addRedirectUri()" type="button">
             <mat-icon>add</mat-icon>
@@ -84,7 +84,7 @@
         <div class="uri-input-row">
           <mat-form-field appearance="outline">
             <mat-label>{{ 'client.addPostLogoutRedirectUri' | translate }}</mat-label>
-            <input matInput formControlName="newPostLogoutRedirectUri" (keyup.enter)="addPostLogoutRedirectUri()">
+            <input matInput [formControl]="newPostLogoutRedirectUri" (keyup.enter)="addPostLogoutRedirectUri()">
           </mat-form-field>
           <button mat-icon-button color="primary" (click)="addPostLogoutRedirectUri()" type="button">
             <mat-icon>add</mat-icon>
