@@ -171,10 +171,10 @@ npm start
 
 ## 更多资源
 
-- [完整文档](README.md)
-- [集成测试指南](docs/integration-testing.md)
-- [示例项目文档](samples/README.md)
-- [API文档](docs/api-documentation.md)
+- [完整文档](../README.md)
+- [集成测试指南](integration-testing.md)
+- [示例项目文档](../samples/README.md)
+- [API文档](api-documentation.md)
 
 ## 获取帮助
 
