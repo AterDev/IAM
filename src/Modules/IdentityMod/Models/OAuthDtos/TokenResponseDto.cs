@@ -8,7 +8,7 @@ public class TokenResponseDto
     /// <summary>
     /// Access token
     /// </summary>
-    public string? AccessToken { get; set; }
+    public string AccessToken { get; set; } = string.Empty;
 
     /// <summary>
     /// Token type (usually "Bearer")

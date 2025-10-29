@@ -1,6 +1,5 @@
 using IdentityMod.Managers;
 using IdentityMod.Models.UserDtos;
-using Microsoft.AspNetCore.Authorization;
 
 namespace ApiService.Controllers;
 
@@ -17,8 +16,6 @@ namespace ApiService.Controllers;
 /// All endpoints require authentication unless specified otherwise.
 /// Most operations require appropriate permissions.
 /// </remarks>
-[Produces("application/json")]
-[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 public class UsersController(
     Share.Localizer localizer,
     UserManager manager,
@@ -196,7 +193,7 @@ public class UsersController(
     {
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
         var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
-        
+
         var success = await _manager.AssignRolesAsync(id, roleIds, ipAddress, userAgent);
         return !success ? BadRequest(_manager.ErrorMsg) : NoContent();
     }

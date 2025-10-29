@@ -2,3 +2,4 @@
 
 @HostAddress = https://localhost:7000
 
+POST {HostAddress}/connec/token

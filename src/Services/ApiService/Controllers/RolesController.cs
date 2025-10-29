@@ -1,6 +1,5 @@
 using IdentityMod.Managers;
 using IdentityMod.Models.RoleDtos;
-using Microsoft.AspNetCore.Authorization;
 
 namespace ApiService.Controllers;
 
@@ -21,8 +20,6 @@ namespace ApiService.Controllers;
 /// 
 /// All endpoints require appropriate administrative permissions.
 /// </remarks>
-[Produces("application/json")]
-[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 public class RolesController(
     Share.Localizer localizer,
     RoleManager manager,
@@ -165,7 +162,7 @@ public class RolesController(
     {
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
         var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
-        
+
         var success = await _manager.GrantPermissionsAsync(id, dto, ipAddress, userAgent);
         return !success ? BadRequest(_manager.ErrorMsg) : NoContent();
     }

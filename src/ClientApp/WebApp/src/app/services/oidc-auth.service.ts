@@ -1,6 +1,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { ApiClient } from './api/api-client';
+import { TokenResponseDto } from './api/models/identity-mod/token-response-dto.model';
 
 /**
  * PKCE helper utilities
@@ -200,7 +201,7 @@ export class OidcAuthService {
     clientId: string,
     redirectUri: string,
     codeVerifier: string
-  ): Promise<TokenResponse> {
+  ): Promise<TokenResponseDto> {
     const tokenData = {
       grant_type: 'authorization_code',
       code: code,
@@ -235,7 +236,7 @@ export class OidcAuthService {
         scope: scope
       };
 
-      const tokenResponse = await new Promise<TokenResponse>((resolve, reject) => {
+      const tokenResponse = await new Promise<TokenResponseDto>((resolve, reject) => {
         this.apiClient.oAuth.token(tokenData).subscribe({
           next: (response) => resolve(response),
           error: (error) => reject(error)
@@ -255,7 +256,7 @@ export class OidcAuthService {
    */
   async refreshAccessToken(): Promise<boolean> {
     const currentRefreshToken = this.authState().refreshToken;
-    
+
     if (!currentRefreshToken) {
       console.error('No refresh token available');
       return false;
@@ -267,7 +268,7 @@ export class OidcAuthService {
         refresh_token: currentRefreshToken
       };
 
-      const tokenResponse = await new Promise<TokenResponse>((resolve, reject) => {
+      const tokenResponse = await new Promise<TokenResponseDto>((resolve, reject) => {
         this.apiClient.oAuth.token(tokenData).subscribe({
           next: (response) => resolve(response),
           error: (error) => reject(error)
@@ -308,16 +309,16 @@ export class OidcAuthService {
   /**
    * Set tokens from response
    */
-  private setTokens(tokenResponse: TokenResponse): void {
-    const expiresAt = Date.now() + (tokenResponse.expires_in * 1000);
-    const user = this.parseIdToken(tokenResponse.id_token);
+  private setTokens(tokenResponse: TokenResponseDto): void {
+    const expiresAt = Date.now() + (tokenResponse.expiresIn ?? 1 * 1000);
+    const user = this.parseIdToken(tokenResponse.idToken!);
 
     const newState: AuthState = {
       isAuthenticated: true,
       user: user,
-      accessToken: tokenResponse.access_token,
-      refreshToken: tokenResponse.refresh_token || null,
-      idToken: tokenResponse.id_token || null,
+      accessToken: tokenResponse.accessToken!,
+      refreshToken: tokenResponse.refreshToken || null,
+      idToken: tokenResponse.idToken || null,
       expiresAt: expiresAt
     };
 
@@ -376,7 +377,7 @@ export class OidcAuthService {
       }
 
       const state = JSON.parse(saved) as AuthState;
-      
+
       // Check if token is expired
       if (state.expiresAt && state.expiresAt < Date.now()) {
         // Try to refresh
@@ -405,7 +406,7 @@ export class OidcAuthService {
 
     // Refresh 5 minutes before expiry
     const refreshTime = state.expiresAt - Date.now() - (5 * 60 * 1000);
-    
+
     if (refreshTime > 0) {
       setTimeout(() => {
         this.refreshAccessToken();

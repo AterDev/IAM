@@ -6,7 +6,6 @@ namespace ApiService.Controllers;
 /// <summary>
 /// API scope management controller
 /// </summary>
-[Route("api/[controller]")]
 public class ScopesController(
     Share.Localizer localizer,
     ScopeManager manager,

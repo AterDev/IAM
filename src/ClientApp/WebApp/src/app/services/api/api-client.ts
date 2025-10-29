@@ -11,7 +11,6 @@ import { RolesService } from './services/roles.service';
 import { ScopesService } from './services/scopes.service';
 import { SecurityService } from './services/security.service';
 import { UsersService } from './services/users.service';
-import { SecurityService } from './services/security.service';
 @Injectable({
   providedIn: 'root'
 })
@@ -28,5 +27,4 @@ export class ApiClient {
   public scopes = inject(ScopesService);
   public security = inject(SecurityService);
   public users = inject(UsersService);
-  public security = inject(SecurityService);
 }
