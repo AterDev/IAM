@@ -7,6 +7,7 @@
 - docs: 项目文档存储目录
 - scripts： 项目脚本文件目录
 - src：项目代码目录
+- samples：集成测试示例项目目录
 - tests：测试项目目录
 - .config：配置文件目录
 
@@ -30,8 +31,21 @@
   - 用户、角色、客户端CRUD操作测试
   - API端点集成测试
 
+## 示例项目samples
+
+* `samples/backend-dotnet/`: ASP.NET Core后端示例项目
+  - 演示如何使用JWT Bearer认证
+  - 集成IAM进行令牌验证
+  - 提供受保护的API端点
+* `samples/frontend-angular/`: Angular前端示例项目
+  - 演示OAuth 2.0/OIDC认证流程
+  - 使用angular-auth-oidc-client库
+  - 自动令牌管理和刷新
+  - 受保护路由和API调用
+
 详细信息请参阅：
-- [集成测试文档](tests/Integration/README.md)
+- [集成测试文档](docs/integration-testing.md)
+- [示例项目文档](samples/README.md)
 - [API文档](docs/api-documentation.md)
 
 > [!NOTE]
