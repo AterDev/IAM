@@ -106,17 +106,17 @@ public class OAuthController(
             }
 
             // Get user ID from claims
-            var userId = User.FindFirst("sub")?.Value ?? User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+            var userId = User.FindFirst(OAuthConstants.ClaimTypes.Subject)?.Value ?? User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
             if (string.IsNullOrEmpty(userId))
             {
-                return Unauthorized(new { error = "invalid_user", error_description = "User ID not found in claims" });
+                return Unauthorized(new { error = OAuthConstants.ErrorCodes.InvalidUser, error_description = "User ID not found in claims" });
             }
 
             // TODO: Check if consent is required
             // For now, auto-consent for demonstration
 
             // Handle response type
-            if (request.ResponseType == "code")
+            if (request.ResponseType == OAuthConstants.ResponseTypes.Code)
             {
                 // Authorization code flow
                 var code = await _authorizationManager.CreateAuthorizationCodeAsync(
@@ -142,7 +142,7 @@ public class OAuthController(
                 // Unsupported response type (implicit/hybrid flows not implemented yet)
                 var errorResponse = new AuthorizeResponseDto
                 {
-                    Error = "unsupported_response_type",
+                    Error = OAuthConstants.ErrorCodes.UnsupportedResponseType,
                     ErrorDescription = "Only authorization code flow is currently supported",
                     State = request.State
                 };
@@ -153,7 +153,7 @@ public class OAuthController(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing authorization request");
-            return StatusCode(500, new { error = "server_error", error_description = "An error occurred processing the request" });
+            return StatusCode(500, new { error = OAuthConstants.ErrorCodes.ServerError, error_description = "An error occurred processing the request" });
         }
     }
 
@@ -233,7 +233,7 @@ public class OAuthController(
             _logger.LogError(ex, "Error processing token request");
             return StatusCode(500, new TokenResponseDto
             {
-                Error = "server_error",
+                Error = OAuthConstants.ErrorCodes.ServerError,
                 ErrorDescription = "An error occurred processing the request"
             });
         }
@@ -254,7 +254,7 @@ public class OAuthController(
 
             if (response == null)
             {
-                return BadRequest(new { error = "invalid_client", error_description = "Invalid client ID" });
+                return BadRequest(new { error = OAuthConstants.ErrorCodes.InvalidClient, error_description = "Invalid client ID" });
             }
 
             return Ok(response);
@@ -262,7 +262,7 @@ public class OAuthController(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing device authorization request");
-            return StatusCode(500, new { error = "server_error", error_description = "An error occurred processing the request" });
+            return StatusCode(500, new { error = OAuthConstants.ErrorCodes.ServerError, error_description = "An error occurred processing the request" });
         }
     }
 
@@ -283,7 +283,7 @@ public class OAuthController(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error introspecting token");
-            return StatusCode(500, new { error = "server_error", error_description = "An error occurred processing the request" });
+            return StatusCode(500, new { error = OAuthConstants.ErrorCodes.ServerError, error_description = "An error occurred processing the request" });
         }
     }
 
@@ -304,7 +304,7 @@ public class OAuthController(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error revoking token");
-            return StatusCode(500, new { error = "server_error", error_description = "An error occurred processing the request" });
+            return StatusCode(500, new { error = OAuthConstants.ErrorCodes.ServerError, error_description = "An error occurred processing the request" });
         }
     }
 
@@ -338,7 +338,7 @@ public class OAuthController(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing logout request");
-            return StatusCode(500, new { error = "server_error", error_description = "An error occurred processing the request" });
+            return StatusCode(500, new { error = OAuthConstants.ErrorCodes.ServerError, error_description = "An error occurred processing the request" });
         }
     }
 

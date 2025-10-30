@@ -25,14 +25,14 @@ public class TokenManager(
     {
         return request.GrantType switch
         {
-            "authorization_code" => await ProcessAuthorizationCodeGrantAsync(request),
-            "refresh_token" => await ProcessRefreshTokenGrantAsync(request),
-            "client_credentials" => await ProcessClientCredentialsGrantAsync(request),
-            "password" => await ProcessPasswordGrantAsync(request),
-            "urn:ietf:params:oauth:grant-type:device_code" => await ProcessDeviceCodeGrantAsync(request),
+            OAuthConstants.GrantTypes.AuthorizationCode => await ProcessAuthorizationCodeGrantAsync(request),
+            OAuthConstants.GrantTypes.RefreshToken => await ProcessRefreshTokenGrantAsync(request),
+            OAuthConstants.GrantTypes.ClientCredentials => await ProcessClientCredentialsGrantAsync(request),
+            OAuthConstants.GrantTypes.Password => await ProcessPasswordGrantAsync(request),
+            OAuthConstants.GrantTypes.DeviceCode => await ProcessDeviceCodeGrantAsync(request),
             _ => new TokenResponseDto
             {
-                Error = "unsupported_grant_type",
+                Error = OAuthConstants.ErrorCodes.UnsupportedGrantType,
                 ErrorDescription = "The grant type is not supported"
             }
         };
@@ -47,7 +47,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = "invalid_request",
+                Error = OAuthConstants.ErrorCodes.InvalidRequest,
                 ErrorDescription = "Missing required parameters"
             };
         }
@@ -58,7 +58,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = "invalid_client",
+                Error = OAuthConstants.ErrorCodes.InvalidClient,
                 ErrorDescription = "Invalid client credentials"
             };
         }
@@ -76,7 +76,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = "invalid_grant",
+                Error = OAuthConstants.ErrorCodes.InvalidGrant,
                 ErrorDescription = "Invalid authorization code"
             };
         }
@@ -87,7 +87,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = "invalid_grant",
+                Error = OAuthConstants.ErrorCodes.InvalidGrant,
                 ErrorDescription = "User not found"
             };
         }
@@ -105,7 +105,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = "invalid_request",
+                Error = OAuthConstants.ErrorCodes.InvalidRequest,
                 ErrorDescription = "Missing refresh token"
             };
         }
@@ -116,15 +116,15 @@ public class TokenManager(
                 .ThenInclude(a => a!.Client)
             .FirstOrDefaultAsync(t =>
                 t.ReferenceId == request.RefreshToken &&
-                t.Type == "refresh_token" &&
-                t.Status == "valid"
+                t.Type == OAuthConstants.TokenTypes.RefreshToken &&
+                t.Status == OAuthConstants.TokenStatuses.Valid
             );
 
         if (tokenEntity == null || tokenEntity.Authorization == null)
         {
             return new TokenResponseDto
             {
-                Error = "invalid_grant",
+                Error = OAuthConstants.ErrorCodes.InvalidGrant,
                 ErrorDescription = "Invalid refresh token"
             };
         }
@@ -134,7 +134,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = "invalid_grant",
+                Error = OAuthConstants.ErrorCodes.InvalidGrant,
                 ErrorDescription = "Refresh token expired"
             };
         }
@@ -145,7 +145,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = "invalid_client",
+                Error = OAuthConstants.ErrorCodes.InvalidClient,
                 ErrorDescription = "Client mismatch"
             };
         }
@@ -158,7 +158,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = "invalid_grant",
+                Error = OAuthConstants.ErrorCodes.InvalidGrant,
                 ErrorDescription = "User not found"
             };
         }
@@ -181,7 +181,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = "invalid_request",
+                Error = OAuthConstants.ErrorCodes.InvalidRequest,
                 ErrorDescription = "Missing client credentials"
             };
         }
@@ -192,7 +192,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = "invalid_client",
+                Error = OAuthConstants.ErrorCodes.InvalidClient,
                 ErrorDescription = "Invalid client credentials"
             };
         }
@@ -202,8 +202,8 @@ public class TokenManager(
         {
             SubjectId = client.Id.ToString(),
             ClientId = client.Id,
-            Type = "client_credentials",
-            Status = "valid",
+            Type = OAuthConstants.AuthorizationTypes.ClientCredentials,
+            Status = OAuthConstants.AuthorizationStatuses.Valid,
             Scopes = request.Scope,
             CreationDate = DateTimeOffset.UtcNow,
             ExpirationDate = DateTimeOffset.UtcNow.AddHours(1)
@@ -215,9 +215,9 @@ public class TokenManager(
         // Generate access token
         var claims = new List<Claim>
         {
-            new("sub", client.Id.ToString()),
-            new("client_id", client.ClientId),
-            new("scope", request.Scope ?? "")
+            new(OAuthConstants.ClaimTypes.Subject, client.Id.ToString()),
+            new(OAuthConstants.ClaimTypes.ClientId, client.ClientId),
+            new(OAuthConstants.ClaimTypes.Scope, request.Scope ?? "")
         };
 
         var accessToken = _jwtService.GetToken(claims, 3600);
@@ -227,8 +227,8 @@ public class TokenManager(
         {
             AuthorizationId = authorization.Id,
             ReferenceId = GenerateTokenReference(),
-            Type = "access_token",
-            Status = "valid",
+            Type = OAuthConstants.TokenTypes.AccessToken,
+            Status = OAuthConstants.TokenStatuses.Valid,
             SubjectId = client.Id.ToString(),
             Payload = accessToken,
             CreationDate = DateTimeOffset.UtcNow,
@@ -241,7 +241,7 @@ public class TokenManager(
         return new TokenResponseDto
         {
             AccessToken = accessToken,
-            TokenType = "Bearer",
+            TokenType = OAuthConstants.TokenTypes.Bearer,
             ExpiresIn = 3600,
             Scope = request.Scope
         };
@@ -256,7 +256,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = "invalid_request",
+                Error = OAuthConstants.ErrorCodes.InvalidRequest,
                 ErrorDescription = "Missing username or password"
             };
         }
@@ -267,7 +267,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = "invalid_client",
+                Error = OAuthConstants.ErrorCodes.InvalidClient,
                 ErrorDescription = "Invalid client credentials"
             };
         }
@@ -281,7 +281,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = "invalid_grant",
+                Error = OAuthConstants.ErrorCodes.InvalidGrant,
                 ErrorDescription = "Invalid username or password"
             };
         }
@@ -292,7 +292,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = "invalid_grant",
+                Error = OAuthConstants.ErrorCodes.InvalidGrant,
                 ErrorDescription = "Invalid username or password"
             };
         }
@@ -310,7 +310,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = "invalid_request",
+                Error = OAuthConstants.ErrorCodes.InvalidRequest,
                 ErrorDescription = "Missing device code"
             };
         }
@@ -321,34 +321,34 @@ public class TokenManager(
                 .ThenInclude(a => a!.Client)
             .FirstOrDefaultAsync(t =>
                 t.ReferenceId == request.DeviceCode &&
-                t.Type == "device_code"
+                t.Type == OAuthConstants.TokenTypes.DeviceCode
             );
 
         if (tokenEntity == null || tokenEntity.Authorization == null)
         {
             return new TokenResponseDto
             {
-                Error = "invalid_grant",
+                Error = OAuthConstants.ErrorCodes.InvalidGrant,
                 ErrorDescription = "Invalid device code"
             };
         }
 
         // Check if pending
-        if (tokenEntity.Status == "pending")
+        if (tokenEntity.Status == OAuthConstants.TokenStatuses.Pending)
         {
             return new TokenResponseDto
             {
-                Error = "authorization_pending",
+                Error = OAuthConstants.ErrorCodes.AuthorizationPending,
                 ErrorDescription = "User has not yet authorized the device"
             };
         }
 
         // Check if denied
-        if (tokenEntity.Status == "denied")
+        if (tokenEntity.Status == OAuthConstants.TokenStatuses.Denied)
         {
             return new TokenResponseDto
             {
-                Error = "access_denied",
+                Error = OAuthConstants.ErrorCodes.AccessDenied,
                 ErrorDescription = "User denied the authorization"
             };
         }
@@ -358,7 +358,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = "expired_token",
+                Error = OAuthConstants.ErrorCodes.ExpiredToken,
                 ErrorDescription = "Device code expired"
             };
         }
@@ -371,13 +371,13 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = "invalid_grant",
+                Error = OAuthConstants.ErrorCodes.InvalidGrant,
                 ErrorDescription = "User not found"
             };
         }
 
         // Mark as redeemed
-        tokenEntity.Status = "redeemed";
+        tokenEntity.Status = OAuthConstants.TokenStatuses.Redeemed;
         tokenEntity.RedemptionDate = DateTimeOffset.UtcNow;
         await _dbContext.SaveChangesAsync();
 
@@ -403,19 +403,19 @@ public class TokenManager(
         // Build claims
         var claims = new List<Claim>
         {
-            new("sub", user.Id.ToString()),
-            new("name", user.UserName),
-            new("client_id", client.ClientId)
+            new(OAuthConstants.ClaimTypes.Subject, user.Id.ToString()),
+            new(OAuthConstants.ClaimTypes.Name, user.UserName),
+            new(OAuthConstants.ClaimTypes.ClientId, client.ClientId)
         };
 
         if (!string.IsNullOrEmpty(user.Email))
         {
-            claims.Add(new Claim("email", user.Email));
+            claims.Add(new Claim(OAuthConstants.ClaimTypes.Email, user.Email));
         }
 
         if (!string.IsNullOrEmpty(scope))
         {
-            claims.Add(new Claim("scope", scope));
+            claims.Add(new Claim(OAuthConstants.ClaimTypes.Scope, scope));
         }
 
         // Generate access token
@@ -429,8 +429,8 @@ public class TokenManager(
             {
                 SubjectId = user.Id.ToString(),
                 ClientId = client.Id,
-                Type = "password",
-                Status = "valid",
+                Type = OAuthConstants.AuthorizationTypes.Password,
+                Status = OAuthConstants.AuthorizationStatuses.Valid,
                 Scopes = scope,
                 CreationDate = DateTimeOffset.UtcNow,
                 ExpirationDate = DateTimeOffset.UtcNow.AddDays(30)
@@ -446,8 +446,8 @@ public class TokenManager(
         {
             AuthorizationId = authorizationId,
             ReferenceId = GenerateTokenReference(),
-            Type = "access_token",
-            Status = "valid",
+            Type = OAuthConstants.TokenTypes.AccessToken,
+            Status = OAuthConstants.TokenStatuses.Valid,
             SubjectId = user.Id.ToString(),
             Payload = accessToken,
             CreationDate = DateTimeOffset.UtcNow,
@@ -459,8 +459,8 @@ public class TokenManager(
         {
             AuthorizationId = authorizationId,
             ReferenceId = refreshTokenValue,
-            Type = "refresh_token",
-            Status = "valid",
+            Type = OAuthConstants.TokenTypes.RefreshToken,
+            Status = OAuthConstants.TokenStatuses.Valid,
             SubjectId = user.Id.ToString(),
             CreationDate = DateTimeOffset.UtcNow,
             ExpirationDate = DateTimeOffset.UtcNow.AddDays(30)
@@ -472,18 +472,18 @@ public class TokenManager(
 
         // Generate ID token if openid scope is present
         string? idToken = null;
-        if (scope?.Contains("openid") == true)
+        if (scope?.Contains(OAuthConstants.Scopes.OpenId) == true)
         {
             var idClaims = new List<Claim>
             {
-                new("sub", user.Id.ToString()),
-                new("name", user.UserName),
-                new("aud", client.ClientId)
+                new(OAuthConstants.ClaimTypes.Subject, user.Id.ToString()),
+                new(OAuthConstants.ClaimTypes.Name, user.UserName),
+                new(OAuthConstants.ClaimTypes.Audience, client.ClientId)
             };
 
             if (!string.IsNullOrEmpty(user.Email))
             {
-                idClaims.Add(new Claim("email", user.Email));
+                idClaims.Add(new Claim(OAuthConstants.ClaimTypes.Email, user.Email));
             }
 
             idToken = _jwtService.GetToken(idClaims, 3600);
@@ -492,7 +492,7 @@ public class TokenManager(
         return new TokenResponseDto
         {
             AccessToken = accessToken,
-            TokenType = "Bearer",
+            TokenType = OAuthConstants.TokenTypes.Bearer,
             ExpiresIn = 3600,
             RefreshToken = refreshTokenValue,
             IdToken = idToken,
@@ -552,7 +552,7 @@ public class TokenManager(
             return true; // Token doesn't exist, consider it revoked
         }
 
-        tokenEntity.Status = "revoked";
+        tokenEntity.Status = OAuthConstants.TokenStatuses.Revoked;
         await _dbContext.SaveChangesAsync();
 
         return true;
@@ -568,7 +568,7 @@ public class TokenManager(
                 .ThenInclude(a => a!.Client)
             .FirstOrDefaultAsync(t => t.ReferenceId == token || t.Payload == token);
 
-        if (tokenEntity == null || tokenEntity.Status != "valid")
+        if (tokenEntity == null || tokenEntity.Status != OAuthConstants.TokenStatuses.Valid)
         {
             return new IntrospectResponseDto { Active = false };
         }

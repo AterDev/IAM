@@ -27,21 +27,21 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
 
         if (client == null)
         {
-            return (false, "invalid_client", null);
+            return (false, OAuthConstants.ErrorCodes.InvalidClient, null);
         }
 
         // Validate redirect URI
         if (!client.RedirectUris.Contains(request.RedirectUri))
         {
-            return (false, "invalid_request", client);
+            return (false, OAuthConstants.ErrorCodes.InvalidRequest, client);
         }
 
         // Validate response type
-        var supportedResponseTypes = new[] { "code", "token", "id_token" };
+        var supportedResponseTypes = new[] { OAuthConstants.ResponseTypes.Code, OAuthConstants.ResponseTypes.Token, OAuthConstants.ResponseTypes.IdToken };
         if (string.IsNullOrEmpty(request.ResponseType) ||
             !supportedResponseTypes.Contains(request.ResponseType.Split(' ')[0]))
         {
-            return (false, "unsupported_response_type", client);
+            return (false, OAuthConstants.ErrorCodes.UnsupportedResponseType, client);
         }
 
         // Validate PKCE if required
@@ -49,14 +49,14 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
         {
             if (string.IsNullOrEmpty(request.CodeChallenge))
             {
-                return (false, "invalid_request", client);
+                return (false, OAuthConstants.ErrorCodes.InvalidRequest, client);
             }
 
-            var supportedMethods = new[] { "plain", "S256" };
+            var supportedMethods = new[] { OAuthConstants.CodeChallengeMethods.Plain, OAuthConstants.CodeChallengeMethods.S256 };
             if (!string.IsNullOrEmpty(request.CodeChallengeMethod) &&
                 !supportedMethods.Contains(request.CodeChallengeMethod))
             {
-                return (false, "invalid_request", client);
+                return (false, OAuthConstants.ErrorCodes.InvalidRequest, client);
             }
         }
 
@@ -68,9 +68,9 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
 
             foreach (var scope in requestedScopes)
             {
-                if (!clientScopeNames.Contains(scope) && scope != "openid" && scope != "profile")
+                if (!clientScopeNames.Contains(scope) && scope != OAuthConstants.Scopes.OpenId && scope != OAuthConstants.Scopes.Profile)
                 {
-                    return (false, "invalid_scope", client);
+                    return (false, OAuthConstants.ErrorCodes.InvalidScope, client);
                 }
             }
         }
@@ -98,8 +98,8 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
         {
             SubjectId = subjectId,
             ClientId = clientId,
-            Type = "code",
-            Status = "valid",
+            Type = OAuthConstants.AuthorizationTypes.Code,
+            Status = OAuthConstants.AuthorizationStatuses.Valid,
             Scopes = scope,
             CreationDate = DateTimeOffset.UtcNow,
             ExpirationDate = DateTimeOffset.UtcNow.AddMinutes(10),
@@ -119,8 +119,8 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
         {
             AuthorizationId = authorization.Id,
             ReferenceId = code,
-            Type = "authorization_code",
-            Status = "valid",
+            Type = OAuthConstants.TokenTypes.AuthorizationCode,
+            Status = OAuthConstants.TokenStatuses.Valid,
             SubjectId = subjectId,
             Payload = System.Text.Json.JsonSerializer.Serialize(new { authorization_id = authorization.Id }),
             CreationDate = DateTimeOffset.UtcNow,
@@ -148,8 +148,8 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
                 .ThenInclude(a => a!.Client)
             .FirstOrDefaultAsync(t =>
                 t.ReferenceId == code &&
-                t.Type == "authorization_code" &&
-                t.Status == "valid"
+                t.Type == OAuthConstants.TokenTypes.AuthorizationCode &&
+                t.Status == OAuthConstants.TokenStatuses.Valid
             );
 
         if (token == null || token.Authorization == null)
@@ -189,7 +189,7 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
                 return (false, null);
             }
 
-            var isValidPkce = ValidatePkce(codeVerifier, codeChallenge, codeChallengeMethod ?? "plain");
+            var isValidPkce = ValidatePkce(codeVerifier, codeChallenge, codeChallengeMethod ?? OAuthConstants.CodeChallengeMethods.Plain);
             if (!isValidPkce)
             {
                 return (false, null);
@@ -197,7 +197,7 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
         }
 
         // Mark code as redeemed
-        token.Status = "redeemed";
+        token.Status = OAuthConstants.TokenStatuses.Redeemed;
         token.RedemptionDate = DateTimeOffset.UtcNow;
         await _dbContext.SaveChangesAsync();
 
@@ -209,11 +209,11 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
     /// </summary>
     private bool ValidatePkce(string verifier, string challenge, string method)
     {
-        if (method == "plain")
+        if (method == OAuthConstants.CodeChallengeMethods.Plain)
         {
             return verifier == challenge;
         }
-        else if (method == "S256")
+        else if (method == OAuthConstants.CodeChallengeMethods.S256)
         {
             using var sha256 = SHA256.Create();
             var hash = sha256.ComputeHash(Encoding.ASCII.GetBytes(verifier));
