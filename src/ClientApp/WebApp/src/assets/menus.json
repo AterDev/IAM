@@ -1,47 +1,5 @@
 [
     {
-        "name": "menu.business",
-        "path": null,
-        "accessCode": "business",
-        "icon": "assignment_ind",
-        "sort": 0,
-        "menuType": 0,
-        "children": [
-            {
-                "name": "menu.customer",
-                "path": "/customer",
-                "accessCode": "customerInfo",
-                "icon": "person",
-                "sort": 0,
-                "menuType": 0
-            },
-            {
-                "name": "menu.team",
-                "path": "/team",
-                "accessCode": "team",
-                "icon": "groups",
-                "sort": 0,
-                "menuType": 0
-            },
-            {
-                "name": "menu.product",
-                "path": "/product",
-                "accessCode": "product",
-                "icon": "inventory_2",
-                "sort": 0,
-                "menuType": 0
-            },
-            {
-                "name": "menu.order",
-                "path": "/order",
-                "accessCode": "order",
-                "icon": "payments",
-                "sort": 0,
-                "menuType": 0
-            }
-        ]
-    },
-    {
         "name": "menu.system",
         "path": null,
         "accessCode": "system",

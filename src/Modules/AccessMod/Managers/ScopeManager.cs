@@ -12,13 +12,13 @@ public class ScopeManager(DefaultDbContext dbContext, ILogger<ScopeManager> logg
     /// Get paged scopes
     /// </summary>
     /// <param name="filter">Filter criteria</param>
-    /// <returns>Paged list of scopes</returns>
+    /// <returns>Paged list of scopes</returns>查询在
     public async Task<PageList<ScopeItemDto>> GetPageAsync(ScopeFilterDto filter)
     {
         Queryable = Queryable
-            .WhereNotNull(filter.Name != null, q => q.Name.Contains(filter.Name!))
-            .WhereNotNull(filter.DisplayName != null, q => q.DisplayName.Contains(filter.DisplayName!))
-            .WhereNotNull(filter.Required.HasValue, q => q.Required == filter.Required!.Value);
+            .WhereNotNull(filter.Name, q => q.Name.Contains(filter.Name!))
+            .WhereNotNull(filter.DisplayName, q => q.DisplayName.Contains(filter.DisplayName!))
+            .WhereNotNull(filter.Required, q => q.Required == filter.Required!.Value);
 
         return await ToPageAsync<ScopeFilterDto, ScopeItemDto>(filter);
     }

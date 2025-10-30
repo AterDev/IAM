@@ -65,7 +65,7 @@ public abstract class ManagerBase<TDbContext, TEntity>
         _logger = logger;
         _dbContext = dbContext;
         _dbSet = _dbContext.Set<TEntity>();
-        Queryable = _dbSet.AsNoTracking().AsQueryable();
+        Queryable = _dbSet.AsQueryable();
         if (!EnableGlobalQuery)
         {
             Queryable = Queryable.IgnoreQueryFilters();
@@ -197,7 +197,7 @@ public abstract class ManagerBase<TDbContext, TEntity>
         where TItem : class
     {
         Queryable =
-            filter.OrderBy != null
+            filter.OrderBy != null && filter.OrderBy.Count > 0
                 ? Queryable.OrderBy(filter.OrderBy)
                 : Queryable.OrderByDescending(t => t.CreatedTime);
 

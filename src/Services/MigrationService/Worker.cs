@@ -85,7 +85,7 @@ public class Worker(
             var passwordHasher = new PasswordHasherService();
 
             // Create default admin role if not exists
-            var adminRoleName = "Administrator";
+            var adminRoleName = WebConst.SuperAdmin;
             var normalizedAdminRoleName = adminRoleName.ToUpperInvariant();
 
             var adminRole = await dbContext.Roles.FirstOrDefaultAsync(

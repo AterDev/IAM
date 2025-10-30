@@ -23,13 +23,28 @@ public class JwtService(IOptions<JwtOption> options)
     /// <summary>
     /// 生成jwt token
     /// </summary>
+    /// <param name="claims">Token claims</param>
+    /// <param name="expiresIn">Expiration time in seconds (default: 3600)</param>
+    /// <returns>JWT token string</returns>
+    public string GetToken(IEnumerable<Claim> claims, int expiresIn = 3600)
+    {
+        SymmetricSecurityKey signingKey = new(Encoding.UTF8.GetBytes(Sign));
+        SigningCredentials signingCredentials = new(signingKey, SecurityAlgorithms.HmacSha256);
+        JwtSecurityToken jwt = new(Issuer, Audience, claims,
+            expires: DateTime.UtcNow.AddSeconds(expiresIn),
+            signingCredentials: signingCredentials);
+        var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
+        return encodedJwt;
+    }
+
+    /// <summary>
+    /// 生成jwt token
+    /// </summary>
     /// <param name="id"></param>
     /// <param name="roles">角色</param>
     /// <returns></returns>
     public string GetToken(string id, string[] roles)
     {
-        SymmetricSecurityKey signingKey = new(Encoding.UTF8.GetBytes(Sign));
-        SigningCredentials signingCredentials = new(signingKey, SecurityAlgorithms.HmacSha256);
         List<Claim> claims = [new Claim(ClaimTypes.NameIdentifier, id)];
         if (roles.Length != 0)
         {
@@ -42,11 +57,7 @@ public class JwtService(IOptions<JwtOption> options)
         {
             claims.AddRange(Claims);
         }
-        JwtSecurityToken jwt = new(Issuer, Audience, claims,
-            expires: DateTime.UtcNow.AddSeconds(ExpiredSecond),
-            signingCredentials: signingCredentials);
-        var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
-        return encodedJwt;
+        return GetToken(claims, ExpiredSecond);
     }
 
     /// <summary>
@@ -82,5 +93,4 @@ public class JwtService(IOptions<JwtOption> options)
         JwtSecurityToken jwtToken = DecodeJwtToken(token);
         return jwtToken.Claims.First(c => c.Type == claimType).Value;
     }
-
 }

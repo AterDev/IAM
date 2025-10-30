@@ -1,9 +1,9 @@
 using System.Security.Claims;
+using Ater.Web.Convention.Services;
 using IdentityMod.Managers;
 using IdentityMod.Models.AdminAuthDtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Share.Services;
 
 namespace ApiService.Controllers;
 
@@ -15,13 +15,13 @@ namespace ApiService.Controllers;
 public class AdminAuthController(
     UserManager userManager,
     RoleManager roleManager,
-    IJwtTokenService jwtTokenService,
+    JwtService jwtService,
     ILogger<AdminAuthController> logger
 ) : ControllerBase
 {
     private readonly UserManager _userManager = userManager;
     private readonly RoleManager _roleManager = roleManager;
-    private readonly IJwtTokenService _jwtTokenService = jwtTokenService;
+    private readonly JwtService _jwtService = jwtService;
     private readonly ILogger<AdminAuthController> _logger = logger;
 
     /// <summary>
@@ -64,31 +64,14 @@ public class AdminAuthController(
             var roleIds = user.UserRoles.Select(ur => ur.RoleId).ToList();
             var roles = await _roleManager.GetRoleNamesByIdsAsync(roleIds);
 
-            // Generate JWT claims
-            var claims = new List<Claim>
-            {
-                new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new(ClaimTypes.Name, user.UserName),
-                new("sub", user.Id.ToString()),
-                new("preferred_username", user.UserName)
-            };
-
-            if (!string.IsNullOrEmpty(user.Email))
-            {
-                claims.Add(new Claim(ClaimTypes.Email, user.Email));
-                claims.Add(new Claim("email", user.Email));
-            }
-
-            // Add roles to claims
-            foreach (var role in roles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-            }
-
             // Generate JWT token with 2 hours expiration
             var expiresIn = 7200; // 2 hours
-            var accessToken = _jwtTokenService.GenerateAccessToken(claims, expiresIn);
-
+            _jwtService.Claims =
+            [
+                new Claim(ClaimTypes.Name, user.UserName),
+                new Claim(ClaimTypes.Email, user.Email??string.Empty)
+            ];
+            var accessToken = _jwtService.GetToken(user.Id.ToString(), [.. roles]);
             var response = new AdminLoginResponseDto
             {
                 AccessToken = accessToken,

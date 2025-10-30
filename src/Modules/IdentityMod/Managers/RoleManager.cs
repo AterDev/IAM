@@ -1,8 +1,6 @@
-using CommonMod.Managers;
-using Entity.IdentityMod;
-using EntityFramework.DBProvider;
-using IdentityMod.Models.RoleDtos;
 using System.Text.Json;
+using CommonMod.Managers;
+using IdentityMod.Models.RoleDtos;
 
 namespace IdentityMod.Managers;
 
@@ -24,9 +22,9 @@ public class RoleManager(
     public async Task<PageList<RoleItemDto>> GetPageAsync(RoleFilterDto filter)
     {
         Queryable = Queryable
-            .WhereNotNull(filter.Name != null, q => q.Name.Contains(filter.Name!))
-            .WhereNotNull(filter.StartDate != null, q => q.CreatedTime >= filter.StartDate)
-            .WhereNotNull(filter.EndDate != null, q => q.CreatedTime <= filter.EndDate);
+            .WhereNotNull(filter.Name, q => q.Name.Contains(filter.Name!))
+            .WhereNotNull(filter.StartDate, q => q.CreatedTime >= filter.StartDate)
+            .WhereNotNull(filter.EndDate, q => q.CreatedTime <= filter.EndDate);
 
         return await ToPageAsync<RoleFilterDto, RoleItemDto>(filter);
     }
@@ -200,16 +198,16 @@ public class RoleManager(
             var newPermissions = dto.Permissions
                 .Select(p => $"{p.ClaimType}:{p.ClaimValue}")
                 .ToList();
-            
+
             await _auditLogManager.AddAuditLogAsync(
                 category: "Authorization",
                 eventName: "RolePermissionsChanged",
                 subjectId: roleId.ToString(),
-                payload: JsonSerializer.Serialize(new 
-                { 
-                    roleName = role.Name, 
-                    oldCount = oldPermissions.Count, 
-                    newCount = newPermissions.Count 
+                payload: JsonSerializer.Serialize(new
+                {
+                    roleName = role.Name,
+                    oldCount = oldPermissions.Count,
+                    newCount = newPermissions.Count
                 }),
                 ipAddress: ipAddress,
                 userAgent: userAgent

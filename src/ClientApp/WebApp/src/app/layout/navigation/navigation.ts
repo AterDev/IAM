@@ -4,7 +4,7 @@ import { BaseMatModules, CommonModules } from 'src/app/share/shared-modules';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatListModule } from '@angular/material/list';
-import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb';
+import { BreadcrumbComponent } from '../../share/components/breadcrumb/breadcrumb';
 
 @Component({
   selector: 'app-navigation',

@@ -1,11 +1,11 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
 
 namespace Share.Implement;
 
 [ApiExplorerSettings(GroupName = "v1")]
-[Authorize(Policy = WebConst.User)]
+[Authorize(Policy = WebConst.AdminUser)]
 public class RestControllerBase<TManager>(
     Localizer localizer,
     TManager manager,

@@ -25,21 +25,21 @@ public class UserManager(
     public async Task<PageList<UserItemDto>> GetPageAsync(UserFilterDto filter)
     {
         Queryable = Queryable
-            .WhereNotNull(filter.UserName != null, q => q.UserName.Contains(filter.UserName!))
+            .WhereNotNull(filter.UserName, q => q.UserName.Contains(filter.UserName!))
             .WhereNotNull(
-                filter.Email != null,
+                filter.Email,
                 q => q.Email != null && q.Email.Contains(filter.Email!)
             )
             .WhereNotNull(
-                filter.PhoneNumber != null,
+                filter.PhoneNumber,
                 q => q.PhoneNumber != null && q.PhoneNumber.Contains(filter.PhoneNumber!)
             )
             .WhereNotNull(
-                filter.LockoutEnabled != null,
+                filter.LockoutEnabled,
                 q => q.LockoutEnabled == filter.LockoutEnabled
             )
-            .WhereNotNull(filter.StartDate != null, q => q.CreatedTime >= filter.StartDate)
-            .WhereNotNull(filter.EndDate != null, q => q.CreatedTime <= filter.EndDate);
+            .WhereNotNull(filter.StartDate, q => q.CreatedTime >= filter.StartDate)
+            .WhereNotNull(filter.EndDate, q => q.CreatedTime <= filter.EndDate);
 
         return await ToPageAsync<UserFilterDto, UserItemDto>(filter);
     }
