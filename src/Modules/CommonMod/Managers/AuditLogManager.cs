@@ -18,11 +18,11 @@ public class AuditLogManager(DefaultDbContext dbContext, ILogger<AuditLogManager
     public async Task<PageList<AuditLogItemDto>> GetPageAsync(AuditLogFilterDto filter)
     {
         Queryable = Queryable
-            .WhereNotNull(filter.Category != null, q => q.Category == filter.Category)
-            .WhereNotNull(filter.Event != null, q => q.Event == filter.Event)
-            .WhereNotNull(filter.SubjectId != null, q => q.SubjectId == filter.SubjectId)
-            .WhereNotNull(filter.StartDate != null, q => q.CreatedTime >= filter.StartDate)
-            .WhereNotNull(filter.EndDate != null, q => q.CreatedTime <= filter.EndDate);
+            .WhereNotNull(filter.Category, q => q.Category == filter.Category)
+            .WhereNotNull(filter.Event, q => q.Event == filter.Event)
+            .WhereNotNull(filter.SubjectId, q => q.SubjectId == filter.SubjectId)
+            .WhereNotNull(filter.StartDate, q => q.CreatedTime >= filter.StartDate)
+            .WhereNotNull(filter.EndDate, q => q.CreatedTime <= filter.EndDate);
 
         return await ToPageAsync<AuditLogFilterDto, AuditLogItemDto>(filter);
     }

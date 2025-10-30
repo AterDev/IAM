@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using IdentityMod.Models.OAuthDtos;
+using Ater.Web.Convention.Services;
 
 namespace IdentityMod.Managers;
 
@@ -10,11 +11,11 @@ namespace IdentityMod.Managers;
 public class TokenManager(
     DefaultDbContext dbContext,
     ILogger<TokenManager> logger,
-    IJwtTokenService jwtTokenService,
+    JwtService jwtService,
     IPasswordHasher passwordHasher
     ) : ManagerBase<DefaultDbContext>(dbContext, logger)
 {
-    private readonly IJwtTokenService _jwtTokenService = jwtTokenService;
+    private readonly JwtService _jwtService = jwtService;
     private readonly IPasswordHasher _passwordHasher = passwordHasher;
 
     /// <summary>
@@ -219,7 +220,7 @@ public class TokenManager(
             new("scope", request.Scope ?? "")
         };
 
-        var accessToken = _jwtTokenService.GenerateAccessToken(claims, 3600);
+        var accessToken = _jwtService.GetToken(claims, 3600);
 
         // Store token
         var token = new Token
@@ -418,7 +419,7 @@ public class TokenManager(
         }
 
         // Generate access token
-        var accessToken = _jwtTokenService.GenerateAccessToken(claims, 3600);
+        var accessToken = _jwtService.GetToken(claims, 3600);
         var refreshTokenValue = GenerateTokenReference();
 
         // Create authorization if not exists
@@ -485,7 +486,7 @@ public class TokenManager(
                 idClaims.Add(new Claim("email", user.Email));
             }
 
-            idToken = _jwtTokenService.GenerateIdToken(idClaims, 3600);
+            idToken = _jwtService.GetToken(idClaims, 3600);
         }
 
         return new TokenResponseDto

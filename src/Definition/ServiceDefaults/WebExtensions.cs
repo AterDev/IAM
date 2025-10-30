@@ -389,8 +389,8 @@ public static class WebExtensions
             .AddAuthorizationBuilder()
             .AddPolicy(WebConst.Default, policy => policy.RequireAuthenticatedUser())
             .AddPolicy(
-                WebConst.User,
-                policy => policy.RequireRole(WebConst.User, WebConst.AdminUser, WebConst.SuperAdmin)
+                WebConst.AdminUser,
+                policy => policy.RequireRole(WebConst.AdminUser, WebConst.SuperAdmin)
             );
 
         return services;

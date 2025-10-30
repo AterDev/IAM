@@ -15,8 +15,6 @@ public static class ModuleExtensions
         builder.Services.AddScoped<IAuditTrailService, AuditTrailService>();
         builder.Services.AddSingleton<IPasswordHasher, PasswordHasherService>();
         builder.Services.AddSingleton<IKeyManagementService, KeyManagementService>();
-        builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
-
         return builder;
     }
 }

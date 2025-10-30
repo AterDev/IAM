@@ -25,10 +25,10 @@ public class ClientManager(
     public async Task<PageList<ClientItemDto>> GetPageAsync(ClientFilterDto filter)
     {
         Queryable = Queryable
-            .WhereNotNull(filter.ClientId != null, q => q.ClientId.Contains(filter.ClientId!))
-            .WhereNotNull(filter.DisplayName != null, q => q.DisplayName.Contains(filter.DisplayName!))
-            .WhereNotNull(filter.Type != null, q => q.Type == filter.Type)
-            .WhereNotNull(filter.ApplicationType != null, q => q.ApplicationType == filter.ApplicationType);
+            .WhereNotNull(filter.ClientId, q => q.ClientId.Contains(filter.ClientId!))
+            .WhereNotNull(filter.DisplayName, q => q.DisplayName.Contains(filter.DisplayName!))
+            .WhereNotNull(filter.Type, q => q.Type == filter.Type)
+            .WhereNotNull(filter.ApplicationType, q => q.ApplicationType == filter.ApplicationType);
 
         return await ToPageAsync<ClientFilterDto, ClientItemDto>(filter);
     }

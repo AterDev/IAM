@@ -18,8 +18,8 @@ public class ResourceManager(DefaultDbContext dbContext, ILogger<ResourceManager
     public async Task<PageList<ResourceItemDto>> GetPageAsync(ResourceFilterDto filter)
     {
         Queryable = Queryable
-            .WhereNotNull(filter.Name != null, q => q.Name.Contains(filter.Name!))
-            .WhereNotNull(filter.DisplayName != null, q => q.DisplayName.Contains(filter.DisplayName!));
+            .WhereNotNull(filter.Name, q => q.Name.Contains(filter.Name!))
+            .WhereNotNull(filter.DisplayName, q => q.DisplayName.Contains(filter.DisplayName!));
 
         return await ToPageAsync<ResourceFilterDto, ResourceItemDto>(filter);
     }
