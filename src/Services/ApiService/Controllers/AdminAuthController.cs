@@ -4,6 +4,7 @@ using IdentityMod.Managers;
 using IdentityMod.Models.AdminAuthDtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using ClaimTypes = System.Security.Claims.ClaimTypes;
 
 namespace ApiService.Controllers;
 

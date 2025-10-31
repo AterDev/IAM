@@ -12,11 +12,11 @@ public static class OAuthTypeExtensions
     {
         return grantType switch
         {
-            GrantType.AuthorizationCode => OAuthConstants.GrantTypes.AuthorizationCode,
-            GrantType.RefreshToken => OAuthConstants.GrantTypes.RefreshToken,
-            GrantType.ClientCredentials => OAuthConstants.GrantTypes.ClientCredentials,
-            GrantType.Password => OAuthConstants.GrantTypes.Password,
-            GrantType.DeviceCode => OAuthConstants.GrantTypes.DeviceCode,
+            GrantType.AuthorizationCode => GrantTypes.AuthorizationCode,
+            GrantType.RefreshToken => GrantTypes.RefreshToken,
+            GrantType.ClientCredentials => GrantTypes.ClientCredentials,
+            GrantType.Password => GrantTypes.Password,
+            GrantType.DeviceCode => GrantTypes.DeviceCode,
             _ => throw new ArgumentOutOfRangeException(nameof(grantType), grantType, null)
         };
     }
@@ -28,11 +28,11 @@ public static class OAuthTypeExtensions
     {
         return grantType switch
         {
-            OAuthConstants.GrantTypes.AuthorizationCode => GrantType.AuthorizationCode,
-            OAuthConstants.GrantTypes.RefreshToken => GrantType.RefreshToken,
-            OAuthConstants.GrantTypes.ClientCredentials => GrantType.ClientCredentials,
-            OAuthConstants.GrantTypes.Password => GrantType.Password,
-            OAuthConstants.GrantTypes.DeviceCode => GrantType.DeviceCode,
+            GrantTypes.AuthorizationCode => GrantType.AuthorizationCode,
+            GrantTypes.RefreshToken => GrantType.RefreshToken,
+            GrantTypes.ClientCredentials => GrantType.ClientCredentials,
+            GrantTypes.Password => GrantType.Password,
+            GrantTypes.DeviceCode => GrantType.DeviceCode,
             _ => null
         };
     }
@@ -44,9 +44,9 @@ public static class OAuthTypeExtensions
     {
         return responseType switch
         {
-            ResponseType.Code => OAuthConstants.ResponseTypes.Code,
-            ResponseType.Token => OAuthConstants.ResponseTypes.Token,
-            ResponseType.IdToken => OAuthConstants.ResponseTypes.IdToken,
+            ResponseType.Code => ResponseTypes.Code,
+            ResponseType.Token => ResponseTypes.Token,
+            ResponseType.IdToken => ResponseTypes.IdToken,
             _ => throw new ArgumentOutOfRangeException(nameof(responseType), responseType, null)
         };
     }
@@ -58,9 +58,9 @@ public static class OAuthTypeExtensions
     {
         return responseType switch
         {
-            OAuthConstants.ResponseTypes.Code => ResponseType.Code,
-            OAuthConstants.ResponseTypes.Token => ResponseType.Token,
-            OAuthConstants.ResponseTypes.IdToken => ResponseType.IdToken,
+            ResponseTypes.Code => ResponseType.Code,
+            ResponseTypes.Token => ResponseType.Token,
+            ResponseTypes.IdToken => ResponseType.IdToken,
             _ => null
         };
     }
@@ -72,12 +72,12 @@ public static class OAuthTypeExtensions
     {
         return tokenType switch
         {
-            TokenType.AccessToken => OAuthConstants.TokenTypes.AccessToken,
-            TokenType.RefreshToken => OAuthConstants.TokenTypes.RefreshToken,
-            TokenType.IdToken => OAuthConstants.TokenTypes.IdToken,
-            TokenType.AuthorizationCode => OAuthConstants.TokenTypes.AuthorizationCode,
-            TokenType.DeviceCode => OAuthConstants.TokenTypes.DeviceCode,
-            TokenType.UserCode => OAuthConstants.TokenTypes.UserCode,
+            TokenType.AccessToken => TokenTypes.AccessToken,
+            TokenType.RefreshToken => TokenTypes.RefreshToken,
+            TokenType.IdToken => TokenTypes.IdToken,
+            TokenType.AuthorizationCode => TokenTypes.AuthorizationCode,
+            TokenType.DeviceCode => TokenTypes.DeviceCode,
+            TokenType.UserCode => TokenTypes.UserCode,
             _ => throw new ArgumentOutOfRangeException(nameof(tokenType), tokenType, null)
         };
     }
@@ -89,12 +89,12 @@ public static class OAuthTypeExtensions
     {
         return tokenType switch
         {
-            OAuthConstants.TokenTypes.AccessToken => TokenType.AccessToken,
-            OAuthConstants.TokenTypes.RefreshToken => TokenType.RefreshToken,
-            OAuthConstants.TokenTypes.IdToken => TokenType.IdToken,
-            OAuthConstants.TokenTypes.AuthorizationCode => TokenType.AuthorizationCode,
-            OAuthConstants.TokenTypes.DeviceCode => TokenType.DeviceCode,
-            OAuthConstants.TokenTypes.UserCode => TokenType.UserCode,
+            TokenTypes.AccessToken => TokenType.AccessToken,
+            TokenTypes.RefreshToken => TokenType.RefreshToken,
+            TokenTypes.IdToken => TokenType.IdToken,
+            TokenTypes.AuthorizationCode => TokenType.AuthorizationCode,
+            TokenTypes.DeviceCode => TokenType.DeviceCode,
+            TokenTypes.UserCode => TokenType.UserCode,
             _ => null
         };
     }
@@ -106,11 +106,11 @@ public static class OAuthTypeExtensions
     {
         return tokenStatus switch
         {
-            TokenStatus.Valid => OAuthConstants.TokenStatuses.Valid,
-            TokenStatus.Revoked => OAuthConstants.TokenStatuses.Revoked,
-            TokenStatus.Redeemed => OAuthConstants.TokenStatuses.Redeemed,
-            TokenStatus.Pending => OAuthConstants.TokenStatuses.Pending,
-            TokenStatus.Denied => OAuthConstants.TokenStatuses.Denied,
+            TokenStatus.Valid => TokenStatuses.Valid,
+            TokenStatus.Revoked => TokenStatuses.Revoked,
+            TokenStatus.Redeemed => TokenStatuses.Redeemed,
+            TokenStatus.Pending => TokenStatuses.Pending,
+            TokenStatus.Denied => TokenStatuses.Denied,
             _ => throw new ArgumentOutOfRangeException(nameof(tokenStatus), tokenStatus, null)
         };
     }
@@ -122,11 +122,11 @@ public static class OAuthTypeExtensions
     {
         return tokenStatus switch
         {
-            OAuthConstants.TokenStatuses.Valid => TokenStatus.Valid,
-            OAuthConstants.TokenStatuses.Revoked => TokenStatus.Revoked,
-            OAuthConstants.TokenStatuses.Redeemed => TokenStatus.Redeemed,
-            OAuthConstants.TokenStatuses.Pending => TokenStatus.Pending,
-            OAuthConstants.TokenStatuses.Denied => TokenStatus.Denied,
+            TokenStatuses.Valid => TokenStatus.Valid,
+            TokenStatuses.Revoked => TokenStatus.Revoked,
+            TokenStatuses.Redeemed => TokenStatus.Redeemed,
+            TokenStatuses.Pending => TokenStatus.Pending,
+            TokenStatuses.Denied => TokenStatus.Denied,
             _ => null
         };
     }
@@ -138,10 +138,10 @@ public static class OAuthTypeExtensions
     {
         return authorizationType switch
         {
-            AuthorizationType.Code => OAuthConstants.AuthorizationTypes.Code,
-            AuthorizationType.ClientCredentials => OAuthConstants.AuthorizationTypes.ClientCredentials,
-            AuthorizationType.Password => OAuthConstants.AuthorizationTypes.Password,
-            AuthorizationType.DeviceCode => OAuthConstants.AuthorizationTypes.DeviceCode,
+            AuthorizationType.Code => AuthorizationTypes.Code,
+            AuthorizationType.ClientCredentials => AuthorizationTypes.ClientCredentials,
+            AuthorizationType.Password => AuthorizationTypes.Password,
+            AuthorizationType.DeviceCode => AuthorizationTypes.DeviceCode,
             _ => throw new ArgumentOutOfRangeException(nameof(authorizationType), authorizationType, null)
         };
     }
@@ -153,10 +153,10 @@ public static class OAuthTypeExtensions
     {
         return authorizationType switch
         {
-            OAuthConstants.AuthorizationTypes.Code => AuthorizationType.Code,
-            OAuthConstants.AuthorizationTypes.ClientCredentials => AuthorizationType.ClientCredentials,
-            OAuthConstants.AuthorizationTypes.Password => AuthorizationType.Password,
-            OAuthConstants.AuthorizationTypes.DeviceCode => AuthorizationType.DeviceCode,
+            AuthorizationTypes.Code => AuthorizationType.Code,
+            AuthorizationTypes.ClientCredentials => AuthorizationType.ClientCredentials,
+            AuthorizationTypes.Password => AuthorizationType.Password,
+            AuthorizationTypes.DeviceCode => AuthorizationType.DeviceCode,
             _ => null
         };
     }
@@ -168,11 +168,11 @@ public static class OAuthTypeExtensions
     {
         return authorizationStatus switch
         {
-            AuthorizationStatus.Valid => OAuthConstants.AuthorizationStatuses.Valid,
-            AuthorizationStatus.Revoked => OAuthConstants.AuthorizationStatuses.Revoked,
-            AuthorizationStatus.Pending => OAuthConstants.AuthorizationStatuses.Pending,
-            AuthorizationStatus.Authorized => OAuthConstants.AuthorizationStatuses.Authorized,
-            AuthorizationStatus.Denied => OAuthConstants.AuthorizationStatuses.Denied,
+            AuthorizationStatus.Valid => AuthorizationStatuses.Valid,
+            AuthorizationStatus.Revoked => AuthorizationStatuses.Revoked,
+            AuthorizationStatus.Pending => AuthorizationStatuses.Pending,
+            AuthorizationStatus.Authorized => AuthorizationStatuses.Authorized,
+            AuthorizationStatus.Denied => AuthorizationStatuses.Denied,
             _ => throw new ArgumentOutOfRangeException(nameof(authorizationStatus), authorizationStatus, null)
         };
     }
@@ -184,11 +184,11 @@ public static class OAuthTypeExtensions
     {
         return authorizationStatus switch
         {
-            OAuthConstants.AuthorizationStatuses.Valid => AuthorizationStatus.Valid,
-            OAuthConstants.AuthorizationStatuses.Revoked => AuthorizationStatus.Revoked,
-            OAuthConstants.AuthorizationStatuses.Pending => AuthorizationStatus.Pending,
-            OAuthConstants.AuthorizationStatuses.Authorized => AuthorizationStatus.Authorized,
-            OAuthConstants.AuthorizationStatuses.Denied => AuthorizationStatus.Denied,
+            AuthorizationStatuses.Valid => AuthorizationStatus.Valid,
+            AuthorizationStatuses.Revoked => AuthorizationStatus.Revoked,
+            AuthorizationStatuses.Pending => AuthorizationStatus.Pending,
+            AuthorizationStatuses.Authorized => AuthorizationStatus.Authorized,
+            AuthorizationStatuses.Denied => AuthorizationStatus.Denied,
             _ => null
         };
     }
@@ -200,8 +200,8 @@ public static class OAuthTypeExtensions
     {
         return codeChallengeMethod switch
         {
-            CodeChallengeMethod.Plain => OAuthConstants.CodeChallengeMethods.Plain,
-            CodeChallengeMethod.S256 => OAuthConstants.CodeChallengeMethods.S256,
+            CodeChallengeMethod.Plain => CodeChallengeMethods.Plain,
+            CodeChallengeMethod.S256 => CodeChallengeMethods.S256,
             _ => throw new ArgumentOutOfRangeException(nameof(codeChallengeMethod), codeChallengeMethod, null)
         };
     }
@@ -213,8 +213,8 @@ public static class OAuthTypeExtensions
     {
         return codeChallengeMethod switch
         {
-            OAuthConstants.CodeChallengeMethods.Plain => CodeChallengeMethod.Plain,
-            OAuthConstants.CodeChallengeMethods.S256 => CodeChallengeMethod.S256,
+            CodeChallengeMethods.Plain => CodeChallengeMethod.Plain,
+            CodeChallengeMethods.S256 => CodeChallengeMethod.S256,
             _ => null
         };
     }
@@ -226,9 +226,9 @@ public static class OAuthTypeExtensions
     {
         return responseMode switch
         {
-            ResponseMode.Query => OAuthConstants.ResponseModes.Query,
-            ResponseMode.Fragment => OAuthConstants.ResponseModes.Fragment,
-            ResponseMode.FormPost => OAuthConstants.ResponseModes.FormPost,
+            ResponseMode.Query => ResponseModes.Query,
+            ResponseMode.Fragment => ResponseModes.Fragment,
+            ResponseMode.FormPost => ResponseModes.FormPost,
             _ => throw new ArgumentOutOfRangeException(nameof(responseMode), responseMode, null)
         };
     }
@@ -240,9 +240,9 @@ public static class OAuthTypeExtensions
     {
         return responseMode switch
         {
-            OAuthConstants.ResponseModes.Query => ResponseMode.Query,
-            OAuthConstants.ResponseModes.Fragment => ResponseMode.Fragment,
-            OAuthConstants.ResponseModes.FormPost => ResponseMode.FormPost,
+            ResponseModes.Query => ResponseMode.Query,
+            ResponseModes.Fragment => ResponseMode.Fragment,
+            ResponseModes.FormPost => ResponseMode.FormPost,
             _ => null
         };
     }

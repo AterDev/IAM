@@ -1,3 +1,4 @@
+using IdentityMod;
 using IdentityMod.Managers;
 using IdentityMod.Models.OAuthDtos;
 using Microsoft.AspNetCore.Authentication;
@@ -109,7 +110,7 @@ public class OAuthController(
             var userId = User.FindFirst(OAuthConstants.ClaimTypes.Subject)?.Value ?? User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
             if (string.IsNullOrEmpty(userId))
             {
-                return Unauthorized(new { error = OAuthConstants.ErrorCodes.InvalidUser, error_description = "User ID not found in claims" });
+                return Unauthorized(new { error = ErrorCodes.InvalidUser, error_description = "User ID not found in claims" });
             }
 
             // TODO: Check if consent is required
