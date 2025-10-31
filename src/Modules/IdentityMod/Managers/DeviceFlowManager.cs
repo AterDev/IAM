@@ -39,8 +39,8 @@ public class DeviceFlowManager(DefaultDbContext dbContext, ILogger<DeviceFlowMan
         {
             SubjectId = "", // Will be set when user authorizes
             ClientId = client.Id,
-            Type = OAuthConstants.AuthorizationTypes.DeviceCode,
-            Status = OAuthConstants.AuthorizationStatuses.Pending,
+            Type = AuthorizationTypes.DeviceCode,
+            Status = AuthorizationStatuses.Pending,
             Scopes = request.Scope,
             CreationDate = DateTimeOffset.UtcNow,
             ExpirationDate = DateTimeOffset.UtcNow.AddSeconds(DeviceCodeExpirationSeconds),
@@ -54,8 +54,8 @@ public class DeviceFlowManager(DefaultDbContext dbContext, ILogger<DeviceFlowMan
         {
             AuthorizationId = authorization.Id,
             ReferenceId = deviceCode,
-            Type = OAuthConstants.TokenTypes.DeviceCode,
-            Status = OAuthConstants.TokenStatuses.Pending,
+            Type = TokenTypes.DeviceCode,
+            Status = TokenStatuses.Pending,
             Payload = System.Text.Json.JsonSerializer.Serialize(new
             {
                 user_code = userCode,
@@ -70,8 +70,8 @@ public class DeviceFlowManager(DefaultDbContext dbContext, ILogger<DeviceFlowMan
         {
             AuthorizationId = authorization.Id,
             ReferenceId = userCode,
-            Type = OAuthConstants.TokenTypes.UserCode,
-            Status = OAuthConstants.TokenStatuses.Pending,
+            Type = TokenTypes.UserCode,
+            Status = TokenStatuses.Pending,
             Payload = System.Text.Json.JsonSerializer.Serialize(new
             {
                 device_code = deviceCode,
@@ -109,7 +109,7 @@ public class DeviceFlowManager(DefaultDbContext dbContext, ILogger<DeviceFlowMan
         var token = await _dbContext.Tokens
             .Include(t => t.Authorization)
                 .ThenInclude(a => a!.Client)
-            .FirstOrDefaultAsync(t => t.ReferenceId == userCode && t.Type == OAuthConstants.TokenTypes.UserCode);
+            .FirstOrDefaultAsync(t => t.ReferenceId == userCode && t.Type == TokenTypes.UserCode);
 
         if (token == null || token.Authorization == null)
         {
@@ -132,7 +132,7 @@ public class DeviceFlowManager(DefaultDbContext dbContext, ILogger<DeviceFlowMan
     {
         var token = await _dbContext.Tokens
             .Include(t => t.Authorization)
-            .FirstOrDefaultAsync(t => t.ReferenceId == userCode && t.Type == OAuthConstants.TokenTypes.UserCode);
+            .FirstOrDefaultAsync(t => t.ReferenceId == userCode && t.Type == TokenTypes.UserCode);
 
         if (token == null || token.Authorization == null)
         {
@@ -147,20 +147,20 @@ public class DeviceFlowManager(DefaultDbContext dbContext, ILogger<DeviceFlowMan
 
         // Update authorization
         token.Authorization.SubjectId = userId;
-        token.Authorization.Status = OAuthConstants.AuthorizationStatuses.Authorized;
+        token.Authorization.Status = AuthorizationStatuses.Authorized;
 
         // Update all related tokens
         var deviceCodeToken = await _dbContext.Tokens.FirstOrDefaultAsync(t =>
-            t.AuthorizationId == token.AuthorizationId && t.Type == OAuthConstants.TokenTypes.DeviceCode
+            t.AuthorizationId == token.AuthorizationId && t.Type == TokenTypes.DeviceCode
         );
 
         if (deviceCodeToken != null)
         {
-            deviceCodeToken.Status = OAuthConstants.TokenStatuses.Valid;
+            deviceCodeToken.Status = TokenStatuses.Valid;
             deviceCodeToken.SubjectId = userId;
         }
 
-        token.Status = OAuthConstants.TokenStatuses.Valid;
+        token.Status = TokenStatuses.Valid;
         token.SubjectId = userId;
 
         await _dbContext.SaveChangesAsync();
@@ -174,7 +174,7 @@ public class DeviceFlowManager(DefaultDbContext dbContext, ILogger<DeviceFlowMan
     {
         var token = await _dbContext.Tokens
             .Include(t => t.Authorization)
-            .FirstOrDefaultAsync(t => t.ReferenceId == userCode && t.Type == OAuthConstants.TokenTypes.UserCode);
+            .FirstOrDefaultAsync(t => t.ReferenceId == userCode && t.Type == TokenTypes.UserCode);
 
         if (token == null || token.Authorization == null)
         {
@@ -182,19 +182,19 @@ public class DeviceFlowManager(DefaultDbContext dbContext, ILogger<DeviceFlowMan
         }
 
         // Update authorization
-        token.Authorization.Status = OAuthConstants.AuthorizationStatuses.Denied;
+        token.Authorization.Status = AuthorizationStatuses.Denied;
 
         // Update all related tokens
         var deviceCodeToken = await _dbContext.Tokens.FirstOrDefaultAsync(t =>
-            t.AuthorizationId == token.AuthorizationId && t.Type == OAuthConstants.TokenTypes.DeviceCode
+            t.AuthorizationId == token.AuthorizationId && t.Type == TokenTypes.DeviceCode
         );
 
         if (deviceCodeToken != null)
         {
-            deviceCodeToken.Status = OAuthConstants.TokenStatuses.Denied;
+            deviceCodeToken.Status = TokenStatuses.Denied;
         }
 
-        token.Status = OAuthConstants.TokenStatuses.Denied;
+        token.Status = TokenStatuses.Denied;
 
         await _dbContext.SaveChangesAsync();
         return true;

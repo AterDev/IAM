@@ -1,7 +1,9 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
-using IdentityMod.Models.OAuthDtos;
+using System.Text.Json;
 using Ater.Web.Convention.Services;
+using IdentityMod.Models.OAuthDtos;
+using IdentityMod.Services;
 
 namespace IdentityMod.Managers;
 
@@ -12,11 +14,13 @@ public class TokenManager(
     DefaultDbContext dbContext,
     ILogger<TokenManager> logger,
     JwtService jwtService,
-    IPasswordHasher passwordHasher
+    IPasswordHasher passwordHasher,
+    OAuthService oAuthService
     ) : ManagerBase<DefaultDbContext>(dbContext, logger)
 {
     private readonly JwtService _jwtService = jwtService;
     private readonly IPasswordHasher _passwordHasher = passwordHasher;
+    private readonly OAuthService _oAuthService = oAuthService;
 
     /// <summary>
     /// Process token request (authorization_code, refresh_token, client_credentials, password)
@@ -25,14 +29,14 @@ public class TokenManager(
     {
         return request.GrantType switch
         {
-            OAuthConstants.GrantTypes.AuthorizationCode => await ProcessAuthorizationCodeGrantAsync(request),
-            OAuthConstants.GrantTypes.RefreshToken => await ProcessRefreshTokenGrantAsync(request),
-            OAuthConstants.GrantTypes.ClientCredentials => await ProcessClientCredentialsGrantAsync(request),
-            OAuthConstants.GrantTypes.Password => await ProcessPasswordGrantAsync(request),
-            OAuthConstants.GrantTypes.DeviceCode => await ProcessDeviceCodeGrantAsync(request),
+            GrantTypes.AuthorizationCode => await ProcessAuthorizationCodeGrantAsync(request),
+            GrantTypes.RefreshToken => await ProcessRefreshTokenGrantAsync(request),
+            GrantTypes.ClientCredentials => await ProcessClientCredentialsGrantAsync(request),
+            GrantTypes.Password => await ProcessPasswordGrantAsync(request),
+            GrantTypes.DeviceCode => await ProcessDeviceCodeGrantAsync(request),
             _ => new TokenResponseDto
             {
-                Error = OAuthConstants.ErrorCodes.UnsupportedGrantType,
+                Error = ErrorCodes.UnsupportedGrantType,
                 ErrorDescription = "The grant type is not supported"
             }
         };
@@ -47,7 +51,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = OAuthConstants.ErrorCodes.InvalidRequest,
+                Error = ErrorCodes.InvalidRequest,
                 ErrorDescription = "Missing required parameters"
             };
         }
@@ -58,28 +62,95 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = OAuthConstants.ErrorCodes.InvalidClient,
+                Error = ErrorCodes.InvalidClient,
                 ErrorDescription = "Invalid client credentials"
             };
         }
 
         // Validate authorization code
-        var authManager = new AuthorizationManager(_dbContext, _logger as ILogger<AuthorizationManager>);
-        var (isValid, authorization) = await authManager.ValidateAuthorizationCodeAsync(
-            request.Code,
-            request.ClientId,
-            request.RedirectUri ?? "",
-            request.CodeVerifier
-        );
+        var token = await _dbContext.Tokens
+            .Include(t => t.Authorization)
+                .ThenInclude(a => a!.Client)
+            .FirstOrDefaultAsync(t =>
+                t.ReferenceId == request.Code &&
+                t.Type == TokenTypes.AuthorizationCode &&
+                t.Status == TokenStatuses.Valid
+            );
 
-        if (!isValid || authorization == null)
+        if (token == null || token.Authorization == null)
         {
             return new TokenResponseDto
             {
-                Error = OAuthConstants.ErrorCodes.InvalidGrant,
+                Error = ErrorCodes.InvalidGrant,
                 ErrorDescription = "Invalid authorization code"
             };
         }
+
+        // Check expiration
+        if (token.ExpirationDate < DateTimeOffset.UtcNow)
+        {
+            return new TokenResponseDto
+            {
+                Error = ErrorCodes.InvalidGrant,
+                ErrorDescription = "Authorization code expired"
+            };
+        }
+
+        // Validate client
+        if (token.Authorization.Client.ClientId != request.ClientId)
+        {
+            return new TokenResponseDto
+            {
+                Error = ErrorCodes.InvalidClient,
+                ErrorDescription = "Client mismatch"
+            };
+        }
+
+        // Validate redirect URI
+        var properties = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(
+            token.Authorization.Properties ?? "{}"
+        );
+        if (properties?.GetValueOrDefault("redirect_uri") != request.RedirectUri)
+        {
+            return new TokenResponseDto
+            {
+                Error = ErrorCodes.InvalidRequest,
+                ErrorDescription = "Invalid redirect URI"
+            };
+        }
+
+        // Validate PKCE if present
+        var codeChallenge = properties?.GetValueOrDefault("code_challenge");
+        var codeChallengeMethod = properties?.GetValueOrDefault("code_challenge_method");
+
+        if (!string.IsNullOrEmpty(codeChallenge))
+        {
+            if (string.IsNullOrEmpty(request.CodeVerifier))
+            {
+                return new TokenResponseDto
+                {
+                    Error = ErrorCodes.InvalidRequest,
+                    ErrorDescription = "Missing code verifier"
+                };
+            }
+
+            var isValidPkce = _oAuthService.ValidatePkce(request.CodeVerifier, codeChallenge, codeChallengeMethod ?? CodeChallengeMethods.Plain);
+            if (!isValidPkce)
+            {
+                return new TokenResponseDto
+                {
+                    Error = ErrorCodes.InvalidGrant,
+                    ErrorDescription = "Invalid code verifier"
+                };
+            }
+        }
+
+        // Mark code as redeemed
+        token.Status = TokenStatuses.Redeemed;
+        token.RedemptionDate = DateTimeOffset.UtcNow;
+        await _dbContext.SaveChangesAsync();
+
+        var authorization = token.Authorization;
 
         // Get user
         var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id.ToString() == authorization.SubjectId);
@@ -87,7 +158,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = OAuthConstants.ErrorCodes.InvalidGrant,
+                Error = ErrorCodes.InvalidGrant,
                 ErrorDescription = "User not found"
             };
         }
@@ -105,7 +176,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = OAuthConstants.ErrorCodes.InvalidRequest,
+                Error = ErrorCodes.InvalidRequest,
                 ErrorDescription = "Missing refresh token"
             };
         }
@@ -116,15 +187,15 @@ public class TokenManager(
                 .ThenInclude(a => a!.Client)
             .FirstOrDefaultAsync(t =>
                 t.ReferenceId == request.RefreshToken &&
-                t.Type == OAuthConstants.TokenTypes.RefreshToken &&
-                t.Status == OAuthConstants.TokenStatuses.Valid
+                t.Type == TokenTypes.RefreshToken &&
+                t.Status == TokenStatuses.Valid
             );
 
         if (tokenEntity == null || tokenEntity.Authorization == null)
         {
             return new TokenResponseDto
             {
-                Error = OAuthConstants.ErrorCodes.InvalidGrant,
+                Error = ErrorCodes.InvalidGrant,
                 ErrorDescription = "Invalid refresh token"
             };
         }
@@ -134,7 +205,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = OAuthConstants.ErrorCodes.InvalidGrant,
+                Error = ErrorCodes.InvalidGrant,
                 ErrorDescription = "Refresh token expired"
             };
         }
@@ -145,7 +216,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = OAuthConstants.ErrorCodes.InvalidClient,
+                Error = ErrorCodes.InvalidClient,
                 ErrorDescription = "Client mismatch"
             };
         }
@@ -158,7 +229,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = OAuthConstants.ErrorCodes.InvalidGrant,
+                Error = ErrorCodes.InvalidGrant,
                 ErrorDescription = "User not found"
             };
         }
@@ -181,7 +252,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = OAuthConstants.ErrorCodes.InvalidRequest,
+                Error = ErrorCodes.InvalidRequest,
                 ErrorDescription = "Missing client credentials"
             };
         }
@@ -192,7 +263,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = OAuthConstants.ErrorCodes.InvalidClient,
+                Error = ErrorCodes.InvalidClient,
                 ErrorDescription = "Invalid client credentials"
             };
         }
@@ -202,8 +273,8 @@ public class TokenManager(
         {
             SubjectId = client.Id.ToString(),
             ClientId = client.Id,
-            Type = OAuthConstants.AuthorizationTypes.ClientCredentials,
-            Status = OAuthConstants.AuthorizationStatuses.Valid,
+            Type = AuthorizationTypes.ClientCredentials,
+            Status = AuthorizationStatuses.Valid,
             Scopes = request.Scope,
             CreationDate = DateTimeOffset.UtcNow,
             ExpirationDate = DateTimeOffset.UtcNow.AddHours(1)
@@ -221,14 +292,15 @@ public class TokenManager(
         };
 
         var accessToken = _jwtService.GetToken(claims, 3600);
+        var refreshTokenValue = _oAuthService.GenerateTokenReference();
 
         // Store token
         var token = new Token
         {
             AuthorizationId = authorization.Id,
-            ReferenceId = GenerateTokenReference(),
-            Type = OAuthConstants.TokenTypes.AccessToken,
-            Status = OAuthConstants.TokenStatuses.Valid,
+            ReferenceId = _oAuthService.GenerateTokenReference(),
+            Type = TokenTypes.AccessToken,
+            Status = TokenStatuses.Valid,
             SubjectId = client.Id.ToString(),
             Payload = accessToken,
             CreationDate = DateTimeOffset.UtcNow,
@@ -241,7 +313,7 @@ public class TokenManager(
         return new TokenResponseDto
         {
             AccessToken = accessToken,
-            TokenType = OAuthConstants.TokenTypes.Bearer,
+            TokenType = TokenTypes.Bearer,
             ExpiresIn = 3600,
             Scope = request.Scope
         };
@@ -256,7 +328,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = OAuthConstants.ErrorCodes.InvalidRequest,
+                Error = ErrorCodes.InvalidRequest,
                 ErrorDescription = "Missing username or password"
             };
         }
@@ -267,7 +339,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = OAuthConstants.ErrorCodes.InvalidClient,
+                Error = ErrorCodes.InvalidClient,
                 ErrorDescription = "Invalid client credentials"
             };
         }
@@ -281,7 +353,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = OAuthConstants.ErrorCodes.InvalidGrant,
+                Error = ErrorCodes.InvalidGrant,
                 ErrorDescription = "Invalid username or password"
             };
         }
@@ -292,7 +364,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = OAuthConstants.ErrorCodes.InvalidGrant,
+                Error = ErrorCodes.InvalidGrant,
                 ErrorDescription = "Invalid username or password"
             };
         }
@@ -310,7 +382,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = OAuthConstants.ErrorCodes.InvalidRequest,
+                Error = ErrorCodes.InvalidRequest,
                 ErrorDescription = "Missing device code"
             };
         }
@@ -321,34 +393,34 @@ public class TokenManager(
                 .ThenInclude(a => a!.Client)
             .FirstOrDefaultAsync(t =>
                 t.ReferenceId == request.DeviceCode &&
-                t.Type == OAuthConstants.TokenTypes.DeviceCode
+                t.Type == TokenTypes.DeviceCode
             );
 
         if (tokenEntity == null || tokenEntity.Authorization == null)
         {
             return new TokenResponseDto
             {
-                Error = OAuthConstants.ErrorCodes.InvalidGrant,
+                Error = ErrorCodes.InvalidGrant,
                 ErrorDescription = "Invalid device code"
             };
         }
 
         // Check if pending
-        if (tokenEntity.Status == OAuthConstants.TokenStatuses.Pending)
+        if (tokenEntity.Status == TokenStatuses.Pending)
         {
             return new TokenResponseDto
             {
-                Error = OAuthConstants.ErrorCodes.AuthorizationPending,
+                Error = ErrorCodes.AuthorizationPending,
                 ErrorDescription = "User has not yet authorized the device"
             };
         }
 
         // Check if denied
-        if (tokenEntity.Status == OAuthConstants.TokenStatuses.Denied)
+        if (tokenEntity.Status == TokenStatuses.Denied)
         {
             return new TokenResponseDto
             {
-                Error = OAuthConstants.ErrorCodes.AccessDenied,
+                Error = ErrorCodes.AccessDenied,
                 ErrorDescription = "User denied the authorization"
             };
         }
@@ -358,7 +430,7 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = OAuthConstants.ErrorCodes.ExpiredToken,
+                Error = ErrorCodes.ExpiredToken,
                 ErrorDescription = "Device code expired"
             };
         }
@@ -371,13 +443,13 @@ public class TokenManager(
         {
             return new TokenResponseDto
             {
-                Error = OAuthConstants.ErrorCodes.InvalidGrant,
+                Error = ErrorCodes.InvalidGrant,
                 ErrorDescription = "User not found"
             };
         }
 
         // Mark as redeemed
-        tokenEntity.Status = OAuthConstants.TokenStatuses.Redeemed;
+        tokenEntity.Status = TokenStatuses.Redeemed;
         tokenEntity.RedemptionDate = DateTimeOffset.UtcNow;
         await _dbContext.SaveChangesAsync();
 
@@ -420,7 +492,7 @@ public class TokenManager(
 
         // Generate access token
         var accessToken = _jwtService.GetToken(claims, 3600);
-        var refreshTokenValue = GenerateTokenReference();
+        var refreshTokenValue = _oAuthService.GenerateTokenReference();
 
         // Create authorization if not exists
         if (!authorizationId.HasValue)
@@ -429,8 +501,8 @@ public class TokenManager(
             {
                 SubjectId = user.Id.ToString(),
                 ClientId = client.Id,
-                Type = OAuthConstants.AuthorizationTypes.Password,
-                Status = OAuthConstants.AuthorizationStatuses.Valid,
+                Type = AuthorizationTypes.Password,
+                Status = AuthorizationStatuses.Valid,
                 Scopes = scope,
                 CreationDate = DateTimeOffset.UtcNow,
                 ExpirationDate = DateTimeOffset.UtcNow.AddDays(30)
@@ -445,9 +517,9 @@ public class TokenManager(
         var accessTokenEntity = new Token
         {
             AuthorizationId = authorizationId,
-            ReferenceId = GenerateTokenReference(),
-            Type = OAuthConstants.TokenTypes.AccessToken,
-            Status = OAuthConstants.TokenStatuses.Valid,
+            ReferenceId = _oAuthService.GenerateTokenReference(),
+            Type = TokenTypes.AccessToken,
+            Status = TokenStatuses.Valid,
             SubjectId = user.Id.ToString(),
             Payload = accessToken,
             CreationDate = DateTimeOffset.UtcNow,
@@ -459,8 +531,8 @@ public class TokenManager(
         {
             AuthorizationId = authorizationId,
             ReferenceId = refreshTokenValue,
-            Type = OAuthConstants.TokenTypes.RefreshToken,
-            Status = OAuthConstants.TokenStatuses.Valid,
+            Type = TokenTypes.RefreshToken,
+            Status = TokenStatuses.Valid,
             SubjectId = user.Id.ToString(),
             CreationDate = DateTimeOffset.UtcNow,
             ExpirationDate = DateTimeOffset.UtcNow.AddDays(30)
@@ -472,7 +544,7 @@ public class TokenManager(
 
         // Generate ID token if openid scope is present
         string? idToken = null;
-        if (scope?.Contains(OAuthConstants.Scopes.OpenId) == true)
+        if (scope?.Contains(Scopes.OpenId) == true)
         {
             var idClaims = new List<Claim>
             {
@@ -492,7 +564,7 @@ public class TokenManager(
         return new TokenResponseDto
         {
             AccessToken = accessToken,
-            TokenType = OAuthConstants.TokenTypes.Bearer,
+            TokenType = TokenTypes.Bearer,
             ExpiresIn = 3600,
             RefreshToken = refreshTokenValue,
             IdToken = idToken,
@@ -552,7 +624,7 @@ public class TokenManager(
             return true; // Token doesn't exist, consider it revoked
         }
 
-        tokenEntity.Status = OAuthConstants.TokenStatuses.Revoked;
+        tokenEntity.Status = TokenStatuses.Revoked;
         await _dbContext.SaveChangesAsync();
 
         return true;
@@ -568,7 +640,7 @@ public class TokenManager(
                 .ThenInclude(a => a!.Client)
             .FirstOrDefaultAsync(t => t.ReferenceId == token || t.Payload == token);
 
-        if (tokenEntity == null || tokenEntity.Status != OAuthConstants.TokenStatuses.Valid)
+        if (tokenEntity == null || tokenEntity.Status != TokenStatuses.Valid)
         {
             return new IntrospectResponseDto { Active = false };
         }
@@ -595,19 +667,5 @@ public class TokenManager(
         }
 
         return response;
-    }
-
-    /// <summary>
-    /// Generate token reference
-    /// </summary>
-    private string GenerateTokenReference()
-    {
-        var bytes = new byte[32];
-        using var rng = RandomNumberGenerator.Create();
-        rng.GetBytes(bytes);
-        return Convert.ToBase64String(bytes)
-            .TrimEnd('=')
-            .Replace('+', '-')
-            .Replace('/', '_');
     }
 }

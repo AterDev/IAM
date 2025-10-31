@@ -9,3 +9,4 @@ global using Microsoft.EntityFrameworkCore;
 global using Microsoft.Extensions.Logging;
 global using Share.Implement;
 global using Share.Services;
+global using static IdentityMod.OAuthConstants;
