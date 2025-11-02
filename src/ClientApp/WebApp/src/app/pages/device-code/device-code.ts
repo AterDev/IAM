@@ -9,7 +9,7 @@ import { Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { ApiClient } from 'src/app/services/api/api-client';
-import { OidcAuthService } from 'src/app/services/oidc-auth.service';
+import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
   selector: 'app-device-code',
@@ -29,12 +29,12 @@ import { OidcAuthService } from 'src/app/services/oidc-auth.service';
 })
 export class DeviceCode implements OnInit {
   private apiClient = inject(ApiClient);
-  private authService = inject(OidcAuthService);
+  private authService = inject(AuthService);
   private router = inject(Router);
   private translate = inject(TranslateService);
 
   deviceCodeForm!: FormGroup;
-  
+
   isLoading = signal(false);
   errorMessage = signal('');
   successMessage = signal('');
@@ -55,11 +55,11 @@ export class DeviceCode implements OnInit {
   formatUserCode(event: Event): void {
     const input = event.target as HTMLInputElement;
     let value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    
+
     if (value.length > 4) {
       value = value.slice(0, 4) + '-' + value.slice(4, 8);
     }
-    
+
     input.value = value;
     this.userCode.setValue(value, { emitEvent: false });
   }

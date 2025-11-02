@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, Inject, signal } from '@angular/core';
 import { CommonModules, CommonFormModules } from 'src/app/share/shared-modules';
 import { FormBuilder, FormGroup, FormControl, Validators, FormArray } from '@angular/forms';
 import { MatDialogRef, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -10,6 +10,7 @@ import { ApiClient } from 'src/app/services/api/api-client';
 import { ClientUpdateDto } from 'src/app/services/api/models/access-mod/client-update-dto.model';
 import { ClientDetailDto } from 'src/app/services/api/models/access-mod/client-detail-dto.model';
 import { TranslateService } from '@ngx-translate/core';
+import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 
 @Component({
   selector: 'app-edit',
@@ -19,7 +20,8 @@ import { TranslateService } from '@ngx-translate/core';
     MatDialogModule,
     MatProgressSpinnerModule,
     MatChipsModule,
-    MatIconModule
+  MatIconModule,
+  AppLoadingComponent
   ],
   templateUrl: './edit.html',
   styleUrls: ['./edit.scss']
@@ -27,7 +29,7 @@ import { TranslateService } from '@ngx-translate/core';
 export class ClientEditComponent implements OnInit {
   clientForm!: FormGroup;
   isSubmitting = false;
-  isLoading = true;
+  isLoading = signal(true);
   client?: ClientDetailDto;
 
   constructor(
@@ -66,11 +68,11 @@ export class ClientEditComponent implements OnInit {
     this.api.clients.getDetail(this.data.clientId).subscribe({
       next: (client) => {
         this.client = client;
-        
+
         client.redirectUris.forEach(uri => {
           this.redirectUris.push(this.fb.control(uri));
         });
-        
+
         client.postLogoutRedirectUris.forEach(uri => {
           this.postLogoutRedirectUris.push(this.fb.control(uri));
         });
@@ -81,8 +83,8 @@ export class ClientEditComponent implements OnInit {
           consentType: client.consentType || '',
           requirePkce: client.requirePkce
         });
-        
-        this.isLoading = false;
+
+  this.isLoading.set(false);
       },
       error: () => {
         this.snackBar.open(

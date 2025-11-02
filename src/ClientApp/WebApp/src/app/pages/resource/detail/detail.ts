@@ -10,6 +10,7 @@ import { ResourceDetailDto } from 'src/app/services/api/models/access-mod/resour
 import { ResourceEditComponent } from '../edit/edit';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { TranslateService } from '@ngx-translate/core';
+import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 
 @Component({
   selector: 'app-detail',
@@ -17,14 +18,15 @@ import { TranslateService } from '@ngx-translate/core';
     ...CommonModules,
     ...BaseMatModules,
     MatCardModule,
-    MatProgressSpinnerModule
+  MatProgressSpinnerModule,
+  AppLoadingComponent
   ],
   templateUrl: './detail.html',
   styleUrls: ['./detail.scss']
 })
 export class ResourceDetailComponent implements OnInit {
   resource = signal<ResourceDetailDto | null>(null);
-  isLoading = false;
+  isLoading = signal(true);
   resourceId?: string;
 
   constructor(
@@ -44,14 +46,14 @@ export class ResourceDetailComponent implements OnInit {
   }
 
   loadResource(): void {
-    this.isLoading = true;
+    this.isLoading.set(true);
     this.api.resources.getDetail(this.resourceId!).subscribe({
       next: (resource) => {
         this.resource.set(resource);
-        this.isLoading = false;
+        this.isLoading.set(false);
       },
       error: () => {
-        this.isLoading = false;
+        this.isLoading.set(false);
         this.snackBar.open(
           this.translate.instant('error.loadResourceFailed'),
           this.translate.instant('common.close'),

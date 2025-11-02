@@ -15,6 +15,7 @@ import { ClientEditComponent } from '../edit/edit';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { TranslateService } from '@ngx-translate/core';
 import { Clipboard } from '@angular/cdk/clipboard';
+import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 
 @Component({
   selector: 'app-detail',
@@ -25,7 +26,8 @@ import { Clipboard } from '@angular/cdk/clipboard';
     MatProgressSpinnerModule,
     MatChipsModule,
     MatTableModule,
-    MatTabsModule
+  MatTabsModule,
+  AppLoadingComponent
   ],
   templateUrl: './detail.html',
   styleUrls: ['./detail.scss']
@@ -33,11 +35,11 @@ import { Clipboard } from '@angular/cdk/clipboard';
 export class ClientDetailComponent implements OnInit {
   client = signal<ClientDetailDto | null>(null);
   authorizations = signal<AuthorizationItemDto[]>([]);
-  
-  isLoading = false;
-  isLoadingAuthorizations = false;
+
+  isLoading = signal(false);
+  isLoadingAuthorizations = signal(false);
   clientId?: string;
-  
+
   authDisplayedColumns: string[] = ['subjectId', 'status', 'creationDate'];
 
   constructor(
@@ -59,14 +61,14 @@ export class ClientDetailComponent implements OnInit {
   }
 
   loadClient(): void {
-    this.isLoading = true;
+  this.isLoading.set(true);
     this.api.clients.getDetail(this.clientId!).subscribe({
       next: (client) => {
-        this.client.set(client);
-        this.isLoading = false;
+  this.client.set(client);
+  this.isLoading.set(false);
       },
       error: () => {
-        this.isLoading = false;
+  this.isLoading.set(false);
         this.snackBar.open(
           this.translate.instant('error.loadClientFailed'),
           this.translate.instant('common.close'),
@@ -78,14 +80,14 @@ export class ClientDetailComponent implements OnInit {
   }
 
   loadAuthorizations(): void {
-    this.isLoadingAuthorizations = true;
+  this.isLoadingAuthorizations.set(true);
     this.api.clients.getAuthorizations(this.clientId!).subscribe({
       next: (authorizations) => {
-        this.authorizations.set(authorizations);
-        this.isLoadingAuthorizations = false;
+  this.authorizations.set(authorizations);
+  this.isLoadingAuthorizations.set(false);
       },
       error: () => {
-        this.isLoadingAuthorizations = false;
+  this.isLoadingAuthorizations.set(false);
         this.snackBar.open(
           this.translate.instant('error.loadAuthorizationsFailed'),
           this.translate.instant('common.close'),
@@ -128,7 +130,7 @@ export class ClientDetailComponent implements OnInit {
               this.translate.instant('common.close'),
               { duration: 5000 }
             );
-            
+
             alert(`${this.translate.instant('client.newSecret')}: ${secret}\n\n${this.translate.instant('client.secretWarning')}`);
           },
           error: () => {

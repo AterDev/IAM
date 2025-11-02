@@ -1,10 +1,7 @@
 <div class="audit-log-list-container">
-  <div class="header">
-    <h2>{{ 'menu.auditLogs' | translate }}</h2>
-    <div class="header-actions">
-      <button mat-raised-button 
-              [color]="autoRefreshEnabled ? 'accent' : 'basic'"
-              (click)="toggleAutoRefresh()">
+  <div class="my-1 py-1">
+    <div class="d-flex justify-content-end gap-1">
+      <button mat-raised-button [color]="autoRefreshEnabled ? 'accent' : 'basic'" (click)="toggleAutoRefresh()">
         <mat-icon>{{ autoRefreshEnabled ? 'pause' : 'autorenew' }}</mat-icon>
         {{ (autoRefreshEnabled ? 'auditLog.stopAutoRefresh' : 'auditLog.startAutoRefresh') | translate }}
       </button>
@@ -18,40 +15,39 @@
       </button>
     </div>
   </div>
+  <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center gap-1">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ 'auditLog.category' | translate }}</mat-label>
+        <input matInput [(ngModel)]="categoryFilter" (keyup.enter)="onFilterChange()">
+      </mat-form-field>
 
-  <div class="filter-section">
-    <mat-form-field appearance="outline">
-      <mat-label>{{ 'auditLog.category' | translate }}</mat-label>
-      <input matInput [(ngModel)]="categoryFilter" (keyup.enter)="onFilterChange()">
-    </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ 'auditLog.event' | translate }}</mat-label>
+        <input matInput [(ngModel)]="eventFilter" (keyup.enter)="onFilterChange()">
+      </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>{{ 'auditLog.event' | translate }}</mat-label>
-      <input matInput [(ngModel)]="eventFilter" (keyup.enter)="onFilterChange()">
-    </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ 'auditLog.subjectId' | translate }}</mat-label>
+        <input matInput [(ngModel)]="subjectIdFilter" (keyup.enter)="onFilterChange()">
+      </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>{{ 'auditLog.subjectId' | translate }}</mat-label>
-      <input matInput [(ngModel)]="subjectIdFilter" (keyup.enter)="onFilterChange()">
-    </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ 'auditLog.startDate' | translate }}</mat-label>
+        <input matInput [matDatepicker]="startPicker" [formControl]="startDateControl" (dateChange)="onFilterChange()">
+        <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+        <mat-datepicker #startPicker></mat-datepicker>
+      </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>{{ 'auditLog.startDate' | translate }}</mat-label>
-      <input matInput [matDatepicker]="startPicker" [formControl]="startDateControl" 
-             (dateChange)="onFilterChange()">
-      <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
-      <mat-datepicker #startPicker></mat-datepicker>
-    </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ 'auditLog.endDate' | translate }}</mat-label>
+        <input matInput [matDatepicker]="endPicker" [formControl]="endDateControl" (dateChange)="onFilterChange()">
+        <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+        <mat-datepicker #endPicker></mat-datepicker>
+      </mat-form-field>
+    </div>
 
-    <mat-form-field appearance="outline">
-      <mat-label>{{ 'auditLog.endDate' | translate }}</mat-label>
-      <input matInput [matDatepicker]="endPicker" [formControl]="endDateControl" 
-             (dateChange)="onFilterChange()">
-      <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
-      <mat-datepicker #endPicker></mat-datepicker>
-    </mat-form-field>
-
-    <button mat-button (click)="clearFilters()">
+    <button mat-button="outlined" (click)="clearFilters()">
       <mat-icon>clear</mat-icon>
       {{ 'common.clearFilters' | translate }}
     </button>
@@ -111,7 +107,7 @@
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-      
+
       <tr class="mat-row" *matNoDataRow>
         <td class="mat-cell" [attr.colspan]="displayedColumns.length">
           <div class="no-data">
@@ -122,13 +118,8 @@
       </tr>
     </table>
 
-    <mat-paginator
-      [length]="total()"
-      [pageSize]="pageSize"
-      [pageIndex]="pageIndex"
-      [pageSizeOptions]="[10, 20, 50, 100]"
-      (page)="onPageChange($event)"
-      showFirstLastButtons>
+    <mat-paginator [length]="total()" [pageSize]="pageSize" [pageIndex]="pageIndex"
+      [pageSizeOptions]="[10, 20, 50, 100]" (page)="onPageChange($event)" showFirstLastButtons>
     </mat-paginator>
   </div>
 </div>

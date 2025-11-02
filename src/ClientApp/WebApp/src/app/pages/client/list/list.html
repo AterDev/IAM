@@ -1,50 +1,49 @@
 <div class="client-list-container">
   <div class="header">
-    <h2>{{ 'menu.clients' | translate }}</h2>
-    <button mat-raised-button color="primary" (click)="openAddDialog()">
+    <div class="d-flex align-items-center gap-1">
+      <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
+        <mat-label>{{ 'common.search' | translate }}</mat-label>
+        <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()"
+               placeholder="Client ID or Display Name">
+        <button mat-icon-button matSuffix (click)="onSearch()">
+          <mat-icon>search</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ 'client.type' | translate }}</mat-label>
+        <mat-select [(ngModel)]="typeFilter" (selectionChange)="onFilterChange()">
+          <mat-option [value]="null">{{ 'common.all' | translate }}</mat-option>
+          <mat-option value="confidential">{{ 'client.confidential' | translate }}</mat-option>
+          <mat-option value="public">{{ 'client.public' | translate }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ 'client.applicationType' | translate }}</mat-label>
+        <mat-select [(ngModel)]="applicationTypeFilter" (selectionChange)="onFilterChange()">
+          <mat-option [value]="null">{{ 'common.all' | translate }}</mat-option>
+          <mat-option value="web">{{ 'client.web' | translate }}</mat-option>
+          <mat-option value="native">{{ 'client.native' | translate }}</mat-option>
+          <mat-option value="spa">{{ 'client.spa' | translate }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <button matButton="tonal" (click)="clearFilters()">
+        <mat-icon>clear</mat-icon>
+        {{ 'common.clearFilters' | translate }}
+      </button>
+    </div>
+
+    <button matButton="tonal" (click)="openAddDialog()">
       <mat-icon>add</mat-icon>
       {{ 'common.add' | translate }}
     </button>
   </div>
 
-  <div class="filter-section">
-    <mat-form-field appearance="outline" class="search-field">
-      <mat-label>{{ 'common.search' | translate }}</mat-label>
-      <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()" 
-             placeholder="Client ID or Display Name">
-      <button mat-icon-button matSuffix (click)="onSearch()">
-        <mat-icon>search</mat-icon>
-      </button>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline">
-      <mat-label>{{ 'client.type' | translate }}</mat-label>
-      <mat-select [(ngModel)]="typeFilter" (selectionChange)="onFilterChange()">
-        <mat-option [value]="null">{{ 'common.all' | translate }}</mat-option>
-        <mat-option value="confidential">{{ 'client.confidential' | translate }}</mat-option>
-        <mat-option value="public">{{ 'client.public' | translate }}</mat-option>
-      </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline">
-      <mat-label>{{ 'client.applicationType' | translate }}</mat-label>
-      <mat-select [(ngModel)]="applicationTypeFilter" (selectionChange)="onFilterChange()">
-        <mat-option [value]="null">{{ 'common.all' | translate }}</mat-option>
-        <mat-option value="web">{{ 'client.web' | translate }}</mat-option>
-        <mat-option value="native">{{ 'client.native' | translate }}</mat-option>
-        <mat-option value="spa">{{ 'client.spa' | translate }}</mat-option>
-      </mat-select>
-    </mat-form-field>
-
-    <button mat-button (click)="clearFilters()">
-      <mat-icon>clear</mat-icon>
-      {{ 'common.clearFilters' | translate }}
-    </button>
-  </div>
-
   <div class="batch-actions" *ngIf="selectedIds().size > 0">
     <span class="selection-info">{{ selectedIds().size }} {{ 'common.selected' | translate }}</span>
-    <button mat-button color="warn" (click)="deleteSelected()">
+    <button mat-button (click)="deleteSelected()">
       <mat-icon>delete</mat-icon>
       {{ 'common.delete' | translate }}
     </button>
@@ -127,9 +126,11 @@
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
     </table>
 
-    <div class="loading-shade" *ngIf="isLoading">
+    @if (isLoading()) {
+    <div class="loading-shade">
       <mat-spinner></mat-spinner>
     </div>
+    }
   </div>
 
   <mat-paginator

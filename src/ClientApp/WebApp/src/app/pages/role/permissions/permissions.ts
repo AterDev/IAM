@@ -11,6 +11,7 @@ import { ApiClient } from 'src/app/services/api/api-client';
 import { RoleItemDto } from 'src/app/services/api/models/identity-mod/role-item-dto.model';
 import { PermissionClaim } from 'src/app/services/api/models/identity-mod/permission-claim.model';
 import { RoleGrantPermissionDto } from 'src/app/services/api/models/identity-mod/role-grant-permission-dto.model';
+import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 
 interface PermissionGroup {
   category: string;
@@ -29,16 +30,17 @@ interface PermissionGroup {
     MatCheckboxModule,
     MatExpansionModule,
     MatChipsModule,
-    FormsModule
+  FormsModule,
+  AppLoadingComponent
   ],
   templateUrl: './permissions.html',
   styleUrls: ['./permissions.scss']
 })
 export class RolePermissionsComponent implements OnInit {
-  isLoading = true;
+  isLoading = signal(true);
   isSaving = false;
   searchText = '';
-  
+
   currentPermissions = signal<PermissionClaim[]>([]);
   selectedPermissions = signal<Set<string>>(new Set());
   permissionGroups = signal<PermissionGroup[]>([]);
@@ -67,22 +69,22 @@ export class RolePermissionsComponent implements OnInit {
   }
 
   loadPermissions(): void {
-    this.isLoading = true;
-    
+  this.isLoading.set(true);
+
     this.api.roles.getPermissions(this.data.id).subscribe({
       next: (permissions) => {
         this.currentPermissions.set(permissions);
-        
+
         // Initialize selected permissions
         const selected = new Set<string>();
         permissions.forEach(p => {
           selected.add(`${p.claimType}:${p.claimValue}`);
         });
         this.selectedPermissions.set(selected);
-        
+
         // Build permission groups
         this.buildPermissionGroups();
-        this.isLoading = false;
+  this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Failed to load permissions:', error);
@@ -91,7 +93,7 @@ export class RolePermissionsComponent implements OnInit {
           this.translate.instant('common.close'),
           { duration: 3000 }
         );
-        this.isLoading = false;
+  this.isLoading.set(false);
       }
     });
   }
@@ -99,17 +101,17 @@ export class RolePermissionsComponent implements OnInit {
   buildPermissionGroups(): void {
     const groups: PermissionGroup[] = [];
     const selected = this.selectedPermissions();
-    
+
     Object.keys(this.commonPermissions).forEach(category => {
       const permissions: PermissionClaim[] = this.commonPermissions[category].map(value => ({
         claimType: 'permissions',
         claimValue: `${category}.${value}`
       }));
-      
-      const selectedCount = permissions.filter(p => 
+
+      const selectedCount = permissions.filter(p =>
         selected.has(`${p.claimType}:${p.claimValue}`)
       ).length;
-      
+
       groups.push({
         category,
         permissions,
@@ -117,20 +119,20 @@ export class RolePermissionsComponent implements OnInit {
         someSelected: selectedCount > 0 && selectedCount < permissions.length
       });
     });
-    
+
     this.permissionGroups.set(groups);
   }
 
   togglePermission(permission: PermissionClaim): void {
     const key = `${permission.claimType}:${permission.claimValue}`;
     const selected = new Set(this.selectedPermissions());
-    
+
     if (selected.has(key)) {
       selected.delete(key);
     } else {
       selected.add(key);
     }
-    
+
     this.selectedPermissions.set(selected);
     this.buildPermissionGroups();
   }
@@ -142,7 +144,7 @@ export class RolePermissionsComponent implements OnInit {
 
   toggleGroupPermissions(group: PermissionGroup): void {
     const selected = new Set(this.selectedPermissions());
-    
+
     if (group.allSelected) {
       // Deselect all in group
       group.permissions.forEach(p => {
@@ -156,7 +158,7 @@ export class RolePermissionsComponent implements OnInit {
         selected.add(key);
       });
     }
-    
+
     this.selectedPermissions.set(selected);
     this.buildPermissionGroups();
   }
@@ -166,9 +168,9 @@ export class RolePermissionsComponent implements OnInit {
     if (!this.searchText) {
       return groups;
     }
-    
+
     const searchLower = this.searchText.toLowerCase();
-    return groups.filter(group => 
+    return groups.filter(group =>
       group.category.toLowerCase().includes(searchLower) ||
       group.permissions.some(p => p.claimValue.toLowerCase().includes(searchLower))
     );
@@ -188,19 +190,19 @@ export class RolePermissionsComponent implements OnInit {
     if (this.isSaving) {
       return;
     }
-    
+
     this.isSaving = true;
-    
+
     const permissions: PermissionClaim[] = [];
     this.selectedPermissions().forEach(key => {
       const [claimType, claimValue] = key.split(':');
       permissions.push({ claimType, claimValue });
     });
-    
+
     const data: RoleGrantPermissionDto = {
       permissions
     };
-    
+
     this.api.roles.grantPermissions(this.data.id, data).subscribe({
       next: () => {
         this.snackBar.open(

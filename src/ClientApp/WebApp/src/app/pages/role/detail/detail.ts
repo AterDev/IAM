@@ -10,20 +10,22 @@ import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/
 import { RoleEditComponent } from '../edit/edit';
 import { RolePermissionsComponent } from '../permissions/permissions';
 import { MatCardModule } from '@angular/material/card';
+import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 
 @Component({
   selector: 'app-detail',
   imports: [
     ...CommonModules,
     ...BaseMatModules,
-    MatCardModule
+  MatCardModule,
+  AppLoadingComponent
   ],
   templateUrl: './detail.html',
   styleUrls: ['./detail.scss']
 })
 export class RoleDetailComponent implements OnInit {
   role = signal<RoleDetailDto | null>(null);
-  isLoading = true;
+  isLoading = signal(true);
 
   constructor(
     private route: ActivatedRoute,
@@ -42,11 +44,11 @@ export class RoleDetailComponent implements OnInit {
   }
 
   loadRole(id: string): void {
-    this.isLoading = true;
+  this.isLoading.set(true);
     this.api.roles.getDetail(id).subscribe({
       next: (data) => {
         this.role.set(data);
-        this.isLoading = false;
+  this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Failed to load role:', error);
@@ -55,7 +57,7 @@ export class RoleDetailComponent implements OnInit {
           this.translate.instant('common.close'),
           { duration: 3000 }
         );
-        this.isLoading = false;
+  this.isLoading.set(false);
       }
     });
   }
@@ -120,7 +122,7 @@ export class RoleDetailComponent implements OnInit {
               this.translate.instant('common.close'),
               { duration: 3000 }
             );
-            this.router.navigate(['/system-role']);
+            this.router.navigate(['/role']);
           },
           error: (error) => {
             console.error('Failed to delete role:', error);
@@ -136,6 +138,6 @@ export class RoleDetailComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/system-role']);
+    this.router.navigate(['/role']);
   }
 }

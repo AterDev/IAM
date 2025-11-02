@@ -35,16 +35,16 @@ import { UserAddComponent } from '../add/add';
 })
 export class UserListComponent implements OnInit {
   displayedColumns: string[] = ['select', 'userName', 'email', 'phoneNumber', 'lockoutEnabled', 'createdTime', 'actions'];
-  
+
   // Use signals only for reactive template values
   dataSource = signal<UserItemDto[]>([]);
   total = signal(0);
   selectedIds = signal<Set<string>>(new Set());
-  
+
   // Regular properties for non-reactive values
   pageSize = 10;
   pageIndex = 0;
-  isLoading = false;
+  isLoading = signal(false);
   searchText = '';
   lockoutEnabled: boolean | null = null;
 
@@ -73,8 +73,8 @@ export class UserListComponent implements OnInit {
   }
 
   loadData(): void {
-    this.isLoading = true;
-    
+  this.isLoading.set(true);
+
     this.api.users.getUsers(
       this.searchText || null,
       this.searchText || null,
@@ -89,10 +89,10 @@ export class UserListComponent implements OnInit {
       next: (result: PageList<UserItemDto>) => {
         this.dataSource.set(result.data);
         this.total.set(result.count);
-        this.isLoading = false;
+  this.isLoading.set(false);
       },
       error: () => {
-        this.isLoading = false;
+  this.isLoading.set(false);
         this.snackBar.open('Failed to load users', 'Close', { duration: 3000 });
       }
     });
@@ -153,12 +153,12 @@ export class UserListComponent implements OnInit {
   }
 
   viewDetail(user: UserItemDto): void {
-    this.router.navigate(['/system-user', user.id]);
+    this.router.navigate(['/user', user.id]);
   }
 
   toggleUserStatus(user: UserItemDto): void {
     const lockoutEnd = user.lockoutEnabled ? null : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
-    
+
     this.api.users.updateStatus(user.id, lockoutEnd as any).subscribe({
       next: () => {
         this.snackBar.open(

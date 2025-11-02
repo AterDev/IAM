@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, Inject, signal } from '@angular/core';
 import { CommonModules, CommonFormModules } from 'src/app/share/shared-modules';
 import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatDialogRef, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -22,7 +22,7 @@ import { UserDetailDto } from 'src/app/services/api/models/identity-mod/user-det
 export class UserEditComponent implements OnInit {
   userForm!: FormGroup;
   isSubmitting = false;
-  isLoading = true;
+  isLoading = signal(true);
   user?: UserDetailDto;
 
   constructor(
@@ -58,7 +58,7 @@ export class UserEditComponent implements OnInit {
           email: user.email || '',
           phoneNumber: user.phoneNumber || ''
         });
-        this.isLoading = false;
+  this.isLoading.set(false);
       },
       error: () => {
         this.snackBar.open('Failed to load user', 'Close', { duration: 3000 });

@@ -8,7 +8,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { ApiClient } from 'src/app/services/api/api-client';
-import { OidcAuthService } from 'src/app/services/oidc-auth.service';
+import { AuthService } from 'src/app/services/auth.service';
 
 interface ScopeInfo {
   name: string;
@@ -33,7 +33,7 @@ interface ScopeInfo {
 })
 export class Authorize implements OnInit {
   private apiClient = inject(ApiClient);
-  private authService = inject(OidcAuthService);
+  private authService = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private translate = inject(TranslateService);
@@ -115,7 +115,7 @@ export class Authorize implements OnInit {
       // Call authorize endpoint
       // In a real implementation, this would POST to /connect/authorize
       // with user consent
-      
+
       // For now, simulate redirect to callback URL
       const redirectUri = params['redirect_uri'];
       const state = params['state'];

@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, Inject, signal } from '@angular/core';
 import { CommonModules, CommonFormModules } from 'src/app/share/shared-modules';
 import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatDialogRef, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -8,6 +8,7 @@ import { ApiClient } from 'src/app/services/api/api-client';
 import { ResourceUpdateDto } from 'src/app/services/api/models/access-mod/resource-update-dto.model';
 import { ResourceDetailDto } from 'src/app/services/api/models/access-mod/resource-detail-dto.model';
 import { TranslateService } from '@ngx-translate/core';
+import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 
 @Component({
   selector: 'app-edit',
@@ -15,7 +16,8 @@ import { TranslateService } from '@ngx-translate/core';
     ...CommonModules,
     ...CommonFormModules,
     MatDialogModule,
-    MatProgressSpinnerModule
+  MatProgressSpinnerModule,
+  AppLoadingComponent
   ],
   templateUrl: './edit.html',
   styleUrls: ['./edit.scss']
@@ -23,7 +25,7 @@ import { TranslateService } from '@ngx-translate/core';
 export class ResourceEditComponent implements OnInit {
   resourceForm!: FormGroup;
   isSubmitting = false;
-  isLoading = true;
+  isLoading = signal(true);
   resource?: ResourceDetailDto;
 
   constructor(
@@ -52,7 +54,7 @@ export class ResourceEditComponent implements OnInit {
           displayName: resource.displayName,
           description: resource.description || ''
         });
-        this.isLoading = false;
+  this.isLoading.set(false);
       },
       error: () => {
         this.snackBar.open(

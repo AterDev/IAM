@@ -5,13 +5,13 @@ import { catchError } from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Observable, throwError } from 'rxjs';
 import { Router } from '@angular/router';
-import { OidcAuthService } from './services/oidc-auth.service';
+import { AuthService } from './services/auth.service';
 
 @Injectable()
 export class CustomerHttpInterceptor implements HttpInterceptor {
   private snb = inject(MatSnackBar);
   private router = inject(Router);
-  private auth = inject(OidcAuthService);
+  private auth = inject(AuthService);
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     return next.handle(request)
       .pipe(
@@ -31,7 +31,6 @@ export class CustomerHttpInterceptor implements HttpInterceptor {
       case 401:
         errors.detail = '401:未授权的请求';
         this.auth.logout();
-        this.router.navigateByUrl('/login');
         break;
       case 403:
         errors.detail = '403:已拒绝请求';

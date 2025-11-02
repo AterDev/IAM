@@ -1,33 +1,32 @@
 <div class="scope-list-container">
-  <div class="header">
-    <h2>{{ 'scope.title' | translate }}</h2>
-    <button mat-raised-button color="primary" (click)="openAddDialog()">
+  <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center gap-1">
+      <mat-form-field class="search-field" subscriptSizing="dynamic">
+        <mat-label>{{ 'common.search' | translate }}</mat-label>
+        <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()" [placeholder]="'scope.searchPlaceholder' | translate">
+        <button mat-icon-button matSuffix (click)="onSearch()">
+          <mat-icon>search</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <mat-form-field class="filter-field" subscriptSizing="dynamic">
+        <mat-label>{{ 'scope.requiredFilter' | translate }}</mat-label>
+        <mat-select [(ngModel)]="requiredFilter" (selectionChange)="onFilterChange()">
+          <mat-option [value]="null">{{ 'common.all' | translate }}</mat-option>
+          <mat-option [value]="true">{{ 'scope.required' | translate }}</mat-option>
+          <mat-option [value]="false">{{ 'scope.optional' | translate }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <button matButton="tonal" (click)="clearFilters()">
+        <mat-icon>clear</mat-icon>
+        {{ 'common.clearFilters' | translate }}
+      </button>
+    </div>
+
+    <button matButton="tonal" (click)="openAddDialog()">
       <mat-icon>add</mat-icon>
       {{ 'common.add' | translate }}
-    </button>
-  </div>
-    
-  <div class="filters">
-    <mat-form-field class="search-field">
-      <mat-label>{{ 'common.search' | translate }}</mat-label>
-      <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()" [placeholder]="'scope.searchPlaceholder' | translate">
-      <button mat-icon-button matSuffix (click)="onSearch()">
-        <mat-icon>search</mat-icon>
-      </button>
-    </mat-form-field>
-    
-    <mat-form-field class="filter-field">
-      <mat-label>{{ 'scope.requiredFilter' | translate }}</mat-label>
-      <mat-select [(ngModel)]="requiredFilter" (selectionChange)="onFilterChange()">
-        <mat-option [value]="null">{{ 'common.all' | translate }}</mat-option>
-        <mat-option [value]="true">{{ 'scope.required' | translate }}</mat-option>
-        <mat-option [value]="false">{{ 'scope.optional' | translate }}</mat-option>
-      </mat-select>
-    </mat-form-field>
-    
-    <button mat-stroked-button (click)="clearFilters()">
-      <mat-icon>clear</mat-icon>
-      {{ 'common.clearFilters' | translate }}
     </button>
   </div>
 
@@ -104,7 +103,7 @@
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
 
-      @if (dataSource().length === 0 && !isLoading) {
+  @if (dataSource().length === 0 && !isLoading()) {
         <tr class="mat-row no-data-row">
           <td class="mat-cell" [attr.colspan]="displayedColumns.length">
             <div class="no-data">
@@ -116,7 +115,7 @@
       }
     </table>
 
-    @if (isLoading) {
+  @if (isLoading()) {
       <div class="loading-spinner">
         <mat-spinner diameter="50"></mat-spinner>
         <p>{{ 'common.loading' | translate }}</p>

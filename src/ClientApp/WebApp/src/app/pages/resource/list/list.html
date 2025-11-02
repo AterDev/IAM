@@ -1,25 +1,24 @@
 <div class="resource-list-container">
   <div class="header">
-    <h2>{{ 'resource.title' | translate }}</h2>
-    <button mat-raised-button color="primary" (click)="openAddDialog()">
+    <div class="d-flex align-items-center gap-1">
+      <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
+        <mat-label>{{ 'common.search' | translate }}</mat-label>
+        <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()"
+               placeholder="Name or Display Name">
+        <button mat-icon-button matSuffix (click)="onSearch()">
+          <mat-icon>search</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <button matButton="tonal" (click)="clearFilters()">
+        <mat-icon>clear</mat-icon>
+        {{ 'common.clearFilters' | translate }}
+      </button>
+    </div>
+
+    <button matButton="tonal" (click)="openAddDialog()">
       <mat-icon>add</mat-icon>
       {{ 'common.add' | translate }}
-    </button>
-  </div>
-
-  <div class="filter-section">
-    <mat-form-field appearance="outline" class="search-field">
-      <mat-label>{{ 'common.search' | translate }}</mat-label>
-      <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()" 
-             placeholder="Name or Display Name">
-      <button mat-icon-button matSuffix (click)="onSearch()">
-        <mat-icon>search</mat-icon>
-      </button>
-    </mat-form-field>
-
-    <button mat-button (click)="clearFilters()">
-      <mat-icon>clear</mat-icon>
-      {{ 'common.clearFilters' | translate }}
     </button>
   </div>
 

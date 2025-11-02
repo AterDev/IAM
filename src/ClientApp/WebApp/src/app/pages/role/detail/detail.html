@@ -4,7 +4,7 @@
       <mat-icon>arrow_back</mat-icon>
     </button>
     <h2>{{ 'role.roleDetail' | translate }}</h2>
-    
+
     <div class="actions">
       <button mat-raised-button color="primary" (click)="openEditDialog()">
         <mat-icon>edit</mat-icon>
@@ -21,14 +21,11 @@
     </div>
   </div>
 
-  @if (isLoading) {
-    <div class="loading-spinner">
-      <mat-spinner diameter="50"></mat-spinner>
-      <p>{{ 'common.loading' | translate }}</p>
-    </div>
+  @if (isLoading()) {
+    <app-loading [diameter]="50"></app-loading>
   }
 
-  @if (!isLoading && role()) {
+  @if (!isLoading() && role()) {
     <mat-card class="info-card">
       <mat-card-header>
         <mat-card-title>{{ 'role.basicInfo' | translate }}</mat-card-title>
@@ -39,17 +36,17 @@
             <label>{{ 'role.name' | translate }}</label>
             <p>{{ role()!.name }}</p>
           </div>
-          
+
           <div class="info-item">
             <label>{{ 'role.description' | translate }}</label>
             <p>{{ role()!.description || '-' }}</p>
           </div>
-          
+
           <div class="info-item">
             <label>{{ 'common.createdTime' | translate }}</label>
             <p>{{ role()!.createdTime | date:'yyyy-MM-dd HH:mm:ss' }}</p>
           </div>
-          
+
           <div class="info-item">
             <label>{{ 'common.updatedTime' | translate }}</label>
             <p>{{ role()!.updatedTime | date:'yyyy-MM-dd HH:mm:ss' }}</p>

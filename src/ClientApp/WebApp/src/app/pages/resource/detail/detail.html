@@ -16,11 +16,9 @@
     </div>
   </div>
 
-  <div *ngIf="isLoading" class="loading-container">
-    <mat-spinner></mat-spinner>
-  </div>
+  <app-loading *ngIf="isLoading()" [diameter]="50"></app-loading>
 
-  <mat-card *ngIf="!isLoading && resource()">
+  <mat-card *ngIf="!isLoading() && resource()">
     <mat-card-header>
       <mat-card-title>{{ 'resource.basicInfo' | translate }}</mat-card-title>
     </mat-card-header>

@@ -11,6 +11,7 @@ import { ScopeDetailDto } from 'src/app/services/api/models/access-mod/scope-det
 import { ScopeEditComponent } from '../edit/edit';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { TranslateService } from '@ngx-translate/core';
+import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 
 @Component({
   selector: 'app-detail',
@@ -19,15 +20,16 @@ import { TranslateService } from '@ngx-translate/core';
     ...BaseMatModules,
     MatCardModule,
     MatProgressSpinnerModule,
-    MatChipsModule
+  MatChipsModule,
+  AppLoadingComponent
   ],
   templateUrl: './detail.html',
   styleUrls: ['./detail.scss']
 })
 export class ScopeDetailComponent implements OnInit {
   scope = signal<ScopeDetailDto | null>(null);
-  
-  isLoading = false;
+
+  isLoading = signal(false);
   scopeId?: string;
 
   constructor(
@@ -47,14 +49,14 @@ export class ScopeDetailComponent implements OnInit {
   }
 
   loadScope(): void {
-    this.isLoading = true;
+  this.isLoading.set(true);
     this.api.scopes.getDetail(this.scopeId!).subscribe({
       next: (scope) => {
-        this.scope.set(scope);
-        this.isLoading = false;
+  this.scope.set(scope);
+  this.isLoading.set(false);
       },
       error: () => {
-        this.isLoading = false;
+  this.isLoading.set(false);
         this.snackBar.open(
           this.translate.instant('error.loadScopeFailed'),
           this.translate.instant('common.close'),

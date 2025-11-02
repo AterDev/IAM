@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, Inject, signal } from '@angular/core';
 import { CommonModules, CommonFormModules } from 'src/app/share/shared-modules';
 import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatDialogRef, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -7,6 +7,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { OrganizationUpdateDto } from 'src/app/services/api/models/identity-mod/organization-update-dto.model';
 import { OrganizationDetailDto } from 'src/app/services/api/models/identity-mod/organization-detail-dto.model';
+import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 
 @Component({
   selector: 'app-edit',
@@ -14,7 +15,8 @@ import { OrganizationDetailDto } from 'src/app/services/api/models/identity-mod/
     ...CommonModules,
     ...CommonFormModules,
     MatDialogModule,
-    MatProgressSpinnerModule
+  MatProgressSpinnerModule,
+  AppLoadingComponent
   ],
   templateUrl: './edit.html',
   styleUrls: ['./edit.scss']
@@ -22,7 +24,7 @@ import { OrganizationDetailDto } from 'src/app/services/api/models/identity-mod/
 export class OrganizationEditComponent implements OnInit {
   orgForm!: FormGroup;
   isSubmitting = false;
-  isLoading = true;
+  isLoading = signal(true);
   organization?: OrganizationDetailDto;
 
   constructor(
@@ -64,7 +66,7 @@ export class OrganizationEditComponent implements OnInit {
           description: org.description || '',
           displayOrder: org.displayOrder
         });
-        this.isLoading = false;
+  this.isLoading.set(false);
       },
       error: () => {
         this.snackBar.open('Failed to load organization', 'Close', { duration: 3000 });

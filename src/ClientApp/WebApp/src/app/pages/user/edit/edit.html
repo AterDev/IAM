@@ -1,11 +1,11 @@
 <h2 mat-dialog-title>{{ 'user.editUser' | translate }}</h2>
 
 <mat-dialog-content>
-  <div *ngIf="isLoading" class="loading-container">
+  <div *ngIf="isLoading()" class="loading-container">
     <mat-spinner diameter="40"></mat-spinner>
   </div>
 
-  <form [formGroup]="userForm" class="user-form" *ngIf="!isLoading">
+  <form [formGroup]="userForm" class="user-form" *ngIf="!isLoading()">
     <div class="info-text" *ngIf="user">
       <mat-icon>person</mat-icon>
       <span><strong>{{ 'user.userName' | translate }}:</strong> {{ user.userName }}</span>
@@ -30,7 +30,7 @@
   <button mat-button (click)="onCancel()" [disabled]="isSubmitting">
     {{ 'common.cancel' | translate }}
   </button>
-  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="isSubmitting || isLoading">
+  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="isSubmitting || isLoading()">
     {{ isSubmitting ? ('common.saving' | translate) : ('common.save' | translate) }}
   </button>
 </mat-dialog-actions>
