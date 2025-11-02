@@ -19,17 +19,16 @@
     "team": "Team",
     "product": "Product",
     "order": "Order",
-    "system": "System",
-    "systemRole": "Role",
-    "systemUser": "Account",
+    "identity": "Identity Configuration",
+    "user": "User Management",
+    "role": "Role Management",
     "organization": "Organization",
+    "oauth": "OAuth Configuration",
     "application": "Application",
     "resource": "Resource",
     "scope": "Scope",
     "sessions": "Sessions",
-    "auditLogs": "Audit Logs",
-    "systemLogs": "Logs",
-    "systemConfig": "Settings"
+    "auditLogs": "Audit Logs"
   },
   "common": {
     "add": "Add",

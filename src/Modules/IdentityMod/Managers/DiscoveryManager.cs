@@ -1,9 +1,8 @@
-using Entity.CommonMod;
-using EntityFramework;
-using IdentityMod.Models.OAuthDtos;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using System.Security.Cryptography;
+using Entity.CommonMod;
+using IdentityMod.Models.OAuthDtos;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 
 namespace IdentityMod.Managers;
 
@@ -11,13 +10,11 @@ namespace IdentityMod.Managers;
 /// Manager for OIDC Discovery and JWKS endpoints
 /// </summary>
 public class DiscoveryManager(
-    QueryDbContext context,
+    DefaultDbContext context,
     ILogger<DiscoveryManager> logger,
     IConfiguration configuration
-    )
+) : ManagerBase<DefaultDbContext>(context, logger)
 {
-    private readonly QueryDbContext _context = context;
-    private readonly ILogger<DiscoveryManager> _logger = logger;
     private readonly IConfiguration _configuration = configuration;
 
     /// <summary>
@@ -48,7 +45,7 @@ public class DiscoveryManager(
                 "code id_token",
                 "code token",
                 "id_token token",
-                "code id_token token"
+                "code id_token token",
             ],
             GrantTypesSupported =
             [
@@ -56,24 +53,12 @@ public class DiscoveryManager(
                 "client_credentials",
                 "refresh_token",
                 "password",
-                "urn:ietf:params:oauth:grant-type:device_code"
+                "urn:ietf:params:oauth:grant-type:device_code",
             ],
             SubjectTypesSupported = ["public"],
             IdTokenSigningAlgValuesSupported = ["RS256"],
-            ScopesSupported =
-            [
-                "openid",
-                "profile",
-                "email",
-                "phone",
-                "address",
-                "offline_access"
-            ],
-            TokenEndpointAuthMethodsSupported =
-            [
-                "client_secret_basic",
-                "client_secret_post"
-            ],
+            ScopesSupported = ["openid", "profile", "email", "phone", "address", "offline_access"],
+            TokenEndpointAuthMethodsSupported = ["client_secret_basic", "client_secret_post"],
             ClaimsSupported =
             [
                 "sub",
@@ -95,12 +80,12 @@ public class DiscoveryManager(
                 "phone_number",
                 "phone_number_verified",
                 "address",
-                "updated_at"
+                "updated_at",
             ],
             CodeChallengeMethodsSupported = ["plain", "S256"],
             RequestParameterSupported = false,
             RequestUriParameterSupported = false,
-            RequireRequestUriRegistration = false
+            RequireRequestUriRegistration = false,
         };
     }
 
@@ -113,8 +98,8 @@ public class DiscoveryManager(
         var keys = new List<JsonWebKeyDto>();
 
         // Get current signing keys from database
-        var signingKeys = await _context.SigningKeys
-            .Where(k => !k.IsDeleted && k.ExpiresAt > DateTime.UtcNow)
+        var signingKeys = await _dbContext
+            .SigningKeys.Where(k => !k.IsDeleted && k.ExpirationDate > DateTime.UtcNow)
             .OrderByDescending(k => k.CreatedTime)
             .Take(2) // Include current and previous key for rotation period
             .ToListAsync();
@@ -153,7 +138,7 @@ public class DiscoveryManager(
             // Import RSA public key
             using var rsa = RSA.Create();
             var publicKeyBytes = Convert.FromBase64String(key.PublicKey);
-            
+
             // Validate key size (minimum 2048 bits for RSA)
             if (publicKeyBytes.Length < 256) // 2048 bits = 256 bytes minimum
             {
@@ -164,20 +149,17 @@ public class DiscoveryManager(
             var parameters = rsa.ExportParameters(false);
 
             // Validate that required parameters are present
-            if (parameters.Modulus == null || parameters.Exponent == null)
-            {
-                return null;
-            }
-
-            return new JsonWebKeyDto
-            {
-                Kty = "RSA",
-                Use = "sig",
-                Kid = key.Id.ToString(),
-                Alg = key.Algorithm ?? "RS256",
-                N = Base64UrlEncoder.Encode(parameters.Modulus),
-                E = Base64UrlEncoder.Encode(parameters.Exponent)
-            };
+            return parameters.Modulus == null || parameters.Exponent == null
+                ? null
+                : new JsonWebKeyDto
+                {
+                    Kty = "RSA",
+                    Use = "sig",
+                    Kid = key.Id.ToString(),
+                    Alg = key.Algorithm ?? "RS256",
+                    N = Base64UrlEncoder.Encode(parameters.Modulus),
+                    E = Base64UrlEncoder.Encode(parameters.Exponent),
+                };
         }
         catch (CryptographicException)
         {
@@ -199,8 +181,8 @@ public class DiscoveryManager(
     /// <returns>User information DTO</returns>
     public async Task<UserInfoDto?> GetUserInfoAsync(Guid userId, List<string> scopes)
     {
-        var user = await _context.Users
-            .Where(u => u.Id == userId && !u.IsDeleted)
+        var user = await _dbContext
+            .Users.Where(u => u.Id == userId && !u.IsDeleted)
             .FirstOrDefaultAsync();
 
         if (user == null)
@@ -208,10 +190,7 @@ public class DiscoveryManager(
             return null;
         }
 
-        var userInfo = new UserInfoDto
-        {
-            Sub = user.Id.ToString()
-        };
+        var userInfo = new UserInfoDto { Sub = user.Id.ToString() };
 
         // Add profile claims if 'profile' scope is included
         if (scopes.Contains("profile"))

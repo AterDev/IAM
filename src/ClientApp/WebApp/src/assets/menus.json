@@ -1,25 +1,25 @@
 [
     {
-        "name": "menu.system",
+        "name": "menu.identity",
         "path": null,
-        "accessCode": "system",
-        "icon": "admin_panel_settings",
-        "sort": 2,
+        "accessCode": "identity",
+        "icon": "people",
+        "sort": 0,
         "menuType": 0,
         "children": [
             {
-                "name": "menu.systemRole",
-                "path": "/role",
-                "accessCode": "role",
-                "icon": "groups",
+                "name": "menu.user",
+                "path": "/user",
+                "accessCode": "user",
+                "icon": "manage_accounts",
                 "sort": 0,
                 "menuType": 0
             },
             {
-                "name": "menu.systemUser",
-                "path": "/user",
-                "accessCode": "user",
-                "icon": "manage_accounts",
+                "name": "menu.role",
+                "path": "/role",
+                "accessCode": "role",
+                "icon": "groups",
                 "sort": 1,
                 "menuType": 0
             },
@@ -32,11 +32,29 @@
                 "menuType": 0
             },
             {
+                "name": "menu.auditLogs",
+                "path": "/security/audit-logs",
+                "accessCode": "security-audit-logs",
+                "icon": "history",
+                "sort": 3,
+                "menuType": 0
+            }
+        ]
+    },
+    {
+        "name": "menu.oauth",
+        "path": null,
+        "accessCode": "oauth",
+        "icon": "security",
+        "sort": 1,
+        "menuType": 0,
+        "children": [
+            {
                 "name": "menu.application",
                 "path": "/client",
                 "accessCode": "client",
                 "icon": "apps",
-                "sort": 3,
+                "sort": 0,
                 "menuType": 0
             },
             {
@@ -44,7 +62,7 @@
                 "path": "/resource",
                 "accessCode": "resource",
                 "icon": "api",
-                "sort": 4,
+                "sort": 1,
                 "menuType": 0
             },
             {
@@ -52,7 +70,7 @@
                 "path": "/scope",
                 "accessCode": "scope",
                 "icon": "vpn_key",
-                "sort": 5,
+                "sort": 2,
                 "menuType": 0
             },
             {
@@ -60,31 +78,7 @@
                 "path": "/security/sessions",
                 "accessCode": "security-sessions",
                 "icon": "devices",
-                "sort": 6,
-                "menuType": 0
-            },
-            {
-                "name": "menu.auditLogs",
-                "path": "/security/audit-logs",
-                "accessCode": "security-audit-logs",
-                "icon": "history",
-                "sort": 7,
-                "menuType": 0
-            },
-            {
-                "name": "menu.systemLogs",
-                "path": "/logs",
-                "accessCode": "logs",
-                "icon": "manage_search",
-                "sort": 8,
-                "menuType": 0
-            },
-            {
-                "name": "menu.systemConfig",
-                "path": "/config",
-                "accessCode": "config",
-                "icon": "settings",
-                "sort": 9,
+                "sort": 3,
                 "menuType": 0
             }
         ]
