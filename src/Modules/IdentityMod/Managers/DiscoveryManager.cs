@@ -23,7 +23,7 @@ public class DiscoveryManager(
     /// <summary>
     /// Get OpenID Connect configuration document
     /// </summary>
-    /// <param name="issuer">The issuer URL</param>
+    /// <param name="issuer">The issuer URL (must be validated by caller)</param>
     /// <returns>OIDC configuration document</returns>
     public OidcConfigurationDto GetConfiguration(string issuer)
     {
@@ -152,9 +152,22 @@ public class DiscoveryManager(
         {
             // Import RSA public key
             using var rsa = RSA.Create();
-            rsa.ImportRSAPublicKey(Convert.FromBase64String(key.PublicKey), out _);
+            var publicKeyBytes = Convert.FromBase64String(key.PublicKey);
+            
+            // Validate key size (minimum 2048 bits for RSA)
+            if (publicKeyBytes.Length < 256) // 2048 bits = 256 bytes minimum
+            {
+                return null;
+            }
 
+            rsa.ImportRSAPublicKey(publicKeyBytes, out _);
             var parameters = rsa.ExportParameters(false);
+
+            // Validate that required parameters are present
+            if (parameters.Modulus == null || parameters.Exponent == null)
+            {
+                return null;
+            }
 
             return new JsonWebKeyDto
             {
@@ -162,12 +175,18 @@ public class DiscoveryManager(
                 Use = "sig",
                 Kid = key.Id.ToString(),
                 Alg = key.Algorithm ?? "RS256",
-                N = Base64UrlEncoder.Encode(parameters.Modulus!),
-                E = Base64UrlEncoder.Encode(parameters.Exponent!)
+                N = Base64UrlEncoder.Encode(parameters.Modulus),
+                E = Base64UrlEncoder.Encode(parameters.Exponent)
             };
         }
-        catch (Exception)
+        catch (CryptographicException)
         {
+            // Invalid key format
+            return null;
+        }
+        catch (FormatException)
+        {
+            // Invalid base64 string
             return null;
         }
     }

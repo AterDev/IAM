@@ -24,10 +24,12 @@ namespace ApiService.Controllers;
 [Produces("application/json")]
 public class DiscoveryController(
     DiscoveryManager discoveryManager,
+    IConfiguration configuration,
     ILogger<DiscoveryController> logger
     ) : ControllerBase
 {
     private readonly DiscoveryManager _discoveryManager = discoveryManager;
+    private readonly IConfiguration _configuration = configuration;
     private readonly ILogger<DiscoveryController> _logger = logger;
 
     /// <summary>
@@ -65,7 +67,16 @@ public class DiscoveryController(
     {
         try
         {
-            var issuer = $"{Request.Scheme}://{Request.Host}";
+            // Use configured issuer URL to prevent Host header injection
+            var issuer = _configuration["Authentication:Issuer"];
+            
+            // Fallback to request URL if not configured (development only)
+            if (string.IsNullOrEmpty(issuer))
+            {
+                issuer = $"{Request.Scheme}://{Request.Host}";
+                _logger.LogWarning("Issuer URL not configured, using request URL: {Issuer}. This should only happen in development.", issuer);
+            }
+
             var config = _discoveryManager.GetConfiguration(issuer);
             return Ok(config);
         }
@@ -189,20 +200,11 @@ public class DiscoveryController(
                 return Unauthorized(new { error = "invalid_token", error_description = "The access token is invalid or does not contain a valid subject" });
             }
 
-            // Get scopes from token claims
-            var scopeClaims = User.FindAll("scope").Select(c => c.Value).ToList();
-            if (scopeClaims.Count == 0)
-            {
-                // Try alternative scope claim formats
-                var scopeValue = User.FindFirst("scope")?.Value;
-                if (!string.IsNullOrEmpty(scopeValue))
-                {
-                    scopeClaims = scopeValue.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
-                }
-            }
+            // Parse scopes from token
+            var scopes = ParseScopesFromToken(User);
 
             // Get user information
-            var userInfo = await _discoveryManager.GetUserInfoAsync(userId, scopeClaims);
+            var userInfo = await _discoveryManager.GetUserInfoAsync(userId, scopes);
 
             if (userInfo == null)
             {
@@ -217,5 +219,34 @@ public class DiscoveryController(
             _logger.LogError(ex, "Failed to get user info");
             return Problem("Failed to retrieve user information", statusCode: 500);
         }
+    }
+
+    /// <summary>
+    /// Parse scopes from the token claims
+    /// </summary>
+    /// <param name="principal">The claims principal from the token</param>
+    /// <returns>List of scope strings</returns>
+    private static List<string> ParseScopesFromToken(ClaimsPrincipal principal)
+    {
+        var scopes = new List<string>();
+
+        // Get all scope claims
+        var scopeClaims = principal.FindAll("scope").Select(c => c.Value).ToList();
+        
+        if (scopeClaims.Count > 0)
+        {
+            scopes.AddRange(scopeClaims);
+        }
+        else
+        {
+            // Try alternative scope claim format (space-separated)
+            var scopeValue = principal.FindFirst("scope")?.Value;
+            if (!string.IsNullOrEmpty(scopeValue))
+            {
+                scopes.AddRange(scopeValue.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+            }
+        }
+
+        return scopes;
     }
 }
