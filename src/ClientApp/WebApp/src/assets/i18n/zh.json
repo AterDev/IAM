@@ -84,17 +84,16 @@
     "team": "团队管理",
     "product": "产品管理",
     "order": "订单管理",
-    "system": "系统管理",
-    "systemRole": "角色管理",
-    "systemUser": "账号管理",
+    "identity": "权限配置",
+    "user": "用户管理",
+    "role": "角色管理",
     "organization": "组织管理",
+    "oauth": "OAuth配置",
     "application": "应用管理",
     "resource": "资源管理",
     "scope": "作用域管理",
     "sessions": "会话管理",
-    "auditLogs": "审计日志",
-    "systemLogs": "系统日志",
-    "systemConfig": "系统设置"
+    "auditLogs": "审计日志"
   },
   "common": {
     "add": "添加",

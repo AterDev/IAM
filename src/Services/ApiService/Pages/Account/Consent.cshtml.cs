@@ -1,7 +1,7 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using IdentityMod.Managers;
 using AccessMod.Managers;
+using Entity.AccessMod;
+using IdentityMod.Managers;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace ApiService.Pages.Account;
 
@@ -9,7 +9,8 @@ public class ConsentModel(
     AuthorizationManager authorizationManager,
     ClientManager clientManager,
     ScopeManager scopeManager,
-    ILogger<ConsentModel> logger) : PageModel
+    ILogger<ConsentModel> logger
+) : PageModel
 {
     private readonly AuthorizationManager _authorizationManager = authorizationManager;
     private readonly ClientManager _clientManager = clientManager;
@@ -59,28 +60,43 @@ public class ConsentModel(
 
         if (string.IsNullOrEmpty(userId))
         {
-            return RedirectToPage("/Account/Login", new { returnUrl = Request.Path + Request.QueryString });
+            return RedirectToPage(
+                "/Account/Login",
+                new { returnUrl = Request.Path + Request.QueryString }
+            );
         }
 
         // Parse query parameters
         if (!string.IsNullOrEmpty(Request.QueryString.Value))
         {
-            var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(Request.QueryString.Value);
-            
-            ClientId = query.TryGetValue("client_id", out var clientId) ? clientId.ToString() : string.Empty;
+            var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(
+                Request.QueryString.Value
+            );
+
+            ClientId = query.TryGetValue("client_id", out var clientId)
+                ? clientId.ToString()
+                : string.Empty;
             Scope = query.TryGetValue("scope", out var scope) ? scope.ToString() : string.Empty;
             State = query.TryGetValue("state", out var state) ? state.ToString() : null;
             Nonce = query.TryGetValue("nonce", out var nonce) ? nonce.ToString() : null;
-            CodeChallenge = query.TryGetValue("code_challenge", out var challenge) ? challenge.ToString() : null;
-            CodeChallengeMethod = query.TryGetValue("code_challenge_method", out var method) ? method.ToString() : null;
-            RedirectUri = query.TryGetValue("redirect_uri", out var redirectUri) ? redirectUri.ToString() : null;
-            ResponseType = query.TryGetValue("response_type", out var responseType) ? responseType.ToString() : null;
+            CodeChallenge = query.TryGetValue("code_challenge", out var challenge)
+                ? challenge.ToString()
+                : null;
+            CodeChallengeMethod = query.TryGetValue("code_challenge_method", out var method)
+                ? method.ToString()
+                : null;
+            RedirectUri = query.TryGetValue("redirect_uri", out var redirectUri)
+                ? redirectUri.ToString()
+                : null;
+            ResponseType = query.TryGetValue("response_type", out var responseType)
+                ? responseType.ToString()
+                : null;
         }
 
         // Load client information
         try
         {
-            var client = await _clientManager.FindAsync(c => c.ClientId == ClientId);
+            var client = await _clientManager.FindAsync<Client>(c => c.ClientId == ClientId);
             if (client != null)
             {
                 ClientName = client.DisplayName;
@@ -103,25 +119,30 @@ public class ConsentModel(
         {
             try
             {
-                var scopeInfo = await _scopeManager.FindAsync(s => s.Name == scopeName);
-                RequestedScopes.Add(new ScopeViewModel
-                {
-                    Name = scopeName,
-                    DisplayName = scopeInfo?.DisplayName ?? scopeName,
-                    Description = scopeInfo?.Description ?? GetDefaultScopeDescription(scopeName),
-                    Required = scopeInfo?.Required ?? IsDefaultRequiredScope(scopeName)
-                });
+                var scopeInfo = await _scopeManager.FindAsync<ApiScope>(s => s.Name == scopeName);
+                RequestedScopes.Add(
+                    new ScopeViewModel
+                    {
+                        Name = scopeName,
+                        DisplayName = scopeInfo?.DisplayName ?? scopeName,
+                        Description =
+                            scopeInfo?.Description ?? GetDefaultScopeDescription(scopeName),
+                        Required = scopeInfo?.Required ?? IsDefaultRequiredScope(scopeName),
+                    }
+                );
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to load scope {Scope}", scopeName);
-                RequestedScopes.Add(new ScopeViewModel
-                {
-                    Name = scopeName,
-                    DisplayName = scopeName,
-                    Description = GetDefaultScopeDescription(scopeName),
-                    Required = IsDefaultRequiredScope(scopeName)
-                });
+                RequestedScopes.Add(
+                    new ScopeViewModel
+                    {
+                        Name = scopeName,
+                        DisplayName = scopeName,
+                        Description = GetDefaultScopeDescription(scopeName),
+                        Required = IsDefaultRequiredScope(scopeName),
+                    }
+                );
             }
         }
 
@@ -131,7 +152,7 @@ public class ConsentModel(
     public async Task<IActionResult> OnPostAsync(string action)
     {
         var userId = HttpContext.Session.GetString("UserId");
-        
+
         if (string.IsNullOrEmpty(userId))
         {
             return RedirectToPage("/Account/Login");
@@ -142,7 +163,8 @@ public class ConsentModel(
             // User denied authorization
             if (!string.IsNullOrEmpty(RedirectUri))
             {
-                var errorUrl = $"{RedirectUri}?error=access_denied&error_description=User denied authorization";
+                var errorUrl =
+                    $"{RedirectUri}?error=access_denied&error_description=User denied authorization";
                 if (!string.IsNullOrEmpty(State))
                 {
                     errorUrl += $"&state={State}";
@@ -157,18 +179,30 @@ public class ConsentModel(
         {
             // TODO: Create authorization code and save consent
             // For now, redirect back to the authorize endpoint to continue the flow
-            
-            var authorizeUrl = $"/connect/authorize?client_id={ClientId}&scope={Scope}&response_type={ResponseType}&redirect_uri={RedirectUri}";
-            
+
+            var authorizeUrl =
+                $"/connect/authorize?client_id={ClientId}&scope={Scope}&response_type={ResponseType}&redirect_uri={RedirectUri}";
+
             if (!string.IsNullOrEmpty(State))
+            {
                 authorizeUrl += $"&state={State}";
+            }
+
             if (!string.IsNullOrEmpty(Nonce))
+            {
                 authorizeUrl += $"&nonce={Nonce}";
+            }
+
             if (!string.IsNullOrEmpty(CodeChallenge))
+            {
                 authorizeUrl += $"&code_challenge={CodeChallenge}";
+            }
+
             if (!string.IsNullOrEmpty(CodeChallengeMethod))
+            {
                 authorizeUrl += $"&code_challenge_method={CodeChallengeMethod}";
-            
+            }
+
             // Add consent granted flag
             authorizeUrl += "&consent_granted=true";
 
@@ -191,7 +225,7 @@ public class ConsentModel(
             "phone" => "访问您的手机号码",
             "address" => "访问您的地址信息",
             "offline_access" => "在您离线时访问您的信息",
-            _ => $"访问 {scopeName} 资源"
+            _ => $"访问 {scopeName} 资源",
         };
     }
 
