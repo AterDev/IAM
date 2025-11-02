@@ -29,56 +29,56 @@ export const routes: Routes = [
     canActivateChild: [AuthGuard],
     children: [
       {
-        path: 'system-user',
-        loadComponent: () => import('./pages/system-user/user-list').then(m => m.UserListComponent)
+        path: 'user',
+        loadComponent: () => import('./pages/user/list/list').then(m => m.UserListComponent)
       },
       {
-        path: 'system-user/:id',
-        loadComponent: () => import('./pages/system-user/user-detail').then(m => m.UserDetailComponent)
+        path: 'user/:id',
+        loadComponent: () => import('./pages/user/detail/detail').then(m => m.UserDetailComponent)
       },
       {
         path: 'organization',
-        loadComponent: () => import('./pages/organization/organization-list').then(m => m.OrganizationListComponent)
+        loadComponent: () => import('./pages/organization/list/list').then(m => m.OrganizationListComponent)
       },
       {
-        path: 'system-role',
-        loadComponent: () => import('./pages/system-role/role-list').then(m => m.RoleListComponent)
+        path: 'role',
+        loadComponent: () => import('./pages/role/list/list').then(m => m.RoleListComponent)
       },
       {
-        path: 'system-role/:id',
-        loadComponent: () => import('./pages/system-role/role-detail').then(m => m.RoleDetailComponent)
+        path: 'role/:id',
+        loadComponent: () => import('./pages/role/detail/detail').then(m => m.RoleDetailComponent)
       },
       {
         path: 'client',
-        loadComponent: () => import('./pages/client/client-list').then(m => m.ClientListComponent)
+        loadComponent: () => import('./pages/client/list/list').then(m => m.ClientListComponent)
       },
       {
         path: 'client/:id',
-        loadComponent: () => import('./pages/client/client-detail').then(m => m.ClientDetailComponent)
+        loadComponent: () => import('./pages/client/detail/detail').then(m => m.ClientDetailComponent)
       },
       {
         path: 'scope',
-        loadComponent: () => import('./pages/scope/scope-list').then(m => m.ScopeListComponent)
+        loadComponent: () => import('./pages/scope/list/list').then(m => m.ScopeListComponent)
       },
       {
         path: 'scope/:id',
-        loadComponent: () => import('./pages/scope/scope-detail').then(m => m.ScopeDetailComponent)
+        loadComponent: () => import('./pages/scope/detail/detail').then(m => m.ScopeDetailComponent)
       },
       {
         path: 'resource',
-        loadComponent: () => import('./pages/resource/resource-list').then(m => m.ResourceListComponent)
+        loadComponent: () => import('./pages/resource/list/list').then(m => m.ResourceListComponent)
       },
       {
         path: 'resource/:id',
-        loadComponent: () => import('./pages/resource/resource-detail').then(m => m.ResourceDetailComponent)
+        loadComponent: () => import('./pages/resource/detail/detail').then(m => m.ResourceDetailComponent)
       },
       {
         path: 'security/sessions',
-        loadComponent: () => import('./pages/security/session-list').then(m => m.SessionListComponent)
+        loadComponent: () => import('./pages/security/session-list/list').then(m => m.SessionListComponent)
       },
       {
         path: 'security/audit-logs',
-        loadComponent: () => import('./pages/security/audit-log-list').then(m => m.AuditLogListComponent)
+        loadComponent: () => import('./pages/security/audit-log-list/list').then(m => m.AuditLogListComponent)
       }
     ],
   },

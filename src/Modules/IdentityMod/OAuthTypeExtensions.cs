@@ -1,3 +1,5 @@
+using IdentityMod.Models;
+
 namespace IdentityMod;
 
 /// <summary>
@@ -17,7 +19,7 @@ public static class OAuthTypeExtensions
             GrantType.ClientCredentials => GrantTypes.ClientCredentials,
             GrantType.Password => GrantTypes.Password,
             GrantType.DeviceCode => GrantTypes.DeviceCode,
-            _ => throw new ArgumentOutOfRangeException(nameof(grantType), grantType, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(grantType), grantType, null),
         };
     }
 
@@ -33,7 +35,7 @@ public static class OAuthTypeExtensions
             GrantTypes.ClientCredentials => GrantType.ClientCredentials,
             GrantTypes.Password => GrantType.Password,
             GrantTypes.DeviceCode => GrantType.DeviceCode,
-            _ => null
+            _ => null,
         };
     }
 
@@ -47,7 +49,7 @@ public static class OAuthTypeExtensions
             ResponseType.Code => ResponseTypes.Code,
             ResponseType.Token => ResponseTypes.Token,
             ResponseType.IdToken => ResponseTypes.IdToken,
-            _ => throw new ArgumentOutOfRangeException(nameof(responseType), responseType, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(responseType), responseType, null),
         };
     }
 
@@ -61,7 +63,7 @@ public static class OAuthTypeExtensions
             ResponseTypes.Code => ResponseType.Code,
             ResponseTypes.Token => ResponseType.Token,
             ResponseTypes.IdToken => ResponseType.IdToken,
-            _ => null
+            _ => null,
         };
     }
 
@@ -78,7 +80,7 @@ public static class OAuthTypeExtensions
             TokenType.AuthorizationCode => TokenTypes.AuthorizationCode,
             TokenType.DeviceCode => TokenTypes.DeviceCode,
             TokenType.UserCode => TokenTypes.UserCode,
-            _ => throw new ArgumentOutOfRangeException(nameof(tokenType), tokenType, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(tokenType), tokenType, null),
         };
     }
 
@@ -95,7 +97,7 @@ public static class OAuthTypeExtensions
             TokenTypes.AuthorizationCode => TokenType.AuthorizationCode,
             TokenTypes.DeviceCode => TokenType.DeviceCode,
             TokenTypes.UserCode => TokenType.UserCode,
-            _ => null
+            _ => null,
         };
     }
 
@@ -111,7 +113,7 @@ public static class OAuthTypeExtensions
             TokenStatus.Redeemed => TokenStatuses.Redeemed,
             TokenStatus.Pending => TokenStatuses.Pending,
             TokenStatus.Denied => TokenStatuses.Denied,
-            _ => throw new ArgumentOutOfRangeException(nameof(tokenStatus), tokenStatus, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(tokenStatus), tokenStatus, null),
         };
     }
 
@@ -127,7 +129,7 @@ public static class OAuthTypeExtensions
             TokenStatuses.Redeemed => TokenStatus.Redeemed,
             TokenStatuses.Pending => TokenStatus.Pending,
             TokenStatuses.Denied => TokenStatus.Denied,
-            _ => null
+            _ => null,
         };
     }
 
@@ -142,7 +144,11 @@ public static class OAuthTypeExtensions
             AuthorizationType.ClientCredentials => AuthorizationTypes.ClientCredentials,
             AuthorizationType.Password => AuthorizationTypes.Password,
             AuthorizationType.DeviceCode => AuthorizationTypes.DeviceCode,
-            _ => throw new ArgumentOutOfRangeException(nameof(authorizationType), authorizationType, null)
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(authorizationType),
+                authorizationType,
+                null
+            ),
         };
     }
 
@@ -157,7 +163,7 @@ public static class OAuthTypeExtensions
             AuthorizationTypes.ClientCredentials => AuthorizationType.ClientCredentials,
             AuthorizationTypes.Password => AuthorizationType.Password,
             AuthorizationTypes.DeviceCode => AuthorizationType.DeviceCode,
-            _ => null
+            _ => null,
         };
     }
 
@@ -173,7 +179,11 @@ public static class OAuthTypeExtensions
             AuthorizationStatus.Pending => AuthorizationStatuses.Pending,
             AuthorizationStatus.Authorized => AuthorizationStatuses.Authorized,
             AuthorizationStatus.Denied => AuthorizationStatuses.Denied,
-            _ => throw new ArgumentOutOfRangeException(nameof(authorizationStatus), authorizationStatus, null)
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(authorizationStatus),
+                authorizationStatus,
+                null
+            ),
         };
     }
 
@@ -189,7 +199,7 @@ public static class OAuthTypeExtensions
             AuthorizationStatuses.Pending => AuthorizationStatus.Pending,
             AuthorizationStatuses.Authorized => AuthorizationStatus.Authorized,
             AuthorizationStatuses.Denied => AuthorizationStatus.Denied,
-            _ => null
+            _ => null,
         };
     }
 
@@ -202,7 +212,11 @@ public static class OAuthTypeExtensions
         {
             CodeChallengeMethod.Plain => CodeChallengeMethods.Plain,
             CodeChallengeMethod.S256 => CodeChallengeMethods.S256,
-            _ => throw new ArgumentOutOfRangeException(nameof(codeChallengeMethod), codeChallengeMethod, null)
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(codeChallengeMethod),
+                codeChallengeMethod,
+                null
+            ),
         };
     }
 
@@ -215,7 +229,7 @@ public static class OAuthTypeExtensions
         {
             CodeChallengeMethods.Plain => CodeChallengeMethod.Plain,
             CodeChallengeMethods.S256 => CodeChallengeMethod.S256,
-            _ => null
+            _ => null,
         };
     }
 
@@ -229,7 +243,7 @@ public static class OAuthTypeExtensions
             ResponseMode.Query => ResponseModes.Query,
             ResponseMode.Fragment => ResponseModes.Fragment,
             ResponseMode.FormPost => ResponseModes.FormPost,
-            _ => throw new ArgumentOutOfRangeException(nameof(responseMode), responseMode, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(responseMode), responseMode, null),
         };
     }
 
@@ -243,7 +257,7 @@ public static class OAuthTypeExtensions
             ResponseModes.Query => ResponseMode.Query,
             ResponseModes.Fragment => ResponseMode.Fragment,
             ResponseModes.FormPost => ResponseMode.FormPost,
-            _ => null
+            _ => null,
         };
     }
 }
