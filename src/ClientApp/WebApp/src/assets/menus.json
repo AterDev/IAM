@@ -32,11 +32,27 @@
                 "menuType": 0
             },
             {
+                "name": "menu.application",
+                "path": "/client",
+                "accessCode": "client",
+                "icon": "apps",
+                "sort": 3,
+                "menuType": 0
+            },
+            {
+                "name": "menu.resource",
+                "path": "/resource",
+                "accessCode": "resource",
+                "icon": "api",
+                "sort": 4,
+                "menuType": 0
+            },
+            {
                 "name": "menu.scope",
                 "path": "/scope",
                 "accessCode": "scope",
                 "icon": "vpn_key",
-                "sort": 3,
+                "sort": 5,
                 "menuType": 0
             },
             {
@@ -44,7 +60,7 @@
                 "path": "/security/sessions",
                 "accessCode": "security-sessions",
                 "icon": "devices",
-                "sort": 4,
+                "sort": 6,
                 "menuType": 0
             },
             {
@@ -52,7 +68,7 @@
                 "path": "/security/audit-logs",
                 "accessCode": "security-audit-logs",
                 "icon": "history",
-                "sort": 5,
+                "sort": 7,
                 "menuType": 0
             },
             {
@@ -60,7 +76,7 @@
                 "path": "/logs",
                 "accessCode": "logs",
                 "icon": "manage_search",
-                "sort": 6,
+                "sort": 8,
                 "menuType": 0
             },
             {
@@ -68,7 +84,7 @@
                 "path": "/config",
                 "accessCode": "config",
                 "icon": "settings",
-                "sort": 7,
+                "sort": 9,
                 "menuType": 0
             }
         ]
