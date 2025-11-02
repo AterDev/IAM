@@ -103,18 +103,30 @@ public class OAuthController(
             {
                 // Redirect to login page with return URL
                 var returnUrl = Request.Path + Request.QueryString;
-                return Redirect($"/login?returnUrl={Uri.EscapeDataString(returnUrl)}");
+                return Redirect($"/Account/Login?returnUrl={Uri.EscapeDataString(returnUrl)}");
             }
 
-            // Get user ID from claims
-            var userId = User.FindFirst(OAuthConstants.ClaimTypes.Subject)?.Value ?? User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+            // Get user ID from claims or session
+            var userId = User.FindFirst(OAuthConstants.ClaimTypes.Subject)?.Value 
+                ?? User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value
+                ?? HttpContext.Session.GetString("UserId");
+                
             if (string.IsNullOrEmpty(userId))
             {
-                return Unauthorized(new { error = ErrorCodes.InvalidUser, error_description = "User ID not found in claims" });
+                // Redirect to login
+                var returnUrl = Request.Path + Request.QueryString;
+                return Redirect($"/Account/Login?returnUrl={Uri.EscapeDataString(returnUrl)}");
             }
 
-            // TODO: Check if consent is required
-            // For now, auto-consent for demonstration
+            // Check if consent is required and not yet granted
+            var consentGranted = Request.Query.ContainsKey("consent_granted") && Request.Query["consent_granted"] == "true";
+            
+            if (!consentGranted)
+            {
+                // Redirect to consent page
+                var consentUrl = $"/Account/Consent{Request.QueryString}";
+                return Redirect(consentUrl);
+            }
 
             // Handle response type
             if (request.ResponseType == OAuthConstants.ResponseTypes.Code)
