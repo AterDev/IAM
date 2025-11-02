@@ -37,21 +37,21 @@ import { AuditLogDetailDialogComponent } from '../audit-log-detail-dialog/detail
 })
 export class AuditLogListComponent implements OnInit {
   displayedColumns: string[] = ['category', 'event', 'subjectId', 'ipAddress', 'createdTime', 'actions'];
-  
+
   dataSource = signal<AuditLogItemDto[]>([]);
   total = signal(0);
-  
-  pageSize = 20;
+
+  pageSize = 10;
   pageIndex = 0;
-  isLoading = false;
-  
+  isLoading = signal(false);
+
   // Filter controls
   categoryFilter = '';
   eventFilter = '';
   subjectIdFilter = '';
   startDateControl = new FormControl<Date | null>(null);
   endDateControl = new FormControl<Date | null>(null);
-  
+
   // Auto-refresh
   autoRefreshEnabled = false;
   autoRefreshInterval: any = null;
@@ -69,10 +69,10 @@ export class AuditLogListComponent implements OnInit {
     const endDate = new Date();
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 7);
-    
+
     this.startDateControl.setValue(startDate);
     this.endDateControl.setValue(endDate);
-    
+
     this.loadData();
   }
 
@@ -81,8 +81,8 @@ export class AuditLogListComponent implements OnInit {
   }
 
   loadData(): void {
-    this.isLoading = true;
-    
+  this.isLoading.set(true);
+
     this.api.security.getAuditLogs(
       this.categoryFilter || null,
       this.eventFilter || null,
@@ -96,7 +96,7 @@ export class AuditLogListComponent implements OnInit {
       next: (res: PageList<AuditLogItemDto>) => {
         this.dataSource.set(res.data);
         this.total.set(res.count);
-        this.isLoading = false;
+  this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Failed to load audit logs:', error);
@@ -105,7 +105,7 @@ export class AuditLogListComponent implements OnInit {
           this.translate.instant('common.close'),
           { duration: 3000 }
         );
-        this.isLoading = false;
+  this.isLoading.set(false);
       }
     });
   }
@@ -119,15 +119,15 @@ export class AuditLogListComponent implements OnInit {
     this.categoryFilter = '';
     this.eventFilter = '';
     this.subjectIdFilter = '';
-    
+
     // Reset to last 7 days
     const endDate = new Date();
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 7);
-    
+
     this.startDateControl.setValue(startDate);
     this.endDateControl.setValue(endDate);
-    
+
     this.pageIndex = 0;
     this.loadData();
   }
@@ -159,7 +159,7 @@ export class AuditLogListComponent implements OnInit {
 
   toggleAutoRefresh(): void {
     this.autoRefreshEnabled = !this.autoRefreshEnabled;
-    
+
     if (this.autoRefreshEnabled) {
       this.startAutoRefresh();
     } else {
@@ -187,7 +187,7 @@ export class AuditLogListComponent implements OnInit {
       'Security': 'warn',
       'System': 'basic'
     };
-    
+
     return categoryMap[category] || 'basic';
   }
 

@@ -35,14 +35,14 @@ import { ClientAddComponent } from '../add/add';
 })
 export class ClientListComponent implements OnInit {
   displayedColumns: string[] = ['select', 'clientId', 'displayName', 'type', 'applicationType', 'createdTime', 'actions'];
-  
+
   dataSource = signal<ClientItemDto[]>([]);
   total = signal(0);
   selectedIds = signal<Set<string>>(new Set());
-  
+
   pageSize = 10;
   pageIndex = 0;
-  isLoading = false;
+  isLoading = signal(false);
   searchText = '';
   typeFilter: string | null = null;
   applicationTypeFilter: string | null = null;
@@ -72,8 +72,8 @@ export class ClientListComponent implements OnInit {
   }
 
   loadData(): void {
-    this.isLoading = true;
-    
+  this.isLoading.set(true);
+
     this.api.clients.getClients(
       this.searchText || null,
       this.searchText || null,
@@ -86,7 +86,7 @@ export class ClientListComponent implements OnInit {
       next: (res: PageList<ClientItemDto>) => {
         this.dataSource.set(res.data);
         this.total.set(res.count);
-        this.isLoading = false;
+  this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Failed to load clients:', error);
@@ -95,7 +95,7 @@ export class ClientListComponent implements OnInit {
           this.translate.instant('common.close'),
           { duration: 3000 }
         );
-        this.isLoading = false;
+  this.isLoading.set(false);
       }
     });
   }
@@ -236,7 +236,7 @@ export class ClientListComponent implements OnInit {
   private handleBatchDeleteComplete(successCount: number, errorCount: number): void {
     this.selectedIds.set(new Set());
     this.loadData();
-    
+
     if (errorCount === 0) {
       this.snackBar.open(
         this.translate.instant('client.deleteMultipleSuccess', { count: successCount }),

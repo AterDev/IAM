@@ -1,11 +1,9 @@
 <h2 mat-dialog-title>{{ 'resource.editResource' | translate }}</h2>
 
 <mat-dialog-content>
-  <div *ngIf="isLoading" class="loading-container">
-    <mat-spinner></mat-spinner>
-  </div>
+  <app-loading *ngIf="isLoading()"></app-loading>
 
-  <form [formGroup]="resourceForm" class="resource-form" *ngIf="!isLoading">
+  <form [formGroup]="resourceForm" class="resource-form" *ngIf="!isLoading()">
     <mat-form-field appearance="outline">
       <mat-label>{{ 'resource.displayName' | translate }}</mat-label>
       <input matInput [formControl]="displayName" required>
@@ -25,7 +23,7 @@
   <button mat-button (click)="onCancel()" [disabled]="isSubmitting">
     {{ 'common.cancel' | translate }}
   </button>
-  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="isSubmitting || isLoading">
+  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="isSubmitting || isLoading()">
     {{ isSubmitting ? ('common.saving' | translate) : ('common.save' | translate) }}
   </button>
 </mat-dialog-actions>

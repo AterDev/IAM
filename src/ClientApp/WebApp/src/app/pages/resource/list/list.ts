@@ -30,13 +30,13 @@ import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/
 })
 export class ResourceListComponent implements OnInit {
   displayedColumns: string[] = ['name', 'displayName', 'description', 'actions'];
-  
+
   dataSource = signal<ResourceItemDto[]>([]);
   total = signal(0);
-  
+
   pageSize = 10;
   pageIndex = 0;
-  isLoading = false;
+  isLoading = signal(false);
   searchText = '';
 
   constructor(
@@ -52,8 +52,8 @@ export class ResourceListComponent implements OnInit {
   }
 
   loadData(): void {
-    this.isLoading = true;
-    
+  this.isLoading.set(true);
+
     this.api.resources.getResources(
       this.searchText || null,
       this.searchText || null,
@@ -64,7 +64,7 @@ export class ResourceListComponent implements OnInit {
       next: (res: PageList<ResourceItemDto>) => {
         this.dataSource.set(res.data);
         this.total.set(res.count);
-        this.isLoading = false;
+  this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Failed to load resources:', error);
@@ -73,7 +73,7 @@ export class ResourceListComponent implements OnInit {
           this.translate.instant('common.close'),
           { duration: 3000 }
         );
-        this.isLoading = false;
+  this.isLoading.set(false);
       }
     });
   }

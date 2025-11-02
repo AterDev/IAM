@@ -1,12 +1,10 @@
 <div class="session-list-container">
-  <div class="header">
-    <h2>{{ 'menu.sessions' | translate }}</h2>
-    <div class="header-actions">
-      <button mat-raised-button 
-              [color]="autoRefreshEnabled ? 'accent' : 'basic'"
-              (click)="toggleAutoRefresh()">
+  <div class="my-1 py-1">
+    <div class="d-flex justify-content-end gap-1">
+      <button mat-raised-button [color]="autoRefreshEnabled ? 'accent' : 'basic'" (click)="toggleAutoRefresh()">
         <mat-icon>{{ autoRefreshEnabled ? 'pause' : 'autorenew' }}</mat-icon>
-        {{ (autoRefreshEnabled ? 'session.stopAutoRefresh' : 'session.startAutoRefresh') | translate }}
+        {{ (autoRefreshEnabled ? 'session.stopAutoRefresh' :
+        'session.startAutoRefresh') | translate }}
       </button>
       <button mat-raised-button color="primary" (click)="loadData()">
         <mat-icon>refresh</mat-icon>
@@ -15,47 +13,47 @@
     </div>
   </div>
 
-  <div class="filter-section">
-    <mat-form-field appearance="outline" class="search-field">
-      <mat-label>{{ 'session.searchPlaceholder' | translate }}</mat-label>
-      <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()" 
-             placeholder="Session ID">
-      <button mat-icon-button matSuffix (click)="onSearch()">
-        <mat-icon>search</mat-icon>
-      </button>
-    </mat-form-field>
+  <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center gap-1">
+      <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
+        <mat-label>{{ 'session.searchPlaceholder' | translate }}</mat-label>
+        <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()" placeholder="Session ID" />
+        <button mat-icon-button matSuffix (click)="onSearch()">
+          <mat-icon>search</mat-icon>
+        </button>
+      </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>{{ 'session.ipAddress' | translate }}</mat-label>
-      <input matInput [(ngModel)]="ipAddressFilter" (keyup.enter)="onFilterChange()">
-    </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ 'session.ipAddress' | translate }}</mat-label>
+        <input matInput [(ngModel)]="ipAddressFilter" (keyup.enter)="onFilterChange()" />
+      </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>{{ 'session.status' | translate }}</mat-label>
-      <mat-select [(ngModel)]="isActiveFilter" (selectionChange)="onFilterChange()">
-        <mat-option [value]="null">{{ 'common.all' | translate }}</mat-option>
-        <mat-option [value]="true">{{ 'session.active' | translate }}</mat-option>
-        <mat-option [value]="false">{{ 'session.inactive' | translate }}</mat-option>
-      </mat-select>
-    </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ 'session.status' | translate }}</mat-label>
+        <mat-select [(ngModel)]="isActiveFilter" (selectionChange)="onFilterChange()">
+          <mat-option [value]="null">{{ 'common.all' | translate }}</mat-option>
+          <mat-option [value]="true">{{ 'session.active' | translate }}</mat-option>
+          <mat-option [value]="false">{{ 'session.inactive' | translate }}</mat-option>
+        </mat-select>
+      </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>{{ 'session.startDate' | translate }}</mat-label>
-      <input matInput [matDatepicker]="startPicker" [formControl]="startDateControl" 
-             (dateChange)="onFilterChange()">
-      <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
-      <mat-datepicker #startPicker></mat-datepicker>
-    </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ 'session.startDate' | translate }}</mat-label>
+        <input matInput [matDatepicker]="startPicker" [formControl]="startDateControl"
+          (dateChange)="onFilterChange()" />
+        <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+        <mat-datepicker #startPicker></mat-datepicker>
+      </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>{{ 'session.endDate' | translate }}</mat-label>
-      <input matInput [matDatepicker]="endPicker" [formControl]="endDateControl" 
-             (dateChange)="onFilterChange()">
-      <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
-      <mat-datepicker #endPicker></mat-datepicker>
-    </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ 'session.endDate' | translate }}</mat-label>
+        <input matInput [matDatepicker]="endPicker" [formControl]="endDateControl" (dateChange)="onFilterChange()" />
+        <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+        <mat-datepicker #endPicker></mat-datepicker>
+      </mat-form-field>
+    </div>
 
-    <button mat-button (click)="clearFilters()">
+    <button matButton="outlined" (click)="clearFilters()">
       <mat-icon>clear</mat-icon>
       {{ 'common.clearFilters' | translate }}
     </button>
@@ -74,23 +72,20 @@
       <!-- Checkbox Column -->
       <ng-container matColumnDef="select">
         <th mat-header-cell *matHeaderCellDef>
-          <mat-checkbox
-            [checked]="allSelected()"
-            [indeterminate]="someSelected()"
-            (change)="toggleSelectAll()">
+          <mat-checkbox [checked]="allSelected()" [indeterminate]="someSelected()" (change)="toggleSelectAll()">
           </mat-checkbox>
         </th>
         <td mat-cell *matCellDef="let row">
-          <mat-checkbox
-            [checked]="selectedIds().has(row.id)"
-            (change)="toggleSelect(row.id)">
+          <mat-checkbox [checked]="selectedIds().has(row.id)" (change)="toggleSelect(row.id)">
           </mat-checkbox>
         </td>
       </ng-container>
 
       <!-- Session ID Column -->
       <ng-container matColumnDef="sessionId">
-        <th mat-header-cell *matHeaderCellDef>{{ 'session.sessionId' | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>
+          {{ 'session.sessionId' | translate }}
+        </th>
         <td mat-cell *matCellDef="let session">
           <span class="session-id">{{ session.sessionId.substring(0, 8) }}...</span>
         </td>
@@ -98,7 +93,9 @@
 
       <!-- IP Address Column -->
       <ng-container matColumnDef="ipAddress">
-        <th mat-header-cell *matHeaderCellDef>{{ 'session.ipAddress' | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>
+          {{ 'session.ipAddress' | translate }}
+        </th>
         <td mat-cell *matCellDef="let session">
           <span class="ip-address">{{ session.ipAddress || '-' }}</span>
         </td>
@@ -106,7 +103,9 @@
 
       <!-- User Agent Column -->
       <ng-container matColumnDef="userAgent">
-        <th mat-header-cell *matHeaderCellDef>{{ 'session.device' | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>
+          {{ 'session.device' | translate }}
+        </th>
         <td mat-cell *matCellDef="let session">
           <span class="user-agent" [title]="session.userAgent || ''">
             {{ formatUserAgent(session.userAgent) }}
@@ -116,7 +115,9 @@
 
       <!-- Login Time Column -->
       <ng-container matColumnDef="loginTime">
-        <th mat-header-cell *matHeaderCellDef>{{ 'session.loginTime' | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>
+          {{ 'session.loginTime' | translate }}
+        </th>
         <td mat-cell *matCellDef="let session">
           {{ session.loginTime | date:'short' }}
         </td>
@@ -124,7 +125,9 @@
 
       <!-- Last Activity Time Column -->
       <ng-container matColumnDef="lastActivityTime">
-        <th mat-header-cell *matHeaderCellDef>{{ 'session.lastActivity' | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>
+          {{ 'session.lastActivity' | translate }}
+        </th>
         <td mat-cell *matCellDef="let session">
           {{ session.lastActivityTime | date:'short' }}
         </td>
@@ -132,17 +135,22 @@
 
       <!-- Active Status Column -->
       <ng-container matColumnDef="isActive">
-        <th mat-header-cell *matHeaderCellDef>{{ 'session.status' | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>
+          {{ 'session.status' | translate }}
+        </th>
         <td mat-cell *matCellDef="let session">
           <mat-chip [class.active]="session.isActive" [class.inactive]="!session.isActive">
-            {{ (session.isActive ? 'session.active' : 'session.inactive') | translate }}
+            {{ (session.isActive ? 'session.active' : 'session.inactive') |
+            translate }}
           </mat-chip>
         </td>
       </ng-container>
 
       <!-- Actions Column -->
       <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>
+          {{ 'common.actions' | translate }}
+        </th>
         <td mat-cell *matCellDef="let session">
           <button mat-icon-button [matMenuTriggerFor]="menu">
             <mat-icon>more_vert</mat-icon>
@@ -152,8 +160,7 @@
               <mat-icon>visibility</mat-icon>
               <span>{{ 'common.view' | translate }}</span>
             </button>
-            <button mat-menu-item (click)="revokeSession(session.id)" 
-                    [disabled]="!session.isActive">
+            <button mat-menu-item (click)="revokeSession(session.id)" [disabled]="!session.isActive">
               <mat-icon>block</mat-icon>
               <span>{{ 'session.revoke' | translate }}</span>
             </button>
@@ -163,7 +170,7 @@
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-      
+
       <tr class="mat-row" *matNoDataRow>
         <td class="mat-cell" [attr.colspan]="displayedColumns.length">
           <div class="no-data">
@@ -174,13 +181,8 @@
       </tr>
     </table>
 
-    <mat-paginator
-      [length]="total()"
-      [pageSize]="pageSize"
-      [pageIndex]="pageIndex"
-      [pageSizeOptions]="[10, 20, 50, 100]"
-      (page)="onPageChange($event)"
-      showFirstLastButtons>
+    <mat-paginator [length]="total()" [pageSize]="pageSize" [pageIndex]="pageIndex"
+      [pageSizeOptions]="[10, 20, 50, 100]" (page)="onPageChange($event)" showFirstLastButtons>
     </mat-paginator>
   </div>
 </div>

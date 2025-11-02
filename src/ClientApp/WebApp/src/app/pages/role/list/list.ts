@@ -39,17 +39,19 @@ import { RolePermissionsComponent } from '../permissions/permissions';
 })
 export class RoleListComponent implements OnInit {
   displayedColumns: string[] = ['select', 'name', 'description', 'createdTime', 'actions'];
-  
+
   // Use signals only for reactive template values
   dataSource = signal<RoleItemDto[]>([]);
   total = signal(0);
   selectedIds = signal<Set<string>>(new Set());
-  
-  // Regular properties for non-reactive values
+
+  // Regular properties for non-reactive values (non-signals)
   pageSize = 10;
   pageIndex = 0;
-  isLoading = false;
   searchText = '';
+
+  // Loading state as signal for proper template reactivity
+  isLoading = signal(false);
 
   // Computed
   allSelected = computed(() => {
@@ -70,15 +72,15 @@ export class RoleListComponent implements OnInit {
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private translate: TranslateService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadData();
   }
 
   loadData(): void {
-    this.isLoading = true;
-    
+  this.isLoading.set(true);
+
     this.api.roles.getRoles(
       this.searchText || null,
       null,
@@ -90,7 +92,7 @@ export class RoleListComponent implements OnInit {
       next: (res: PageList<RoleItemDto>) => {
         this.dataSource.set(res.data);
         this.total.set(res.count);
-        this.isLoading = false;
+  this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Failed to load roles:', error);
@@ -99,7 +101,7 @@ export class RoleListComponent implements OnInit {
           this.translate.instant('common.close'),
           { duration: 3000 }
         );
-        this.isLoading = false;
+  this.isLoading.set(false);
       }
     });
   }
@@ -118,7 +120,7 @@ export class RoleListComponent implements OnInit {
   toggleAll(): void {
     const data = this.dataSource();
     const selected = this.selectedIds();
-    
+
     if (this.allSelected()) {
       this.selectedIds.set(new Set());
     } else {
@@ -128,13 +130,13 @@ export class RoleListComponent implements OnInit {
 
   toggleSelection(id: string): void {
     const selected = new Set(this.selectedIds());
-    
+
     if (selected.has(id)) {
       selected.delete(id);
     } else {
       selected.add(id);
     }
-    
+
     this.selectedIds.set(selected);
   }
 
@@ -182,7 +184,7 @@ export class RoleListComponent implements OnInit {
   }
 
   viewDetail(id: string): void {
-    this.router.navigate(['/system-role', id]);
+    this.router.navigate(['/role', id]);
   }
 
   deleteRole(id: string): void {
@@ -236,7 +238,7 @@ export class RoleListComponent implements OnInit {
       if (result) {
         let deletedCount = 0;
         const totalCount = selected.size;
-        
+
         selected.forEach(id => {
           this.api.roles.deleteRole(id, false).subscribe({
             next: () => {

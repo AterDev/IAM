@@ -29,6 +29,21 @@ export class AuthService {
       this.isLogin = false;
     }
   }
+
+  isAuthenticated(): boolean {
+    return this.isLogin;
+  }
+
+  user(): { preferred_username?: string; name?: string } | null {
+    if (this.isLogin && this.userName) {
+      return {
+        preferred_username: this.userName,
+        name: this.userName
+      };
+    }
+    return null;
+  }
+
   logout(): void {
     localStorage.clear();
     this.isLogin = false;

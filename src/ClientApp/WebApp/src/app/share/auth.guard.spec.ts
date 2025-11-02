@@ -1,12 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { Router, ActivatedRouteSnapshot, RouterStateSnapshot, UrlTree } from '@angular/router';
 import { AuthGuard } from './auth.guard';
-import { OidcAuthService } from '../services/oidc-auth.service';
+import { AuthService } from '../services/auth.service';
 
 describe('AuthGuard', () => {
   let guard: AuthGuard;
   let router: Router;
-  let authService: OidcAuthService;
+  let authService: AuthService;
 
   beforeEach(() => {
     const authServiceMock = {
@@ -19,13 +19,13 @@ describe('AuthGuard', () => {
     TestBed.configureTestingModule({
       providers: [
         AuthGuard,
-        { provide: OidcAuthService, useValue: authServiceMock },
+        { provide: AuthService, useValue: authServiceMock },
         { provide: Router, useValue: routerMock }
       ]
     });
 
     guard = TestBed.inject(AuthGuard);
-    authService = TestBed.inject(OidcAuthService);
+    authService = TestBed.inject(AuthService);
     router = TestBed.inject(Router);
   });
 
@@ -57,7 +57,7 @@ describe('AuthGuard', () => {
     (authService.isAuthenticated as jest.Mock).mockReturnValue(false);
     const loginUrl = {} as UrlTree;
     (router.parseUrl as jest.Mock).mockReturnValue(loginUrl);
-    
+
     const route = {} as ActivatedRouteSnapshot;
     const state = { url: '/dashboard' } as RouterStateSnapshot;
 

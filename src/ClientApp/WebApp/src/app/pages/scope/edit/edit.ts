@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, Inject, signal } from '@angular/core';
 import { CommonModules, CommonFormModules } from 'src/app/share/shared-modules';
 import { FormBuilder, FormGroup, FormControl, Validators, FormArray } from '@angular/forms';
 import { MatDialogRef, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -11,6 +11,7 @@ import { ApiClient } from 'src/app/services/api/api-client';
 import { ScopeUpdateDto } from 'src/app/services/api/models/access-mod/scope-update-dto.model';
 import { ScopeDetailDto } from 'src/app/services/api/models/access-mod/scope-detail-dto.model';
 import { TranslateService } from '@ngx-translate/core';
+import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 
 @Component({
   selector: 'app-edit',
@@ -21,7 +22,8 @@ import { TranslateService } from '@ngx-translate/core';
     MatProgressSpinnerModule,
     MatChipsModule,
     MatIconModule,
-    MatCheckboxModule
+  MatCheckboxModule,
+  AppLoadingComponent
   ],
   templateUrl: './edit.html',
   styleUrls: ['./edit.scss']
@@ -29,7 +31,7 @@ import { TranslateService } from '@ngx-translate/core';
 export class ScopeEditComponent implements OnInit {
   scopeForm!: FormGroup;
   isSubmitting = false;
-  isLoading = true;
+  isLoading = signal(true);
   scope?: ScopeDetailDto;
 
   constructor(
@@ -62,7 +64,7 @@ export class ScopeEditComponent implements OnInit {
     this.api.scopes.getDetail(this.data.scopeId).subscribe({
       next: (scope) => {
         this.scope = scope;
-        
+
         scope.claims.forEach(claim => {
           this.claims.push(this.fb.control(claim));
         });
@@ -73,8 +75,8 @@ export class ScopeEditComponent implements OnInit {
           required: scope.required,
           emphasize: scope.emphasize
         });
-        
-        this.isLoading = false;
+
+  this.isLoading.set(false);
       },
       error: () => {
         this.snackBar.open(

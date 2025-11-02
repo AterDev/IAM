@@ -39,22 +39,22 @@ import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/
 })
 export class SessionListComponent implements OnInit {
   displayedColumns: string[] = ['select', 'sessionId', 'ipAddress', 'userAgent', 'loginTime', 'lastActivityTime', 'isActive', 'actions'];
-  
+
   dataSource = signal<LoginSessionItemDto[]>([]);
   total = signal(0);
   selectedIds = signal<Set<string>>(new Set());
-  
+
   pageSize = 10;
   pageIndex = 0;
-  isLoading = false;
-  
+  isLoading = signal(false);
+
   // Filter controls
   searchText = '';
   ipAddressFilter = '';
   isActiveFilter: boolean | null = true;
   startDateControl = new FormControl<Date | null>(null);
   endDateControl = new FormControl<Date | null>(null);
-  
+
   // Auto-refresh
   autoRefreshEnabled = false;
   autoRefreshInterval: any = null;
@@ -88,8 +88,8 @@ export class SessionListComponent implements OnInit {
   }
 
   loadData(): void {
-    this.isLoading = true;
-    
+  this.isLoading.set(true);
+
     this.api.security.getSessions(
       null,
       this.searchText || null,
@@ -104,7 +104,7 @@ export class SessionListComponent implements OnInit {
       next: (res: PageList<LoginSessionItemDto>) => {
         this.dataSource.set(res.data);
         this.total.set(res.count);
-        this.isLoading = false;
+  this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Failed to load sessions:', error);
@@ -113,7 +113,7 @@ export class SessionListComponent implements OnInit {
           this.translate.instant('common.close'),
           { duration: 3000 }
         );
-        this.isLoading = false;
+  this.isLoading.set(false);
       }
     });
   }
@@ -157,13 +157,13 @@ export class SessionListComponent implements OnInit {
   toggleSelectAll(): void {
     const data = this.dataSource();
     const selected = new Set(this.selectedIds());
-    
+
     if (this.allSelected()) {
       data.forEach(item => selected.delete(item.id));
     } else {
       data.forEach(item => selected.add(item.id));
     }
-    
+
     this.selectedIds.set(selected);
   }
 
@@ -218,7 +218,7 @@ export class SessionListComponent implements OnInit {
       if (result) {
         let completed = 0;
         let failed = 0;
-        
+
         selected.forEach(id => {
           this.api.security.revokeSession(id).subscribe({
             next: () => {
@@ -242,11 +242,11 @@ export class SessionListComponent implements OnInit {
   private showBatchResult(completed: number, failed: number): void {
     this.selectedIds.set(new Set());
     this.loadData();
-    
+
     const message = failed === 0
       ? this.translate.instant('session.revokeBatchSuccess', { count: completed })
       : this.translate.instant('session.revokeBatchPartial', { success: completed, failed });
-    
+
     this.snackBar.open(message, this.translate.instant('common.close'), { duration: 3000 });
   }
 
@@ -256,7 +256,7 @@ export class SessionListComponent implements OnInit {
 
   toggleAutoRefresh(): void {
     this.autoRefreshEnabled = !this.autoRefreshEnabled;
-    
+
     if (this.autoRefreshEnabled) {
       this.startAutoRefresh();
     } else {
@@ -281,7 +281,7 @@ export class SessionListComponent implements OnInit {
     if (!userAgent) {
       return '-';
     }
-    
+
     // Extract browser name and version
     if (userAgent.includes('Chrome')) {
       return 'Chrome';
@@ -292,7 +292,7 @@ export class SessionListComponent implements OnInit {
     } else if (userAgent.includes('Edge')) {
       return 'Edge';
     }
-    
+
     return userAgent.substring(0, 20) + '...';
   }
 }

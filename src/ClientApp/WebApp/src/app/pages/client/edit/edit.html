@@ -1,11 +1,9 @@
 <h2 mat-dialog-title>{{ 'client.editClient' | translate }}</h2>
 
 <mat-dialog-content>
-  <div *ngIf="isLoading" class="loading-container">
-    <mat-spinner></mat-spinner>
-  </div>
+  <app-loading *ngIf="isLoading()"></app-loading>
 
-  <form [formGroup]="clientForm" class="client-form" *ngIf="!isLoading">
+  <form [formGroup]="clientForm" class="client-form" *ngIf="!isLoading()">
     <mat-form-field appearance="outline">
       <mat-label>{{ 'client.displayName' | translate }}</mat-label>
       <input matInput formControlName="displayName" required>
@@ -45,7 +43,7 @@
         </button>
       </div>
       <mat-chip-set>
-        <mat-chip *ngFor="let uri of redirectUris.controls; let i = index" 
+        <mat-chip *ngFor="let uri of redirectUris.controls; let i = index"
                   (removed)="removeRedirectUri(i)">
           {{ uri.value }}
           <button matChipRemove>
@@ -67,7 +65,7 @@
         </button>
       </div>
       <mat-chip-set>
-        <mat-chip *ngFor="let uri of postLogoutRedirectUris.controls; let i = index" 
+        <mat-chip *ngFor="let uri of postLogoutRedirectUris.controls; let i = index"
                   (removed)="removePostLogoutRedirectUri(i)">
           {{ uri.value }}
           <button matChipRemove>
@@ -83,7 +81,7 @@
   <button mat-button (click)="onCancel()" [disabled]="isSubmitting">
     {{ 'common.cancel' | translate }}
   </button>
-  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="isSubmitting || isLoading">
+  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="isSubmitting || isLoading()">
     <mat-spinner *ngIf="isSubmitting" diameter="20"></mat-spinner>
     <span *ngIf="!isSubmitting">{{ 'common.save' | translate }}</span>
   </button>

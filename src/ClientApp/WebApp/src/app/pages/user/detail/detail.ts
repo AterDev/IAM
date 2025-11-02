@@ -10,6 +10,7 @@ import { ApiClient } from 'src/app/services/api/api-client';
 import { UserDetailDto } from 'src/app/services/api/models/identity-mod/user-detail-dto.model';
 import { UserEditComponent } from '../edit/edit';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
+import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 
 @Component({
   selector: 'app-detail',
@@ -18,7 +19,8 @@ import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/
     ...BaseMatModules,
     MatCardModule,
     MatProgressSpinnerModule,
-    MatChipsModule
+  MatChipsModule,
+  AppLoadingComponent
   ],
   templateUrl: './detail.html',
   styleUrls: ['./detail.scss']
@@ -26,8 +28,8 @@ import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/
 export class UserDetailComponent implements OnInit {
   // Keep signals only for template-reactive values
   user = signal<UserDetailDto | null>(null);
-  
-  isLoading = false;
+
+  isLoading = signal(false);
   userId?: string;
 
   constructor(
@@ -46,16 +48,16 @@ export class UserDetailComponent implements OnInit {
   }
 
   loadUser(): void {
-    this.isLoading = true;
+  this.isLoading.set(true);
     this.api.users.getDetail(this.userId!).subscribe({
       next: (user) => {
-        this.user.set(user);
-        this.isLoading = false;
+  this.user.set(user);
+  this.isLoading.set(false);
       },
       error: () => {
-        this.isLoading = false;
+  this.isLoading.set(false);
         this.snackBar.open('Failed to load user', 'Close', { duration: 3000 });
-        this.router.navigate(['/system-user']);
+        this.router.navigate(['/user']);
       }
     });
   }
@@ -80,7 +82,7 @@ export class UserDetailComponent implements OnInit {
     }
 
     const lockoutEnd = user.lockoutEnabled ? null : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
-    
+
     this.api.users.updateStatus(this.userId!, lockoutEnd as any).subscribe({
       next: () => {
         this.snackBar.open(
@@ -115,7 +117,7 @@ export class UserDetailComponent implements OnInit {
         this.api.users.deleteUser(this.userId!, false).subscribe({
           next: () => {
             this.snackBar.open('User deleted successfully', 'Close', { duration: 3000 });
-            this.router.navigate(['/system-user']);
+            this.router.navigate(['/user']);
           },
           error: () => {
             this.snackBar.open('Failed to delete user', 'Close', { duration: 3000 });
@@ -126,6 +128,6 @@ export class UserDetailComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/system-user']);
+    this.router.navigate(['/user']);
   }
 }

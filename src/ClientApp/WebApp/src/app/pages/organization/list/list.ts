@@ -32,8 +32,8 @@ export class OrganizationListComponent implements OnInit {
   dataSource = new MatTreeNestedDataSource<OrganizationTreeDto>();
   // Keep signals for template-reactive values
   selectedNode = signal<OrganizationTreeDto | null>(null);
-  
-  isLoading = false;
+
+  isLoading = signal(false);
 
   constructor(
     private api: ApiClient,
@@ -46,16 +46,16 @@ export class OrganizationListComponent implements OnInit {
   }
 
   loadTree(): void {
-    this.isLoading = true;
+  this.isLoading.set(true);
     this.api.organizations.getTree(null).subscribe({
       next: (tree) => {
         this.dataSource.data = tree;
-        this.isLoading = false;
+  this.isLoading.set(false);
         // Expand root nodes by default
         tree.forEach(node => this.treeControl.expand(node));
       },
       error: () => {
-        this.isLoading = false;
+  this.isLoading.set(false);
         this.snackBar.open('Failed to load organization tree', 'Close', { duration: 3000 });
       }
     });
@@ -97,7 +97,7 @@ export class OrganizationListComponent implements OnInit {
 
   deleteNode(node: OrganizationTreeDto, event: Event): void {
     event.stopPropagation();
-    
+
     if (node.children && node.children.length > 0) {
       this.snackBar.open('Cannot delete organization with children', 'Close', { duration: 3000 });
       return;

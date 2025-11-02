@@ -32,13 +32,13 @@ import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/
 })
 export class ScopeListComponent implements OnInit {
   displayedColumns: string[] = ['name', 'displayName', 'required', 'emphasize', 'description', 'actions'];
-  
+
   dataSource = signal<ScopeItemDto[]>([]);
   total = signal(0);
-  
+
   pageSize = 10;
   pageIndex = 0;
-  isLoading = false;
+  isLoading = signal(false);
   searchText = '';
   requiredFilter: boolean | null = null;
 
@@ -48,15 +48,15 @@ export class ScopeListComponent implements OnInit {
     private translate: TranslateService,
     private dialog: MatDialog,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadData();
   }
 
   loadData(): void {
-    this.isLoading = true;
-    
+    this.isLoading.set(true);
+
     this.api.scopes.getScopes(
       this.searchText || null,
       this.searchText || null,
@@ -68,7 +68,7 @@ export class ScopeListComponent implements OnInit {
       next: (res: PageList<ScopeItemDto>) => {
         this.dataSource.set(res.data);
         this.total.set(res.count);
-        this.isLoading = false;
+        this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Failed to load scopes:', error);
@@ -77,7 +77,7 @@ export class ScopeListComponent implements OnInit {
           this.translate.instant('common.close'),
           { duration: 3000 }
         );
-        this.isLoading = false;
+        this.isLoading.set(false);
       }
     });
   }
@@ -111,7 +111,8 @@ export class ScopeListComponent implements OnInit {
 
   openAddDialog(): void {
     const dialogRef = this.dialog.open(ScopeAddComponent, {
-      width: '600px'
+      width: '600px',
+      maxHeight: '90vh'
     });
 
     dialogRef.afterClosed().subscribe(result => {

@@ -112,7 +112,7 @@ export class Login implements OnInit, AfterViewInit {
       // Save login state via AuthService
       if (response && response.accessToken) {
         this.authService.saveLoginState(response.user?.userName || username, response.accessToken);
-        this.router.navigate(['/system-user']);
+        this.router.navigate(['/user']);
       } else {
         this.errorMessage = this.translate.instant('login.failed');
       }

@@ -20,11 +20,9 @@
     </div>
   </div>
 
-  <div *ngIf="isLoading" class="loading-container">
-    <mat-spinner></mat-spinner>
-  </div>
+  <app-loading *ngIf="isLoading()" [diameter]="50"></app-loading>
 
-  <mat-card *ngIf="!isLoading && user()">
+  <mat-card *ngIf="!isLoading() && user()">
     <mat-card-header>
       <mat-card-title>{{ 'user.basicInfo' | translate }}</mat-card-title>
     </mat-card-header>
