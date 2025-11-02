@@ -1,282 +1,310 @@
-# 说明
+# IAM 身份与访问管理系统
 
-`ater.web.template` 项目模板的使用提供文档支持。
+基于 .NET 和 Angular 的开箱即用的身份认证与授权解决方案，实现 OAuth 2.0 和 OpenID Connect (OIDC) 标准协议。
 
-## 根目录
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![.NET](https://img.shields.io/badge/.NET-9.0-purple.svg)](https://dotnet.microsoft.com/)
+[![Angular](https://img.shields.io/badge/Angular-20-red.svg)](https://angular.dev/)
 
-- docs: 项目文档存储目录
-- scripts： 项目脚本文件目录
-- src：项目代码目录
-- samples：集成测试示例项目目录
-- tests：测试项目目录
-- .config：配置文件目录
+## 🌟 核心特性
 
-## 代码目录src
+### OAuth 2.0 / OpenID Connect
+- ✅ **完整的OAuth 2.0流程**
+  - 授权码流程（Authorization Code）+ PKCE
+  - 客户端凭证流程（Client Credentials）
+  - 密码流程（Resource Owner Password）
+  - 刷新令牌流程（Refresh Token）
+  - 设备授权流程（Device Code）
 
-* `src/Ater/Ater.Common`: 基础类库，提供基础帮助类。
-* `src/Definition/ServiceDefaults`: 是提供基础的服务注入的项目。
-* `src/Definition/Entity`: 包含所有的实体模型，按模块目录组织。
-* `src/Definition/EntityFramework`: 基于Entity Framework Core的数据库上下文
-* `src/Modules/`: 包含各个模块的程序集，主要用于业务逻辑实现
-* `src/Modules/XXXMod/Managers`: 各模块下，实际实现业务逻辑的目录
-* `src/Modules/XXXMod/Models`: 各模块下，Dto模型定义，按实体目录组织
-* `src/Services/ApiService`: 是接口服务项目，基于ASP.NET Core Web API
-* `src/Services/AdminService`: 后台管理服务接口项目
+- ✅ **OIDC标准端点**
+  - Discovery文档 (`/.well-known/openid-configuration`)
+  - JWKS公钥端点 (`/.well-known/jwks`)
+  - UserInfo端点 (`/connect/userinfo`)
+  - 授权、令牌、撤销、自省、登出端点
 
-## 测试目录tests
+### 身份与访问管理
+- ✅ **用户管理** - 用户注册、认证、状态管理
+- ✅ **角色管理** - 基于角色的访问控制（RBAC）
+- ✅ **组织管理** - 多层级组织架构
+- ✅ **应用管理** - OAuth客户端注册与配置
+- ✅ **作用域管理** - API权限和资源定义
+- ✅ **会话管理** - 活跃会话监控与强制登出
+- ✅ **审计日志** - 完整的操作审计追踪
 
-* `tests/Share.Tests.csproj`: 单元测试项目，包含业务逻辑单元测试
-* `tests/Integration/`: 集成测试项目，使用TestServer进行端到端测试
-  - OAuth/OIDC认证授权流程测试
-  - 用户、角色、客户端CRUD操作测试
-  - API端点集成测试
+### 安全特性
+- ✅ JWT访问令牌（RS256签名）
+- ✅ PKCE防止授权码拦截
+- ✅ 客户端密钥哈希存储
+- ✅ 令牌自省与撤销
+- ✅ 签名密钥轮换支持
+- ✅ 防重放攻击保护
 
-## 示例项目samples
+### 管理门户
+- ✅ 现代化Web管理界面（Angular 20 + Material Design）
+- ✅ 用户、角色、组织可视化管理
+- ✅ OAuth应用配置界面
+- ✅ 会话监控与审计日志查看
+- ✅ 中英文双语支持
+- ✅ 响应式设计
 
-* `samples/backend-dotnet/`: ASP.NET Core后端示例项目
-  - 演示如何使用JWT Bearer认证
-  - 集成IAM进行令牌验证
-  - 提供受保护的API端点
-* `samples/frontend-angular/`: Angular前端示例项目
-  - 演示OAuth 2.0/OIDC认证流程
-  - 使用angular-auth-oidc-client库
-  - 自动令牌管理和刷新
-  - 受保护路由和API调用
+## 📚 文档
 
-详细信息请参阅：
-- [集成测试文档](docs/integration-testing.md)
-- [示例项目文档](samples/README.md)
+- [IAM解决方案设计文档](docs/IAM解决方案设计文档.md)
+- [IAM开发任务规划](docs/tasks/iam-development-plan.md)
+- [开发指南](docs/DEVELOPMENT-GUIDE.md) - 详细的开发规范和约定
+- [未实现功能分析](docs/MISSING-FEATURES-ANALYSIS.md)
+- [OAuth实现文档](docs/oauth-implementation.md)
+- [OAuth安全分析](docs/oauth-security-analysis.md)
 - [API文档](docs/api-documentation.md)
+- [集成测试文档](docs/integration-testing.md)
+- [快速开始指南](docs/quick-start.md)
 
-> [!NOTE]
-> 这里不存在基于`模块`的开发，也没有这个概念。这里的模块是基于业务上的划分，将相应的业务实现在代码上进行拆分，实现关注点分离。
+### 用户文档
+- [用户操作手册](src/ClientApp/WebApp/docs/USER-MANUAL.md)
+- [管理员操作手册](src/ClientApp/WebApp/docs/ADMIN-MANUAL.md)
+- [部署指南](src/ClientApp/WebApp/docs/DEPLOYMENT-GUIDE.md)
+- [测试指南](src/ClientApp/WebApp/docs/TESTING-GUIDE.md)
 
-# 规范及约定
+## 🚀 快速开始
 
-## EF模型定义
+### 环境要求
+- .NET 9.0 SDK
+- Node.js 20+ / pnpm 9+
+- PostgreSQL 14+
+- Redis（可选，用于缓存）
 
-遵循`Entity Framework Core`的官方文档，对模型及关联关系进行定义。
+### 后端启动
 
-- 不同模块的实体要以模块名称(XXXMod)分文件夹，且命名空间要对应。
-- 所有模型属性需要注释，所有枚举都要添加[Description]特性说明
-- 实体模型类需要继承自`EntityBase`
-- 对于只关联于实体自身的属性，优先考虑使用ToJson映射，而不是单独建表，包括简单数组属性。
+```bash
+# 克隆仓库
+git clone https://github.com/AterDev/IAM.git
+cd IAM
 
-## 业务Manager
+# 配置数据库连接
+# 编辑 src/Services/ApiService/appsettings.Development.json
 
-通过`Manager`来定义和管理业务方法，模板中提供`ManagerBase`类作为默认实现。
+# 运行数据库迁移
+cd src/Services/MigrationService
+dotnet run
 
-## 接口请求与返回
-
-整体以RESTful风格为标准。
-
-控制器方法命名简单一致，如添加用户，直接使用AddAsync，而不是AddUserAsync，如:
-
-- 添加/创建: AddAsync
-- 修改/更新: UpdateAsync
-- 删除: DeleteAsync
-- 查询详情: GetDetailAsync
-- 筛选查询: FilterAsync
-
-### 请求方式
-
-- GET，获取数据时使用GET，复杂的筛选和条件查询，可改用POST方式传递参数。
-- POST，添加数据时使用POST。主体参数使用JSON格式。
-- PUT，修改数据时使用PUT。主体参数使用JSON格式。
-- DELETE，删除数据时使用DELETE。
-
-### 请求返回
-
-返回以HTTP状态码为准。
-
-- 200，执行成功。
-- 201，创建成功。
-- 401，未验证，没有传递token或token已失效。需要重新获取token(登录)。
-- 403，禁止访问，指已登录的用户但没有权限访问。
-- 404，请求的资源不存在。
-- 409，资源冲突。
-- 500，错误返回，服务器出错或业务错误封装。
-
-接口请求成功时， 前端可直接获取数据。
-
-接口请求失败时，返回统一的错误格式。
-
-前端根据HTTP状态码判断请求是否成功，然后获取数据。
-
-错误返回的格式如下：
-
-```json
-{
-  "title": "",
-  "status": 500,
-  "detail": "未知的错误！",
-  "traceId": "00-d768e1472decd92538cdf0a2120c6a31-a9d7310446ea4a3f-00"
-}
+# 启动API服务
+cd ../ApiService
+dotnet run
 ```
 
-### ASP.NET Core 请求返回示例
+API将在 `https://localhost:5001` 启动
 
-1. 路由定义，约定使用HTTP谓词，不使用Route。
-请参见 [**HTTP谓词模板**](https://docs.microsoft.com/zh-cn/aspnet/core/mvc/controllers/routing?view=aspnetcore-6.0#http-verb-templates)。
-2. **模型绑定**，可使用`[Frombody]`以及`[FromRoute]`指明请求来源，
-参见[**请求来源**](https://docs.microsoft.com/zh-cn/aspnet/core/mvc/models/model-binding?view=aspnetcore-6.0#sources)，如：
+### 前端启动
+
+```bash
+cd src/ClientApp/WebApp
+
+# 安装依赖
+pnpm install
+
+# 启动开发服务器
+pnpm start
+```
+
+管理门户将在 `http://localhost:4200` 启动
+
+默认管理员账号：
+- 用户名: `admin`
+- 密码: `Admin@123`
+
+### Docker部署
+
+```bash
+# 构建镜像
+docker-compose build
+
+# 启动服务
+docker-compose up -d
+```
+
+## 📁 项目结构
+
+```
+IAM/
+├── src/
+│   ├── Ater/                    # 基础类库
+│   │   ├── Ater.Common/         # 通用帮助类
+│   │   ├── Ater.Web.Convention/ # Web约定
+│   │   └── Ater.Web.Extension/  # Web扩展
+│   ├── Definition/              # 定义层
+│   │   ├── Entity/              # 实体模型
+│   │   ├── EntityFramework/     # EF Core上下文
+│   │   ├── ServiceDefaults/     # 服务默认配置
+│   │   └── Share/               # 共享服务
+│   ├── Modules/                 # 业务模块
+│   │   ├── CommonMod/           # 公共模块
+│   │   ├── IdentityMod/         # 身份认证模块
+│   │   └── AccessMod/           # 访问控制模块
+│   ├── Services/                # 服务层
+│   │   ├── ApiService/          # API服务
+│   │   └── MigrationService/    # 数据库迁移服务
+│   └── ClientApp/               # 前端应用
+│       └── WebApp/              # Angular管理门户
+├── tests/                       # 测试项目
+│   └── Integration/             # 集成测试
+├── samples/                     # 示例项目
+│   ├── backend-dotnet/          # .NET后端集成示例
+│   └── frontend-angular/        # Angular前端集成示例
+├── docs/                        # 文档
+└── scripts/                     # 脚本工具
+```
+
+### 核心模块说明
+
+#### IdentityMod（身份认证模块）
+- **Managers**: AuthorizationManager, TokenManager, DeviceFlowManager, DiscoveryManager
+- **功能**: OAuth/OIDC流程实现、令牌管理、用户认证
+
+#### AccessMod（访问控制模块）
+- **Managers**: ClientManager, ScopeManager, ResourceManager
+- **功能**: 客户端管理、作用域配置、API资源定义
+
+#### CommonMod（公共模块）
+- **Managers**: AuditLogManager, SystemSettingManager
+- **功能**: 审计日志、系统配置、密钥管理
+
+## 🔧 技术栈
+
+### 后端
+- **框架**: ASP.NET Core 9.0
+- **ORM**: Entity Framework Core
+- **数据库**: PostgreSQL
+- **认证**: JWT Bearer
+- **文档**: Swagger/OpenAPI
+
+### 前端
+- **框架**: Angular 20 (Standalone Components)
+- **UI**: Angular Material
+- **状态**: Signals
+- **国际化**: ngx-translate
+- **测试**: Jest + Playwright
+
+## 🧪 测试
+
+### 后端测试
+```bash
+cd tests/Integration
+dotnet test
+```
+
+### 前端测试
+```bash
+cd src/ClientApp/WebApp
+
+# 单元测试
+pnpm test
+
+# E2E测试
+pnpm e2e
+
+# 覆盖率
+pnpm test:coverage
+```
+
+## 📖 开发规范
+
+### 实体定义
+- 继承 `EntityBase`
+- 使用 `[Module]` 特性标注所属模块
+- 所有属性添加XML注释
+
+### DTO模型
+- 按实体组织目录：`XxxDtos/`
+- 命名规范：`XxxAddDto`, `XxxUpdateDto`, `XxxItemDto`, `XxxDetailDto`, `XxxFilterDto`
+
+### Manager层
+- 继承 `ManagerBase<TEntity>`
+- 实现业务逻辑，不直接调用其他Manager
+- 公共逻辑放在 `CommonMod`
+
+### Controller层
+- 继承 `RestControllerBase<TEntity>`
+- RESTful风格接口
+- 方法命名：`AddAsync`, `UpdateAsync`, `DeleteAsync`, `GetDetailAsync`, `FilterAsync`
+
+详见 [编码规范](src/ClientApp/WebApp/docs/CODING-STANDARDS.md)
+
+## 🔐 安全最佳实践
+
+1. **密钥管理**
+   - 定期轮换签名密钥
+   - 使用环境变量存储敏感配置
+   - 客户端密钥使用哈希存储
+
+2. **令牌安全**
+   - 使用短期访问令牌（15分钟）
+   - 实现刷新令牌轮换
+   - 启用令牌撤销
+
+3. **PKCE**
+   - 所有公共客户端强制PKCE
+   - 使用S256挑战方法
+
+4. **速率限制**
+   - 登录端点限流
+   - 令牌端点限流
+   - IP黑名单
+
+## 🤝 示例集成
+
+### .NET后端集成
+参见 [samples/backend-dotnet/](samples/backend-dotnet/)
 
 ```csharp
-// 修改信息
-[HttpPut("{id}")]
-public async Task<ActionResult<TEntity?>> UpdateAsync([FromRoute] Guid id, TUpdate form)
+// 配置JWT认证
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = "https://your-iam-server";
+        options.Audience = "your-api";
+    });
 ```
 
-1. 关于返回类型，请使用[ActionResult&#60;T&#62;或特定类型](https://docs.microsoft.com/zh-cn/aspnet/core/web-api/action-return-types?view=aspnetcore-6.0#actionresult-vs-iactionresult)作为返回类型。
+### Angular前端集成
+参见 [samples/frontend-angular/](samples/frontend-angular/)
 
-- 正常返回，可直接返回特定类型数据。
-- 错误返回,使用Problem()，如：
-
-```csharp
-// 如果错误，使用Problem返回内容
-return Problem("未知的错误！", title: "业务错误");
+```typescript
+// 配置OIDC客户端
+export const authConfig: AuthConfig = {
+  issuer: 'https://your-iam-server',
+  clientId: 'your-client-id',
+  redirectUri: window.location.origin + '/callback',
+  scope: 'openid profile email',
+  responseType: 'code',
+  usePkce: true
+};
 ```
 
-- 404，使用NotFound()，如：
+## 📋 待实现功能
 
-```csharp
-// 如果不存在，返回404
-return NotFound("用户名密码不存在");
-```
+详见 [未实现功能分析](docs/MISSING-FEATURES-ANALYSIS.md)
 
-# 业务实现
+**高优先级**：
+- [ ] 刷新令牌自动轮换
+- [ ] 速率限制和防暴力破解
+- [ ] 多因子认证（MFA）
 
-## 定义实体模型
+**中优先级**：
+- [ ] 外部身份提供商集成（Google, Microsoft等）
+- [ ] 完善的用户同意管理
+- [ ] 密钥自动轮换
 
-遵循`Entity Framework Core`的官方文档，对模型及关联关系进行定义。
+## 📄 License
 
-## 生成基础代码
+本项目采用 [MIT License](LICENSE) 开源协议。
 
-使用`dry api`生成基础的`DTO`,`Manager`,`Controller`等基础代码。
+## 🙏 致谢
 
-## 实现自定义业务逻辑
->
-> 默认的`Manager`继承了`ManagerBase`类，实现了常见的业务逻辑。
-默认实现的新增和修改，会直接调用`SaveChangesAsync()`，提交数据库更改。
-如果你想更改此行为，可在构造方法中覆盖`AutoSave`属性。
->
->``` csharp
->/// <summary>
->/// 是否自动保存(调用SaveChangesAsync)
->/// </summary>
->public bool AutoSave { get; set; } = true;
->```
+基于 [Ater.Web.Template](https://github.com/AterDev/ater.web) 项目模板构建。
 
-在`Manager`中实现自定义业务，通常包括 `筛选查询`,`添加实体`,`更新实体`.
+---
 
-### 筛选查询
+**项目状态**: ✅ 生产就绪（测试/开发环境）  
+**维护者**: [@AterDev](https://github.com/AterDev)  
+**最后更新**: 2025-11-02
 
-构建自定义查询条件的步骤：
-
-1. 构造自定义查询条件`Queryable`，可使用`WhereNotNull`扩展方法.
-2. 调用`ToPageAsync<TFilter,TItem>`方法获取结果.
-
-代码示例：
-
-```csharp
-
-public async Task<PageList<FolderItemDto>> ToPageAsync(FolderFilterDto filter)
-{
-    Queryable = Queryable
-        .WhereNotNull(filter.Name, q => q.Name == filter.Name)
-        .WhereNotNull(filter.ParentId, q => q.ParentId == filter.ParentId);
-
-    return await ToPageAsync<FolderFilterDto, FolderItemDto>(filter);
-}
-```
-
-### 新增实体
-
-代码示例:
-
-Manager:
-
-```csharp
-public async Task<Guid?> AddAsync(FolderAddDto dto)
-{
-    Folder entity = dto.MapTo<Folder>();
-    return await AddAsync(entity) ? entity.Id : null;
-}
-```
-
-Controller:
-```csharp
-[HttpPost]
-public async Task<ActionResult<Guid?>> AddAsync(SystemUserAddDto dto)
-{
-    var id = await _manager.AddAsync(dto);
-    return id == null ? base.Problem(Localizer.AddFailed) : id;
-}
-```
-
-### 更新实体
-
-`Manager`提供了`GetCurrentAsync`方法来获取当前实体。
-
-在控制器中，会先获取实体，如果不存在，则直接返回`404`。
-
-代码示例:
-
-Manager:
-```csharp
-public async Task<bool> UpdateAsync(Folder entity, FolderUpdateDto dto)
-{
-    entity.Merge(dto);
-    return await UpdateAsync(entity);
-}
-```
-
-Controller:
-
-```csharp
-[HttpPatch("{id}")]
-public async Task<ActionResult<bool?>> UpdateAsync([FromRoute] Guid id, SystemUserUpdateDto dto)
-{
-    SystemUser? current = await _manager.GetCurrentAsync(id);
-    return current == null
-        ? base.NotFound(Localizer.NotFoundResource)
-        : await base._manager.UpdateAsync(current, dto);
-}
-```
-
-### 详情查询
-
-`Manager`提供了默认的详情查询方法，可直接传递查询条件:
-`public async Task<TDto?> FindAsync<TDto>(Expression<Func<TEntity, bool>>? whereExp = null){}`
-
-若自定义查询，如查询关联的内容，需要添加新的方法来实现.
-
-代码示例:
-
-```csharp
-[HttpGet("{id}")]
-public async Task<ActionResult<SystemUserDetailDto?>> GetDetailAsync([FromRoute] Guid id)
-{
-    var res =  await _manager.FindAsync<SystemUserDetailDto>(u => u.Id == id)
-    return res == null ? NotFound() : res;
-}
-```
-
-### 删除处理
-
-删除默认为软删除，如果想修改该行为.
-
-Manager会封装获取要被删除的实体对象的逻辑(仅能删除拥有的实体，如用户或应用权限范围)，通常命名为`GetOwnedAsync`.
-
-删除默认支持批量删除.
-
-```csharp
- [HttpDelete("{id}")]
-public async Task<ActionResult<bool?>> DeleteAsync([FromRoute] Guid id)
-{
-    // 注意删除权限
-    SystemUser? entity = await _manager.GetOwnedAsync(id);
-    return entity == null ? NotFound() : await _manager.DeleteAsync([id], false);
-}
-
-```
