@@ -6,12 +6,12 @@ namespace IdentityMod.Services;
 /// <summary>
 /// Service for OAuth/OIDC operations
 /// </summary>
-public class OAuthService(ILogger<OAuthService> logger)
+public class OAuthService()
 {
     /// <summary>
     /// Validate PKCE challenge
     /// </summary>
-    public bool ValidatePkce(string verifier, string challenge, string method)
+    public static bool ValidatePkce(string verifier, string challenge, string method)
     {
         if (method == CodeChallengeMethods.Plain)
         {
@@ -21,7 +21,8 @@ public class OAuthService(ILogger<OAuthService> logger)
         {
             using var sha256 = SHA256.Create();
             var hash = sha256.ComputeHash(Encoding.ASCII.GetBytes(verifier));
-            var computed = Convert.ToBase64String(hash)
+            var computed = Convert
+                .ToBase64String(hash)
                 .TrimEnd('=')
                 .Replace('+', '-')
                 .Replace('/', '_');
@@ -34,28 +35,22 @@ public class OAuthService(ILogger<OAuthService> logger)
     /// <summary>
     /// Generate authorization code
     /// </summary>
-    public string GenerateAuthorizationCode()
+    public static string GenerateAuthorizationCode()
     {
         var bytes = new byte[32];
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(bytes);
-        return Convert.ToBase64String(bytes)
-            .TrimEnd('=')
-            .Replace('+', '-')
-            .Replace('/', '_');
+        return Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
     }
 
     /// <summary>
     /// Generate token reference
     /// </summary>
-    public string GenerateTokenReference()
+    public static string GenerateTokenReference()
     {
         var bytes = new byte[32];
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(bytes);
-        return Convert.ToBase64String(bytes)
-            .TrimEnd('=')
-            .Replace('+', '-')
-            .Replace('/', '_');
+        return Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
     }
 }

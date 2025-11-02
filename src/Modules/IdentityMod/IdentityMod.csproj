@@ -12,6 +12,5 @@
     </ItemGroup>
     <ItemGroup>
         <Folder Include="Managers\" />
-        <Folder Include="Models\" />
     </ItemGroup>
 </Project>

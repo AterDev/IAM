@@ -9,16 +9,16 @@
         "children": [
             {
                 "name": "menu.systemRole",
-                "path": "/system-role",
-                "accessCode": "system-role",
+                "path": "/role",
+                "accessCode": "role",
                 "icon": "groups",
                 "sort": 0,
                 "menuType": 0
             },
             {
                 "name": "menu.systemUser",
-                "path": "/system-user",
-                "accessCode": "system-user",
+                "path": "/user",
+                "accessCode": "user",
                 "icon": "manage_accounts",
                 "sort": 1,
                 "menuType": 0
@@ -57,16 +57,16 @@
             },
             {
                 "name": "menu.systemLogs",
-                "path": "/system-logs",
-                "accessCode": "system-logs",
+                "path": "/logs",
+                "accessCode": "logs",
                 "icon": "manage_search",
                 "sort": 6,
                 "menuType": 0
             },
             {
                 "name": "menu.systemConfig",
-                "path": "/system-config",
-                "accessCode": "system-config",
+                "path": "/config",
+                "accessCode": "config",
                 "icon": "settings",
                 "sort": 7,
                 "menuType": 0

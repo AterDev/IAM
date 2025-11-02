@@ -1,30 +1,27 @@
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
 using IdentityMod.Models.OAuthDtos;
 using IdentityMod.Services;
-
 
 namespace IdentityMod.Managers;
 
 /// <summary>
 /// Manager for OAuth/OIDC authorization operations
 /// </summary>
-public class AuthorizationManager(DefaultDbContext dbContext, ILogger<AuthorizationManager> logger, OAuthService oAuthService) : ManagerBase<DefaultDbContext>(dbContext, logger)
+public class AuthorizationManager(DefaultDbContext dbContext, ILogger<AuthorizationManager> logger)
+    : ManagerBase<DefaultDbContext>(dbContext, logger)
 {
-    private readonly OAuthService _oAuthService = oAuthService;
-
     /// <summary>
     /// Validate authorization request
     /// </summary>
-    public async Task<(bool isValid, string? error, Client? client)> ValidateAuthorizationRequestAsync(
-        AuthorizeRequestDto request
-    )
+    public async Task<(
+        bool isValid,
+        string? error,
+        Client? client
+    )> ValidateAuthorizationRequestAsync(AuthorizeRequestDto request)
     {
         // Validate client
-        var client = await _dbContext.Clients
-            .Include(c => c.ClientScopes)
-                .ThenInclude(cs => cs.Scope)
+        var client = await _dbContext
+            .Clients.Include(c => c.ClientScopes)
+            .ThenInclude(cs => cs.Scope)
             .FirstOrDefaultAsync(c => c.ClientId == request.ClientId);
 
         if (client == null)
@@ -39,9 +36,16 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
         }
 
         // Validate response type
-        var supportedResponseTypes = new[] { ResponseTypes.Code, ResponseTypes.Token, ResponseTypes.IdToken };
-        if (string.IsNullOrEmpty(request.ResponseType) ||
-            !supportedResponseTypes.Contains(request.ResponseType.Split(' ')[0]))
+        var supportedResponseTypes = new[]
+        {
+            ResponseTypes.Code,
+            ResponseTypes.Token,
+            ResponseTypes.IdToken,
+        };
+        if (
+            string.IsNullOrEmpty(request.ResponseType)
+            || !supportedResponseTypes.Contains(request.ResponseType.Split(' ')[0])
+        )
         {
             return (false, ErrorCodes.UnsupportedResponseType, client);
         }
@@ -55,8 +59,10 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
             }
 
             var supportedMethods = new[] { CodeChallengeMethods.Plain, CodeChallengeMethods.S256 };
-            if (!string.IsNullOrEmpty(request.CodeChallengeMethod) &&
-                !supportedMethods.Contains(request.CodeChallengeMethod))
+            if (
+                !string.IsNullOrEmpty(request.CodeChallengeMethod)
+                && !supportedMethods.Contains(request.CodeChallengeMethod)
+            )
             {
                 return (false, ErrorCodes.InvalidRequest, client);
             }
@@ -70,7 +76,11 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
 
             foreach (var scope in requestedScopes)
             {
-                if (!clientScopeNames.Contains(scope) && scope != Scopes.OpenId && scope != Scopes.Profile)
+                if (
+                    !clientScopeNames.Contains(scope)
+                    && scope != Scopes.OpenId
+                    && scope != Scopes.Profile
+                )
                 {
                     return (false, ErrorCodes.InvalidScope, client);
                 }
@@ -93,7 +103,7 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
         string? nonce
     )
     {
-        var code = _oAuthService.GenerateAuthorizationCode();
+        var code = OAuthService.GenerateAuthorizationCode();
 
         // Create authorization record
         var authorization = new Authorization
@@ -105,13 +115,15 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
             Scopes = scope,
             CreationDate = DateTimeOffset.UtcNow,
             ExpirationDate = DateTimeOffset.UtcNow.AddMinutes(10),
-            Properties = System.Text.Json.JsonSerializer.Serialize(new
-            {
-                redirect_uri = redirectUri,
-                code_challenge = codeChallenge,
-                code_challenge_method = codeChallengeMethod,
-                nonce
-            })
+            Properties = System.Text.Json.JsonSerializer.Serialize(
+                new
+                {
+                    redirect_uri = redirectUri,
+                    code_challenge = codeChallenge,
+                    code_challenge_method = codeChallengeMethod,
+                    nonce,
+                }
+            ),
         };
 
         await _dbContext.Authorizations.AddAsync(authorization);
@@ -124,9 +136,11 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
             Type = TokenTypes.AuthorizationCode,
             Status = TokenStatuses.Valid,
             SubjectId = subjectId,
-            Payload = System.Text.Json.JsonSerializer.Serialize(new { authorization_id = authorization.Id }),
+            Payload = System.Text.Json.JsonSerializer.Serialize(
+                new { authorization_id = authorization.Id }
+            ),
             CreationDate = DateTimeOffset.UtcNow,
-            ExpirationDate = DateTimeOffset.UtcNow.AddMinutes(10)
+            ExpirationDate = DateTimeOffset.UtcNow.AddMinutes(10),
         };
 
         await _dbContext.Tokens.AddAsync(token);
@@ -145,13 +159,13 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
         string? codeVerifier
     )
     {
-        var token = await _dbContext.Tokens
-            .Include(t => t.Authorization)
-                .ThenInclude(a => a!.Client)
+        var token = await _dbContext
+            .Tokens.Include(t => t.Authorization)
+            .ThenInclude(a => a!.Client)
             .FirstOrDefaultAsync(t =>
-                t.ReferenceId == code &&
-                t.Type == TokenTypes.AuthorizationCode &&
-                t.Status == TokenStatuses.Valid
+                t.ReferenceId == code
+                && t.Type == TokenTypes.AuthorizationCode
+                && t.Status == TokenStatuses.Valid
             );
 
         if (token == null || token.Authorization == null)
@@ -191,7 +205,11 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
                 return (false, null);
             }
 
-            var isValidPkce = _oAuthService.ValidatePkce(codeVerifier, codeChallenge, codeChallengeMethod ?? CodeChallengeMethods.Plain);
+            var isValidPkce = OAuthService.ValidatePkce(
+                codeVerifier,
+                codeChallenge,
+                codeChallengeMethod ?? CodeChallengeMethods.Plain
+            );
             if (!isValidPkce)
             {
                 return (false, null);
