@@ -2,6 +2,7 @@
   <Folder Name="/config/">
     <File Path=".config/dotnet-tools.json" />
     <File Path=".editorconfig" />
+    <File Path=".github/agents/ater-agent.md" />
     <File Path=".github/copilot-instructions.md" />
     <File Path="Directory.Packages.props" />
   </Folder>
