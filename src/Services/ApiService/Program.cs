@@ -20,6 +20,19 @@ builder.AddIdentityModMod();
 // Web中间件服务:route, openapi, jwt, cors, auth, rateLimiter etc.
 builder.AddMiddlewareServices();
 
+// Add session support for OAuth pages
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+});
+
+// Add Razor Pages for OAuth UI (login, consent, logout)
+builder.Services.AddRazorPages();
+
 builder
     .Services.AddAuthorizationBuilder()
     .AddPolicy(
@@ -40,7 +53,13 @@ WebApplication app = builder.Build();
 
 app.MapDefaultEndpoints();
 
+// Enable session middleware
+app.UseSession();
+
 // 使用中间件
 app.UseMiddlewareServices();
+
+// Map Razor Pages
+app.MapRazorPages();
 
 await app.RunAsync();
