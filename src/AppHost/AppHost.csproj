@@ -22,5 +22,6 @@
     <ProjectReference Include="..\Ater\Ater.Common\Ater.Common.csproj" IsAspireProjectResource="false" />
     <ProjectReference Include="..\Services\ApiService\ApiService.csproj" />
     <ProjectReference Include="..\Services\MigrationService\MigrationService.csproj" />
+    <ProjectReference Include="..\..\samples\backend-dotnet\SampleApi.csproj" />
   </ItemGroup>
 </Project>

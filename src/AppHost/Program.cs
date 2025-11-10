@@ -67,6 +67,7 @@ if (aspireSetting.EnableQdrant)
 
 var migration = builder.AddProject<Projects.MigrationService>("MigrationService");
 var apiService = builder.AddProject<Projects.ApiService>("ApiService").WaitForCompletion(migration);
+var sampleApi = builder.AddProject<Projects.SampleApi>("SampleApi");
 
 if (database != null)
 {
