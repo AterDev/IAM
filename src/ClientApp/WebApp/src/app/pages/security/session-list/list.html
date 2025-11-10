@@ -6,7 +6,7 @@
         {{ (autoRefreshEnabled ? 'session.stopAutoRefresh' :
         'session.startAutoRefresh') | translate }}
       </button>
-      <button mat-raised-button color="primary" (click)="loadData()">
+      <button mat-raised-button  (click)="loadData()">
         <mat-icon>refresh</mat-icon>
         {{ 'common.refresh' | translate }}
       </button>
