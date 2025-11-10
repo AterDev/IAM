@@ -3,20 +3,19 @@
     <div class="d-flex align-items-center gap-1">
       <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
         <mat-label>{{ 'common.search' | translate }}</mat-label>
-        <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()"
-               placeholder="Name or Display Name">
+        <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()" placeholder="Name or Display Name">
         <button mat-icon-button matSuffix (click)="onSearch()">
           <mat-icon>search</mat-icon>
         </button>
       </mat-form-field>
 
-      <button matButton="tonal" (click)="clearFilters()">
+      <button matButton="outlined" (click)="clearFilters()">
         <mat-icon>clear</mat-icon>
         {{ 'common.clearFilters' | translate }}
       </button>
     </div>
 
-    <button matButton="tonal" (click)="openAddDialog()">
+    <button matButton="filled" (click)="openAddDialog()">
       <mat-icon>add</mat-icon>
       {{ 'common.add' | translate }}
     </button>
@@ -67,11 +66,7 @@
     </div>
   </div>
 
-  <mat-paginator
-    [length]="total()"
-    [pageSize]="pageSize"
-    [pageIndex]="pageIndex"
-    [pageSizeOptions]="[5, 10, 20, 50]"
+  <mat-paginator [length]="total()" [pageSize]="pageSize" [pageIndex]="pageIndex" [pageSizeOptions]="[5, 10, 20, 50]"
     (page)="onPageChange($event)">
   </mat-paginator>
 </div>

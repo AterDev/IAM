@@ -9,9 +9,10 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { AuditLogItemDto } from 'src/app/services/api/models/common-mod/audit-log-item-dto.model';
+import { AuditLogFilterDto } from 'src/app/services/api/models/common-mod/audit-log-filter-dto.model';
 import { PageList } from 'src/app/services/api/models/ater/page-list.model';
 import { Router } from '@angular/router';
-import { FormsModule, FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslateService } from '@ngx-translate/core';
 import { AuditLogDetailDialogComponent } from '../audit-log-detail-dialog/detail-dialog';
@@ -29,7 +30,6 @@ import { AuditLogDetailDialogComponent } from '../audit-log-detail-dialog/detail
     MatMenuModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    FormsModule,
     ReactiveFormsModule
   ],
   templateUrl: './list.html',
@@ -45,12 +45,8 @@ export class AuditLogListComponent implements OnInit {
   pageIndex = 0;
   isLoading = signal(false);
 
-  // Filter controls
-  categoryFilter = '';
-  eventFilter = '';
-  subjectIdFilter = '';
-  startDateControl = new FormControl<Date | null>(null);
-  endDateControl = new FormControl<Date | null>(null);
+  // Filter form
+  filterForm: FormGroup;
 
   // Auto-refresh
   autoRefreshEnabled = false;
@@ -61,18 +57,24 @@ export class AuditLogListComponent implements OnInit {
     private router: Router,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
-    private translate: TranslateService
-  ) {}
-
-  ngOnInit(): void {
-    // Set default date range to last 7 days
+    private translate: TranslateService,
+    private fb: FormBuilder
+  ) {
+    // Initialize filter form with default values
     const endDate = new Date();
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 7);
 
-    this.startDateControl.setValue(startDate);
-    this.endDateControl.setValue(endDate);
+    this.filterForm = this.fb.group({
+      category: [''],
+      event: [''],
+      subjectId: [''],
+      startDate: [startDate],
+      endDate: [endDate]
+    });
+  }
 
+  ngOnInit(): void {
     this.loadData();
   }
 
@@ -81,22 +83,27 @@ export class AuditLogListComponent implements OnInit {
   }
 
   loadData(): void {
-  this.isLoading.set(true);
+    this.isLoading.set(true);
 
-    this.api.security.getAuditLogs(
-      this.categoryFilter || null,
-      this.eventFilter || null,
-      this.subjectIdFilter || null,
-      this.startDateControl.value,
-      this.endDateControl.value,
-      this.pageIndex + 1,
-      this.pageSize,
-      null
-    ).subscribe({
+    const formValue = this.filterForm.value;
+
+    // Build filter DTO
+    const filter: AuditLogFilterDto = {
+      category: formValue.category?.trim() || null,
+      event: formValue.event?.trim() || null,
+      subjectId: formValue.subjectId?.trim() || null,
+      startDate: formValue.startDate instanceof Date ? formValue.startDate : null,
+      endDate: formValue.endDate instanceof Date ? formValue.endDate : null,
+      pageIndex: this.pageIndex + 1,
+      pageSize: this.pageSize,
+      orderBy: null
+    };
+
+    this.api.security.getAuditLogs(filter).subscribe({
       next: (res: PageList<AuditLogItemDto>) => {
         this.dataSource.set(res.data);
         this.total.set(res.count);
-  this.isLoading.set(false);
+        this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Failed to load audit logs:', error);
@@ -105,7 +112,7 @@ export class AuditLogListComponent implements OnInit {
           this.translate.instant('common.close'),
           { duration: 3000 }
         );
-  this.isLoading.set(false);
+        this.isLoading.set(false);
       }
     });
   }
@@ -116,17 +123,18 @@ export class AuditLogListComponent implements OnInit {
   }
 
   clearFilters(): void {
-    this.categoryFilter = '';
-    this.eventFilter = '';
-    this.subjectIdFilter = '';
-
     // Reset to last 7 days
     const endDate = new Date();
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 7);
 
-    this.startDateControl.setValue(startDate);
-    this.endDateControl.setValue(endDate);
+    this.filterForm.patchValue({
+      category: '',
+      event: '',
+      subjectId: '',
+      startDate: startDate,
+      endDate: endDate
+    });
 
     this.pageIndex = 0;
     this.loadData();

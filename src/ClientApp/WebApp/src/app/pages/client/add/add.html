@@ -1,144 +1,196 @@
-<div *ngIf="!clientSecret">
-  <h2 mat-dialog-title>{{ 'client.addClient' | translate }}</h2>
-
+@if (!clientSecret) {
+<div class="add-form-container">
+  <h2 mat-dialog-title class="dialog-title">{{ 'client.addClient' | translate }}</h2>
   <mat-dialog-content>
-    <form [formGroup]="clientForm" class="client-form">
-      <mat-form-field appearance="outline">
-        <mat-label>{{ 'client.clientId' | translate }}</mat-label>
-        <input matInput [formControl]="clientId" required>
-        <mat-error *ngIf="clientId.invalid && clientId.touched">
-          {{ getErrorMessage(clientId, 'clientId') }}
-        </mat-error>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>{{ 'client.displayName' | translate }}</mat-label>
-        <input matInput [formControl]="displayName" required>
-        <mat-error *ngIf="displayName.invalid && displayName.touched">
-          {{ getErrorMessage(displayName, 'displayName') }}
-        </mat-error>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>{{ 'client.description' | translate }}</mat-label>
-        <textarea matInput [formControl]="description" rows="3"></textarea>
-      </mat-form-field>
-
-      <div class="form-row">
-        <mat-form-field appearance="outline">
-          <mat-label>{{ 'client.type' | translate }}</mat-label>
-          <mat-select [formControl]="type">
-            <mat-option value="confidential">{{ 'client.confidential' | translate }}</mat-option>
-            <mat-option value="public">{{ 'client.public' | translate }}</mat-option>
-          </mat-select>
+    <form [formGroup]="clientForm" class="d-flex flex-column gap-2">
+      <!-- 基本信息部分 -->
+      <div>
+        <h3 class="h5 fw-500">{{ 'client.basicInfo' | translate }}</h3>
+        <mat-form-field appearance="outline" class="w-100 mb-3">
+          <mat-label>{{ 'client.clientId' | translate }}</mat-label>
+          <input matInput [formControl]="clientId" required placeholder="e.g., my-app">
+          @if (clientId.invalid && clientId.touched) {
+          <mat-error>
+            {{ getErrorMessage(clientId, 'clientId') }}
+          </mat-error>
+          }
         </mat-form-field>
 
-        <mat-form-field appearance="outline">
-          <mat-label>{{ 'client.applicationType' | translate }}</mat-label>
-          <mat-select [formControl]="applicationType">
-            <mat-option value="web">{{ 'client.web' | translate }}</mat-option>
-            <mat-option value="native">{{ 'client.native' | translate }}</mat-option>
-            <mat-option value="spa">{{ 'client.spa' | translate }}</mat-option>
-          </mat-select>
+        <mat-form-field appearance="outline" class="w-100 mb-3">
+          <mat-label>{{ 'client.displayName' | translate }}</mat-label>
+          <input matInput [formControl]="displayName" required placeholder="e.g., My Web Application">
+          @if (displayName.invalid && displayName.touched) {
+          <mat-error>
+            {{ getErrorMessage(displayName, 'displayName') }}
+          </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-100">
+          <mat-label>{{ 'client.description' | translate }}</mat-label>
+          <textarea matInput [formControl]="description" rows="3" placeholder="Optional description"></textarea>
         </mat-form-field>
       </div>
 
-      <div class="form-row">
-        <mat-form-field appearance="outline">
-          <mat-label>{{ 'client.consentType' | translate }}</mat-label>
-          <mat-select [formControl]="consentType">
-            <mat-option value="explicit">{{ 'client.explicit' | translate }}</mat-option>
-            <mat-option value="implicit">{{ 'client.implicit' | translate }}</mat-option>
-          </mat-select>
-        </mat-form-field>
+      <!-- 配置部分 -->
+      <div class="border-top pt-1">
+        <h3 class="h5 fw-500">{{ 'client.configuration' | translate }}</h3>
+        <div class="d-flex gap-2 mb-2">
+          <mat-form-field appearance="outline" class="col" subscriptSizing="dynamic">
+            <mat-label>{{ 'client.type' | translate }}</mat-label>
+            <mat-select [formControl]="type">
+              <mat-option value="confidential">{{ 'client.confidential' | translate }}</mat-option>
+              <mat-option value="public">{{ 'client.public' | translate }}</mat-option>
+            </mat-select>
+          </mat-form-field>
 
-        <mat-checkbox [formControl]="requirePkce" class="pkce-checkbox">
-          {{ 'client.requirePkce' | translate }}
-        </mat-checkbox>
+          <mat-form-field appearance="outline" class="col" subscriptSizing="dynamic">
+            <mat-label>{{ 'client.applicationType' | translate }}</mat-label>
+            <mat-select [formControl]="applicationType">
+              <mat-option value="web">{{ 'client.web' | translate }}</mat-option>
+              <mat-option value="native">{{ 'client.native' | translate }}</mat-option>
+              <mat-option value="spa">{{ 'client.spa' | translate }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="d-flex gap-2 align-items-center">
+          <mat-form-field appearance="outline" class="col" subscriptSizing="dynamic">
+            <mat-label>{{ 'client.consentType' | translate }}</mat-label>
+            <mat-select [formControl]="consentType">
+              <mat-option value="explicit">{{ 'client.explicit' | translate }}</mat-option>
+              <mat-option value="implicit">{{ 'client.implicit' | translate }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-checkbox [formControl]="requirePkce" class="col">
+            {{ 'client.requirePkce' | translate }}
+          </mat-checkbox>
+        </div>
       </div>
 
-      <div class="uri-section">
-        <h3>{{ 'client.redirectUris' | translate }}</h3>
-        <div class="uri-input-row">
-          <mat-form-field appearance="outline">
+      <!-- 重定向URI部分 -->
+      <div class="border-top pt-1">
+        <h3 class="h5 fw-500 mb-2">{{ 'client.redirectUris' | translate }}</h3>
+        <p class="small text-muted mb-3">{{ 'client.redirectUrisHint' | translate }}</p>
+
+        <div class="d-flex gap-2 align-items-center mb-2">
+          <mat-form-field appearance="outline" class="col" subscriptSizing="dynamic">
             <mat-label>{{ 'client.addRedirectUri' | translate }}</mat-label>
-            <input matInput [formControl]="newRedirectUri" (keyup.enter)="addRedirectUri()">
+            <input matInput [formControl]="newRedirectUri" (keyup.enter)="addRedirectUri()"
+              placeholder="https://example.com/callback">
           </mat-form-field>
-          <button mat-icon-button color="primary" (click)="addRedirectUri()" type="button">
-            <mat-icon>add</mat-icon>
+          <button mat-icon-button class="col-auto" (click)="addRedirectUri()" type="button"
+            [disabled]="!newRedirectUri.value?.trim()">
+            <mat-icon>add_circle</mat-icon>
           </button>
         </div>
-        <mat-chip-set>
-          <mat-chip *ngFor="let uri of redirectUris.controls; let i = index" 
-                    (removed)="removeRedirectUri(i)">
-            {{ uri.value }}
-            <button matChipRemove>
-              <mat-icon>cancel</mat-icon>
-            </button>
-          </mat-chip>
-        </mat-chip-set>
-      </div>
 
-      <div class="uri-section">
-        <h3>{{ 'client.postLogoutRedirectUris' | translate }}</h3>
-        <div class="uri-input-row">
-          <mat-form-field appearance="outline">
+        @if (redirectUris.controls.length > 0) {
+        <div class="d-flex flex-wrap gap-2 mt-2">
+          <mat-chip-set aria-label="Redirect URIs">
+            @for (uri of redirectUris.controls; track $index; let i = $index) {
+            <mat-chip [removable]="true"
+              (removed)="removeRedirectUri(i)">
+              {{ uri.value }}
+              <button matChipRemove [attr.aria-label]="'Remove ' + uri.value" type="button">
+                <mat-icon>close</mat-icon>
+              </button>
+            </mat-chip>
+            }
+          </mat-chip-set>
+        </div>
+        }
+      </div>
+      <!-- PostLogout重定向URI部分 -->
+      <div class="border-top pt-1">
+        <h3 class="h5 fw-500 mb-2">{{ 'client.postLogoutRedirectUris' | translate }}</h3>
+        <p class="small text-muted mb-3">{{ 'client.postLogoutRedirectUrisHint' | translate }}</p>
+
+        <div class="d-flex gap-2 align-items-center mb-2">
+          <mat-form-field appearance="outline" class="col" subscriptSizing="dynamic">
             <mat-label>{{ 'client.addPostLogoutRedirectUri' | translate }}</mat-label>
-            <input matInput [formControl]="newPostLogoutRedirectUri" (keyup.enter)="addPostLogoutRedirectUri()">
+            <input matInput [formControl]="newPostLogoutRedirectUri" (keyup.enter)="addPostLogoutRedirectUri()"
+              placeholder="https://example.com/logout">
           </mat-form-field>
-          <button mat-icon-button color="primary" (click)="addPostLogoutRedirectUri()" type="button">
-            <mat-icon>add</mat-icon>
+          <button mat-icon-button class="col-auto" (click)="addPostLogoutRedirectUri()" type="button"
+            [disabled]="!newPostLogoutRedirectUri.value?.trim()">
+            <mat-icon>add_circle</mat-icon>
           </button>
         </div>
-        <mat-chip-set>
-          <mat-chip *ngFor="let uri of postLogoutRedirectUris.controls; let i = index" 
-                    (removed)="removePostLogoutRedirectUri(i)">
-            {{ uri.value }}
-            <button matChipRemove>
-              <mat-icon>cancel</mat-icon>
-            </button>
-          </mat-chip>
-        </mat-chip-set>
+
+        @if (postLogoutRedirectUris.controls.length > 0) {
+        <div class="d-flex flex-wrap gap-2 mt-2">
+          <mat-chip-set aria-label="Post Logout Redirect URIs">
+            @for (uri of postLogoutRedirectUris.controls; track $index; let i = $index) {
+            <mat-chip [removable]="true"
+              (removed)="removePostLogoutRedirectUri(i)">
+              {{ uri.value }}
+              <button matChipRemove [attr.aria-label]="'Remove ' + uri.value" type="button">
+                <mat-icon>close</mat-icon>
+              </button>
+            </mat-chip>
+            }
+          </mat-chip-set>
+        </div>
+        }
       </div>
     </form>
   </mat-dialog-content>
 
-  <mat-dialog-actions align="end">
+  <mat-dialog-actions align="end" class="gap-2">
     <button mat-button (click)="onCancel()" [disabled]="isSubmitting">
       {{ 'common.cancel' | translate }}
     </button>
-    <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="isSubmitting">
-      <mat-spinner *ngIf="isSubmitting" diameter="20"></mat-spinner>
-      <span *ngIf="!isSubmitting">{{ 'common.save' | translate }}</span>
+    <button mat-raised-button (click)="onSubmit()" [disabled]="isSubmitting || clientForm.invalid">
+      @if (isSubmitting) {
+      <mat-spinner diameter="20"></mat-spinner>
+      }
+      @if (!isSubmitting) {
+      <span>{{ 'common.save' | translate }}</span>
+      }
     </button>
   </mat-dialog-actions>
 </div>
+}
 
-<div *ngIf="clientSecret" class="secret-display">
-  <h2 mat-dialog-title>{{ 'client.secretTitle' | translate }}</h2>
-  
+<!-- 成功显示Secret信息 -->
+@if (clientSecret) {
+<div class="secret-display-container">
+  <h2 mat-dialog-title class="dialog-title success-title mb-3">{{ 'client.secretTitle' | translate }}</h2>
+
   <mat-dialog-content>
-    <div class="warning-message">
-      <mat-icon color="warn">warning</mat-icon>
-      <p>{{ 'client.secretWarning' | translate }}</p>
+    <div class="text-center mb-4">
+      <mat-icon class="d-block"
+        style="font-size: 64px; width: 64px; height: 64px; color: #4caf50; margin: 0 auto;">check_circle</mat-icon>
     </div>
 
-    <div class="secret-container">
-      <mat-form-field appearance="outline" class="secret-field">
+    <div class="d-flex gap-2 p-3 rounded" style="background-color: #fff3e0; border-left: 4px solid #f57c00;">
+      <mat-icon class="flex-shrink-0" style="color: #f57c00; margin-top: 2px;">warning</mat-icon>
+      <div>
+        <p class="fw-500 mb-1">{{ 'client.secretWarning' | translate }}</p>
+        <p class="small text-muted mb-0">{{ 'client.secretWarningText' | translate }}</p>
+      </div>
+    </div>
+
+    <div class="d-flex gap-2 align-items-center my-4">
+      <mat-form-field appearance="outline" class="flex-1">
         <mat-label>{{ 'client.clientSecret' | translate }}</mat-label>
         <input matInput [value]="clientSecret" readonly>
+        <button matSuffix mat-icon-button (click)="copySecret()" matTooltip="{{ 'common.copy' | translate }}"
+          type="button">
+          <mat-icon>{{ secretCopied ? 'check' : 'content_copy' }}</mat-icon>
+        </button>
       </mat-form-field>
-      <button mat-icon-button color="primary" (click)="copySecret()" matTooltip="{{ 'common.copy' | translate }}">
-        <mat-icon>{{ secretCopied ? 'check' : 'content_copy' }}</mat-icon>
-      </button>
     </div>
 
-    <p class="secret-note">{{ 'client.secretNote' | translate }}</p>
+    <p class="small text-muted">{{ 'client.secretNote' | translate }}</p>
   </mat-dialog-content>
 
   <mat-dialog-actions align="end">
-    <button mat-raised-button color="primary" (click)="onClose()">
+    <button mat-raised-button (click)="onClose()">
       {{ 'common.close' | translate }}
     </button>
   </mat-dialog-actions>
 </div>
+}

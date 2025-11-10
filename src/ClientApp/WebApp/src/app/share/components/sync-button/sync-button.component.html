@@ -1,9 +1,9 @@
 @if(!isSync){
-  <button mat-button color="primary">
+  <button mat-button >
     生成
   </button>
   }@else {
-  <button mat-button color="primary" [disabled]="isSync">
+  <button mat-button  [disabled]="isSync">
     @if (isSync) {
       <mat-spinner style="width: 24px;height:24px"></mat-spinner>
     }

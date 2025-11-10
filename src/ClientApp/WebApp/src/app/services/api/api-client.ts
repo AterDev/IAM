@@ -4,6 +4,7 @@ import { AuditTrailService } from './services/audit-trail.service';
 import { ClientsService } from './services/clients.service';
 import { CommonService } from './services/common.service';
 import { CommonSettingsService } from './services/common-settings.service';
+import { DiscoveryService } from './services/discovery.service';
 import { ExternalAuthService } from './services/external-auth.service';
 import { OAuthService } from './services/oauth.service';
 import { OrganizationsService } from './services/organizations.service';
@@ -26,6 +27,8 @@ export class ApiClient {
   public common = inject(CommonService);
   /** Common settings controller */
   public commonSettings = inject(CommonSettingsService);
+  /** OpenID Connect Discovery endpoint controller */
+  public discovery = inject(DiscoveryService);
   /** ExternalAuth */
   public externalAuth = inject(ExternalAuthService);
   /** OAuth 2.0 / OpenID Connect endpoint controller */
