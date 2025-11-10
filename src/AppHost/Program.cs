@@ -65,8 +65,13 @@ if (aspireSetting.EnableQdrant)
 
 #endregion
 
+devPassword.WithParentRelationship(database!);
 var migration = builder.AddProject<Projects.MigrationService>("MigrationService");
 var apiService = builder.AddProject<Projects.ApiService>("ApiService").WaitForCompletion(migration);
+var webApp = builder
+    .AddNpmApp("WebApp", "../ClientApp/WebApp")
+    .WithReference(apiService)
+    .WithUrl("http://localhost:4200");
 
 if (database != null)
 {

@@ -96,9 +96,9 @@ public class SecurityController(
     /// </summary>
     /// <param name="filter">Filter criteria</param>
     /// <returns>Paged list of audit logs</returns>
-    [HttpGet("logs")]
+    [HttpPost("logs")]
     public async Task<ActionResult<PageList<AuditLogItemDto>>> GetAuditLogs(
-        [FromQuery] AuditLogFilterDto filter
+        AuditLogFilterDto filter
     )
     {
         var result = await _auditLogManager.GetPageAsync(filter);
