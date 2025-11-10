@@ -10,7 +10,7 @@
         </mat-option>
       </mat-select>
     </mat-form-field>
-    <button mat-raised-button color="primary" (click)="addMember()" [disabled]="!selectedUserId || isAdding">
+    <button mat-raised-button  (click)="addMember()" [disabled]="!selectedUserId || isAdding">
       <mat-icon>add</mat-icon>
       {{ 'organization.addMember' | translate }}
     </button>

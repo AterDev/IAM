@@ -22,7 +22,7 @@
 
 <mat-dialog-actions align="end">
   <button mat-button (click)="onCancel()">{{ 'common.cancel' | translate }}</button>
-  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="!roleForm.valid || isSubmitting">
+  <button mat-raised-button  (click)="onSubmit()" [disabled]="!roleForm.valid || isSubmitting">
     {{ isSubmitting ? ('common.saving' | translate) : ('common.save' | translate) }}
   </button>
 </mat-dialog-actions>

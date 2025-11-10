@@ -132,6 +132,10 @@ export class ClientAddComponent implements OnInit {
         this.translate.instant('common.close'),
         { duration: 2000 }
       );
+      // 复制成功后3秒自动关闭
+      setTimeout(() => {
+        this.dialogRef.close(true);
+      }, 3000);
     }
   }
 
@@ -166,6 +170,10 @@ export class ClientAddComponent implements OnInit {
           this.translate.instant('common.close'),
           { duration: 3000 }
         );
+        // 在显示secret后，2秒后自动关闭dialog
+        setTimeout(() => {
+          this.dialogRef.close(true);
+        }, 2000);
       },
       error: (error) => {
         this.isSubmitting = false;
@@ -176,13 +184,7 @@ export class ClientAddComponent implements OnInit {
   }
 
   onClose(): void {
-    if (this.clientSecret && !this.secretCopied) {
-      const confirmed = confirm(this.translate.instant('client.secretNotCopiedWarning'));
-      if (!confirmed) {
-        return;
-      }
-    }
-    this.dialogRef.close(this.clientSecret ? true : false);
+    this.dialogRef.close(true);
   }
 
   onCancel(): void {

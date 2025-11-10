@@ -1,11 +1,11 @@
-<div class="client-list-container">
-  <div class="header">
-    <div class="d-flex align-items-center gap-1">
-      <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
+<div class="d-flex flex-column h-100 gap-3 p-3">
+  <!-- 头部搜索和筛选 -->
+  <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+    <div class="d-flex align-items-center gap-2">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>{{ 'common.search' | translate }}</mat-label>
-        <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()"
-               placeholder="Client ID or Display Name">
-        <button mat-icon-button matSuffix (click)="onSearch()">
+        <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()" placeholder="Client ID / Display Name">
+        <button mat-icon-button matSuffix (click)="onSearch()" type="button">
           <mat-icon>search</mat-icon>
         </button>
       </mat-form-field>
@@ -29,92 +29,102 @@
         </mat-select>
       </mat-form-field>
 
-      <button matButton="tonal" (click)="clearFilters()">
+      <button matButton="outlined" (click)="clearFilters()" type="button">
         <mat-icon>clear</mat-icon>
         {{ 'common.clearFilters' | translate }}
       </button>
     </div>
 
-    <button matButton="tonal" (click)="openAddDialog()">
+    <button matButton="filled" (click)="openAddDialog()" type="button">
       <mat-icon>add</mat-icon>
       {{ 'common.add' | translate }}
     </button>
   </div>
 
-  <div class="batch-actions" *ngIf="selectedIds().size > 0">
-    <span class="selection-info">{{ selectedIds().size }} {{ 'common.selected' | translate }}</span>
-    <button mat-button (click)="deleteSelected()">
+  <!-- 批量操作提示 -->
+  @if (selectedIds().size > 0) {
+  <div class="d-flex align-items-center gap-3 p-3 rounded">
+    <span class="fw-500">{{ selectedIds().size }} {{ 'common.selected' | translate }}</span>
+    <button mat-button color="warn" (click)="deleteSelected()" type="button" class="ms-auto">
       <mat-icon>delete</mat-icon>
       {{ 'common.delete' | translate }}
     </button>
   </div>
+  }
 
-  <div class="table-container">
-    <table mat-table [dataSource]="dataSource()" class="client-table">
-      <!-- Checkbox Column -->
+  <!-- 表格容器 -->
+  <div class="flex-1 overflow-auto rounded bg-white position-relative" style="min-height: 300px;">
+    <table mat-table [dataSource]="dataSource()" class="w-100">
+      <!-- 选择框列 -->
       <ng-container matColumnDef="select">
-        <th mat-header-cell *matHeaderCellDef>
-          <mat-checkbox
-            [checked]="allSelected()"
-            [indeterminate]="someSelected()"
-            (change)="toggleSelectAll()">
+        <th mat-header-cell *matHeaderCellDef class="text-center" style="width: 60px;">
+          <mat-checkbox [checked]="allSelected()" [indeterminate]="someSelected()" (change)="toggleSelectAll()"
+            aria-label="Select all clients">
           </mat-checkbox>
         </th>
-        <td mat-cell *matCellDef="let row">
-          <mat-checkbox
-            [checked]="selectedIds().has(row.id)"
-            (change)="toggleSelect(row.id)">
+        <td mat-cell *matCellDef="let row" class="text-center" style="width: 60px;">
+          <mat-checkbox [checked]="selectedIds().has(row.id)" (change)="toggleSelect(row.id)"
+            [attr.aria-label]="'Select ' + row.displayName">
           </mat-checkbox>
         </td>
       </ng-container>
 
-      <!-- Client ID Column -->
+      <!-- Client ID 列 -->
       <ng-container matColumnDef="clientId">
         <th mat-header-cell *matHeaderCellDef>{{ 'client.clientId' | translate }}</th>
-        <td mat-cell *matCellDef="let client">{{ client.clientId }}</td>
+        <td mat-cell *matCellDef="let client" class="font-monospace small">{{ client.clientId }}</td>
       </ng-container>
 
-      <!-- Display Name Column -->
+      <!-- 显示名称列 -->
       <ng-container matColumnDef="displayName">
         <th mat-header-cell *matHeaderCellDef>{{ 'client.displayName' | translate }}</th>
-        <td mat-cell *matCellDef="let client">{{ client.displayName }}</td>
+        <td mat-cell *matCellDef="let client" class="fw-500">{{ client.displayName }}</td>
       </ng-container>
 
-      <!-- Type Column -->
+      <!-- 类型列 -->
       <ng-container matColumnDef="type">
         <th mat-header-cell *matHeaderCellDef>{{ 'client.type' | translate }}</th>
         <td mat-cell *matCellDef="let client">
-          <mat-chip *ngIf="client.type">{{ client.type }}</mat-chip>
+          @if (client.type) {
+          <mat-chip class="small">
+            {{ client.type | uppercase }}
+          </mat-chip>
+          }
         </td>
       </ng-container>
 
-      <!-- Application Type Column -->
+      <!-- 应用类型列 -->
       <ng-container matColumnDef="applicationType">
         <th mat-header-cell *matHeaderCellDef>{{ 'client.applicationType' | translate }}</th>
         <td mat-cell *matCellDef="let client">
-          <mat-chip *ngIf="client.applicationType">{{ client.applicationType }}</mat-chip>
+          @if (client.applicationType) {
+          <mat-chip class="small">
+            {{ client.applicationType | uppercase }}
+          </mat-chip>
+          }
         </td>
       </ng-container>
 
-      <!-- Created Time Column -->
+      <!-- 创建时间列 -->
       <ng-container matColumnDef="createdTime">
         <th mat-header-cell *matHeaderCellDef>{{ 'common.createdTime' | translate }}</th>
-        <td mat-cell *matCellDef="let client">{{ client.createdTime | date:'short' }}</td>
+        <td mat-cell *matCellDef="let client" class="small text-muted">{{ client.createdTime | date:'short' }}</td>
       </ng-container>
 
-      <!-- Actions Column -->
+      <!-- 操作列 -->
       <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
-        <td mat-cell *matCellDef="let client">
-          <button mat-icon-button [matMenuTriggerFor]="menu">
+        <td mat-cell *matCellDef="let client" class="text-end">
+          <button mat-icon-button [matMenuTriggerFor]="menu" [attr.aria-label]="'Actions for ' + client.displayName"
+            type="button">
             <mat-icon>more_vert</mat-icon>
           </button>
           <mat-menu #menu="matMenu">
-            <button mat-menu-item (click)="viewDetail(client.id)">
+            <button mat-menu-item (click)="viewDetail(client.id)" type="button">
               <mat-icon>visibility</mat-icon>
               <span>{{ 'common.view' | translate }}</span>
             </button>
-            <button mat-menu-item (click)="deleteClient(client.id)">
+            <button mat-menu-item (click)="deleteClient(client.id)" color="warn" type="button">
               <mat-icon>delete</mat-icon>
               <span>{{ 'common.delete' | translate }}</span>
             </button>
@@ -122,22 +132,33 @@
         </td>
       </ng-container>
 
+      <!-- 表头行 -->
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <!-- 数据行 -->
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+      <!-- 无数据行 -->
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+          <div class="d-flex flex-column align-items-center justify-content-center py-5 text-muted">
+            <mat-icon class="mb-3" style="font-size: 48px; width: 48px; height: 48px; opacity: 0.3;">info</mat-icon>
+            <p>{{ 'common.noData' | translate }}</p>
+          </div>
+        </td>
+      </tr>
     </table>
 
+    <!-- 加载状态 -->
     @if (isLoading()) {
-    <div class="loading-shade">
-      <mat-spinner></mat-spinner>
+    <div class="position-absolute w-100 h-100 d-flex align-items-center justify-content-center"
+      style="background-color: rgba(0, 0, 0, 0.05); top: 0; left: 0; z-index: 100;">
+      <mat-spinner diameter="50"></mat-spinner>
     </div>
     }
   </div>
 
-  <mat-paginator
-    [length]="total()"
-    [pageSize]="pageSize"
-    [pageIndex]="pageIndex"
-    [pageSizeOptions]="[5, 10, 20, 50]"
-    (page)="onPageChange($event)">
+  <!-- 分页器 -->
+  <mat-paginator [length]="total()" [pageSize]="pageSize" [pageIndex]="pageIndex" [pageSizeOptions]="[5, 10, 20, 50]"
+    (page)="onPageChange($event)" showFirstLastButtons>
   </mat-paginator>
 </div>

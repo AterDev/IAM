@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { PageList } from '../models/ater/page-list.model';
 import { LoginSessionItemDto } from '../models/identity-mod/login-session-item-dto.model';
 import { LoginSessionDetailDto } from '../models/identity-mod/login-session-detail-dto.model';
+import { AuditLogFilterDto } from '../models/common-mod/audit-log-filter-dto.model';
 import { AuditLogItemDto } from '../models/common-mod/audit-log-item-dto.model';
 import { AuditLogDetailDto } from '../models/common-mod/audit-log-detail-dto.model';
 /**
@@ -53,18 +54,11 @@ export class SecurityService extends BaseService {
   }
   /**
    * Get paged audit logs
-   * @param category Filter by category
-   * @param event Filter by event
-   * @param subjectId Filter by subject ID
-   * @param startDate Filter by date range start
-   * @param endDate Filter by date range end
-   * @param pageIndex number
-   * @param pageSize number
-   * @param orderBy Record<string, boolean>
+   * @param data AuditLogFilterDto
    */
-  getAuditLogs(category: string | null, event: string | null, subjectId: string | null, startDate: Date | null, endDate: Date | null, pageIndex: number | null, pageSize: number | null, orderBy: Record<string, boolean> | null): Observable<PageList<AuditLogItemDto>> {
-    const _url = `/api/Security/logs?category=${category ?? ''}&event=${event ?? ''}&subjectId=${subjectId ?? ''}&startDate=${startDate ?? ''}&endDate=${endDate ?? ''}&pageIndex=${pageIndex ?? ''}&pageSize=${pageSize ?? ''}&orderBy=${orderBy ?? ''}`;
-    return this.request<PageList<AuditLogItemDto>>('get', _url);
+  getAuditLogs(data: AuditLogFilterDto): Observable<PageList<AuditLogItemDto>> {
+    const _url = `/api/Security/logs`;
+    return this.request<PageList<AuditLogItemDto>>('post', _url, data);
   }
   /**
    * Get audit log detail by id

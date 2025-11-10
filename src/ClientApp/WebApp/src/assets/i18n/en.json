@@ -48,7 +48,8 @@
     "createdTime": "Created Time",
     "updatedTime": "Updated Time",
     "clearFilters": "Clear Filters",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "copy": "Copy"
   },
   "user": {
     "userName": "Username",
@@ -159,7 +160,30 @@
     "explicit": "Explicit",
     "addUri": "Add URI",
     "removeUri": "Remove URI",
-    "uriPlaceholder": "Enter URI and press Enter to add"
+    "uriPlaceholder": "Enter URI and press Enter to add",
+    "configuration": "Configuration",
+    "redirectUrisHint": "Specify the redirect URI for your application, used for OAuth authorization flow callbacks",
+    "addRedirectUri": "Add Redirect URI",
+    "noRedirectUris": "No redirect URIs",
+    "postLogoutRedirectUrisHint": "Specify where users should be redirected after logging out",
+    "addPostLogoutRedirectUri": "Add Post Logout Redirect URI",
+    "noPostLogoutRedirectUris": "No post logout redirect URIs",
+    "secretTitle": "Application Created Successfully",
+    "secretWarning": "Important",
+    "secretWarningText": "This is the only time you can view the complete secret. Please keep it safe and do not expose or share it in your code.",
+    "secretNote": "To generate a new secret, please rotate the current secret.",
+    "authorizations": "Authorizations",
+    "subjectId": "Subject ID",
+    "status": "Status",
+    "creationDate": "Authorization Date",
+    "noAuthorizations": "No authorization records",
+    "deleteConfirmTitle": "Confirm Delete Application",
+    "deleteConfirmMessage": "Are you sure you want to delete this application? This action cannot be undone.",
+    "deleteMultipleConfirmMessage": "Are you sure you want to delete {{count}} applications? This action cannot be undone.",
+    "deleteSuccess": "Application deleted successfully",
+    "deleteMultipleSuccess": "Successfully deleted {{count}} applications",
+    "deleteMultiplePartial": "Successfully deleted {{success}} applications, {{error}} failed",
+    "createSuccess": "Application created successfully"
   },
   "resource": {
     "title": "Resource Management",
@@ -268,6 +292,11 @@
     "deleteRoleFailed": "Failed to delete role",
     "batchDeletePartialFailed": "Some roles failed to delete",
     "loadRoleDetailFailed": "Failed to load role detail",
-    "loadScopesFailed": "Failed to load scopes"
+    "loadScopesFailed": "Failed to load scopes",
+    "loadClientsFailed": "Failed to load applications",
+    "createClientFailed": "Failed to create application",
+    "deleteClientFailed": "Failed to delete application",
+    "required": "This field is required",
+    "minLength": "The minimum length is {{length}}"
   }
 }

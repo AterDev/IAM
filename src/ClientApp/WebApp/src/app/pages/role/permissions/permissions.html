@@ -75,7 +75,7 @@
 
 <mat-dialog-actions align="end">
   <button mat-button (click)="onCancel()">{{ 'common.cancel' | translate }}</button>
-  <button mat-raised-button color="primary" (click)="onSave()" [disabled]="isLoading() || isSaving">
+  <button mat-raised-button  (click)="onSave()" [disabled]="isLoading() || isSaving">
     {{ isSaving ? ('common.saving' | translate) : ('common.save' | translate) }}
   </button>
 </mat-dialog-actions>
