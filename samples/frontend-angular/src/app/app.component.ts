@@ -10,15 +10,17 @@ import { OidcSecurityService } from 'angular-auth-oidc-client';
   template: `
     <div class="container">
       <header>
-        <h1>IAM Sample Angular Application</h1>
+        <h1>🔐 IAM示例 - Angular应用</h1>
         <nav>
-          <a routerLink="/home">Home</a>
-          <a routerLink="/protected">Protected</a>
+          <a routerLink="/home" routerLinkActive="active">首页</a>
+          <a routerLink="/protected" routerLinkActive="active">受保护页面</a>
           @if (isAuthenticated) {
-            <button (click)="logout()">Logout</button>
-            <span class="user-info">{{ userData?.name || userData?.email }}</span>
+            <button (click)="logout()" class="btn-logout">登出</button>
+            <span class="user-info">
+              👤 {{ userData?.name || userData?.email || userData?.preferred_username || '用户' }}
+            </span>
           } @else {
-            <button (click)="login()">Login</button>
+            <button (click)="login()" class="btn-login">登录</button>
           }
         </nav>
       </header>
@@ -26,7 +28,14 @@ import { OidcSecurityService } from 'angular-auth-oidc-client';
         <router-outlet></router-outlet>
       </main>
       <footer>
-        <p>Sample application demonstrating IAM integration with Angular</p>
+        <p>示例应用演示如何使用Angular对接IAM授权系统</p>
+        <p class="tech-stack">
+          <span>Angular 19</span>
+          <span>•</span>
+          <span>OpenID Connect</span>
+          <span>•</span>
+          <span>OAuth 2.0</span>
+        </p>
       </footer>
     </div>
   `,
@@ -35,24 +44,30 @@ import { OidcSecurityService } from 'angular-auth-oidc-client';
       max-width: 1200px;
       margin: 0 auto;
       padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
     header {
-      background: #1976d2;
+      background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
       color: white;
       padding: 20px;
       border-radius: 8px;
       margin-bottom: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
 
     h1 {
       margin: 0 0 15px 0;
+      font-size: 24px;
     }
 
     nav {
       display: flex;
       gap: 15px;
       align-items: center;
+      flex-wrap: wrap;
     }
 
     nav a {
@@ -60,30 +75,57 @@ import { OidcSecurityService } from 'angular-auth-oidc-client';
       text-decoration: none;
       padding: 8px 16px;
       border-radius: 4px;
-      transition: background 0.3s;
+      transition: all 0.3s;
+      font-weight: 500;
     }
 
     nav a:hover {
       background: rgba(255, 255, 255, 0.1);
     }
 
+    nav a.active {
+      background: rgba(255, 255, 255, 0.2);
+      font-weight: bold;
+    }
+
     button {
-      background: white;
-      color: #1976d2;
       border: none;
       padding: 8px 16px;
       border-radius: 4px;
       cursor: pointer;
       font-weight: bold;
+      transition: all 0.3s;
+      font-size: 14px;
     }
 
-    button:hover {
+    .btn-login {
+      background: white;
+      color: #1976d2;
+    }
+
+    .btn-login:hover {
       background: #f0f0f0;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .btn-logout {
+      background: #f44336;
+      color: white;
+    }
+
+    .btn-logout:hover {
+      background: #d32f2f;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
 
     .user-info {
       margin-left: auto;
       font-weight: bold;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
     }
 
     main {
@@ -92,12 +134,27 @@ import { OidcSecurityService } from 'angular-auth-oidc-client';
       border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       min-height: 400px;
+      flex: 1;
     }
 
     footer {
       text-align: center;
       margin-top: 20px;
       color: #666;
+      padding: 20px;
+    }
+
+    footer p {
+      margin: 5px 0;
+    }
+
+    .tech-stack {
+      font-size: 14px;
+      color: #999;
+    }
+
+    .tech-stack span {
+      margin: 0 5px;
     }
   `]
 })
@@ -111,6 +168,10 @@ export class AppComponent implements OnInit {
     this.oidcSecurityService.checkAuth().subscribe(({ isAuthenticated, userData }) => {
       this.isAuthenticated = isAuthenticated;
       this.userData = userData;
+      
+      if (isAuthenticated) {
+        console.log('用户已认证:', userData);
+      }
     });
   }
 
@@ -119,6 +180,8 @@ export class AppComponent implements OnInit {
   }
 
   logout() {
-    this.oidcSecurityService.logoff().subscribe();
+    this.oidcSecurityService.logoff().subscribe((result) => {
+      console.log('登出成功');
+    });
   }
 }
