@@ -49,7 +49,9 @@ public class AdminAuthController(
 
             if (userDetail == null)
             {
-                return Unauthorized(new { message = _userManager.ErrorMsg ?? "Invalid username or password" });
+                return Unauthorized(
+                    new { message = _userManager.ErrorMsg ?? "Invalid username or password" }
+                );
             }
 
             // Get user roles
@@ -65,12 +67,11 @@ public class AdminAuthController(
             var roleIds = user.UserRoles.Select(ur => ur.RoleId).ToList();
             var roles = await _roleManager.GetRoleNamesByIdsAsync(roleIds);
 
-            // Generate JWT token with 2 hours expiration
-            var expiresIn = 7200; // 2 hours
+            var expiresIn = 3600 * 24 * 7; // 7 day
             _jwtService.Claims =
             [
                 new Claim(ClaimTypes.Name, user.UserName),
-                new Claim(ClaimTypes.Email, user.Email??string.Empty)
+                new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
             ];
             var accessToken = _jwtService.GetToken(user.Id.ToString(), [.. roles]);
             var response = new AdminLoginResponseDto
@@ -83,8 +84,8 @@ public class AdminAuthController(
                     Id = user.Id,
                     UserName = user.UserName,
                     Email = user.Email,
-                    Roles = roles
-                }
+                    Roles = roles,
+                },
             };
 
             _logger.LogInformation("Admin user {UserName} logged in successfully", user.UserName);
@@ -129,7 +130,7 @@ public class AdminAuthController(
             Id = user.Id,
             UserName = user.UserName,
             Email = user.Email,
-            Roles = roles
+            Roles = roles,
         };
 
         return Ok(userInfo);

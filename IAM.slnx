@@ -13,6 +13,9 @@
     <File Path="issue.md" />
     <File Path="README.md" />
   </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/backend-dotnet/SampleApi.csproj" />
+  </Folder>
   <Folder Name="/scripts/">
     <File Path="scripts/EFMigrations.ps1" />
     <File Path="scripts/UpdateMenus.ps1" />

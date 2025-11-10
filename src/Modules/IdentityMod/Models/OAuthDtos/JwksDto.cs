@@ -78,6 +78,6 @@ public class JsonWebKeyDto
     /// <summary>
     /// X.509 certificate SHA-256 thumbprint (base64url encoded)
     /// </summary>
-    [JsonPropertyName("x5t#S256")]
+    [JsonPropertyName("X5tS256")]
     public string? X5tS256 { get; set; }
 }
