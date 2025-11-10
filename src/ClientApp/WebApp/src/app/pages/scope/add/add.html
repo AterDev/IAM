@@ -39,7 +39,7 @@
           <mat-label>{{ 'scope.addClaim' | translate }}</mat-label>
           <input matInput [formControl]="newClaim" (keyup.enter)="addClaim()">
         </mat-form-field>
-        <button mat-icon-button color="primary" (click)="addClaim()" type="button">
+        <button mat-icon-button  (click)="addClaim()" type="button">
           <mat-icon>add</mat-icon>
         </button>
       </div>
@@ -60,7 +60,7 @@
   <button mat-button (click)="onCancel()" [disabled]="isSubmitting">
     {{ 'common.cancel' | translate }}
   </button>
-  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="isSubmitting">
+  <button mat-raised-button  (click)="onSubmit()" [disabled]="isSubmitting">
     {{ isSubmitting ? ('common.saving' | translate) : ('common.save' | translate) }}
   </button>
 </mat-dialog-actions>

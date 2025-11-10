@@ -1,89 +1,41 @@
-.client-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  min-width: 500px;
+.add-form-container {
+  .dialog-title {
+    font-size: 20px;
+    font-weight: 500;
+  }
+}
 
-  .form-row {
-    display: flex;
-    gap: 16px;
-    align-items: center;
+.secret-display-container {
+  .dialog-title {
+    font-size: 20px;
+    font-weight: 500;
 
-    mat-form-field {
-      flex: 1;
-    }
-
-    .pkce-checkbox {
-      flex: 1;
+    &.success-title {
+      color: #4caf50;
     }
   }
 
-  .uri-section {
-    margin-top: 16px;
+  .success-icon {
+    text-align: center;
+    margin-bottom: 16px;
 
-    h3 {
-      font-size: 16px;
-      font-weight: 500;
-      margin: 0 0 12px 0;
-      color: rgba(0, 0, 0, 0.87);
-    }
-
-    .uri-input-row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-
-      mat-form-field {
-        flex: 1;
-      }
-    }
-
-    mat-chip-set {
-      margin-top: 8px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+    mat-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+      color: #4caf50;
     }
   }
 }
 
-.secret-display {
-  min-width: 500px;
-
-  .warning-message {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px;
-    background-color: #fff3e0;
-    border-radius: 4px;
-    margin-bottom: 16px;
-
-    mat-icon {
-      font-size: 24px;
-      width: 24px;
-      height: 24px;
-    }
-
-    p {
-      margin: 0;
-      color: rgba(0, 0, 0, 0.87);
-    }
+@keyframes checkmark {
+  0% {
+    transform: scale(0.8);
   }
-
-  .secret-container {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-
-    .secret-field {
-      flex: 1;
-    }
+  50% {
+    transform: scale(1.1);
   }
-
-  .secret-note {
-    font-size: 14px;
-    color: rgba(0, 0, 0, 0.6);
-    margin-top: 8px;
+  100% {
+    transform: scale(1);
   }
 }

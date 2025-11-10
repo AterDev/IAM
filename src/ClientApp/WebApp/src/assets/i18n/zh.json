@@ -113,7 +113,8 @@
     "createdTime": "创建时间",
     "updatedTime": "更新时间",
     "clearFilters": "清除筛选",
-    "refresh": "刷新"
+    "refresh": "刷新",
+    "copy": "复制"
   },
   "user": {
     "userName": "用户名",
@@ -224,7 +225,30 @@
     "explicit": "显式",
     "addUri": "添加URI",
     "removeUri": "移除URI",
-    "uriPlaceholder": "输入URI并按Enter添加"
+    "uriPlaceholder": "输入URI并按Enter添加",
+    "configuration": "配置",
+    "redirectUrisHint": "指定应用的重定向URI，用于OAuth授权流程中的回调",
+    "addRedirectUri": "添加重定向URI",
+    "noRedirectUris": "暂无重定向URI",
+    "postLogoutRedirectUrisHint": "指定用户登出后应重定向到的URI",
+    "addPostLogoutRedirectUri": "添加登出后重定向URI",
+    "noPostLogoutRedirectUris": "暂无登出后重定向URI",
+    "secretTitle": "应用创建成功",
+    "secretWarning": "重要提示",
+    "secretWarningText": "这是您唯一查看完整密钥的机会。请妥善保管密钥，不要在代码中公开或分享。",
+    "secretNote": "如需生成新密钥，请轮换当前密钥。",
+    "authorizations": "授权",
+    "subjectId": "主体ID",
+    "status": "状态",
+    "creationDate": "授权时间",
+    "noAuthorizations": "暂无授权记录",
+    "deleteConfirmTitle": "确认删除应用",
+    "deleteConfirmMessage": "确定要删除该应用吗？此操作不可撤销。",
+    "deleteMultipleConfirmMessage": "确定要删除选中的 {{count}} 个应用吗？此操作不可撤销。",
+    "deleteSuccess": "应用已删除",
+    "deleteMultipleSuccess": "成功删除 {{count}} 个应用",
+    "deleteMultiplePartial": "成功删除 {{success}} 个应用，{{error}} 个失败",
+    "createSuccess": "应用创建成功"
   },
   "resource": {
     "title": "资源管理",
@@ -333,6 +357,11 @@
     "deleteRoleFailed": "删除角色失败",
     "batchDeletePartialFailed": "部分角色删除失败",
     "loadRoleDetailFailed": "加载角色详情失败",
-    "loadScopesFailed": "加载作用域列表失败"
+    "loadScopesFailed": "加载作用域列表失败",
+    "loadClientsFailed": "加载应用列表失败",
+    "createClientFailed": "创建应用失败",
+    "deleteClientFailed": "删除应用失败",
+    "required": "此字段是必填项",
+    "minLength": "最小长度是 {{length}}"
   }
 }

@@ -9,43 +9,43 @@
         <mat-icon>download</mat-icon>
         {{ 'auditLog.export' | translate }}
       </button>
-      <button mat-raised-button color="primary" (click)="loadData()">
+      <button mat-raised-button  (click)="loadData()">
         <mat-icon>refresh</mat-icon>
         {{ 'common.refresh' | translate }}
       </button>
     </div>
   </div>
   <div class="d-flex justify-content-between align-items-center">
-    <div class="d-flex align-items-center gap-1">
+    <form [formGroup]="filterForm" class="d-flex align-items-center gap-1">
       <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>{{ 'auditLog.category' | translate }}</mat-label>
-        <input matInput [(ngModel)]="categoryFilter" (keyup.enter)="onFilterChange()">
+        <input matInput formControlName="category" (keyup.enter)="onFilterChange()">
       </mat-form-field>
 
       <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>{{ 'auditLog.event' | translate }}</mat-label>
-        <input matInput [(ngModel)]="eventFilter" (keyup.enter)="onFilterChange()">
+        <input matInput formControlName="event" (keyup.enter)="onFilterChange()">
       </mat-form-field>
 
       <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>{{ 'auditLog.subjectId' | translate }}</mat-label>
-        <input matInput [(ngModel)]="subjectIdFilter" (keyup.enter)="onFilterChange()">
+        <input matInput formControlName="subjectId" (keyup.enter)="onFilterChange()">
       </mat-form-field>
 
       <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>{{ 'auditLog.startDate' | translate }}</mat-label>
-        <input matInput [matDatepicker]="startPicker" [formControl]="startDateControl" (dateChange)="onFilterChange()">
+        <input matInput [matDatepicker]="startPicker" formControlName="startDate" (dateChange)="onFilterChange()">
         <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
         <mat-datepicker #startPicker></mat-datepicker>
       </mat-form-field>
 
       <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>{{ 'auditLog.endDate' | translate }}</mat-label>
-        <input matInput [matDatepicker]="endPicker" [formControl]="endDateControl" (dateChange)="onFilterChange()">
+        <input matInput [matDatepicker]="endPicker" formControlName="endDate" (dateChange)="onFilterChange()">
         <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
         <mat-datepicker #endPicker></mat-datepicker>
       </mat-form-field>
-    </div>
+    </form>
 
     <button mat-button="outlined" (click)="clearFilters()">
       <mat-icon>clear</mat-icon>

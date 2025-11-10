@@ -15,6 +15,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 
 export const BaseMatModules = [
@@ -23,7 +24,7 @@ export const BaseMatModules = [
   TranslateModule
 ];
 // 表单页面依赖的模块
-export const CommonFormModules = [...BaseMatModules, MatFormFieldModule, MatDialogModule, ReactiveFormsModule, FormsModule, MatInputModule, MatSelectModule, MatDatepickerModule];
+export const CommonFormModules = [...BaseMatModules, MatFormFieldModule, MatDialogModule, ReactiveFormsModule, FormsModule, MatInputModule, MatSelectModule, MatDatepickerModule, MatCheckboxModule];
 // 列表页面依赖的模块
 export const CommonListModules = [...BaseMatModules, MatTableModule, MatPaginatorModule, MatDialogModule, RouterModule];
 export const CommonModules = [CommonModule, RouterModule]

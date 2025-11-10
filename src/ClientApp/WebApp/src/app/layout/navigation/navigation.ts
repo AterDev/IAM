@@ -8,7 +8,7 @@ import { BreadcrumbComponent } from '../../share/components/breadcrumb/breadcrum
 
 @Component({
   selector: 'app-navigation',
-  imports: [...BaseMatModules, ...CommonModules, MatSidenavModule, MatExpansionModule, MatListModule, BreadcrumbComponent],
+  imports: [...BaseMatModules, ...CommonModules, MatSidenavModule, MatExpansionModule, MatListModule],
   templateUrl: './navigation.html',
   styleUrl: './navigation.scss'
 })

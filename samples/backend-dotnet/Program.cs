@@ -61,11 +61,12 @@ builder.Services.AddCors(options =>
 });
 
 // Configure JWT Bearer Authentication with IAM
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder
+    .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         // IAM authority URL - the OpenID Connect discovery endpoint
-        options.Authority = builder.Configuration["Authentication:Authority"] ?? "https://localhost:7001";
+        options.Authority = builder.Configuration["Authentication:Authority"] ?? "https://localhost:7000";
         
         // API resource name (audience) - must match the client registered in IAM
         options.Audience = builder.Configuration["Authentication:Audience"] ?? "ApiTest";

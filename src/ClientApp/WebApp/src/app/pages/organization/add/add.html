@@ -34,7 +34,7 @@
   <button mat-button (click)="onCancel()" [disabled]="isSubmitting">
     {{ 'common.cancel' | translate }}
   </button>
-  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="isSubmitting">
+  <button mat-raised-button  (click)="onSubmit()" [disabled]="isSubmitting">
     {{ isSubmitting ? ('common.saving' | translate) : ('common.save' | translate) }}
   </button>
 </mat-dialog-actions>
