@@ -132,8 +132,7 @@ app.MapGet("/api/public", () => new
     Timestamp = DateTime.UtcNow
 })
     .WithName("GetPublic")
-    .WithTags("Public")
-    .WithOpenApi();
+    .WithTags("Public");
 
 // Protected endpoint - requires valid JWT token
 app.MapGet("/api/protected", (HttpContext context) => 
@@ -155,7 +154,6 @@ app.MapGet("/api/protected", (HttpContext context) =>
 })
     .RequireAuthorization()
     .WithName("GetProtected")
-    .WithTags("Protected")
-    .WithOpenApi();
+    .WithTags("Protected");
 
 app.Run();
