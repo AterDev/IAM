@@ -180,7 +180,20 @@
     "optional": "可选",
     "emphasize": "强调",
     "searchPlaceholder": "搜索作用域名称或显示名称",
-    "requiredFilter": "是否必需"
+    "requiredFilter": "是否必需",
+    "addScope": "添加作用域",
+    "editScope": "编辑作用域",
+    "basicInfo": "基本信息",
+    "configuration": "配置",
+    "claims": "声明",
+    "claimsHint": "指定该作用域包含的声明类型",
+    "addClaim": "添加声明",
+    "noClaims": "暂无声明",
+    "createSuccess": "作用域创建成功",
+    "updateSuccess": "作用域更新成功",
+    "deleteSuccess": "作用域已删除",
+    "deleteConfirmTitle": "确认删除作用域",
+    "deleteConfirmMessage": "确定要删除该作用域吗？此操作不可撤销。"
   },
   "client": {
     "title": "应用管理",
@@ -290,7 +303,18 @@
     "deleteRoleFailed": "删除角色失败",
     "batchDeletePartialFailed": "部分角色删除失败",
     "loadRoleDetailFailed": "加载角色详情失败",
-    "loadScopesFailed": "加载作用域列表失败"
+    "loadScopesFailed": "加载作用域列表失败",
+    "required": "此字段是必填项",
+    "minLength": "最小长度是 {{length}}",
+    "maxLength": "最大长度是 {{length}}",
+    "createClientFailed": "创建应用失败",
+    "createScopeFailed": "创建作用域失败",
+    "updateClientFailed": "更新应用失败",
+    "updateScopeFailed": "更新作用域失败",
+    "deleteClientFailed": "删除应用失败",
+    "deleteScopeFailed": "删除作用域失败",
+    "loadClientFailed": "加载应用失败",
+    "loadScopeFailed": "加载作用域失败"
   },
   "permission": {
     "category": {
