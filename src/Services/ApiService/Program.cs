@@ -20,7 +20,6 @@ builder.AddIdentityModMod();
 // Web中间件服务:route, openapi, jwt, cors, auth, rateLimiter etc.
 builder.AddMiddlewareServices();
 
-// Add session support for OAuth pages
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
