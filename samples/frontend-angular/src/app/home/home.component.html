@@ -1,0 +1,58 @@
+<div class="d-flex flex-column gap-4">
+  <mat-card appearance="outlined">
+    <mat-card-title>欢迎使用IAM示例应用</mat-card-title>
+    <mat-card-content>
+      <ng-container *ngIf="(isAuthenticated$ | async); else guestBlock">
+        <mat-chip-set class="mb-2">
+          <mat-chip color="primary" selected>✅ 您已成功登录！</mat-chip>
+        </mat-chip-set>
+        <p>现在可以访问受保护的资源了。</p>
+      </ng-container>
+      <ng-template #guestBlock>
+        <p>这是一个演示如何使用Angular和OIDC对接IAM系统的示例应用。</p>
+        <p>点击导航栏中的"登录"按钮进行身份验证。</p>
+      </ng-template>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card appearance="outlined">
+    <mat-card-title>功能特性</mat-card-title>
+    <mat-card-content>
+      <mat-list>
+        <mat-list-item>✨ OAuth 2.0 / OpenID Connect 认证</mat-list-item>
+        <mat-list-item>🔄 自动令牌管理和刷新</mat-list-item>
+        <mat-list-item>🔒 使用认证守卫保护路由</mat-list-item>
+        <mat-list-item>🚀 HTTP拦截器自动注入令牌</mat-list-item>
+        <mat-list-item>⏰ 静默令牌续订</mat-list-item>
+        <mat-list-item>👤 用户信息显示</mat-list-item>
+      </mat-list>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card appearance="outlined">
+    <mat-card-title>快速开始</mat-card-title>
+    <mat-card-content>
+      <ol class="mb-0">
+        <li>确保IAM服务器运行在 <code>https://localhost:7001</code></li>
+        <li>在IAM中注册客户端，客户端ID: <code>FrontTest</code></li>
+        <li>配置重定向URI: <code>http://localhost:4200</code></li>
+        <li>添加允许的作用域: <code>openid profile email ApiTest</code></li>
+        <li>点击"登录"开始认证流程</li>
+        <li>认证成功后，访问"Protected"页面查看用户信息</li>
+        <li>点击"获取天气预报"测试调用后端API</li>
+      </ol>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card appearance="outlined">
+    <mat-card-title>架构说明</mat-card-title>
+    <mat-card-content>
+      <p>本示例演示了三层架构的认证流程：</p>
+      <mat-list>
+        <mat-list-item><strong>前端应用</strong> - http://localhost:4200</mat-list-item>
+        <mat-list-item><strong>IAM认证服务器</strong> - https://localhost:7001</mat-list-item>
+        <mat-list-item><strong>后端API</strong> - https://localhost:5001</mat-list-item>
+      </mat-list>
+    </mat-card-content>
+  </mat-card>
+</div>
