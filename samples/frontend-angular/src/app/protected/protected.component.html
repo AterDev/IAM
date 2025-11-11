@@ -1,0 +1,60 @@
+<div class="d-flex flex-column gap-4">
+    <mat-card appearance="outlined">
+        <mat-card-title>受保护资源</mat-card-title>
+        <mat-card-content>
+            <div *ngIf="userData; else loadingUser">
+                <mat-list>
+                    <mat-list-item>姓名: {{ userData.name || userData.preferred_username || 'N/A' }}</mat-list-item>
+                    <mat-list-item>邮箱: {{ userData.email || 'N/A' }}</mat-list-item>
+                    <mat-list-item>用户ID: <code>{{ userData.sub || 'N/A' }}</code></mat-list-item>
+                </mat-list>
+                <mat-expansion-panel class="mt-2">
+                    <mat-expansion-panel-header>
+                        <mat-panel-title>🔑 查看访问令牌信息</mat-panel-title>
+                    </mat-expansion-panel-header>
+                    <pre class="mb-0">{{ userData | json }}</pre>
+                </mat-expansion-panel>
+            </div>
+            <ng-template #loadingUser>
+                <p>正在加载用户信息...</p>
+            </ng-template>
+        </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+        <mat-card-title>API调用测试</mat-card-title>
+        <mat-card-content>
+            <p>测试调用受保护的API端点，访问令牌会自动通过HTTP拦截器添加：</p>
+            <div class="d-flex flex-wrap gap-2 my-2">
+                <button mat-stroked-button color="primary" (click)="callPublicApi()" [disabled]="loading">
+                    {{ loading ? '加载中...' : '调用公开API' }}
+                </button>
+                <button mat-raised-button color="primary" (click)="callProtectedApi()" [disabled]="loading">
+                    {{ loading ? '加载中...' : '调用受保护API' }}
+                </button>
+                <button mat-raised-button color="accent" (click)="callWeatherApi()" [disabled]="loading">
+                    {{ loading ? '加载中...' : '获取天气预报' }}
+                </button>
+                <mat-progress-spinner *ngIf="loading" mode="indeterminate" diameter="28"></mat-progress-spinner>
+            </div>
+            <mat-card *ngIf="apiResponse" class="mt-2" appearance="outlined">
+                <mat-card-title>API响应</mat-card-title>
+                <mat-card-content>
+                    <pre class="mb-0">{{ apiResponse | json }}</pre>
+                </mat-card-content>
+            </mat-card>
+        </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+        <mat-card-title>提示</mat-card-title>
+        <mat-card-content>
+            <mat-list>
+                <mat-list-item>访问令牌会自动包含在请求头 Authorization 中</mat-list-item>
+                <mat-list-item>令牌格式: <code>Bearer [access_token] </code></mat-list-item>
+                <mat-list-item>后端API会验证签名、有效期和audience</mat-list-item>
+                <mat-list-item>令牌即将过期时会自动续订</mat-list-item>
+            </mat-list>
+        </mat-card-content>
+    </mat-card>
+</div>
