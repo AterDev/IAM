@@ -16,7 +16,7 @@ export const appConfig: ApplicationConfig = {
     importProvidersFrom(
       AuthModule.forRoot({
         config: {
-          authority: 'https://localhost:7000',
+          authority: 'https://localhost:7070',
           redirectUrl: window.location.origin,
           postLogoutRedirectUri: window.location.origin,
           clientId: 'FrontTest',
@@ -25,7 +25,7 @@ export const appConfig: ApplicationConfig = {
           silentRenew: true,
           useRefreshToken: true,
           logLevel: LogLevel.Debug,
-          secureRoutes: ['https://localhost:5001/api'],
+          secureRoutes: ['https://localhost:7000/api'],
           customParamsAuthRequest: {
           }
         }

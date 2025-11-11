@@ -70,18 +70,59 @@
 ### 环境要求
 - .NET 9.0 SDK
 - Node.js 20+ / pnpm 9+
-- PostgreSQL 14+
-- Redis（可选，用于缓存）
+- Docker Desktop（用于数据库和缓存容器）
 
-### 后端启动
+### 使用 .NET Aspire 一键启动（推荐）
+
+.NET Aspire 可以自动编排和管理所有服务，包括数据库、缓存、API服务和前端应用。
 
 ```bash
 # 克隆仓库
 git clone https://github.com/AterDev/IAM.git
 cd IAM
 
-# 配置数据库连接
-# 编辑 src/Services/ApiService/appsettings.Development.json
+# 启动所有服务
+cd src/AppHost
+dotnet run
+```
+
+这将自动启动：
+- **PostgreSQL** 数据库容器 (端口 15432)
+- **Redis** 缓存容器 (端口 16379)
+- **数据库迁移服务** - 自动执行数据库迁移和数据种子
+- **IAM API 服务** - `https://localhost:7070`
+- **IAM 管理前端** - `http://localhost:4200`
+- **示例 API 服务** - `https://localhost:7000`
+- **示例前端应用** - `http://localhost:4201`
+
+Aspire Dashboard 将自动在浏览器中打开，提供：
+- 所有服务的实时状态监控
+- 日志查看和搜索
+- 分布式追踪
+- 指标和性能监控
+
+**服务端口说明：**
+| 服务 | 端口 | 说明 |
+|------|------|------|
+| IAM API | 7070 | 身份认证和授权服务 |
+| IAM 管理前端 | 4200 | 管理后台界面 |
+| 示例 API | 7000 | 示例后端服务 |
+| 示例前端 | 4201 | 示例前端应用 |
+
+**默认配置已自动创建：**
+- 管理员账号: `admin` / `MakeDotnetGreatAgain`
+- OAuth作用域: openid, profile, email, address, phone, offline_access
+- 前端客户端: `FrontClient` (支持授权码+PKCE流程)
+- API客户端: `ApiClient` (支持客户端凭证流程)
+
+### 手动启动（高级用户）
+
+如果需要单独启动各个服务：
+
+#### 后端启动
+
+```bash
+# 确保 PostgreSQL 和 Redis 正在运行
 
 # 运行数据库迁移
 cd src/Services/MigrationService
@@ -92,9 +133,9 @@ cd ../ApiService
 dotnet run
 ```
 
-API将在 `https://localhost:5001` 启动
+API将在 `https://localhost:7070` 启动
 
-### 前端启动
+#### 前端启动
 
 ```bash
 cd src/ClientApp/WebApp
@@ -107,10 +148,6 @@ pnpm start
 ```
 
 管理门户将在 `http://localhost:4200` 启动
-
-默认管理员账号：
-- 用户名: `admin`
-- 密码: `Admin@123`
 
 ### Docker部署
 
@@ -127,6 +164,7 @@ docker-compose up -d
 ```
 IAM/
 ├── src/
+│   ├── AppHost/                  # .NET Aspire 应用编排
 │   ├── Ater/                    # 基础类库
 │   │   ├── Ater.Common/         # 通用帮助类
 │   │   ├── Ater.Web.Convention/ # Web约定
@@ -172,9 +210,11 @@ IAM/
 
 ### 后端
 - **框架**: ASP.NET Core 9.0
+- **编排**: .NET Aspire (开发环境)
 - **ORM**: Entity Framework Core
 - **数据库**: PostgreSQL
-- **认证**: JWT Bearer
+- **缓存**: Redis
+- **认证**: JWT Bearer / OAuth 2.0 / OIDC
 - **文档**: Swagger/OpenAPI
 
 ### 前端
@@ -252,33 +292,70 @@ pnpm test:coverage
 
 ## 🤝 示例集成
 
+IAM 提供了完整的前后端集成示例，展示如何使用 OAuth 2.0 / OIDC 进行身份认证和授权。
+
+所有示例项目都已集成到 .NET Aspire 中，可以一键启动所有服务。详见 [samples/README.md](samples/README.md)
+
 ### .NET后端集成
 参见 [samples/backend-dotnet/](samples/backend-dotnet/)
+
+演示内容：
+- JWT Bearer 令牌验证
+- 使用 IAM 作为授权服务器
+- 受保护的 API 端点
+- CORS 配置
 
 ```csharp
 // 配置JWT认证
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = "https://your-iam-server";
-        options.Audience = "your-api";
+        options.Authority = "https://localhost:7070";  // IAM 服务器地址
+        options.Audience = "ApiClient";  // API 客户端标识
     });
 ```
+
+**运行端口**: `https://localhost:7000`
 
 ### Angular前端集成
 参见 [samples/frontend-angular/](samples/frontend-angular/)
 
+演示内容：
+- OAuth 2.0 授权码流程 + PKCE
+- 自动令牌管理和刷新
+- 受保护路由
+- HTTP 拦截器自动添加令牌
+
 ```typescript
 // 配置OIDC客户端
 export const authConfig: AuthConfig = {
-  issuer: 'https://your-iam-server',
-  clientId: 'your-client-id',
-  redirectUri: window.location.origin + '/callback',
+  authority: 'https://localhost:7070',  // IAM 服务器地址
+  clientId: 'FrontClient',  // 前端客户端标识
+  redirectUri: window.location.origin,
   scope: 'openid profile email',
   responseType: 'code',
-  usePkce: true
+  usePkce: true  // 启用 PKCE
 };
 ```
+
+**运行端口**: `http://localhost:4201`
+
+### 快速体验
+
+使用 .NET Aspire 一键启动所有服务：
+
+```bash
+cd src/AppHost
+dotnet run
+```
+
+然后访问：
+- IAM 管理后台: `http://localhost:4200`
+- 示例前端应用: `http://localhost:4201`
+
+使用默认账号登录：
+- 用户名: `admin`
+- 密码: `MakeDotnetGreatAgain`
 
 ## 📋 待实现功能
 

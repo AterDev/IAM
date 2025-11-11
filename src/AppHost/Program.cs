@@ -67,8 +67,11 @@ if (aspireSetting.EnableQdrant)
 
 devPassword.WithParentRelationship(database!);
 var migration = builder.AddProject<Projects.MigrationService>("MigrationService");
-var apiService = builder.AddProject<Projects.ApiService>("ApiService").WaitForCompletion(migration);
-var sampleApi = builder.AddProject<Projects.SampleApi>("SampleApi");
+var apiService = builder.AddProject<Projects.ApiService>("ApiService")
+    .WithHttpsEndpoint(port: 7070, name: "https")
+    .WaitForCompletion(migration);
+var sampleApi = builder.AddProject<Projects.SampleApi>("SampleApi")
+    .WithHttpsEndpoint(port: 7000, name: "https");
 
 builder
     .AddNpmApp("SampleApp", "../../samples/frontend-angular")
