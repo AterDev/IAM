@@ -115,7 +115,20 @@
     "optional": "Optional",
     "emphasize": "Emphasize",
     "searchPlaceholder": "Search scope name or display name",
-    "requiredFilter": "Required Filter"
+    "requiredFilter": "Required Filter",
+    "addScope": "Add Scope",
+    "editScope": "Edit Scope",
+    "basicInfo": "Basic Information",
+    "configuration": "Configuration",
+    "claims": "Claims",
+    "claimsHint": "Specify the claim types included in this scope",
+    "addClaim": "Add Claim",
+    "noClaims": "No claims",
+    "createSuccess": "Scope created successfully",
+    "updateSuccess": "Scope updated successfully",
+    "deleteSuccess": "Scope deleted",
+    "deleteConfirmTitle": "Confirm Delete Scope",
+    "deleteConfirmMessage": "Are you sure you want to delete this scope? This action cannot be undone."
   },
   "client": {
     "title": "Application Management",
@@ -225,7 +238,18 @@
     "deleteRoleFailed": "Failed to delete role",
     "batchDeletePartialFailed": "Some roles failed to delete",
     "loadRoleDetailFailed": "Failed to load role detail",
-    "loadScopesFailed": "Failed to load scopes"
+    "loadScopesFailed": "Failed to load scopes",
+    "required": "This field is required",
+    "minLength": "The minimum length is {{length}}",
+    "maxLength": "The maximum length is {{length}}",
+    "createClientFailed": "Failed to create application",
+    "createScopeFailed": "Failed to create scope",
+    "updateClientFailed": "Failed to update application",
+    "updateScopeFailed": "Failed to update scope",
+    "deleteClientFailed": "Failed to delete application",
+    "deleteScopeFailed": "Failed to delete scope",
+    "loadClientFailed": "Failed to load application",
+    "loadScopeFailed": "Failed to load scope"
   },
   "permission": {
     "category": {

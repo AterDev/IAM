@@ -1,66 +1,95 @@
-<h2 mat-dialog-title>{{ 'scope.addScope' | translate }}</h2>
+<h2 mat-dialog-title class="dialog-title">{{ 'scope.addScope' | translate }}</h2>
 
 <mat-dialog-content>
-  <form [formGroup]="scopeForm" class="scope-form">
-    <mat-form-field appearance="outline">
-      <mat-label>{{ 'scope.name' | translate }}</mat-label>
-      <input matInput [formControl]="name" required>
-      <mat-error *ngIf="name.invalid && name.touched">
-        {{ getErrorMessage(name, 'name') }}
-      </mat-error>
-    </mat-form-field>
+  <form [formGroup]="scopeForm" class="d-flex flex-column gap-2">
+    <!-- 基本信息部分 -->
+    <div>
+      <h3 class="h5 fw-500">{{ 'scope.basicInfo' | translate }}</h3>
+      <mat-form-field appearance="outline" class="w-100 mb-3">
+        <mat-label>{{ 'scope.name' | translate }}</mat-label>
+        <input matInput [formControl]="name" required placeholder="e.g., openid">
+        @if (name.invalid && name.touched) {
+        <mat-error>
+          {{ getErrorMessage(name, 'name') }}
+        </mat-error>
+        }
+      </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>{{ 'scope.displayName' | translate }}</mat-label>
-      <input matInput [formControl]="displayName" required>
-      <mat-error *ngIf="displayName.invalid && displayName.touched">
-        {{ getErrorMessage(displayName, 'displayName') }}
-      </mat-error>
-    </mat-form-field>
+      <mat-form-field appearance="outline" class="w-100 mb-3">
+        <mat-label>{{ 'scope.displayName' | translate }}</mat-label>
+        <input matInput [formControl]="displayName" required placeholder="e.g., Open ID">
+        @if (displayName.invalid && displayName.touched) {
+        <mat-error>
+          {{ getErrorMessage(displayName, 'displayName') }}
+        </mat-error>
+        }
+      </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>{{ 'scope.description' | translate }}</mat-label>
-      <textarea matInput [formControl]="description" rows="3"></textarea>
-    </mat-form-field>
-
-    <div class="checkbox-row">
-      <mat-checkbox [formControl]="required">
-        {{ 'scope.required' | translate }}
-      </mat-checkbox>
-      <mat-checkbox [formControl]="emphasize">
-        {{ 'scope.emphasize' | translate }}
-      </mat-checkbox>
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>{{ 'scope.description' | translate }}</mat-label>
+        <textarea matInput [formControl]="description" rows="3" placeholder="Optional description"></textarea>
+      </mat-form-field>
     </div>
 
-    <div class="claims-section">
-      <h3>{{ 'scope.claims' | translate }}</h3>
-      <div class="claim-input-row">
-        <mat-form-field appearance="outline">
+    <!-- 配置部分 -->
+    <div class="border-top pt-1">
+      <h3 class="h5 fw-500">{{ 'scope.configuration' | translate }}</h3>
+      <div class="d-flex gap-2 align-items-center mb-2">
+        <mat-checkbox [formControl]="required" class="col">
+          {{ 'scope.required' | translate }}
+        </mat-checkbox>
+        <mat-checkbox [formControl]="emphasize" class="col">
+          {{ 'scope.emphasize' | translate }}
+        </mat-checkbox>
+      </div>
+    </div>
+
+    <!-- Claims部分 -->
+    <div class="border-top pt-1">
+      <h3 class="h5 fw-500 mb-2">{{ 'scope.claims' | translate }}</h3>
+      <p class="small text-muted mb-3">{{ 'scope.claimsHint' | translate }}</p>
+
+      <div class="d-flex gap-2 align-items-center mb-2">
+        <mat-form-field appearance="outline" class="col" subscriptSizing="dynamic">
           <mat-label>{{ 'scope.addClaim' | translate }}</mat-label>
-          <input matInput [formControl]="newClaim" (keyup.enter)="addClaim()">
+          <input matInput [formControl]="newClaim" (keyup.enter)="addClaim()"
+            placeholder="e.g., sub">
         </mat-form-field>
-        <button mat-icon-button  (click)="addClaim()" type="button">
-          <mat-icon>add</mat-icon>
+        <button mat-icon-button class="col-auto" (click)="addClaim()" type="button"
+          [disabled]="!newClaim.value?.trim()">
+          <mat-icon>add_circle</mat-icon>
         </button>
       </div>
-      <mat-chip-set>
-        <mat-chip *ngFor="let claim of claims.controls; let i = index" 
-                  (removed)="removeClaim(i)">
-          {{ claim.value }}
-          <button matChipRemove>
-            <mat-icon>cancel</mat-icon>
-          </button>
-        </mat-chip>
-      </mat-chip-set>
+
+      @if (claims.controls.length > 0) {
+      <div class="d-flex flex-wrap gap-2 mt-2">
+        <mat-chip-set aria-label="Claims">
+          @for (claim of claims.controls; track $index; let i = $index) {
+          <mat-chip [removable]="true"
+            (removed)="removeClaim(i)">
+            {{ claim.value }}
+            <button matChipRemove [attr.aria-label]="'Remove ' + claim.value" type="button">
+              <mat-icon>close</mat-icon>
+            </button>
+          </mat-chip>
+          }
+        </mat-chip-set>
+      </div>
+      }
     </div>
   </form>
 </mat-dialog-content>
 
-<mat-dialog-actions align="end">
+<mat-dialog-actions align="end" class="gap-2">
   <button mat-button (click)="onCancel()" [disabled]="isSubmitting">
     {{ 'common.cancel' | translate }}
   </button>
-  <button mat-raised-button  (click)="onSubmit()" [disabled]="isSubmitting">
-    {{ isSubmitting ? ('common.saving' | translate) : ('common.save' | translate) }}
+  <button mat-raised-button (click)="onSubmit()" [disabled]="isSubmitting || scopeForm.invalid">
+    @if (isSubmitting) {
+    <mat-spinner diameter="20"></mat-spinner>
+    }
+    @if (!isSubmitting) {
+    <span>{{ 'common.save' | translate }}</span>
+    }
   </button>
 </mat-dialog-actions>

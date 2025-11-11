@@ -6,6 +6,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { ScopeAddDto } from 'src/app/services/api/models/access-mod/scope-add-dto.model';
 import { TranslateService } from '@ngx-translate/core';
@@ -18,7 +19,8 @@ import { TranslateService } from '@ngx-translate/core';
     MatDialogModule,
     MatChipsModule,
     MatIconModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    MatProgressSpinnerModule
   ],
   templateUrl: './add.html',
   styleUrls: ['./add.scss']
