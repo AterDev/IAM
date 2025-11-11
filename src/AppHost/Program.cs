@@ -69,8 +69,14 @@ devPassword.WithParentRelationship(database!);
 var migration = builder.AddProject<Projects.MigrationService>("MigrationService");
 var apiService = builder.AddProject<Projects.ApiService>("ApiService").WaitForCompletion(migration);
 var sampleApi = builder.AddProject<Projects.SampleApi>("SampleApi");
-var webApp = builder
-    .AddNpmApp("WebApp", "../ClientApp/WebApp")
+
+builder
+    .AddNpmApp("SampleApp", "../../samples/frontend-angular")
+    .WithReference(sampleApi)
+    .WithUrl("http://localhost:4201");
+
+builder
+    .AddNpmApp("AdminApp", "../ClientApp/WebApp")
     .WithReference(apiService)
     .WithUrl("http://localhost:4200");
 
