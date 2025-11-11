@@ -183,7 +183,20 @@ export const I18N_KEYS = {
     "optional": "scope.optional",
     "emphasize": "scope.emphasize",
     "searchPlaceholder": "scope.searchPlaceholder",
-    "requiredFilter": "scope.requiredFilter"
+    "requiredFilter": "scope.requiredFilter",
+    "addScope": "scope.addScope",
+    "editScope": "scope.editScope",
+    "basicInfo": "scope.basicInfo",
+    "configuration": "scope.configuration",
+    "claims": "scope.claims",
+    "claimsHint": "scope.claimsHint",
+    "addClaim": "scope.addClaim",
+    "noClaims": "scope.noClaims",
+    "createSuccess": "scope.createSuccess",
+    "updateSuccess": "scope.updateSuccess",
+    "deleteSuccess": "scope.deleteSuccess",
+    "deleteConfirmTitle": "scope.deleteConfirmTitle",
+    "deleteConfirmMessage": "scope.deleteConfirmMessage"
   },
   "client": {
     "title": "client.title",
