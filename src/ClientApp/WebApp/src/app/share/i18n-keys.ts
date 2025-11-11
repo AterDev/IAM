@@ -116,7 +116,8 @@ export const I18N_KEYS = {
     "createdTime": "common.createdTime",
     "updatedTime": "common.updatedTime",
     "clearFilters": "common.clearFilters",
-    "refresh": "common.refresh"
+    "refresh": "common.refresh",
+    "copy": "common.copy"
   },
   "user": {
     "userName": "user.userName",
@@ -227,7 +228,30 @@ export const I18N_KEYS = {
     "explicit": "client.explicit",
     "addUri": "client.addUri",
     "removeUri": "client.removeUri",
-    "uriPlaceholder": "client.uriPlaceholder"
+    "uriPlaceholder": "client.uriPlaceholder",
+    "configuration": "client.configuration",
+    "redirectUrisHint": "client.redirectUrisHint",
+    "addRedirectUri": "client.addRedirectUri",
+    "noRedirectUris": "client.noRedirectUris",
+    "postLogoutRedirectUrisHint": "client.postLogoutRedirectUrisHint",
+    "addPostLogoutRedirectUri": "client.addPostLogoutRedirectUri",
+    "noPostLogoutRedirectUris": "client.noPostLogoutRedirectUris",
+    "secretTitle": "client.secretTitle",
+    "secretWarning": "client.secretWarning",
+    "secretWarningText": "client.secretWarningText",
+    "secretNote": "client.secretNote",
+    "authorizations": "client.authorizations",
+    "subjectId": "client.subjectId",
+    "status": "client.status",
+    "creationDate": "client.creationDate",
+    "noAuthorizations": "client.noAuthorizations",
+    "deleteConfirmTitle": "client.deleteConfirmTitle",
+    "deleteConfirmMessage": "client.deleteConfirmMessage",
+    "deleteMultipleConfirmMessage": "client.deleteMultipleConfirmMessage",
+    "deleteSuccess": "client.deleteSuccess",
+    "deleteMultipleSuccess": "client.deleteMultipleSuccess",
+    "deleteMultiplePartial": "client.deleteMultiplePartial",
+    "createSuccess": "client.createSuccess"
   },
   "resource": {
     "title": "resource.title",
@@ -273,7 +297,12 @@ export const I18N_KEYS = {
     "deleteRoleFailed": "error.deleteRoleFailed",
     "batchDeletePartialFailed": "error.batchDeletePartialFailed",
     "loadRoleDetailFailed": "error.loadRoleDetailFailed",
-    "loadScopesFailed": "error.loadScopesFailed"
+    "loadScopesFailed": "error.loadScopesFailed",
+    "loadClientsFailed": "error.loadClientsFailed",
+    "createClientFailed": "error.createClientFailed",
+    "deleteClientFailed": "error.deleteClientFailed",
+    "required": "error.required",
+    "minLength": "error.minLength"
   },
   "permission": {
     "category": {
