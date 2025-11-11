@@ -4,14 +4,12 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { AuthModule, LogLevel } from 'angular-auth-oidc-client';
 import { routes } from './app.routes';
 import { authInterceptor } from './auth.interceptor';
-import { provideAnimations } from '@angular/platform-browser/animations';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor])),
-    provideAnimations(),
     importProvidersFrom(MatSnackBarModule),
     importProvidersFrom(
       AuthModule.forRoot({
@@ -20,7 +18,7 @@ export const appConfig: ApplicationConfig = {
           redirectUrl: window.location.origin,
           postLogoutRedirectUri: window.location.origin,
           clientId: 'FrontTest',
-          scope: 'openid profile email ApiTest',
+          scope: 'openid profile email offline_access',
           responseType: 'code',
           silentRenew: true,
           useRefreshToken: true,

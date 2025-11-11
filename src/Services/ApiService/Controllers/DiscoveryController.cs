@@ -1,8 +1,10 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Ater.Common;
 using IdentityMod.Managers;
 using IdentityMod.Models.OAuthDtos;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using ClaimTypes = System.Security.Claims.ClaimTypes;
 
 namespace ApiService.Controllers;
@@ -62,8 +64,8 @@ public class DiscoveryController(
     /// }
     /// </remarks>
     [HttpGet("/.well-known/openid-configuration")]
-    [ProducesResponseType(typeof(OidcConfigurationDto), StatusCodes.Status200OK)]
-    public IActionResult GetConfiguration()
+    [EnableCors(AppConst.Default)]
+    public ActionResult<OidcConfigurationDto> GetConfiguration()
     {
         try
         {
@@ -130,8 +132,8 @@ public class DiscoveryController(
     /// }
     /// </remarks>
     [HttpGet("/.well-known/jwks")]
-    [ProducesResponseType(typeof(JwksDto), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetJwks()
+    [EnableCors(AppConst.Default)]
+    public async Task<ActionResult<JwksDto>> GetJwks()
     {
         try
         {
@@ -186,10 +188,7 @@ public class DiscoveryController(
     [HttpGet("/connect/userinfo")]
     [HttpPost("/connect/userinfo")]
     [Authorize]
-    [ProducesResponseType(typeof(UserInfoDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetUserInfo()
+    public async Task<ActionResult<UserInfoDto>> GetUserInfo()
     {
         try
         {

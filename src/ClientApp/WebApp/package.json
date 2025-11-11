@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "pnpm i18n:keys && ng serve",
+    "start": "pnpm i18n:keys && ng serve --port 4200",
     "build": "pnpm i18n:keys && ng build",
     "watch": "ng build --watch --configuration development",
     "i18n:keys": "node scripts/i18n-keys.js",

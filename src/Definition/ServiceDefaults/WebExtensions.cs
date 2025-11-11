@@ -58,7 +58,7 @@ public static class WebExtensions
         services.AddThirdAuthentication(configuration);
 
         services.AddAuthorize();
-        services.AddCors();
+        services.AddCors(configuration);
         services.AddRateLimiter();
 
         services.AddOutputCache(options =>
@@ -77,6 +77,8 @@ public static class WebExtensions
         // 异常统一处理
         app.UseExceptionHandler(ExceptionHandler.Handler());
 
+        app.UseRouting();
+
         if (app.Environment.IsProduction())
         {
             app.UseCors(AppConst.Default);
@@ -91,10 +93,8 @@ public static class WebExtensions
         app.UseRateLimiter();
         app.UseStaticFiles();
         app.UseRequestLocalization();
-        app.UseRouting();
         app.UseOutputCache();
         app.MapSwagger().CacheOutput("openapi");
-
         //app.UseMiddleware<JwtMiddleware>();
         app.UseAuthentication();
         app.UseAuthorization();
@@ -102,7 +102,6 @@ public static class WebExtensions
         app.MapFallbackToFile("index.html");
         return app;
     }
-
 
     public static IServiceCollection AddSwagger(this IServiceCollection services)
     {
