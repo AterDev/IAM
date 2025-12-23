@@ -1,11 +1,11 @@
-using Ater.Common;
-using Ater.Web.Convention.Abstraction;
-using Ater.Web.Convention.Services;
-using Ater.Web.Extension.Services;
+using EntityFramework.AppDbFactory;
 using Mapster;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using Perigon.AspNetCore.Abstraction;
+using Perigon.AspNetCore.Services;
+using Share.Implement;
 
 namespace ServiceDefaults;
 
@@ -20,7 +20,8 @@ public static class FrameworkExtensions
 
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<IUserContext, UserContext>();
-        builder.Services.AddScoped<ITenantProvider, TenantProvider>();
+        builder.Services.AddScoped<ITenantContext, TenantContext>();
+
 
         var components =
             builder.Configuration.GetSection(ComponentOption.ConfigPath).Get<ComponentOption>()
@@ -32,7 +33,6 @@ public static class FrameworkExtensions
         builder.AddDbContext(components);
 
         builder.Services.AddScoped<JwtService>();
-        builder.Services.AddScoped<SmtpService>();
         return builder;
     }
 
@@ -58,18 +58,6 @@ public static class FrameworkExtensions
         builder.Services.Configure<JwtOption>(config.GetSection(JwtOption.ConfigPath));
         builder.Services.Configure<CacheOption>(config.GetSection(CacheOption.ConfigPath));
 
-        if (components.UseSmtp)
-        {
-            builder.Services.Configure<SmtpOption>(config.GetSection(SmtpOption.ConfigPath));
-        }
-        if (components.UseSMS)
-        {
-            builder.Services.Configure<SMSOption>(config.GetSection(SMSOption.ConfigPath));
-        }
-        if (components.UseAWSS3)
-        {
-            builder.Services.Configure<AWSS3Option>(config.GetSection(AWSS3Option.ConfigPath));
-        }
         return builder;
     }
 
@@ -83,8 +71,8 @@ public static class FrameworkExtensions
         ComponentOption components
     )
     {
-        builder.Services.AddSingleton<DbContextFactory>();
-        //builder.Services.AddScoped<TenantDbContextFactory>();
+        builder.Services.AddSingleton<UniversalDbFactory>();
+        builder.Services.AddScoped<TenantDbFactory>();
         return builder;
     }
 
@@ -142,7 +130,7 @@ public static class FrameworkExtensions
                 _ => HybridCacheEntryFlags.None,
             };
 
-            options.MaximumPayloadBytes = cacheOption?.MaxPayloadBytes ?? 1024 * 1024;
+            options.MaximumPayloadBytes = cacheOption?.MaxPayloadBytes ?? (1024 * 1024);
             options.MaximumKeyLength = cacheOption?.MaxKeyLength ?? 1024;
             options.DefaultEntryOptions = new HybridCacheEntryOptions
             {

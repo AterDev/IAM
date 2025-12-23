@@ -1,6 +1,7 @@
-using Ater.Web.Extension.Services;
+using Perigon.AspNetCore.Toolkit.Services;
 
 namespace CommonMod.Managers;
+
 public class EmailManager(ILogger<EmailManager> logger, SmtpService smtp) : ManagerBase(logger)
 {
     /// <summary>

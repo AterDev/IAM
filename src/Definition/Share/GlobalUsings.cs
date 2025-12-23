@@ -1,11 +1,8 @@
 global using System;
-global using System.ComponentModel.DataAnnotations;
-global using Ater.Common.Models;
-global using Ater.Common.Utils;
-global using Ater.Web.Convention;
-global using Ater.Web.Convention.Abstraction;
-global using EntityFramework;
-global using EntityFramework.DBProvider;
+global using EntityFramework.AppDbContext;
 global using Microsoft.EntityFrameworkCore;
-global using Microsoft.EntityFrameworkCore.Infrastructure;
 global using Microsoft.Extensions.Logging;
+global using Perigon.AspNetCore.Abstraction;
+global using Perigon.AspNetCore.Constants;
+global using Perigon.AspNetCore.Models;
+global using Perigon.AspNetCore.Utils;

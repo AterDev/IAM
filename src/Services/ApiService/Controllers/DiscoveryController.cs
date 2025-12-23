@@ -1,6 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using Ater.Common;
+using Perigon.AspNetCore.Constants;
 using IdentityMod.Managers;
 using IdentityMod.Models.OAuthDtos;
 using Microsoft.AspNetCore.Authorization;

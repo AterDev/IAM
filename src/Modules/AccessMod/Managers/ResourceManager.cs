@@ -1,6 +1,6 @@
 using AccessMod.Models.ResourceDtos;
 using Entity.AccessMod;
-using EntityFramework.DBProvider;
+using EntityFramework.AppDbContext;
 
 namespace AccessMod.Managers;
 

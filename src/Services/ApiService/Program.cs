@@ -1,7 +1,7 @@
 using ApiService.Extension;
-using Ater.Web.Convention;
 using CommonMod;
 using IdentityMod;
+using Perigon.AspNetCore.Constants;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 

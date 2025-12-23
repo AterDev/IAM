@@ -1,5 +1,3 @@
-using Entity.IdentityMod;
-using EntityFramework.DBProvider;
 using IdentityMod.Models.OrganizationDtos;
 
 namespace IdentityMod.Managers;

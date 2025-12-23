@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using Entity;
+using Mapster;
 
 namespace Share.Implement;
 
@@ -100,7 +101,7 @@ public abstract class ManagerBase<TDbContext, TEntity>
         {
             return await _dbSet
                 .Where(whereExp ?? (e => true))
-                .ProjectTo<TDto>()
+                .ProjectToType<TDto>()
                 .FirstOrDefaultAsync();
         }
     }
@@ -127,7 +128,7 @@ public abstract class ManagerBase<TDbContext, TEntity>
         var model = await _dbSet
             .AsNoTracking()
             .Where(whereExp ?? (e => true))
-            .ProjectTo<TDto>()
+            .ProjectToType<TDto>()
             .FirstOrDefaultAsync();
 
         if (typeof(TDto) is TEntity && model != null)
@@ -171,7 +172,7 @@ public abstract class ManagerBase<TDbContext, TEntity>
         return await _dbSet
             .AsNoTracking()
             .Where(whereExp ?? (e => true))
-            .ProjectTo<TDto>()
+            .ProjectToType<TDto>()
             .ToListAsync();
     }
 
@@ -206,7 +207,7 @@ public abstract class ManagerBase<TDbContext, TEntity>
             .AsNoTracking()
             .Skip((filter.PageIndex - 1) * filter.PageSize)
             .Take(filter.PageSize)
-            .ProjectTo<TItem>()
+            .ProjectToType<TItem>()
             .ToListAsync();
 
         ResetQuery();

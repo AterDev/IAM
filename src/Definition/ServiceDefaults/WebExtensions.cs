@@ -1,9 +1,6 @@
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using System.Threading.RateLimiting;
-using Ater.Common;
-using Ater.Common.Converters;
-using Ater.Common.Utils;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
@@ -11,6 +8,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using Perigon.AspNetCore.Converters;
+using Perigon.AspNetCore.Utils;
 using ServiceDefaults.Middleware;
 
 namespace ServiceDefaults;
@@ -27,13 +26,6 @@ public static class WebExtensions
         builder.Services.ConfigureWebMiddleware(builder.Configuration);
         builder
             .Services.AddControllers()
-            .ConfigureApiBehaviorOptions(o =>
-            {
-                o.InvalidModelStateResponseFactory = context =>
-                {
-                    return new CustomBadRequest(context, null);
-                };
-            })
             .AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
@@ -74,9 +66,6 @@ public static class WebExtensions
 
     public static WebApplication UseMiddlewareServices(this WebApplication app)
     {
-        // 异常统一处理
-        app.UseExceptionHandler(ExceptionHandler.Handler());
-
         app.UseRouting();
 
         if (app.Environment.IsProduction())

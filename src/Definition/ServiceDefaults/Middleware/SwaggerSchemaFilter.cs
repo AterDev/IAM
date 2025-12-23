@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Reflection;
-using Ater.Common.Utils;
 using Microsoft.OpenApi;
+using Perigon.AspNetCore.Utils;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace ServiceDefaults.Middleware;

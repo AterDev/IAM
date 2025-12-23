@@ -1,6 +1,6 @@
 global using System.Linq.Expressions;
-global using Ater.Common.Options;
-global using Ater.Web.Convention.Abstraction;
+global using Perigon.AspNetCore.Options;
+global using Perigon.AspNetCore.Abstraction;
 global using Entity;
 global using Entity.AccessMod;
 global using Entity.CommonMod;
