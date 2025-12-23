@@ -18,6 +18,6 @@
         <ProjectReference Include="..\..\Definition\ServiceDefaults\ServiceDefaults.csproj" />
         <ProjectReference Include="..\..\Definition\EntityFramework\EntityFramework.csproj" />
         <ProjectReference Include="..\..\Definition\Share\Share.csproj" />
-        <ProjectReference Include="..\..\Ater\Ater.Web.Convention\Ater.Web.Convention.csproj" />
+        <ProjectReference Include="..\..\Perigon\Perigon.AspNetCore\Perigon.AspNetCore.csproj" />
     </ItemGroup>
 </Project>

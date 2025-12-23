@@ -1,7 +1,9 @@
 using System.Diagnostics;
 using Entity.AccessMod;
 using Entity.IdentityMod;
+using EntityFramework.AppDbContext;
 using Microsoft.EntityFrameworkCore;
+using Perigon.AspNetCore.Constants;
 using Share.Services;
 
 namespace MigrationService;
@@ -206,20 +208,20 @@ public class Worker(
                 ApplicationType = "spa",
                 RequirePkce = true,
                 ConsentType = "implicit",
-                RedirectUris = new List<string>
-                {
+                RedirectUris =
+                [
                     "http://localhost:4200",
                     "https://localhost:4200",
                     "http://localhost:4201",
                     "https://localhost:4201"
-                },
-                PostLogoutRedirectUris = new List<string>
-                {
+                ],
+                PostLogoutRedirectUris =
+                [
                     "http://localhost:4200",
                     "https://localhost:4200",
                     "http://localhost:4201",
                     "https://localhost:4201"
-                },
+                ],
                 Permissions = System.Text.Json.JsonSerializer.Serialize(new[]
                 {
                     "ept:authorization",

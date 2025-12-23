@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 using Entity.AccessMod;
-using EntityFramework.DBProvider;
+using EntityFramework.AppDbContext;
 using IdentityMod.Models.OAuthDtos;
 
 namespace IdentityMod.Managers;

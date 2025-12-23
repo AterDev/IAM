@@ -11,6 +11,6 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Entity\Entity.csproj" />
-        <ProjectReference Include="..\..\Ater\Ater.Web.Convention\Ater.Web.Convention.csproj" />
+        <ProjectReference Include="..\..\Perigon\Perigon.AspNetCore\Perigon.AspNetCore.csproj" />
     </ItemGroup>
 </Project>

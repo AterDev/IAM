@@ -1,10 +1,10 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.Json;
-using Ater.Common.Utils;
-using Ater.Web.Convention.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
+using Perigon.AspNetCore.Services;
+using Perigon.AspNetCore.Utils;
 
 namespace ServiceDefaults.Middleware;
 

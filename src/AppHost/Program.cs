@@ -1,5 +1,5 @@
 using AppHost;
-using Ater.Common;
+using Perigon.AspNetCore.Constants;
 
 var builder = DistributedApplication.CreateBuilder(args);
 var aspireSetting = AppSettingsHelper.LoadAspireSettings(builder.Configuration);

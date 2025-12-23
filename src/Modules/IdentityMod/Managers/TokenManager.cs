@@ -1,7 +1,7 @@
 using System.Security.Claims;
-using Ater.Web.Convention.Services;
 using IdentityMod.Models.OAuthDtos;
 using IdentityMod.Services;
+using Perigon.AspNetCore.Services;
 
 namespace IdentityMod.Managers;
 

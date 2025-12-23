@@ -27,7 +27,7 @@ public class RestControllerBase<TManager>(
 [Produces("application/json")]
 public abstract class RestControllerBase(Localizer localizer) : ControllerBase
 {
-    protected readonly Localizer? _localizer = localizer;
+    protected readonly Localizer _localizer = localizer;
 
     /// <summary>
     /// 自定义403
@@ -103,29 +103,23 @@ public abstract class RestControllerBase(Localizer localizer) : ControllerBase
 
     [NonAction]
     private ErrorResult CreateResult(
-        string title,
-        string? detail = null,
-        int errorCode = 0,
-        params object[] arguments
-    )
+         string title,
+         string? detail = null,
+         int errorCode = 0,
+         params object[] arguments
+     )
     {
         var error = detail ?? string.Empty;
 
         if (detail != null)
         {
-            error = _localizer?.Get(detail, arguments) ?? detail;
+            error = _localizer.Get(detail, arguments) ?? detail;
         }
         else if (errorCode != 0)
         {
-            error = _localizer?.Get(errorCode.ToString()) ?? error;
+            error = _localizer.Get(errorCode.ToString()) ?? error;
         }
 
-        return new ErrorResult
-        {
-            Title = title,
-            Detail = error,
-            Status = errorCode,
-            TraceId = HttpContext.TraceIdentifier,
-        };
+        return new ErrorResult(error, HttpContext.TraceIdentifier, title, errorCode);
     }
 }
