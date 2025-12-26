@@ -3,7 +3,7 @@
 基于 .NET 和 Angular 的开箱即用的身份认证与授权解决方案，实现 OAuth 2.0 和 OpenID Connect (OIDC) 标准协议。
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![.NET](https://img.shields.io/badge/.NET-9.0-purple.svg)](https://dotnet.microsoft.com/)
+[![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](https://dotnet.microsoft.com/)
 [![Angular](https://img.shields.io/badge/Angular-20-red.svg)](https://angular.dev/)
 
 ## 🌟 核心特性

@@ -15,17 +15,17 @@ export const appConfig: ApplicationConfig = {
       AuthModule.forRoot({
         config: {
           authority: 'https://localhost:7070',
+          authWellknownEndpointUrl: 'https://localhost:7070/.well-known/openid-configuration',
           redirectUrl: window.location.origin,
           postLogoutRedirectUri: window.location.origin,
-          clientId: 'FrontTest',
+          clientId: 'FrontClient',
           scope: 'openid profile email offline_access',
           responseType: 'code',
           silentRenew: true,
           useRefreshToken: true,
           logLevel: LogLevel.Debug,
           secureRoutes: ['https://localhost:7000/api'],
-          customParamsAuthRequest: {
-          }
+          customParamsAuthRequest: {}
         }
       })
     )

@@ -33,10 +33,10 @@
     <mat-card-title>快速开始</mat-card-title>
     <mat-card-content>
       <ol class="mb-0">
-        <li>确保IAM服务器运行在 <code>https://localhost:7001</code></li>
-        <li>在IAM中注册客户端，客户端ID: <code>FrontTest</code></li>
-        <li>配置重定向URI: <code>http://localhost:4200</code></li>
-        <li>添加允许的作用域: <code>openid profile email ApiTest</code></li>
+        <li>确保IAM服务器运行在 <code>https://localhost:7070</code></li>
+        <li>在IAM中注册客户端，客户端ID: <code>FrontClient</code></li>
+        <li>配置重定向URI: <code>http://localhost:4201</code></li>
+        <li>添加允许的作用域: <code>openid profile email offline_access ApiTest</code></li>
         <li>点击"登录"开始认证流程</li>
         <li>认证成功后，访问"Protected"页面查看用户信息</li>
         <li>点击"获取天气预报"测试调用后端API</li>
@@ -49,9 +49,9 @@
     <mat-card-content>
       <p>本示例演示了三层架构的认证流程：</p>
       <mat-list>
-        <mat-list-item><strong>前端应用</strong> - http://localhost:4200</mat-list-item>
-        <mat-list-item><strong>IAM认证服务器</strong> - https://localhost:7001</mat-list-item>
-        <mat-list-item><strong>后端API</strong> - https://localhost:5001</mat-list-item>
+        <mat-list-item><strong>前端应用</strong> - http://localhost:4201</mat-list-item>
+        <mat-list-item><strong>IAM认证服务器</strong> - https://localhost:7070</mat-list-item>
+        <mat-list-item><strong>后端API</strong> - https://localhost:7000</mat-list-item>
       </mat-list>
     </mat-card-content>
   </mat-card>

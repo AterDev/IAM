@@ -1,7 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using IdentityMod.Managers;
 using System.ComponentModel.DataAnnotations;
+using IdentityMod.Managers;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace ApiService.Pages.Account;
 
@@ -41,7 +40,7 @@ public class LoginModel(
             {
                 var query = new Uri(ReturnUrl, UriKind.RelativeOrAbsolute).Query;
                 var queryParams = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(query);
-                
+
                 if (queryParams.TryGetValue("client_id", out var clientId))
                 {
                     // TODO: Load client details from database
@@ -68,7 +67,7 @@ public class LoginModel(
         {
             // Attempt to authenticate user
             var user = await _userManager.ValidateCredentialsAsync(Username, Password);
-            
+
             if (user == null)
             {
                 ErrorMessage = "用户名或密码错误";

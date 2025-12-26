@@ -15,8 +15,8 @@
 ## 前置要求
 
 - Node.js 20+ 和 npm
-- IAM服务器运行在 `https://localhost:7001`
-- 示例API运行在 `https://localhost:5001`（可选，用于测试API调用）
+- IAM服务器运行在 `https://localhost:7070`
+- 示例API运行在 `https://localhost:7000`（可选，用于测试API调用）
 
 ## IAM配置
 
@@ -25,8 +25,8 @@
 ### 客户端配置
 
 本示例使用IAM后台中已创建的客户端：
-- **客户端ID**: `FrontTest`
-- **客户端名称**: 前端测试客户端
+- **客户端ID**: `FrontClient`
+- **客户端名称**: 前端示例客户端
 - **应用类型**: 单页应用(SPA)
 
 ### 必需的配置设置
@@ -38,23 +38,24 @@
    - 密码: `MakeDotnetGreatAgain`
 
 2. 创建新客户端，配置如下：
-   - **客户端ID**: `FrontTest`
+   - **客户端ID**: `FrontClient`
    - **客户端名称**: 前端示例应用
    - **应用类型**: 单页应用(SPA)
    - **客户端类型**: 公共客户端
    - **授权类型**: 授权码 + PKCE
    - **重定向URI**: 
-     - `http://localhost:4200`
-     - `http://localhost:4200/`
+     - `http://localhost:4201`
+     - `http://localhost:4201/`
    - **登出后重定向URI**:
-     - `http://localhost:4200`
-     - `http://localhost:4200/`
-   - **允许的CORS源**: `http://localhost:4200`
+     - `http://localhost:4201`
+     - `http://localhost:4201/`
+   - **允许的CORS源**: `http://localhost:4201`
    - **允许的作用域**:
      - `openid` （必需）
      - `profile`
      - `email`
-     - `ApiTest` （用于调用示例API）
+     - `offline_access`
+     - `ApiTest` （调用示例API所需）
    - **需要PKCE**: 是
    - **需要客户端密钥**: 否
    - **允许刷新令牌**: 是
@@ -88,11 +89,11 @@ OIDC配置在 `src/app/app.config.ts` 中：
 
 ```typescript
 {
-  authority: 'https://localhost:7001',      // IAM服务器地址
-  redirectUrl: window.location.origin,      // 登录成功后重定向URL
+  authority: 'https://localhost:7070',      // IAM服务器地址
+  redirectUrl: window.location.origin,      // 登录成功后重定向URL (http://localhost:4201)
   postLogoutRedirectUri: window.location.origin, // 登出后重定向URL
-  clientId: 'FrontTest',                    // 客户端ID
-  scope: 'openid profile email ApiTest',    // 请求的作用域
+  clientId: 'FrontClient',                  // 客户端ID
+  scope: 'openid profile email offline_access ApiTest',    // 请求的作用域
   responseType: 'code',                     // 使用授权码流程
   silentRenew: true,                        // 启用静默令牌续订
   useRefreshToken: true                     // 使用刷新令牌
@@ -109,7 +110,7 @@ OIDC配置在 `src/app/app.config.ts` 中：
 npm start
 ```
 
-应用将在 `http://localhost:4200` 可用。
+应用将在 `http://localhost:4201` 可用。
 
 ## 应用结构
 
@@ -146,7 +147,7 @@ src/
 ### 3. HTTP拦截器
 
 `authInterceptor` 自动将访问令牌添加到HTTP请求：
-- 配置为向 `https://localhost:5001/api` 的请求添加令牌
+- 配置为向 `https://localhost:7000/api` 的请求添加令牌
 - 令牌作为 `Authorization: Bearer {token}` 头添加
 
 ### 4. 用户信息
@@ -185,7 +186,7 @@ src/
 
 ### 完整测试流程
 
-1. **启动IAM服务器** （确保运行在 `https://localhost:7001`）
+1. **启动IAM服务器** （确保运行在 `https://localhost:7070`）
 
 2. **在IAM中注册客户端** （如上所述）
 
@@ -194,7 +195,7 @@ src/
    npm start
    ```
 
-4. **导航到** `http://localhost:4200`
+4. **导航到** `http://localhost:4201`
 
 5. **点击"登录"** 并使用以下凭据认证:
    - 用户名: `admin`
@@ -238,13 +239,13 @@ src/
 ### CORS错误
 
 如果看到CORS错误：
-- 确保客户端的"允许的CORS源"包括 `http://localhost:4200`
+- 确保客户端的"允许的CORS源"包括 `http://localhost:4201`
 - 检查IAM的CORS策略允许Angular应用源
 
 ### 重定向URI不匹配
 
 如果认证失败并显示重定向URI错误：
-- 验证IAM客户端配置中的重定向URI完全匹配 `http://localhost:4200`
+- 验证IAM客户端配置中的重定向URI完全匹配 `http://localhost:4201`
 - 检查尾部斜杠
 
 ### 令牌未发送到API
@@ -257,7 +258,7 @@ src/
 
 对于使用自签名证书的开发环境：
 - 首次访问IAM时接受证书警告
-- 您可能需要直接访问 `https://localhost:7001` 来接受证书
+- 您可能需要直接访问 `https://localhost:7070` 来接受证书
 
 ### 无限重定向循环
 
@@ -306,9 +307,9 @@ logLevel: LogLevel.Debug
 
 1. 获取访问令牌：
    - 在Postman中使用OAuth 2.0
-   - 授权URL: `https://localhost:7001/connect/authorize`
-   - 令牌URL: `https://localhost:7001/connect/token`
-   - 客户端ID: `FrontTest`
+   - 授权URL: `https://localhost:7070/connect/authorize`
+   - 令牌URL: `https://localhost:7070/connect/token`
+   - 客户端ID: `FrontClient`
    - 作用域: 所需的作用域
 
 2. 在请求中使用令牌：
