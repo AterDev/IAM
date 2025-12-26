@@ -41,7 +41,7 @@ export class ProtectedComponent implements OnInit {
     this.loading = true;
     this.apiResponse = null;
 
-    this.http.get('https://localhost:5001/api/public')
+    this.http.get('https://localhost:7000/api/public')
       .subscribe({
         next: (response) => {
           this.apiResponse = response;
@@ -58,7 +58,7 @@ export class ProtectedComponent implements OnInit {
     this.loading = true;
     this.apiResponse = null;
 
-    this.http.get('https://localhost:5001/api/protected')
+    this.http.get('https://localhost:7000/api/protected')
       .subscribe({
         next: (response) => {
           this.apiResponse = response;
@@ -75,7 +75,7 @@ export class ProtectedComponent implements OnInit {
     this.loading = true;
     this.apiResponse = null;
 
-    this.http.get('https://localhost:5001/api/weatherforecast')
+    this.http.get('https://localhost:7000/api/weatherforecast')
       .subscribe({
         next: (response) => {
           this.apiResponse = response;

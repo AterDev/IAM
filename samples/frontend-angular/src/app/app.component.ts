@@ -8,6 +8,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatChipsModule } from '@angular/material/chips';
+import { map } from 'rxjs/operators';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -32,18 +34,36 @@ export class AppComponent implements OnInit {
   userData: any;
   darkMode = true;
   sidenavOpened = true;
+  isInitialized = false;
 
-  ngOnInit() {
-    this.oidcSecurityService.checkAuth().subscribe(({ isAuthenticated, userData }) => {
-      this.isAuthenticated = isAuthenticated;
+  async ngOnInit() {
+    // 等待库完全初始化
+    const result = await firstValueFrom(this.oidcSecurityService.checkAuth());
+    this.isInitialized = true;
+    console.log('OIDC 初始化完成:', result);
+
+    // 监听认证状态变化
+    this.oidcSecurityService.isAuthenticated$
+      .pipe(
+        map((result) => result.isAuthenticated)
+      )
+      .subscribe((isAuthenticated) => {
+        this.isAuthenticated = isAuthenticated;
+      });
+
+    this.oidcSecurityService.userData$.subscribe((userData) => {
       this.userData = userData;
-      if (isAuthenticated) {
+      if (userData) {
         console.log('用户已认证:', userData);
       }
     });
   }
 
   login() {
+    if (!this.isInitialized) {
+      console.warn('OIDC库还未初始化，请稍候...');
+      return;
+    }
     this.oidcSecurityService.authorize();
   }
 

@@ -44,7 +44,6 @@ public class OAuthController(
     /// <summary>
     /// Authorization endpoint (OAuth 2.0 / OIDC)
     /// </summary>
-    /// <param name="request">Authorization request parameters including client_id, redirect_uri, scope, etc.</param>
     /// <returns>Authorization response or redirect to login/consent page</returns>
     /// <response code="302">Redirects to login page if user not authenticated, or to redirect_uri with authorization code</response>
     /// <response code="400">If the authorization request is invalid</response>
@@ -67,9 +66,6 @@ public class OAuthController(
     /// GET /connect/authorize?response_type=code&amp;client_id=my_client&amp;redirect_uri=https://example.com/callback&amp;scope=openid%20profile&amp;state=xyz&amp;code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&amp;code_challenge_method=S256
     /// </remarks>
     [HttpGet("authorize")]
-    [HttpPost("authorize")]
-    [ProducesResponseType(StatusCodes.Status302Found)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Authorize([FromQuery] AuthorizeRequestDto request)
     {
         try
@@ -107,10 +103,10 @@ public class OAuthController(
             }
 
             // Get user ID from claims or session
-            var userId = User.FindFirst(OAuthConstants.ClaimTypes.Subject)?.Value 
+            var userId = User.FindFirst(OAuthConstants.ClaimTypes.Subject)?.Value
                 ?? User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value
                 ?? HttpContext.Session.GetString("UserId");
-                
+
             if (string.IsNullOrEmpty(userId))
             {
                 // Redirect to login
@@ -120,7 +116,7 @@ public class OAuthController(
 
             // Check if consent is required and not yet granted
             var consentGranted = Request.Query.ContainsKey("consent_granted") && Request.Query["consent_granted"] == "true";
-            
+
             if (!consentGranted)
             {
                 // Redirect to consent page
@@ -327,7 +323,6 @@ public class OAuthController(
     /// <param name="request">Logout request</param>
     /// <returns>Redirect response</returns>
     [HttpGet("logout")]
-    [HttpPost("logout")]
     public async Task<IActionResult> Logout([FromQuery] LogoutRequestDto request)
     {
         try

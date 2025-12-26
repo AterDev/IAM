@@ -67,7 +67,7 @@
 
 ## 技术选型
 
-- 后端：`Ater.Web.Template` 模块，**.NET 10** + **ASP.NET Core**
+- 后端：使用`Perigon.templates` 模板，**.NET 10** + **ASP.NET Core**
 - 数据库：**Entity Framework Core** + **Postgres**
 - 标准：遵循 **OAuth2** 和 **OpenID Connect** 规范
 - 前端：**Angular 20** + **Angular Material**
