@@ -40,8 +40,6 @@ export class AppComponent implements OnInit {
     // 等待库完全初始化
     const result = await firstValueFrom(this.oidcSecurityService.checkAuth());
     this.isInitialized = true;
-    console.log('OIDC 初始化完成:', result);
-
     // 监听认证状态变化
     this.oidcSecurityService.isAuthenticated$
       .pipe(
