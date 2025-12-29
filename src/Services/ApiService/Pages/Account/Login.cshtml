@@ -1,7 +1,9 @@
 @page
 @model ApiService.Pages.Account.LoginModel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @{
     ViewData["Title"] = "登录";
+    Layout = null;
 }
 
 <!DOCTYPE html>
@@ -98,6 +100,15 @@
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
+
+        input.input-validation-error {
+            border-color: #dc3545;
+        }
+
+        input.input-validation-error:focus {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+        }
         
         .checkbox-group {
             display: flex;
@@ -148,6 +159,29 @@
             font-size: 14px;
             border: 1px solid #f5c6cb;
         }
+
+        .text-danger,
+        .field-validation-error {
+            color: #dc3545;
+            font-size: 13px;
+            margin-top: 5px;
+            display: block;
+        }
+
+        .validation-summary-errors {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .validation-summary-errors ul {
+            margin: 0;
+            padding-left: 20px;
+        }
         
         .links {
             margin-top: 24px;
@@ -196,25 +230,21 @@
             </div>
         }
 
-        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
-        {
-            <div class="error-message">
-                @Model.ErrorMessage
-            </div>
-        }
+        <div asp-validation-summary="All" class="validation-summary-errors"></div>
 
         <form method="post">
             <input type="hidden" asp-for="ReturnUrl" />
+            @Html.AntiForgeryToken()
             
             <div class="form-group">
                 <label asp-for="Username">用户名或邮箱</label>
-                <input asp-for="Username" type="text" placeholder="请输入用户名或邮箱" required autofocus />
+                <input asp-for="Username" type="text" placeholder="请输入用户名或邮箱" autofocus />
                 <span asp-validation-for="Username" class="text-danger"></span>
             </div>
 
             <div class="form-group">
                 <label asp-for="Password">密码</label>
-                <input asp-for="Password" type="password" placeholder="请输入密码" required />
+                <input asp-for="Password" type="password" placeholder="请输入密码" />
                 <span asp-validation-for="Password" class="text-danger"></span>
             </div>
 

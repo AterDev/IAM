@@ -1,6 +1,7 @@
 using AccessMod.Managers;
 using Entity.AccessMod;
 using IdentityMod.Managers;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace ApiService.Pages.Account;
@@ -17,31 +18,31 @@ public class ConsentModel(
     private readonly ScopeManager _scopeManager = scopeManager;
     private readonly ILogger<ConsentModel> _logger = logger;
 
-    [BindProperty(SupportsGet = true)]
+    [BindProperty(SupportsGet = true, Name = "returnUrl")]
     public string? ReturnUrl { get; set; }
 
-    [BindProperty]
+    [BindProperty(Name = "client_id")]
     public string ClientId { get; set; } = string.Empty;
 
-    [BindProperty]
+    [BindProperty(Name = "scope")]
     public string Scope { get; set; } = string.Empty;
 
-    [BindProperty]
+    [BindProperty(Name = "state")]
     public string? State { get; set; }
 
-    [BindProperty]
+    [BindProperty(Name = "nonce")]
     public string? Nonce { get; set; }
 
-    [BindProperty]
+    [BindProperty(Name = "code_challenge")]
     public string? CodeChallenge { get; set; }
 
-    [BindProperty]
+    [BindProperty(Name = "code_challenge_method")]
     public string? CodeChallengeMethod { get; set; }
 
-    [BindProperty]
+    [BindProperty(Name = "redirect_uri")]
     public string? RedirectUri { get; set; }
 
-    [BindProperty]
+    [BindProperty(Name = "response_type")]
     public string? ResponseType { get; set; }
 
     [BindProperty]
@@ -210,35 +211,35 @@ public class ConsentModel(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to process consent for client {ClientId}", ClientId);
+            _logger.LogError(ex, "Error processing consent");
             return Page();
         }
     }
 
     private static string GetDefaultScopeDescription(string scopeName)
     {
-        return scopeName.ToLower() switch
+        return scopeName switch
         {
-            "openid" => "访问您的基本身份信息",
-            "profile" => "访问您的个人资料（姓名、头像等）",
-            "email" => "访问您的邮箱地址",
-            "phone" => "访问您的手机号码",
-            "address" => "访问您的地址信息",
-            "offline_access" => "在您离线时访问您的信息",
-            _ => $"访问 {scopeName} 资源",
+            "openid" => "您的基本身份标识",
+            "profile" => "您的基本个人信息（姓名等）",
+            "email" => "您的电子邮箱地址",
+            "phone" => "您的电话号码",
+            "address" => "您的地址信息",
+            "offline_access" => "在您离线时访问您的数据",
+            _ => $"访问 {scopeName} 资源的权限",
         };
     }
 
     private static bool IsDefaultRequiredScope(string scopeName)
     {
-        return scopeName.ToLower() == "openid";
+        return scopeName == "openid";
     }
 }
 
 public class ScopeViewModel
 {
-    public string Name { get; set; } = string.Empty;
-    public string DisplayName { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
+    public required string Name { get; set; }
+    public required string DisplayName { get; set; }
+    public string? Description { get; set; }
     public bool Required { get; set; }
 }
