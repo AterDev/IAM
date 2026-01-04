@@ -7,7 +7,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { SnackbarService } from '../shared/snackbar.service';
 import { environment } from '../../environments/environment';
 
@@ -153,5 +153,3 @@ export class AuthorizationsComponent implements OnInit {
 export class ConfirmDialogComponent {
   constructor(@inject(MAT_DIALOG_DATA) public data: { clientName: string }) {}
 }
-
-import { MAT_DIALOG_DATA } from '@angular/material/dialog';
