@@ -25,7 +25,7 @@ _ = aspireSetting.DatabaseType?.ToLowerInvariant() switch
 {
     "postgresql" => database = builder
         .AddPostgres(name: "db", password: devPassword, port: aspireSetting.DbPort)
-        .WithImageTag("17.6-alpine")
+        .WithImageTag("18.1-alpine")
         .WithDataVolume()
         .AddDatabase(AppConst.Default, databaseName: defaultName),
     "sqlserver" => database = builder
@@ -54,13 +54,13 @@ var apiService = builder.AddProject<Projects.ApiService>("ApiService").WaitForCo
 
 var sampleApi = builder.AddProject<Projects.SampleApi>("SampleApi");
 
-builder
-    .AddNpmApp("SampleApp", "../../samples/frontend-angular")
+builder.AddJavaScriptApp("SampleApp", "../../samples/frontend-angular", "start")
+    .WithPnpm()
     .WithReference(sampleApi)
     .WithUrl("http://localhost:4201");
 
-builder
-    .AddNpmApp("AdminApp", "../ClientApp/WebApp")
+builder.AddJavaScriptApp("AdminApp", "../ClientApp/WebApp", "start")
+    .WithPnpm()
     .WithReference(apiService)
     .WithUrl("http://localhost:4200");
 

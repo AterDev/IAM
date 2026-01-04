@@ -254,8 +254,11 @@ public static class WebExtensions
         services
             .AddAuthentication(options =>
             {
+                // 对于 API 默认使用 JWT
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                // 但对于 Razor Pages 使用 Cookie
+                options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
             })
             .AddJwtBearer(cfg =>
             {
@@ -277,7 +280,17 @@ public static class WebExtensions
                     ValidateIssuerSigningKey = true,
                 };
             })
-            .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme);
+            .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+            {
+                options.LoginPath = "/Account/Login";
+                options.LogoutPath = "/Account/Logout";
+                options.AccessDeniedPath = "/Account/AccessDenied";
+                options.ExpireTimeSpan = TimeSpan.FromDays(1);
+                options.SlidingExpiration = true;
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                options.Cookie.SameSite = SameSiteMode.Lax;
+            });
         return services;
     }
 

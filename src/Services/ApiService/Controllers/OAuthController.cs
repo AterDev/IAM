@@ -1,8 +1,11 @@
+using System.Security.Claims;
 using IdentityMod;
 using IdentityMod.Managers;
 using IdentityMod.Models.OAuthDtos;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using SysClaimTypes = System.Security.Claims.ClaimTypes;
 
 namespace ApiService.Controllers;
 
@@ -94,17 +97,20 @@ public class OAuthController(
                 return BadRequest(errorResponse);
             }
 
-            // Check if user is authenticated
-            if (!User.Identity?.IsAuthenticated ?? true)
+            // Authenticate using Cookie scheme for web-based OAuth flow
+            var authenticateResult = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            
+            // Check if user is authenticated via Cookie
+            if (!authenticateResult.Succeeded || authenticateResult.Principal == null)
             {
                 // Redirect to login page with return URL
                 var returnUrl = Request.Path + Request.QueryString;
                 return Redirect($"/Account/Login?returnUrl={Uri.EscapeDataString(returnUrl)}");
             }
 
-            // Get user ID from claims or session
-            var userId = User.FindFirst(OAuthConstants.ClaimTypes.Subject)?.Value
-                ?? User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value
+            // Get user ID from cookie claims
+            var userId = authenticateResult.Principal.FindFirst(OAuthConstants.ClaimTypes.Subject)?.Value
+                ?? authenticateResult.Principal.FindFirst(SysClaimTypes.NameIdentifier)?.Value
                 ?? HttpContext.Session.GetString("UserId");
 
             if (string.IsNullOrEmpty(userId))
