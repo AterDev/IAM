@@ -17,6 +17,11 @@ export const routes: Routes = [
     canActivate: [AutoLoginPartialRoutesGuard]
   },
   {
+    path: 'authorizations',
+    loadComponent: () => import('./authorizations/authorizations.component').then(m => m.AuthorizationsComponent),
+    canActivate: [AutoLoginPartialRoutesGuard]
+  },
+  {
     path: 'unauthorized',
     loadComponent: () => import('./unauthorized/unauthorized.component').then(m => m.UnauthorizedComponent)
   }
