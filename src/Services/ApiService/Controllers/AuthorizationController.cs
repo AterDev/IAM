@@ -1,4 +1,5 @@
 using AccessMod.Managers;
+using AccessMod.Models.AuthorizationDtos;
 using Entity.AccessMod;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -57,6 +58,11 @@ public class AuthorizationController(
     [HttpDelete("{id}")]
     public async Task<IActionResult> RevokeAuthorization(Guid id)
     {
+        if (id == Guid.Empty)
+        {
+            return BadRequest(new { message = "Invalid authorization ID" });
+        }
+
         var userId = GetUserId();
         if (string.IsNullOrEmpty(userId))
         {
@@ -82,6 +88,11 @@ public class AuthorizationController(
     [HttpDelete("client/{clientId}")]
     public async Task<IActionResult> RevokeClientAuthorizations(Guid clientId)
     {
+        if (clientId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Invalid client ID" });
+        }
+
         var userId = GetUserId();
         if (string.IsNullOrEmpty(userId))
         {
@@ -102,22 +113,6 @@ public class AuthorizationController(
     private string? GetUserId()
     {
         return User.FindFirst("sub")?.Value
-            ?? User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value
-            ?? HttpContext.Session.GetString("UserId");
+            ?? User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
     }
-}
-
-/// <summary>
-/// User authorization DTO
-/// </summary>
-public class UserAuthorizationDto
-{
-    public Guid Id { get; set; }
-    public string ClientId { get; set; } = string.Empty;
-    public string ClientName { get; set; } = string.Empty;
-    public string Scopes { get; set; } = string.Empty;
-    public string Type { get; set; } = string.Empty;
-    public string Status { get; set; } = string.Empty;
-    public DateTimeOffset CreationDate { get; set; }
-    public DateTimeOffset? ExpirationDate { get; set; }
 }

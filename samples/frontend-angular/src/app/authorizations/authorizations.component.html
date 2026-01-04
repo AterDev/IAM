@@ -64,7 +64,7 @@
               <button 
                 mat-raised-button 
                 color="warn" 
-                (click)="revokeAuthorization(auth.id)"
+                (click)="revokeAuthorization(auth.id, auth.clientName)"
                 [disabled]="auth.status.toLowerCase() === 'revoked'">
                 <mat-icon>block</mat-icon>
                 撤销授权

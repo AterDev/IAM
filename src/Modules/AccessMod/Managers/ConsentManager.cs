@@ -24,7 +24,8 @@ public class ConsentManager(DefaultDbContext dbContext, ILogger<ConsentManager> 
             .Where(a => a.SubjectId == userId 
                 && a.ClientId == clientId 
                 && a.Status == OAuthConstants.AuthorizationStatuses.Valid
-                && a.Type == OAuthConstants.AuthorizationTypes.Permanent)
+                && (a.Type == OAuthConstants.AuthorizationTypes.Permanent 
+                    || a.Type == OAuthConstants.AuthorizationTypes.AdHoc))
             .ToListAsync();
 
         if (authorizations.Count == 0)
@@ -67,6 +68,23 @@ public class ConsentManager(DefaultDbContext dbContext, ILogger<ConsentManager> 
     {
         var authorizationType = isPermanent ? OAuthConstants.AuthorizationTypes.Permanent : OAuthConstants.AuthorizationTypes.AdHoc;
         var expirationDate = isPermanent ? (DateTimeOffset?)null : DateTimeOffset.UtcNow.AddDays(30);
+
+        // Check if an existing authorization already exists for this user/client/scopes combination
+        var existingAuth = await _dbContext.Authorizations
+            .FirstOrDefaultAsync(a => a.SubjectId == userId 
+                && a.ClientId == clientId 
+                && a.Scopes == scopes
+                && a.Status == OAuthConstants.AuthorizationStatuses.Valid
+                && (a.Type == authorizationType || a.Type == OAuthConstants.AuthorizationTypes.Permanent));
+
+        if (existingAuth != null)
+        {
+            // Update existing authorization
+            existingAuth.Type = authorizationType;
+            existingAuth.ExpirationDate = expirationDate;
+            await _dbContext.SaveChangesAsync();
+            return existingAuth;
+        }
 
         // Create new authorization
         var authorization = new Authorization
@@ -123,7 +141,8 @@ public class ConsentManager(DefaultDbContext dbContext, ILogger<ConsentManager> 
         return await _dbContext.Authorizations
             .Include(a => a.Client)
             .Where(a => a.SubjectId == userId 
-                && (a.Type == OAuthConstants.AuthorizationTypes.Permanent || a.Type == OAuthConstants.AuthorizationTypes.AdHoc))
+                && (a.Type == OAuthConstants.AuthorizationTypes.Permanent || a.Type == OAuthConstants.AuthorizationTypes.AdHoc)
+                && a.Status == OAuthConstants.AuthorizationStatuses.Valid)
             .OrderByDescending(a => a.CreationDate)
             .ToListAsync();
     }
@@ -139,6 +158,12 @@ public class ConsentManager(DefaultDbContext dbContext, ILogger<ConsentManager> 
             .FirstOrDefaultAsync(a => a.Id == authorizationId && a.SubjectId == userId);
 
         if (authorization == null)
+        {
+            return false;
+        }
+
+        // Check if already revoked
+        if (authorization.Status != OAuthConstants.AuthorizationStatuses.Valid)
         {
             return false;
         }

@@ -7,7 +7,9 @@ import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { SnackbarService } from '../shared/snackbar.service';
+import { environment } from '../../environments/environment';
 
 interface Authorization {
   id: string;
@@ -30,7 +32,8 @@ interface Authorization {
     MatListModule,
     MatProgressSpinnerModule,
     MatIconModule,
-    MatChipsModule
+    MatChipsModule,
+    MatDialogModule
   ],
   templateUrl: './authorizations.component.html',
   styleUrl: './authorizations.component.scss'
@@ -38,9 +41,11 @@ interface Authorization {
 export class AuthorizationsComponent implements OnInit {
   private http = inject(HttpClient);
   private snackbar = inject(SnackbarService);
+  private dialog = inject(MatDialog);
 
   authorizations: Authorization[] = [];
   loading = false;
+  private apiUrl = `${environment.iamApiUrl}/api/authorization`;
 
   ngOnInit() {
     this.loadAuthorizations();
@@ -48,7 +53,7 @@ export class AuthorizationsComponent implements OnInit {
 
   loadAuthorizations() {
     this.loading = true;
-    this.http.get<Authorization[]>('https://localhost:7070/api/authorization')
+    this.http.get<Authorization[]>(this.apiUrl)
       .subscribe({
         next: (data) => {
           this.authorizations = data;
@@ -61,24 +66,28 @@ export class AuthorizationsComponent implements OnInit {
       });
   }
 
-  revokeAuthorization(id: string) {
-    if (!confirm('确定要撤销此授权吗？')) {
-      return;
-    }
+  revokeAuthorization(id: string, clientName: string) {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: { clientName }
+    });
 
-    this.loading = true;
-    this.http.delete(`https://localhost:7070/api/authorization/${id}`)
-      .subscribe({
-        next: () => {
-          this.loading = false;
-          this.snackbar.showSuccess('授权已撤销');
-          this.loadAuthorizations();
-        },
-        error: (err) => {
-          this.loading = false;
-          this.snackbar.showError('撤销授权失败: ' + (err.error?.message || err.message));
-        }
-      });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loading = true;
+        this.http.delete(`${this.apiUrl}/${id}`)
+          .subscribe({
+            next: () => {
+              this.loading = false;
+              this.snackbar.showSuccess('授权已撤销');
+              this.loadAuthorizations();
+            },
+            error: (err) => {
+              this.loading = false;
+              this.snackbar.showError('撤销授权失败: ' + (err.error?.message || err.message));
+            }
+          });
+      }
+    });
   }
 
   getScopesList(scopes: string): string[] {
@@ -123,3 +132,26 @@ export class AuthorizationsComponent implements OnInit {
     return new Date(date).toLocaleString('zh-CN');
   }
 }
+
+// Confirmation Dialog Component
+@Component({
+  selector: 'app-confirm-dialog',
+  standalone: true,
+  imports: [CommonModule, MatDialogModule, MatButtonModule],
+  template: `
+    <h2 mat-dialog-title>确认撤销授权</h2>
+    <mat-dialog-content>
+      <p>确定要撤销对 <strong>{{ data.clientName }}</strong> 的授权吗？</p>
+      <p>撤销后，该应用将无法继续访问您的数据，您需要重新授权才能使用。</p>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button mat-button mat-dialog-close>取消</button>
+      <button mat-raised-button color="warn" [mat-dialog-close]="true">确认撤销</button>
+    </mat-dialog-actions>
+  `
+})
+export class ConfirmDialogComponent {
+  constructor(@inject(MAT_DIALOG_DATA) public data: { clientName: string }) {}
+}
+
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';

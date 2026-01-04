@@ -185,7 +185,7 @@ public class ConsentModel(
             var client = await _clientManager.FindAsync<Client>(c => c.ClientId == ClientId);
             if (client == null)
             {
-                _logger.LogError("Client not found: {ClientId}", ClientId);
+                _logger.LogError("Client not found in database: {ClientId}", ClientId);
                 return RedirectToPage("/Account/ConsentDenied");
             }
 
