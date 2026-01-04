@@ -5,6 +5,7 @@ import { AuthModule, LogLevel } from 'angular-auth-oidc-client';
 import { routes } from './app.routes';
 import { authInterceptor } from './auth.interceptor';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -14,8 +15,8 @@ export const appConfig: ApplicationConfig = {
     importProvidersFrom(
       AuthModule.forRoot({
         config: {
-          authority: 'https://localhost:7070',
-          authWellknownEndpointUrl: 'https://localhost:7070/.well-known/openid-configuration',
+          authority: environment.iamApiUrl,
+          authWellknownEndpointUrl: `${environment.iamApiUrl}/.well-known/openid-configuration`,
           redirectUrl: window.location.origin,
           postLogoutRedirectUri: window.location.origin,
           clientId: 'FrontClient',
@@ -24,7 +25,7 @@ export const appConfig: ApplicationConfig = {
           silentRenew: true,
           useRefreshToken: true,
           logLevel: LogLevel.Debug,
-          secureRoutes: ['https://localhost:7000/api'],
+          secureRoutes: [`${environment.backendApiUrl}/api`],
           customParamsAuthRequest: {}
         }
       })
