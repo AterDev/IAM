@@ -9,6 +9,7 @@
     <ItemGroup>
         <ProjectReference Include="..\CommonMod\CommonMod.csproj" />
         <ProjectReference Include="..\..\Perigon\Perigon.AspNetCore\Perigon.AspNetCore.csproj" />
+        <ProjectReference Include="..\IdentityMod\IdentityMod.csproj" />
     </ItemGroup>
     <ItemGroup>
         <Folder Include="Managers\" />

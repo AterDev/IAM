@@ -1,5 +1,6 @@
 using AccessMod.Managers;
 using Entity.AccessMod;
+using IdentityMod;
 using IdentityMod.Managers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -10,12 +11,14 @@ public class ConsentModel(
     AuthorizationManager authorizationManager,
     ClientManager clientManager,
     ScopeManager scopeManager,
+    ConsentManager consentManager,
     ILogger<ConsentModel> logger
 ) : PageModel
 {
     private readonly AuthorizationManager _authorizationManager = authorizationManager;
     private readonly ClientManager _clientManager = clientManager;
     private readonly ScopeManager _scopeManager = scopeManager;
+    private readonly ConsentManager _consentManager = consentManager;
     private readonly ILogger<ConsentModel> _logger = logger;
 
     [BindProperty(SupportsGet = true, Name = "returnUrl")]
@@ -178,9 +181,28 @@ public class ConsentModel(
         // User allowed authorization
         try
         {
-            // TODO: Create authorization code and save consent
-            // For now, redirect back to the authorize endpoint to continue the flow
+            // Get client by ClientId
+            var client = await _clientManager.FindAsync<Client>(c => c.ClientId == ClientId);
+            if (client == null)
+            {
+                _logger.LogError("Client not found: {ClientId}", ClientId);
+                return RedirectToPage("/Account/ConsentDenied");
+            }
 
+            // Save consent if user chose to remember
+            if (RememberConsent)
+            {
+                await _consentManager.GrantConsentAsync(userId, client.Id, Scope, isPermanent: true);
+                _logger.LogInformation("Permanent consent granted for user {UserId} and client {ClientId}", userId, ClientId);
+            }
+            else
+            {
+                // Grant temporary consent (30 days)
+                await _consentManager.GrantConsentAsync(userId, client.Id, Scope, isPermanent: false);
+                _logger.LogInformation("Temporary consent granted for user {UserId} and client {ClientId}", userId, ClientId);
+            }
+
+            // Redirect back to the authorize endpoint to continue the flow
             var authorizeUrl =
                 $"/connect/authorize?client_id={ClientId}&scope={Scope}&response_type={ResponseType}&redirect_uri={RedirectUri}";
 

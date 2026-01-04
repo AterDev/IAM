@@ -1,3 +1,4 @@
+using AccessMod.Managers;
 using IdentityMod;
 using IdentityMod.Managers;
 using IdentityMod.Models.OAuthDtos;
@@ -33,12 +34,14 @@ public class OAuthController(
     AuthorizationManager authorizationManager,
     TokenManager tokenManager,
     DeviceFlowManager deviceFlowManager,
+    ConsentManager consentManager,
     ILogger<OAuthController> logger
     ) : ControllerBase
 {
     private readonly AuthorizationManager _authorizationManager = authorizationManager;
     private readonly TokenManager _tokenManager = tokenManager;
     private readonly DeviceFlowManager _deviceFlowManager = deviceFlowManager;
+    private readonly ConsentManager _consentManager = consentManager;
     private readonly ILogger<OAuthController> _logger = logger;
 
     /// <summary>
@@ -114,10 +117,13 @@ public class OAuthController(
                 return Redirect($"/Account/Login?returnUrl={Uri.EscapeDataString(returnUrl)}");
             }
 
+            // Check if user has already granted consent for this client and scopes
+            var hasValidConsent = await _consentManager.HasValidConsentAsync(userId, client!.Id, request.Scope ?? string.Empty);
+            
             // Check if consent is required and not yet granted
             var consentGranted = Request.Query.ContainsKey("consent_granted") && Request.Query["consent_granted"] == "true";
 
-            if (!consentGranted)
+            if (!hasValidConsent && !consentGranted)
             {
                 // Redirect to consent page
                 var consentUrl = $"/Account/Consent{Request.QueryString}";

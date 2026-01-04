@@ -62,6 +62,8 @@ public static class OAuthConstants
         public const string ClientCredentials = "client_credentials";
         public const string Password = "password";
         public const string DeviceCode = "device_code";
+        public const string Permanent = "permanent";
+        public const string AdHoc = "ad_hoc";
     }
 
     /// <summary>
