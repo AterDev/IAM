@@ -117,23 +117,26 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="500001" xml:space="preserve">
+  <data name="LockAccountForManyTimes" xml:space="preserve">
     <value>Too many password attempts, account locked</value>
   </data>
-  <data name="500002" xml:space="preserve">
+  <data name="InvalidVerifyCode" xml:space="preserve">
     <value>Invalid verification code</value>
   </data>
-  <data name="500003" xml:space="preserve">
+  <data name="VerifyCodeExpired" xml:space="preserve">
     <value>Verification code expired</value>
   </data>
-  <data name="500004" xml:space="preserve">
+  <data name="PasswordExpired" xml:space="preserve">
     <value>Password expired, please change your password</value>
   </data>
-  <data name="500005" xml:space="preserve">
+  <data name="InvalidUserOrPassword" xml:space="preserve">
     <value>Invalid username or password</value>
   </data>
   <data name="AddFailed" xml:space="preserve">
     <value>Add Failed</value>
+  </data>
+  <data name="BadRequest" xml:space="preserve">
+    <value>Bad Request</value>
   </data>
   <data name="ConflictResource" xml:space="preserve">
     <value>Conflict Resource</value>
@@ -141,8 +144,8 @@
   <data name="en-US" xml:space="preserve">
     <value>en-US</value>
   </data>
-  <data name="ExistUser" xml:space="preserve">
-    <value>Exist User</value>
+  <data name="ExistUserName" xml:space="preserve">
+    <value>Exist UserName</value>
   </data>
   <data name="NotFoundResource" xml:space="preserve">
     <value>Not Found Resource</value>
@@ -155,5 +158,67 @@
   </data>
   <data name="zh-CN" xml:space="preserve">
     <value>zh-CN</value>
+  </data>
+  <data name="UserNotFound" xml:space="preserve">
+    <value>User not found</value>
+  </data>
+  <data name="RoleNotFound" xml:space="preserve">
+    <value>Role not found</value>
+  </data>
+  <data name="InsufficientPermissions" xml:space="preserve">
+    <value>Insufficient permissions</value>
+  </data>
+  <data name="PasswordComplexityNotMet" xml:space="preserve">
+    <value>Password complexity requirements not met</value>
+  </data>
+  <data name="EntityNotFound" xml:space="preserve">
+    <value>Entity to delete not found</value>
+  </data>
+  <data name="MenuUpdateFailed" xml:space="preserve">
+    <value>Menu update failed</value>
+  </data>
+  <data name="PermissionGroupUpdateFailed" xml:space="preserve">
+    <value>Permission group update failed</value>
+  </data>
+  <data name="VerifyCodeAlreadySent" xml:space="preserve">
+    <value>VerifyCode already sent</value>
+    <comment>验证码已发送</comment>
+  </data>
+  <data name="UserNotExists" xml:space="preserve">
+    <value>User does not exist</value>
+  </data>
+  <data name="PasswordInvalid" xml:space="preserve">
+    <value>Invalid password</value>
+  </data>
+  <data name="PasswordComplexitySimple" xml:space="preserve">
+    <value>Password length 6-60 characters</value>
+  </data>
+  <data name="PasswordComplexityNormal" xml:space="preserve">
+    <value>Password length 8-60 characters, must contain uppercase and lowercase letters and numbers</value>
+  </data>
+  <data name="PasswordComplexityStrict" xml:space="preserve">
+    <value>Password length 8+ characters, must contain uppercase and lowercase letters, numbers and special characters</value>
+  </data>
+  <data name="PasswordComplexityDefault" xml:space="preserve">
+    <value>Password length 6-16 characters</value>
+  </data>
+  <data name="LoginAction" xml:space="preserve">
+    <value>Login</value>
+  </data>
+  <data name="LoginSuccess" xml:space="preserve">
+    <value>Login successful</value>
+  </data>
+  <data name="LoginFailed" xml:space="preserve">
+    <value>Login failed</value>
+  </data>
+  <data name="AlreadyUpdated" xml:space="preserve">
+    <value>Data changed, please refresh and retry!</value>
+    <comment>数据已发生变化，请刷新后重试</comment>
+  </data>
+  <data name="NoPermission" xml:space="preserve">
+    <value>No permission to operate</value>
+  </data>
+  <data name="TenantNotExist" xml:space="preserve">
+    <value>The tenant does not exist</value>
   </data>
 </root>
