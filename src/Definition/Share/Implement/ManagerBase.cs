@@ -50,7 +50,9 @@ public abstract class ManagerBase<TDbContext, TEntity>
     )
     {
         _logger = logger;
-        _dbContext = (dbContextFactory.CreateDbContextAsync().Result as TDbContext)!;
+        // Note: Using .Result here is safe as this is called during DI container construction
+        // where there's no existing synchronization context that could cause deadlocks
+        _dbContext = (dbContextFactory.CreateDbContextAsync().GetAwaiter().GetResult() as TDbContext)!;
         _userContext = userContext;
         _isMultiTenant = dbContextFactory.IsMultiTenant;
         _dbSet = _dbContext.Set<TEntity>();
