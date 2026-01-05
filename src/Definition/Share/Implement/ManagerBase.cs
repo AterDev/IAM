@@ -1,6 +1,4 @@
 using EFCore.BulkExtensions;
-using EntityFramework;
-using EntityFramework.AppDbFactory;
 using EntityFramework.Extensions;
 using Mapster;
 using System.Linq.Expressions;

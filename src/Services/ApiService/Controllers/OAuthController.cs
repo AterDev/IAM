@@ -1,5 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using AccessMod.Managers;
 using IdentityMod;
 using IdentityMod.Managers;
@@ -7,6 +5,8 @@ using IdentityMod.Models.OAuthDtos;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using SysClaimTypes = System.Security.Claims.ClaimTypes;
 
 namespace ApiService.Controllers;
@@ -33,7 +33,6 @@ namespace ApiService.Controllers;
 /// </remarks>
 [ApiController]
 [Route("connect")]
-[AllowAnonymous]
 [Produces("application/json")]
 public class OAuthController(
     AuthorizationManager authorizationManager,
@@ -238,8 +237,6 @@ public class OAuthController(
     /// </remarks>
     [HttpPost("token")]
     [Consumes("application/x-www-form-urlencoded")]
-    [ProducesResponseType(typeof(TokenResponseDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(TokenResponseDto), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<TokenResponseDto>> Token([FromForm] TokenRequestDto request)
     {
         try
@@ -271,8 +268,6 @@ public class OAuthController(
     /// <returns>Device authorization response</returns>
     [HttpPost("device")]
     [Consumes("application/x-www-form-urlencoded")]
-    [ProducesResponseType(typeof(DeviceAuthorizationResponseDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(TokenResponseDto), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<DeviceAuthorizationResponseDto>> DeviceAuthorization([FromForm] DeviceAuthorizationRequestDto request)
     {
         try
@@ -308,8 +303,6 @@ public class OAuthController(
     /// <returns>Introspection response</returns>
     [HttpPost("introspect")]
     [Consumes("application/x-www-form-urlencoded")]
-    [ProducesResponseType(typeof(IntrospectResponseDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(TokenResponseDto), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<IntrospectResponseDto>> Introspect([FromForm] IntrospectRequestDto request)
     {
         try
@@ -339,8 +332,6 @@ public class OAuthController(
     /// <returns>Success response or error</returns>
     [HttpPost("revoke")]
     [Consumes("application/x-www-form-urlencoded")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(TokenResponseDto), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult> Revoke([FromForm] RevokeRequestDto request)
     {
         try
