@@ -1,5 +1,6 @@
-using AccessMod.Managers;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using AccessMod.Managers;
 using IdentityMod;
 using IdentityMod.Managers;
 using IdentityMod.Models.OAuthDtos;
@@ -20,6 +21,7 @@ namespace ApiService.Controllers;
 /// - Device authorization for device flow
 /// - Token revocation for invalidating tokens
 /// - Introspection for validating tokens
+/// - UserInfo endpoint for retrieving authenticated user claims
 /// 
 /// Supports multiple grant types:
 /// - authorization_code: Standard authorization code flow with PKCE support
@@ -38,6 +40,7 @@ public class OAuthController(
     TokenManager tokenManager,
     DeviceFlowManager deviceFlowManager,
     ConsentManager consentManager,
+    DiscoveryManager discoveryManager,
     ILogger<OAuthController> logger
     ) : ControllerBase
 {
@@ -45,6 +48,7 @@ public class OAuthController(
     private readonly TokenManager _tokenManager = tokenManager;
     private readonly DeviceFlowManager _deviceFlowManager = deviceFlowManager;
     private readonly ConsentManager _consentManager = consentManager;
+    private readonly DiscoveryManager _discoveryManager = discoveryManager;
     private readonly ILogger<OAuthController> _logger = logger;
 
     /// <summary>
@@ -72,7 +76,7 @@ public class OAuthController(
     /// GET /connect/authorize?response_type=code&amp;client_id=my_client&amp;redirect_uri=https://example.com/callback&amp;scope=openid%20profile&amp;state=xyz&amp;code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&amp;code_challenge_method=S256
     /// </remarks>
     [HttpGet("authorize")]
-    public async Task<IActionResult> Authorize([FromQuery] AuthorizeRequestDto request)
+    public async Task<ActionResult> Authorize([FromQuery] AuthorizeRequestDto request)
     {
         try
         {
@@ -102,7 +106,7 @@ public class OAuthController(
 
             // Authenticate using Cookie scheme for web-based OAuth flow
             var authenticateResult = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            
+
             // Check if user is authenticated via Cookie
             if (!authenticateResult.Succeeded || authenticateResult.Principal == null)
             {
@@ -125,7 +129,7 @@ public class OAuthController(
 
             // Check if user has already granted consent for this client and scopes
             var hasValidConsent = await _consentManager.HasValidConsentAsync(userId, client!.Id, request.Scope ?? string.Empty);
-            
+
             // Check if consent is required and not yet granted
             var consentGranted = Request.Query.ContainsKey("consent_granted") && Request.Query["consent_granted"] == "true";
 
@@ -236,7 +240,7 @@ public class OAuthController(
     [Consumes("application/x-www-form-urlencoded")]
     [ProducesResponseType(typeof(TokenResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(TokenResponseDto), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Token([FromForm] TokenRequestDto request)
+    public async Task<ActionResult<TokenResponseDto>> Token([FromForm] TokenRequestDto request)
     {
         try
         {
@@ -267,7 +271,9 @@ public class OAuthController(
     /// <returns>Device authorization response</returns>
     [HttpPost("device")]
     [Consumes("application/x-www-form-urlencoded")]
-    public async Task<IActionResult> DeviceAuthorization([FromForm] DeviceAuthorizationRequestDto request)
+    [ProducesResponseType(typeof(DeviceAuthorizationResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(TokenResponseDto), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<DeviceAuthorizationResponseDto>> DeviceAuthorization([FromForm] DeviceAuthorizationRequestDto request)
     {
         try
         {
@@ -275,7 +281,11 @@ public class OAuthController(
 
             if (response == null)
             {
-                return BadRequest(new { error = OAuthConstants.ErrorCodes.InvalidClient, error_description = "Invalid client ID" });
+                return BadRequest(new TokenResponseDto
+                {
+                    Error = OAuthConstants.ErrorCodes.InvalidClient,
+                    ErrorDescription = "Invalid client ID"
+                });
             }
 
             return Ok(response);
@@ -283,7 +293,11 @@ public class OAuthController(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing device authorization request");
-            return StatusCode(500, new { error = OAuthConstants.ErrorCodes.ServerError, error_description = "An error occurred processing the request" });
+            return StatusCode(500, new TokenResponseDto
+            {
+                Error = OAuthConstants.ErrorCodes.ServerError,
+                ErrorDescription = "An error occurred processing the request"
+            });
         }
     }
 
@@ -294,7 +308,9 @@ public class OAuthController(
     /// <returns>Introspection response</returns>
     [HttpPost("introspect")]
     [Consumes("application/x-www-form-urlencoded")]
-    public async Task<IActionResult> Introspect([FromForm] IntrospectRequestDto request)
+    [ProducesResponseType(typeof(IntrospectResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(TokenResponseDto), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<IntrospectResponseDto>> Introspect([FromForm] IntrospectRequestDto request)
     {
         try
         {
@@ -304,18 +320,28 @@ public class OAuthController(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error introspecting token");
-            return StatusCode(500, new { error = OAuthConstants.ErrorCodes.ServerError, error_description = "An error occurred processing the request" });
+            return StatusCode(500, new TokenResponseDto
+            {
+                Error = OAuthConstants.ErrorCodes.ServerError,
+                ErrorDescription = "An error occurred processing the request"
+            });
         }
     }
 
     /// <summary>
     /// Token revocation endpoint (RFC 7009)
     /// </summary>
+    /// <remarks>
+    /// Revocation endpoint returns 200 OK on success (RFC 7009 allows omitting response body).
+    /// Errors are returned as JSON with error code and description.
+    /// </remarks>
     /// <param name="request">Revocation request</param>
-    /// <returns>Success response</returns>
+    /// <returns>Success response or error</returns>
     [HttpPost("revoke")]
     [Consumes("application/x-www-form-urlencoded")]
-    public async Task<IActionResult> Revoke([FromForm] RevokeRequestDto request)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(TokenResponseDto), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult> Revoke([FromForm] RevokeRequestDto request)
     {
         try
         {
@@ -325,7 +351,11 @@ public class OAuthController(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error revoking token");
-            return StatusCode(500, new { error = OAuthConstants.ErrorCodes.ServerError, error_description = "An error occurred processing the request" });
+            return StatusCode(500, new TokenResponseDto
+            {
+                Error = OAuthConstants.ErrorCodes.ServerError,
+                ErrorDescription = "An error occurred processing the request"
+            });
         }
     }
 
@@ -333,9 +363,11 @@ public class OAuthController(
     /// Logout endpoint (OIDC)
     /// </summary>
     /// <param name="request">Logout request</param>
-    /// <returns>Redirect response</returns>
+    /// <returns>Redirect response to post_logout_redirect_uri or success message</returns>
     [HttpGet("logout")]
-    public async Task<IActionResult> Logout([FromQuery] LogoutRequestDto request)
+    [ProducesResponseType(StatusCodes.Status302Found)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult> Logout([FromQuery] LogoutRequestDto request)
     {
         try
         {
@@ -359,6 +391,94 @@ public class OAuthController(
         {
             _logger.LogError(ex, "Error processing logout request");
             return StatusCode(500, new { error = OAuthConstants.ErrorCodes.ServerError, error_description = "An error occurred processing the request" });
+        }
+    }
+
+    /// <summary>
+    /// UserInfo endpoint (OIDC)
+    /// </summary>
+    /// <returns>Claims about the authenticated user</returns>
+    /// <response code="200">Returns user information claims</response>
+    /// <response code="401">If the access token is invalid or missing</response>
+    /// <response code="403">If the token does not have sufficient scope</response>
+    /// <remarks>
+    /// Returns claims about the authenticated End-User as defined in OpenID Connect Core 1.0.
+    /// This endpoint requires a valid access token obtained through the OAuth 2.0 flow.
+    ///
+    /// The returned claims depend on:
+    /// - The scopes granted in the access token (profile, email, phone, address)
+    /// - The user's actual profile data
+    /// - The client's allowed scopes
+    ///
+    /// Standard scopes and their claims:
+    /// - profile: name, family_name, given_name, middle_name, nickname, preferred_username,
+    ///   profile, picture, website, gender, birthdate, zoneinfo, locale, updated_at
+    /// - email: email, email_verified
+    /// - phone: phone_number, phone_number_verified
+    /// - address: address (structured claim)
+    ///
+    /// Request must include Authorization header:
+    /// Authorization: Bearer {access_token}
+    ///
+    /// Example:
+    /// GET /connect/userinfo
+    /// Authorization: Bearer eyJhbGciOiJSUzI1NiIs...
+    ///
+    /// Response:
+    /// {
+    ///   "sub": "248289761001",
+    ///   "name": "Jane Doe",
+    ///   "email": "jane.doe@example.com",
+    ///   "email_verified": true
+    /// }
+    /// </remarks>
+    [HttpGet("userinfo")]
+    [Authorize]
+    public async Task<ActionResult<UserInfoDto>> UserInfo()
+    {
+        try
+        {
+            // Get user ID from the token claims
+            var userIdClaim =
+                User.FindFirst(SysClaimTypes.NameIdentifier)
+                ?? User.FindFirst(JwtRegisteredClaimNames.Sub);
+
+            if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+            {
+                _logger.LogWarning("UserInfo request with invalid or missing subject claim");
+                return Unauthorized(
+                    new
+                    {
+                        error = "invalid_token",
+                        error_description = "The access token is invalid or does not contain a valid subject",
+                    }
+                );
+            }
+
+            // Parse scopes from token
+            var scopes = ParseScopesFromToken(User);
+
+            // Get user information
+            var userInfo = await _discoveryManager.GetUserInfoAsync(userId, scopes);
+
+            if (userInfo == null)
+            {
+                _logger.LogWarning("User {UserId} not found for UserInfo request", userId);
+                return NotFound(
+                    new
+                    {
+                        error = "user_not_found",
+                        error_description = "The user associated with this token was not found",
+                    }
+                );
+            }
+
+            return Ok(userInfo);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get user info");
+            return Problem("Failed to retrieve user information", statusCode: 500);
         }
     }
 
@@ -390,5 +510,25 @@ public class OAuthController(
 
         var separator = baseUri.Contains('?') ? "&" : "?";
         return $"{baseUri}{separator}{string.Join("&", parameters)}";
+    }
+
+    /// <summary>
+    /// Parse scopes from the token claims
+    /// </summary>
+    /// <param name="principal">The claims principal from the token</param>
+    /// <returns>List of scope strings</returns>
+    private static List<string> ParseScopesFromToken(ClaimsPrincipal principal)
+    {
+        var scopes = new List<string>();
+
+        var scopeValue = principal.FindFirst("scope")?.Value;
+
+        if (!string.IsNullOrWhiteSpace(scopeValue))
+        {
+            // Split space-separated scopes
+            scopes.AddRange(scopeValue.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        }
+
+        return scopes;
     }
 }

@@ -1,6 +1,6 @@
-<div class="resource-list-container">
-  <div class="header">
-    <div class="d-flex align-items-center gap-1">
+<div class="d-flex flex-column">
+  <div class="d-flex justify-content-between align-items-center flex-wrap">
+    <div class="d-flex align-items-center gap-2">
       <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
         <mat-label>{{ 'common.search' | translate }}</mat-label>
         <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()" placeholder="Name or Display Name">
@@ -14,7 +14,6 @@
         {{ 'common.clearFilters' | translate }}
       </button>
     </div>
-
     <button matButton="filled" (click)="openAddDialog()">
       <mat-icon>add</mat-icon>
       {{ 'common.add' | translate }}
@@ -61,7 +60,7 @@
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
     </table>
 
-    <div class="loading-shade" *ngIf="isLoading">
+    <div class="loading-shade" *ngIf="isLoading()">
       <mat-spinner></mat-spinner>
     </div>
   </div>

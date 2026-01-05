@@ -118,6 +118,7 @@
     "requiredFilter": "Required Filter",
     "addScope": "Add Scope",
     "editScope": "Edit Scope",
+    "scopeDetail": "Scope Details",
     "basicInfo": "Basic Information",
     "configuration": "Configuration",
     "claims": "Claims",
@@ -128,7 +129,8 @@
     "updateSuccess": "Scope updated successfully",
     "deleteSuccess": "Scope deleted",
     "deleteConfirmTitle": "Confirm Delete Scope",
-    "deleteConfirmMessage": "Are you sure you want to delete this scope? This action cannot be undone."
+    "deleteConfirmMessage": "Are you sure you want to delete this scope? This action cannot be undone.",
+    "deleteConfirmDetailMessage": "Are you sure you want to delete the scope '{{name}}'? This action cannot be undone."
   },
   "client": {
     "title": "Application Management",
@@ -190,13 +192,20 @@
     "status": "Status",
     "creationDate": "Authorization Date",
     "noAuthorizations": "No authorization records",
+    "rotateSecretTitle": "Rotate Client Secret",
+    "rotateSecretMessage": "Are you sure you want to rotate the client secret? The old secret will no longer be valid.",
+    "secretRotatedAndCopied": "Secret rotated successfully and copied to clipboard",
+    "newSecret": "New Secret",
+    "clientIdCopied": "Client ID copied to clipboard",
     "deleteConfirmTitle": "Confirm Delete Application",
     "deleteConfirmMessage": "Are you sure you want to delete this application? This action cannot be undone.",
+    "deleteConfirmDetailMessage": "Are you sure you want to delete the application '{{name}}'? This action cannot be undone.",
     "deleteMultipleConfirmMessage": "Are you sure you want to delete {{count}} applications? This action cannot be undone.",
     "deleteSuccess": "Application deleted successfully",
     "deleteMultipleSuccess": "Successfully deleted {{count}} applications",
     "deleteMultiplePartial": "Successfully deleted {{success}} applications, {{error}} failed",
-    "createSuccess": "Application created successfully"
+    "createSuccess": "Application created successfully",
+    "updateSuccess": "Application updated successfully"
   },
   "resource": {
     "title": "Resource Management",
@@ -210,7 +219,13 @@
     "basicInfo": "Basic Information",
     "searchPlaceholder": "Search resource name or display name",
     "apiResource": "API Resource",
-    "identityResource": "Identity Resource"
+    "identityResource": "Identity Resource",
+    "createSuccess": "Resource created successfully",
+    "updateSuccess": "Resource updated successfully",
+    "deleteSuccess": "Resource deleted successfully",
+    "deleteConfirmTitle": "Confirm Delete Resource",
+    "deleteConfirmMessage": "Are you sure you want to delete this resource? This action cannot be undone.",
+    "deleteConfirmDetailMessage": "Are you sure you want to delete the resource '{{name}}'? This action cannot be undone."
   },
   "dialog": {
     "confirmDelete": {
@@ -321,6 +336,14 @@
     "createClientFailed": "Failed to create application",
     "deleteClientFailed": "Failed to delete application",
     "required": "This field is required",
-    "minLength": "The minimum length is {{length}}"
+    "minLength": "The minimum length is {{length}}",
+    "loadResourceFailed": "Failed to load resource",
+    "loadResourcesFailed": "Failed to load resources",
+    "createResourceFailed": "Failed to create resource",
+    "updateResourceFailed": "Failed to update resource",
+    "deleteResourceFailed": "Failed to delete resource",
+    "loadAuthorizationsFailed": "Failed to load authorizations",
+    "rotateSecretFailed": "Failed to rotate secret",
+    "updateClientFailed": "Failed to update application"
   }
 }

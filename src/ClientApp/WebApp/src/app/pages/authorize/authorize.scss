@@ -17,7 +17,6 @@
   align-items: center;
   gap: 16px;
   padding: 16px;
-  background-color: #f5f5f5;
   border-radius: 8px;
   margin-bottom: 20px;
 }
@@ -26,7 +25,6 @@
   font-size: 48px;
   width: 48px;
   height: 48px;
-  color: #667eea;
 }
 
 .client-details h3 {
@@ -38,20 +36,17 @@
 .client-details p {
   margin: 0;
   font-size: 14px;
-  color: rgba(0, 0, 0, 0.6);
 }
 
 .consent-message {
   margin-bottom: 20px;
   padding: 12px;
-  background-color: #e3f2fd;
-  border-left: 4px solid #2196f3;
+  border-left: 4px solid;
   border-radius: 4px;
 }
 
 .consent-message p {
   margin: 0;
-  color: rgba(0, 0, 0, 0.87);
 }
 
 .scopes-section {
@@ -65,8 +60,6 @@
 }
 
 .required-badge {
-  background-color: #ff9800;
-  color: white;
   padding: 4px 8px;
   border-radius: 12px;
   font-size: 12px;
@@ -83,14 +76,8 @@
   gap: 8px;
   margin: 0;
   padding: 12px;
-  background-color: #fff3e0;
   border-radius: 4px;
   font-size: 14px;
-  color: rgba(0, 0, 0, 0.87);
-}
-
-.info-text mat-icon {
-  color: #ff9800;
 }
 
 .button-group {
@@ -107,21 +94,17 @@
 .privacy-notice {
   margin-top: 20px;
   padding-top: 20px;
-  border-top: 1px solid rgba(0, 0, 0, 0.12);
 }
 
 .privacy-notice p {
   margin: 0;
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.6);
   text-align: center;
 }
 
 .error-message {
   padding: 12px;
   margin-bottom: 16px;
-  background-color: #f44336;
-  color: white;
   border-radius: 4px;
   text-align: center;
 }

@@ -37,24 +37,88 @@ export class AppComponent implements OnInit {
   isInitialized = false;
 
   async ngOnInit() {
-    // 等待库完全初始化
-    const result = await firstValueFrom(this.oidcSecurityService.checkAuth());
-    this.isInitialized = true;
-    // 监听认证状态变化
-    this.oidcSecurityService.isAuthenticated$
-      .pipe(
-        map((result) => result.isAuthenticated)
-      )
-      .subscribe((isAuthenticated) => {
-        this.isAuthenticated = isAuthenticated;
+    console.log('🚀 开始 OIDC 初始化...');
+    
+    // 检查所有存储位置
+    console.log('📦 localStorage 数量:', localStorage.length);
+    console.log('📦 sessionStorage 数量:', sessionStorage.length);
+    
+    console.log('📦 localStorage 所有键:');
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      console.log(`  [${i}] ${key}`);
+    }
+    
+    console.log('📦 sessionStorage 所有键:');
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      console.log(`  [${i}] ${key}`);
+    }
+    
+    try {
+      // 等待库完全初始化，这很关键！
+      const checkAuthResult = await firstValueFrom(this.oidcSecurityService.checkAuth());
+      console.log('✅ OIDC checkAuth 完成，结果:', checkAuthResult);
+      
+      this.isInitialized = true;
+      
+      // 再次检查存储
+      console.log('📦 checkAuth 后 localStorage 数量:', localStorage.length);
+      console.log('📦 checkAuth 后 sessionStorage 数量:', sessionStorage.length);
+      
+      if (localStorage.length > 0) {
+        console.log('📦 localStorage 内容:');
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key) {
+            console.log(`  ${key}:`, localStorage.getItem(key)?.substring(0, 100));
+          }
+        }
+      }
+      
+      if (sessionStorage.length > 0) {
+        console.log('📦 sessionStorage 内容:');
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          if (key) {
+            console.log(`  ${key}:`, sessionStorage.getItem(key)?.substring(0, 100));
+          }
+        }
+      }
+      
+      // 监听认证状态变化
+      this.oidcSecurityService.isAuthenticated$
+        .pipe(
+          map((result) => result.isAuthenticated)
+        )
+        .subscribe((isAuthenticated) => {
+          this.isAuthenticated = isAuthenticated;
+          console.log('🔐 认证状态变化:', isAuthenticated);
+        });
+
+      this.oidcSecurityService.userData$.subscribe((userData) => {
+        this.userData = userData;
+        console.log('👤 用户信息:', userData);
       });
 
-    this.oidcSecurityService.userData$.subscribe((userData) => {
-      this.userData = userData;
-      if (userData) {
-        console.log('用户已认证:', userData);
-      }
-    });
+      // 调试：检查当前状态
+      const authState = await firstValueFrom(this.oidcSecurityService.isAuthenticated$);
+      console.log('📊 当前认证状态详情:', authState);
+      
+      // 获取所有 token
+      const accessToken = await firstValueFrom(this.oidcSecurityService.getAccessToken());
+      console.log('🔑 AccessToken:', accessToken || '(无)');
+      
+      const idToken = await firstValueFrom(this.oidcSecurityService.getIdToken());
+      console.log('🔑 IdToken:', idToken || '(无)');
+      
+      const refreshToken = await firstValueFrom(this.oidcSecurityService.getRefreshToken());
+      console.log('🔑 RefreshToken:', refreshToken || '(无)');
+      
+    } catch (error) {
+      console.error('❌ OIDC 初始化失败:', error);
+      this.isInitialized = true;
+    }
   }
 
   login() {
@@ -71,15 +135,4 @@ export class AppComponent implements OnInit {
     });
   }
 
-  toggleTheme() {
-    this.darkMode = !this.darkMode;
-    const body = document.body;
-    if (this.darkMode) {
-      body.classList.remove('light-theme');
-      body.classList.add('dark-theme');
-    } else {
-      body.classList.remove('dark-theme');
-      body.classList.add('light-theme');
-    }
-  }
 }

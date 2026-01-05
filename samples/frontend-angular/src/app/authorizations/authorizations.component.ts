@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { MatCardModule } from '@angular/material/card';
@@ -151,5 +151,5 @@ export class AuthorizationsComponent implements OnInit {
   `
 })
 export class ConfirmDialogComponent {
-  constructor(@inject(MAT_DIALOG_DATA) public data: { clientName: string }) {}
+  constructor(@Inject(MAT_DIALOG_DATA) public data: { clientName: string }) { }
 }
