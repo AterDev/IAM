@@ -1,12 +1,19 @@
 using AccessMod.Models.ScopeDtos;
+using EntityFramework.AppDbFactory;
+using Share.Exceptions;
+using Microsoft.AspNetCore.Http;
+using Mapster;
 
 namespace AccessMod.Managers;
 
 /// <summary>
 /// Manager for API scope operations
 /// </summary>
-public class ScopeManager(DefaultDbContext dbContext, ILogger<ScopeManager> logger)
-    : ManagerBase<DefaultDbContext, ApiScope>(dbContext, logger)
+public class ScopeManager(
+    TenantDbFactory dbContextFactory,
+    IUserContext userContext,
+    ILogger<ScopeManager> logger
+) : ManagerBase<DefaultDbContext, ApiScope>(dbContextFactory, userContext, logger)
 {
     /// <summary>
     /// Get paged scopes
@@ -20,7 +27,18 @@ public class ScopeManager(DefaultDbContext dbContext, ILogger<ScopeManager> logg
             .WhereNotNull(filter.DisplayName, q => q.DisplayName.Contains(filter.DisplayName!))
             .WhereNotNull(filter.Required, q => q.Required == filter.Required!.Value);
 
-        return await ToPageAsync<ScopeFilterDto, ScopeItemDto>(filter);
+        return await PageListAsync<ScopeFilterDto, ScopeItemDto>(filter);
+    }
+
+    /// <summary>
+    /// Check if user has permission to access scope
+    /// </summary>
+    /// <param name="id">Scope id</param>
+    /// <returns>True if has permission</returns>
+    public override async Task<bool> HasPermissionAsync(Guid id)
+    {
+        // Scope management is accessible by admins for now
+        return await Task.FromResult(true);
     }
 
     /// <summary>
@@ -61,20 +79,12 @@ public class ScopeManager(DefaultDbContext dbContext, ILogger<ScopeManager> logg
     /// <returns>Created scope detail or null</returns>
     public async Task<ScopeDetailDto?> AddAsync(ScopeAddDto dto)
     {
-        if (await ExistAsync(q => q.Name == dto.Name))
+        if (await _dbSet.AnyAsync(q => q.Name == dto.Name))
         {
-            ErrorMsg = "Scope name already exists";
-            return null;
+            throw new BusinessException("ScopeNameExists", StatusCodes.Status400BadRequest);
         }
 
-        var entity = new ApiScope
-        {
-            Name = dto.Name,
-            DisplayName = dto.DisplayName,
-            Description = dto.Description,
-            Required = dto.Required,
-            Emphasize = dto.Emphasize
-        };
+        var entity = dto.MapTo<ApiScope>();
 
         // Add scope claims
         if (dto.Claims.Count > 0)
@@ -89,8 +99,8 @@ public class ScopeManager(DefaultDbContext dbContext, ILogger<ScopeManager> logg
             }
         }
 
-        var success = await AddAsync(entity);
-        return !success ? null : await GetDetailAsync(entity.Id);
+        await InsertAsync(entity);
+        return await GetDetailAsync(entity.Id);
     }
 
     /// <summary>
@@ -107,8 +117,7 @@ public class ScopeManager(DefaultDbContext dbContext, ILogger<ScopeManager> logg
 
         if (entity == null)
         {
-            ErrorMsg = "Scope not found";
-            return null;
+            throw new BusinessException("ScopeNotFound", StatusCodes.Status404NotFound);
         }
 
         if (dto.DisplayName != null)
@@ -142,8 +151,9 @@ public class ScopeManager(DefaultDbContext dbContext, ILogger<ScopeManager> logg
             }
         }
 
-        var success = await SaveChangesAsync() > 0;
-        return !success ? null : await GetDetailAsync(id);
+        entity.UpdatedTime = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
+        return await GetDetailAsync(id);
     }
 
     /// <summary>
@@ -156,10 +166,10 @@ public class ScopeManager(DefaultDbContext dbContext, ILogger<ScopeManager> logg
         var entity = await FindAsync(id);
         if (entity == null)
         {
-            ErrorMsg = "Scope not found";
-            return false;
+            throw new BusinessException("ScopeNotFound", StatusCodes.Status404NotFound);
         }
 
-        return await DeleteAsync(entity);
+        await DeleteOrUpdateAsync([id], softDelete: true);
+        return true;
     }
 }

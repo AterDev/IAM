@@ -76,7 +76,7 @@ public class CommonSettingsController(
     {
         var result = await _manager.AddAsync(dto);
         return result == null
-            ? BadRequest(_manager.ErrorMsg)
+            ? Problem("Failed to create setting", statusCode: StatusCodes.Status400BadRequest)
             : CreatedAtAction(nameof(GetDetail), new { id = result.Id }, result);
     }
 
@@ -93,7 +93,9 @@ public class CommonSettingsController(
     )
     {
         var result = await _manager.UpdateAsync(id, dto);
-        return result == null ? BadRequest(_manager.ErrorMsg) : Ok(result);
+        return result == null
+            ? Problem("Failed to update setting", statusCode: StatusCodes.Status400BadRequest)
+            : Ok(result);
     }
 
     /// <summary>
@@ -105,6 +107,8 @@ public class CommonSettingsController(
     public async Task<ActionResult> DeleteSetting(Guid id)
     {
         var success = await _manager.DeleteAsync(id);
-        return !success ? BadRequest(_manager.ErrorMsg) : NoContent();
+        return !success
+            ? Problem("Failed to delete setting", statusCode: StatusCodes.Status400BadRequest)
+            : NoContent();
     }
 }

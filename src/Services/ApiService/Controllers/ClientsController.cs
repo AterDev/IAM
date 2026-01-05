@@ -69,7 +69,7 @@ public class ClientsController(
         var (detail, secret) = await _manager.AddAsync(dto);
         if (detail == null || secret == null)
         {
-            return BadRequest(_manager.ErrorMsg);
+            return Problem("Failed to create client", statusCode: StatusCodes.Status400BadRequest);
         }
 
         return CreatedAtAction(
@@ -92,7 +92,9 @@ public class ClientsController(
     )
     {
         var result = await _manager.UpdateAsync(id, dto);
-        return result == null ? BadRequest(_manager.ErrorMsg) : Ok(result);
+        return result == null
+            ? Problem("Failed to update client", statusCode: StatusCodes.Status400BadRequest)
+            : Ok(result);
     }
 
     /// <summary>
@@ -104,7 +106,9 @@ public class ClientsController(
     public async Task<ActionResult> DeleteClient(Guid id)
     {
         var success = await _manager.DeleteAsync(id);
-        return !success ? BadRequest(_manager.ErrorMsg) : NoContent();
+        return !success
+            ? Problem("Failed to delete client", statusCode: StatusCodes.Status400BadRequest)
+            : NoContent();
     }
 
     /// <summary>
@@ -136,7 +140,7 @@ public class ClientsController(
         var newSecret = await _manager.RotateSecretAsync(id);
         if (newSecret == null)
         {
-            return BadRequest(_manager.ErrorMsg);
+            return Problem("Failed to rotate secret", statusCode: StatusCodes.Status400BadRequest);
         }
 
         return Ok(new ClientSecretDto { Secret = newSecret });
@@ -152,7 +156,9 @@ public class ClientsController(
     public async Task<ActionResult> AssignScopes(Guid id, [FromBody] ClientScopeAssignDto dto)
     {
         var success = await _manager.AssignScopesAsync(id, dto.ScopeIds);
-        return !success ? BadRequest(_manager.ErrorMsg) : NoContent();
+        return !success
+            ? Problem("Failed to assign scopes to client", statusCode: StatusCodes.Status400BadRequest)
+            : NoContent();
     }
 
     /// <summary>

@@ -49,7 +49,7 @@ public class ScopesController(
     {
         var result = await _manager.AddAsync(dto);
         return result == null
-            ? BadRequest(_manager.ErrorMsg)
+            ? Problem("Failed to create scope", statusCode: StatusCodes.Status400BadRequest)
             : CreatedAtAction(nameof(GetDetail), new { id = result.Id }, result);
     }
 
@@ -66,7 +66,9 @@ public class ScopesController(
     )
     {
         var result = await _manager.UpdateAsync(id, dto);
-        return result == null ? BadRequest(_manager.ErrorMsg) : Ok(result);
+        return result == null
+            ? Problem("Failed to update scope", statusCode: StatusCodes.Status400BadRequest)
+            : Ok(result);
     }
 
     /// <summary>
@@ -78,6 +80,8 @@ public class ScopesController(
     public async Task<ActionResult> DeleteScope(Guid id)
     {
         var success = await _manager.DeleteAsync(id);
-        return !success ? BadRequest(_manager.ErrorMsg) : NoContent();
+        return !success
+            ? Problem("Failed to delete scope", statusCode: StatusCodes.Status400BadRequest)
+            : NoContent();
     }
 }

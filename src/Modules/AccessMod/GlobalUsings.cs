@@ -1,8 +1,10 @@
 global using System.ComponentModel.DataAnnotations;
 global using Entity.AccessMod;
 global using EntityFramework.AppDbContext;
+global using EntityFramework.AppDbFactory;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.Extensions.Logging;
+global using Perigon.AspNetCore.Abstraction;
 global using Perigon.AspNetCore.Models;
 // global using AccessMod.Managers;
 global using Perigon.AspNetCore.Utils;

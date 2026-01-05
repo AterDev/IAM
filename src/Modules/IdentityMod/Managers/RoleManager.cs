@@ -1,6 +1,10 @@
 using System.Text.Json;
 using CommonMod.Managers;
 using IdentityMod.Models.RoleDtos;
+using EntityFramework.AppDbFactory;
+using Share.Exceptions;
+using Microsoft.AspNetCore.Http;
+using Mapster;
 
 namespace IdentityMod.Managers;
 
@@ -8,10 +12,11 @@ namespace IdentityMod.Managers;
 /// Manager for role operations
 /// </summary>
 public class RoleManager(
-    DefaultDbContext dbContext,
+    TenantDbFactory dbContextFactory,
+    IUserContext userContext,
     ILogger<RoleManager> logger,
     AuditLogManager auditLogManager)
-    : ManagerBase<DefaultDbContext, Role>(dbContext, logger)
+    : ManagerBase<DefaultDbContext, Role>(dbContextFactory, userContext, logger)
 {
     private readonly AuditLogManager _auditLogManager = auditLogManager;
     /// <summary>
@@ -26,7 +31,18 @@ public class RoleManager(
             .WhereNotNull(filter.StartDate, q => q.CreatedTime >= filter.StartDate)
             .WhereNotNull(filter.EndDate, q => q.CreatedTime <= filter.EndDate);
 
-        return await ToPageAsync<RoleFilterDto, RoleItemDto>(filter);
+        return await PageListAsync<RoleFilterDto, RoleItemDto>(filter);
+    }
+
+    /// <summary>
+    /// Check if user has permission to access role
+    /// </summary>
+    /// <param name="id">Role id</param>
+    /// <returns>True if has permission</returns>
+    public override async Task<bool> HasPermissionAsync(Guid id)
+    {
+        // Role management is accessible by admins for now
+        return await Task.FromResult(true);
     }
 
     /// <summary>
@@ -60,22 +76,17 @@ public class RoleManager(
         var normalizedName = dto.Name.ToUpperInvariant();
 
         // Check if role name already exists
-        if (await ExistAsync(q => q.NormalizedName == normalizedName))
+        if (await _dbSet.AnyAsync(q => q.NormalizedName == normalizedName))
         {
-            ErrorMsg = "Role name already exists";
-            return null;
+            throw new BusinessException("RoleNameExists", StatusCodes.Status400BadRequest);
         }
 
-        var entity = new Role
-        {
-            Name = dto.Name,
-            NormalizedName = normalizedName,
-            Description = dto.Description,
-            ConcurrencyStamp = Guid.NewGuid().ToString()
-        };
+        var entity = dto.MapTo<Role>();
+        entity.NormalizedName = normalizedName;
+        entity.ConcurrencyStamp = Guid.NewGuid().ToString();
 
-        var success = await AddAsync(entity);
-        return !success ? null : await GetDetailAsync(entity.Id);
+        await InsertAsync(entity);
+        return await GetDetailAsync(entity.Id);
     }
 
     /// <summary>
@@ -89,18 +100,16 @@ public class RoleManager(
         var entity = await FindAsync(id);
         if (entity == null)
         {
-            ErrorMsg = "Role not found";
-            return null;
+            throw new BusinessException("RoleNotFound", StatusCodes.Status404NotFound);
         }
 
         // Check if name already exists (if changing)
         if (!string.IsNullOrWhiteSpace(dto.Name) && dto.Name != entity.Name)
         {
             var normalizedName = dto.Name.ToUpperInvariant();
-            if (await ExistAsync(q => q.NormalizedName == normalizedName && q.Id != id))
+            if (await _dbSet.AnyAsync(q => q.NormalizedName == normalizedName && q.Id != id))
             {
-                ErrorMsg = "Role name already exists";
-                return null;
+                throw new BusinessException("RoleNameExists", StatusCodes.Status400BadRequest);
             }
             entity.Name = dto.Name;
             entity.NormalizedName = normalizedName;
@@ -112,9 +121,10 @@ public class RoleManager(
         }
 
         entity.ConcurrencyStamp = Guid.NewGuid().ToString();
+        entity.UpdatedTime = DateTime.UtcNow;
 
-        var success = await UpdateAsync(entity);
-        return !success ? null : await GetDetailAsync(id);
+        await _dbContext.SaveChangesAsync();
+        return await GetDetailAsync(id);
     }
 
     /// <summary>
@@ -128,19 +138,18 @@ public class RoleManager(
         var entity = await FindAsync(id);
         if (entity == null)
         {
-            ErrorMsg = "Role not found";
-            return false;
+            throw new BusinessException("RoleNotFound", StatusCodes.Status404NotFound);
         }
 
         // Check if role has users
         await LoadManyAsync(entity, r => r.UserRoles);
         if (entity.UserRoles.Count > 0)
         {
-            ErrorMsg = "Cannot delete role that has users assigned";
-            return false;
+            throw new BusinessException("RoleHasUsers", StatusCodes.Status400BadRequest);
         }
 
-        return await DeleteAsync(entity, softDelete);
+        await DeleteOrUpdateAsync([id], softDelete);
+        return true;
     }
 
     /// <summary>
@@ -160,61 +169,63 @@ public class RoleManager(
         var role = await FindAsync(roleId);
         if (role == null)
         {
-            ErrorMsg = "Role not found";
-            return false;
+            throw new BusinessException("RoleNotFound", StatusCodes.Status404NotFound);
         }
 
-        // Load current claims
-        await LoadManyAsync(role, r => r.RoleClaims);
-
-        // Track changes for audit
-        var oldPermissions = role.RoleClaims
-            .Select(rc => $"{rc.ClaimType}:{rc.ClaimValue}")
-            .ToList();
-
-        // Remove all existing permission claims
-        var existingClaims = role.RoleClaims.ToList();
-        foreach (var claim in existingClaims)
+        return await ExecuteInTransactionAsync(async () =>
         {
-            _dbContext.Set<RoleClaim>().Remove(claim);
-        }
+            // Load current claims
+            await LoadManyAsync(role, r => r.RoleClaims);
 
-        // Add new claims
-        foreach (var permission in dto.Permissions)
-        {
-            role.RoleClaims.Add(new RoleClaim
-            {
-                RoleId = roleId,
-                ClaimType = permission.ClaimType,
-                ClaimValue = permission.ClaimValue
-            });
-        }
-
-        var result = await SaveChangesAsync() > 0;
-
-        if (result)
-        {
-            // Write audit log for permission changes
-            var newPermissions = dto.Permissions
-                .Select(p => $"{p.ClaimType}:{p.ClaimValue}")
+            // Track changes for audit
+            var oldPermissions = role.RoleClaims
+                .Select(rc => $"{rc.ClaimType}:{rc.ClaimValue}")
                 .ToList();
 
-            await _auditLogManager.AddAuditLogAsync(
-                category: "Authorization",
-                eventName: "RolePermissionsChanged",
-                subjectId: roleId.ToString(),
-                payload: JsonSerializer.Serialize(new
-                {
-                    roleName = role.Name,
-                    oldCount = oldPermissions.Count,
-                    newCount = newPermissions.Count
-                }),
-                ipAddress: ipAddress,
-                userAgent: userAgent
-            );
-        }
+            // Remove all existing permission claims
+            var existingClaims = role.RoleClaims.ToList();
+            foreach (var claim in existingClaims)
+            {
+                _dbContext.Set<RoleClaim>().Remove(claim);
+            }
 
-        return result;
+            // Add new claims
+            foreach (var permission in dto.Permissions)
+            {
+                role.RoleClaims.Add(new RoleClaim
+                {
+                    RoleId = roleId,
+                    ClaimType = permission.ClaimType,
+                    ClaimValue = permission.ClaimValue
+                });
+            }
+
+            var result = await _dbContext.SaveChangesAsync() > 0;
+
+            if (result)
+            {
+                // Write audit log for permission changes
+                var newPermissions = dto.Permissions
+                    .Select(p => $"{p.ClaimType}:{p.ClaimValue}")
+                    .ToList();
+
+                await _auditLogManager.AddAuditLogAsync(
+                    category: "Authorization",
+                    eventName: "RolePermissionsChanged",
+                    subjectId: roleId.ToString(),
+                    payload: JsonSerializer.Serialize(new
+                    {
+                        roleName = role.Name,
+                        oldCount = oldPermissions.Count,
+                        newCount = newPermissions.Count
+                    }),
+                    ipAddress: ipAddress,
+                    userAgent: userAgent
+                );
+            }
+
+            return result;
+        });
     }
 
     /// <summary>
@@ -245,7 +256,7 @@ public class RoleManager(
     /// <returns>List of all roles</returns>
     public async Task<List<RoleItemDto>> GetAllAsync()
     {
-        return await ToListAsync<RoleItemDto>();
+        return await ListAsync<RoleItemDto>();
     }
 
     /// <summary>

@@ -78,7 +78,7 @@ public abstract class ManagerBase<TDbContext, TEntity>
     /// <typeparam name="TDto">DTO type</typeparam>
     /// <param name="whereExp">Filter expression</param>
     /// <returns>The DTO if found; otherwise, null.</returns>
-    protected async Task<TDto?> FindAsync<TDto>(Expression<Func<TEntity, bool>>? whereExp = null)
+    public async Task<TDto?> FindAsync<TDto>(Expression<Func<TEntity, bool>>? whereExp = null)
         where TDto : class
     {
         var query = _dbSet.AsNoTracking();
@@ -281,7 +281,7 @@ public abstract class ManagerBase<TDbContext, TEntity>
     /// <param name="entity">Entity instance</param>
     /// <param name="propertyExpression">Collection property expression</param>
     /// <returns>Task representing the asynchronous operation.</returns>
-    protected async Task LoadManyAsync<TProperty>(
+    public async Task LoadManyAsync<TProperty>(
         TEntity entity,
         Expression<Func<TEntity, IEnumerable<TProperty>>> propertyExpression
     )

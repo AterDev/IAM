@@ -1,14 +1,21 @@
 using AccessMod.Models.ResourceDtos;
 using Entity.AccessMod;
 using EntityFramework.AppDbContext;
+using EntityFramework.AppDbFactory;
+using Share.Exceptions;
+using Microsoft.AspNetCore.Http;
+using Mapster;
 
 namespace AccessMod.Managers;
 
 /// <summary>
 /// Manager for API resource operations
 /// </summary>
-public class ResourceManager(DefaultDbContext dbContext, ILogger<ResourceManager> logger)
-    : ManagerBase<DefaultDbContext, ApiResource>(dbContext, logger)
+public class ResourceManager(
+    TenantDbFactory dbContextFactory,
+    IUserContext userContext,
+    ILogger<ResourceManager> logger
+) : ManagerBase<DefaultDbContext, ApiResource>(dbContextFactory, userContext, logger)
 {
     /// <summary>
     /// Get paged resources
@@ -21,7 +28,18 @@ public class ResourceManager(DefaultDbContext dbContext, ILogger<ResourceManager
             .WhereNotNull(filter.Name, q => q.Name.Contains(filter.Name!))
             .WhereNotNull(filter.DisplayName, q => q.DisplayName.Contains(filter.DisplayName!));
 
-        return await ToPageAsync<ResourceFilterDto, ResourceItemDto>(filter);
+        return await PageListAsync<ResourceFilterDto, ResourceItemDto>(filter);
+    }
+
+    /// <summary>
+    /// Check if user has permission to access resource
+    /// </summary>
+    /// <param name="id">Resource id</param>
+    /// <returns>True if has permission</returns>
+    public override async Task<bool> HasPermissionAsync(Guid id)
+    {
+        // Resource management is accessible by admins for now
+        return await Task.FromResult(true);
     }
 
     /// <summary>
@@ -41,21 +59,14 @@ public class ResourceManager(DefaultDbContext dbContext, ILogger<ResourceManager
     /// <returns>Created resource detail or null</returns>
     public async Task<ResourceDetailDto?> AddAsync(ResourceAddDto dto)
     {
-        if (await ExistAsync(q => q.Name == dto.Name))
+        if (await _dbSet.AnyAsync(q => q.Name == dto.Name))
         {
-            ErrorMsg = "Resource name already exists";
-            return null;
+            throw new BusinessException("ResourceNameExists", StatusCodes.Status400BadRequest);
         }
 
-        var entity = new ApiResource
-        {
-            Name = dto.Name,
-            DisplayName = dto.DisplayName,
-            Description = dto.Description
-        };
-
-        var success = await AddAsync(entity);
-        return !success ? null : await GetDetailAsync(entity.Id);
+        var entity = dto.MapTo<ApiResource>();
+        await InsertAsync(entity);
+        return await GetDetailAsync(entity.Id);
     }
 
     /// <summary>
@@ -69,8 +80,7 @@ public class ResourceManager(DefaultDbContext dbContext, ILogger<ResourceManager
         var entity = await FindAsync(id);
         if (entity == null)
         {
-            ErrorMsg = "Resource not found";
-            return null;
+            throw new BusinessException("ResourceNotFound", StatusCodes.Status404NotFound);
         }
 
         if (dto.DisplayName != null)
@@ -82,8 +92,9 @@ public class ResourceManager(DefaultDbContext dbContext, ILogger<ResourceManager
             entity.Description = dto.Description;
         }
 
-        var success = await UpdateAsync(entity);
-        return !success ? null : await GetDetailAsync(id);
+        entity.UpdatedTime = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
+        return await GetDetailAsync(id);
     }
 
     /// <summary>
@@ -96,11 +107,11 @@ public class ResourceManager(DefaultDbContext dbContext, ILogger<ResourceManager
         var entity = await FindAsync(id);
         if (entity == null)
         {
-            ErrorMsg = "Resource not found";
-            return false;
+            throw new BusinessException("ResourceNotFound", StatusCodes.Status404NotFound);
         }
 
-        return await DeleteAsync(entity);
+        await DeleteOrUpdateAsync([id], softDelete: true);
+        return true;
     }
 
     /// <summary>

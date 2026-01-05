@@ -1,12 +1,19 @@
 using IdentityMod.Models.OrganizationDtos;
+using EntityFramework.AppDbFactory;
+using Share.Exceptions;
+using Microsoft.AspNetCore.Http;
+using Mapster;
 
 namespace IdentityMod.Managers;
 
 /// <summary>
 /// Manager for organization operations
 /// </summary>
-public class OrganizationManager(DefaultDbContext dbContext, ILogger<OrganizationManager> logger)
-    : ManagerBase<DefaultDbContext, Organization>(dbContext, logger)
+public class OrganizationManager(
+    TenantDbFactory dbContextFactory,
+    IUserContext userContext,
+    ILogger<OrganizationManager> logger
+) : ManagerBase<DefaultDbContext, Organization>(dbContextFactory, userContext, logger)
 {
     /// <summary>
     /// Get paged organizations
@@ -20,7 +27,18 @@ public class OrganizationManager(DefaultDbContext dbContext, ILogger<Organizatio
             .WhereNotNull(filter.ParentId != null, q => q.ParentId == filter.ParentId)
             .WhereNotNull(filter.Level != null, q => q.Level == filter.Level);
 
-        return await ToPageAsync<OrganizationFilterDto, OrganizationItemDto>(filter);
+        return await PageListAsync<OrganizationFilterDto, OrganizationItemDto>(filter);
+    }
+
+    /// <summary>
+    /// Check if user has permission to access organization
+    /// </summary>
+    /// <param name="id">Organization id</param>
+    /// <returns>True if has permission</returns>
+    public override async Task<bool> HasPermissionAsync(Guid id)
+    {
+        // Organization management is accessible by admins for now
+        return await Task.FromResult(true);
     }
 
     /// <summary>
@@ -41,50 +59,42 @@ public class OrganizationManager(DefaultDbContext dbContext, ILogger<Organizatio
     public async Task<OrganizationDetailDto?> AddAsync(OrganizationAddDto dto)
     {
         // Check if name already exists under same parent
-        if (await ExistAsync(q => q.Name == dto.Name && q.ParentId == dto.ParentId))
+        if (await _dbSet.AnyAsync(q => q.Name == dto.Name && q.ParentId == dto.ParentId))
         {
-            ErrorMsg = "Organization name already exists under the same parent";
-            return null;
+            throw new BusinessException("OrganizationNameExists", StatusCodes.Status400BadRequest);
         }
 
-        // Get parent info if parent exists
-        Organization? parent = null;
-        int level = 0;
-        string path = "/";
-
-        if (dto.ParentId.HasValue)
+        return await ExecuteInTransactionAsync(async () =>
         {
-            parent = await FindAsync(dto.ParentId.Value);
-            if (parent == null)
+            // Get parent info if parent exists
+            Organization? parent = null;
+            int level = 0;
+            string path = "/";
+
+            if (dto.ParentId.HasValue)
             {
-                ErrorMsg = "Parent organization not found";
-                return null;
+                parent = await FindAsync(dto.ParentId.Value);
+                if (parent == null)
+                {
+                    throw new BusinessException("ParentOrganizationNotFound", StatusCodes.Status404NotFound);
+                }
+                level = parent.Level + 1;
+                path = $"{parent.Path}{parent.Id}/";
             }
-            level = parent.Level + 1;
-            path = $"{parent.Path}{parent.Id}/";
-        }
 
-        var entity = new Organization
-        {
-            Name = dto.Name,
-            ParentId = dto.ParentId,
-            Level = level,
-            Path = path,
-            DisplayOrder = dto.DisplayOrder,
-            Description = dto.Description
-        };
+            var entity = dto.MapTo<Organization>();
+            entity.Level = level;
+            entity.Path = path;
 
-        var success = await AddAsync(entity);
-        if (!success)
-        {
-            return null;
-        }
+            await InsertAsync(entity);
 
-        // Update path with actual ID
-        entity.Path = dto.ParentId.HasValue ? $"{parent!.Path}{entity.Id}/" : $"/{entity.Id}/";
-        await UpdateAsync(entity);
+            // Update path with actual ID
+            entity.Path = dto.ParentId.HasValue ? $"{parent!.Path}{entity.Id}/" : $"/{entity.Id}/";
+            entity.UpdatedTime = DateTime.UtcNow;
+            await _dbContext.SaveChangesAsync();
 
-        return await GetDetailAsync(entity.Id);
+            return await GetDetailAsync(entity.Id);
+        });
     }
 
     /// <summary>
@@ -98,17 +108,15 @@ public class OrganizationManager(DefaultDbContext dbContext, ILogger<Organizatio
         var entity = await FindAsync(id);
         if (entity == null)
         {
-            ErrorMsg = "Organization not found";
-            return null;
+            throw new BusinessException("OrganizationNotFound", StatusCodes.Status404NotFound);
         }
 
         // Check if name already exists under same parent (if changing)
         if (!string.IsNullOrWhiteSpace(dto.Name) && dto.Name != entity.Name)
         {
-            if (await ExistAsync(q => q.Name == dto.Name && q.ParentId == entity.ParentId && q.Id != id))
+            if (await _dbSet.AnyAsync(q => q.Name == dto.Name && q.ParentId == entity.ParentId && q.Id != id))
             {
-                ErrorMsg = "Organization name already exists under the same parent";
-                return null;
+                throw new BusinessException("OrganizationNameExists", StatusCodes.Status400BadRequest);
             }
             entity.Name = dto.Name;
         }
@@ -119,15 +127,13 @@ public class OrganizationManager(DefaultDbContext dbContext, ILogger<Organizatio
             // Check for circular reference
             if (await IsCircularReferenceAsync(id, dto.ParentId.Value))
             {
-                ErrorMsg = "Cannot move organization to its own descendant";
-                return null;
+                throw new BusinessException("CircularReference", StatusCodes.Status400BadRequest);
             }
 
             var parent = await FindAsync(dto.ParentId.Value);
             if (parent == null)
             {
-                ErrorMsg = "Parent organization not found";
-                return null;
+                throw new BusinessException("ParentOrganizationNotFound", StatusCodes.Status404NotFound);
             }
 
             entity.ParentId = dto.ParentId.Value;
@@ -148,8 +154,9 @@ public class OrganizationManager(DefaultDbContext dbContext, ILogger<Organizatio
             entity.Description = dto.Description;
         }
 
-        var success = await UpdateAsync(entity);
-        return !success ? null : await GetDetailAsync(id);
+        entity.UpdatedTime = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
+        return await GetDetailAsync(id);
     }
 
     /// <summary>
@@ -163,26 +170,24 @@ public class OrganizationManager(DefaultDbContext dbContext, ILogger<Organizatio
         var entity = await FindAsync(id);
         if (entity == null)
         {
-            ErrorMsg = "Organization not found";
-            return false;
+            throw new BusinessException("OrganizationNotFound", StatusCodes.Status404NotFound);
         }
 
         // Check if has children
-        if (await ExistAsync(q => q.ParentId == id))
+        if (await _dbSet.AnyAsync(q => q.ParentId == id))
         {
-            ErrorMsg = "Cannot delete organization with children. Please delete or move children first.";
-            return false;
+            throw new BusinessException("OrganizationHasChildren", StatusCodes.Status400BadRequest);
         }
 
         // Check if has users
         await LoadManyAsync(entity, o => o.OrganizationUsers);
         if (entity.OrganizationUsers.Count > 0)
         {
-            ErrorMsg = "Cannot delete organization with users. Please remove users first.";
-            return false;
+            throw new BusinessException("OrganizationHasUsers", StatusCodes.Status400BadRequest);
         }
 
-        return await DeleteAsync(entity, softDelete);
+        await DeleteOrUpdateAsync([id], softDelete);
+        return true;
     }
 
     /// <summary>
@@ -229,8 +234,7 @@ public class OrganizationManager(DefaultDbContext dbContext, ILogger<Organizatio
         var organization = await FindAsync(organizationId);
         if (organization == null)
         {
-            ErrorMsg = "Organization not found";
-            return false;
+            throw new BusinessException("OrganizationNotFound", StatusCodes.Status404NotFound);
         }
 
         // Load current users
@@ -249,7 +253,7 @@ public class OrganizationManager(DefaultDbContext dbContext, ILogger<Organizatio
             });
         }
 
-        return await SaveChangesAsync() > 0;
+        return await _dbContext.SaveChangesAsync() > 0;
     }
 
     /// <summary>
@@ -263,8 +267,7 @@ public class OrganizationManager(DefaultDbContext dbContext, ILogger<Organizatio
         var organization = await FindAsync(organizationId);
         if (organization == null)
         {
-            ErrorMsg = "Organization not found";
-            return false;
+            throw new BusinessException("OrganizationNotFound", StatusCodes.Status404NotFound);
         }
 
         // Load current users
@@ -280,7 +283,7 @@ public class OrganizationManager(DefaultDbContext dbContext, ILogger<Organizatio
             _dbContext.Set<OrganizationUser>().Remove(orgUser);
         }
 
-        return await SaveChangesAsync() > 0;
+        return await _dbContext.SaveChangesAsync() > 0;
     }
 
     /// <summary>
@@ -324,7 +327,7 @@ public class OrganizationManager(DefaultDbContext dbContext, ILogger<Organizatio
 
         if (children.Count > 0)
         {
-            await SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
         }
     }
 }
