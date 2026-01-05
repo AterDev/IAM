@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using Entity.AccessMod;
 using Entity.IdentityMod;
-using EntityFramework.AppDbContext;
 using Microsoft.EntityFrameworkCore;
 using Perigon.AspNetCore.Constants;
 using Share.Services;
