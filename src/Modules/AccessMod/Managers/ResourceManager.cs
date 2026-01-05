@@ -102,4 +102,22 @@ public class ResourceManager(DefaultDbContext dbContext, ILogger<ResourceManager
 
         return await DeleteAsync(entity);
     }
+
+    /// <summary>
+    /// Get all resources (for dropdown/selection)
+    /// </summary>
+    /// <returns>List of all resources</returns>
+    public async Task<List<ResourceItemDto>> GetAllAsync()
+    {
+        return await Queryable
+            .Select(r => new ResourceItemDto
+            {
+                Id = r.Id,
+                Name = r.Name,
+                DisplayName = r.DisplayName,
+                Description = r.Description,
+                CreatedTime = r.CreatedTime
+            })
+            .ToListAsync();
+    }
 }

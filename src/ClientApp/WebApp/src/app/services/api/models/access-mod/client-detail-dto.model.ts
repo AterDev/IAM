@@ -1,3 +1,6 @@
+import { ScopeItemDto } from './scope-item-dto.model';
+import { ResourceItemDto } from './resource-item-dto.model';
+
 /**
  * Client detail DTO
  */
@@ -23,7 +26,9 @@ export interface ClientDetailDto {
   /** postLogoutRedirectUris */
   postLogoutRedirectUris: string[];
   /** scopes */
-  scopes: string[];
+  scopes: ScopeItemDto[];
+  /** resources - API resources this client can access */
+  resources: ResourceItemDto[];
   /** createdTime */
   createdTime: Date;
   /** updatedTime */

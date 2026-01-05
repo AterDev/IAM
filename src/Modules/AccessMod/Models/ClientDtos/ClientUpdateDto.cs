@@ -24,4 +24,9 @@ public class ClientUpdateDto
 
     public List<string>? RedirectUris { get; set; }
     public List<string>? PostLogoutRedirectUris { get; set; }
+    public List<Guid>? ScopeIds { get; set; }
+    /// <summary>
+    /// API resource IDs this client can access
+    /// </summary>
+    public List<Guid>? ResourceIds { get; set; }
 }

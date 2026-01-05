@@ -144,6 +144,31 @@
             }
           </mat-card-content>
         </mat-card>
+
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>{{ 'client.resources' | translate }}</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            @if (client()!.resources.length > 0) {
+            <mat-chip-set>
+              @for (resource of client()!.resources; track resource.id) {
+              <mat-chip>
+                <strong>{{ resource.displayName }}</strong>
+                @if (resource.description) {
+                <span class="ms-2 text-muted">{{ resource.description }}</span>
+                }
+              </mat-chip>
+              }
+            </mat-chip-set>
+            }
+            @if (client()!.resources.length === 0) {
+            <p class="text-center text-muted py-5">
+              {{ 'client.noResources' | translate }}
+            </p>
+            }
+          </mat-card-content>
+        </mat-card>
       </div>
 
     </mat-tab>

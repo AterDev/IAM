@@ -84,6 +84,11 @@ public class Client : EntityBase
     public List<ClientScope> ClientScopes { get; set; } = [];
 
     /// <summary>
+    /// Client resources (API resources this client can access)
+    /// </summary>
+    public List<ClientResource> ClientResources { get; set; } = [];
+
+    /// <summary>
     /// Authorizations
     /// </summary>
     public List<Authorization> Authorizations { get; set; } = [];

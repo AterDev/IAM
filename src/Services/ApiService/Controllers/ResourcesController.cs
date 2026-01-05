@@ -14,6 +14,17 @@ public class ResourcesController(
 ) : RestControllerBase<ResourceManager>(localizer, manager, user, logger)
 {
     /// <summary>
+    /// Get all resources (for dropdown/selection)
+    /// </summary>
+    /// <returns>List of all resources</returns>
+    [HttpGet("all")]
+    public async Task<ActionResult<List<ResourceItemDto>>> GetAll()
+    {
+        var result = await _manager.GetAllAsync();
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Get paged resources
     /// </summary>
     /// <param name="filter">Filter criteria</param>

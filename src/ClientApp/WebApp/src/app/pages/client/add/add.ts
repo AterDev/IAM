@@ -1,15 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModules, CommonFormModules } from 'src/app/share/shared-modules';
-import { FormBuilder, FormGroup, FormControl, Validators, FormArray } from '@angular/forms';
+import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { ClientAddDto } from 'src/app/services/api/models/access-mod/client-add-dto.model';
+import { ResourceItemDto } from 'src/app/services/api/models/access-mod/resource-item-dto.model';
 import { TranslateService } from '@ngx-translate/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Clipboard } from '@angular/cdk/clipboard';
+import { COMMA, ENTER } from '@angular/cdk/keycodes';
+import { MatChipInputEvent } from '@angular/material/chips';
 
 @Component({
   selector: 'app-add',
@@ -29,6 +32,13 @@ export class ClientAddComponent implements OnInit {
   isSubmitting = false;
   clientSecret: string | null = null;
   secretCopied = false;
+  separatorKeysCodes = [ENTER, COMMA];
+  
+  redirectUris: string[] = [];
+  postLogoutRedirectUris: string[] = [];
+  scopes: string[] = [];
+  resourceIds: string[] = [];
+  availableResources: ResourceItemDto[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -48,10 +58,22 @@ export class ClientAddComponent implements OnInit {
       requirePkce: [true],
       consentType: ['explicit'],
       applicationType: ['web'],
-      redirectUris: this.fb.array([]),
-      postLogoutRedirectUris: this.fb.array([]),
       newRedirectUri: [''],
-      newPostLogoutRedirectUri: ['']
+      newPostLogoutRedirectUri: [''],
+      newScope: ['']
+    });
+
+    this.loadAvailableResources();
+  }
+
+  loadAvailableResources(): void {
+    this.api.resources.getList().subscribe({
+      next: (resources) => {
+        this.availableResources = resources || [];
+      },
+      error: (error) => {
+        console.error('[ClientAdd] Failed to load resources:', error);
+      }
     });
   }
 
@@ -91,36 +113,61 @@ export class ClientAddComponent implements OnInit {
     return this.clientForm.get('newPostLogoutRedirectUri') as FormControl;
   }
 
-  get redirectUris(): FormArray {
-    return this.clientForm.get('redirectUris') as FormArray;
+  get newScope() {
+    return this.clientForm.get('newScope') as FormControl;
   }
 
-  get postLogoutRedirectUris(): FormArray {
-    return this.clientForm.get('postLogoutRedirectUris') as FormArray;
-  }
-
-  addRedirectUri(): void {
-    const uri = this.newRedirectUri.value?.trim();
-    if (uri) {
-      this.redirectUris.push(this.fb.control(uri));
-      this.newRedirectUri.setValue('');
+  addRedirectUri(event: MatChipInputEvent): void {
+    const value = (event.value || '').trim();
+    if (value && !this.redirectUris.includes(value)) {
+      this.redirectUris.push(value);
     }
+    event.chipInput?.clear();
+    this.clientForm.get('newRedirectUri')?.setValue('');
   }
 
   removeRedirectUri(index: number): void {
-    this.redirectUris.removeAt(index);
+    this.redirectUris.splice(index, 1);
   }
 
-  addPostLogoutRedirectUri(): void {
-    const uri = this.newPostLogoutRedirectUri.value?.trim();
-    if (uri) {
-      this.postLogoutRedirectUris.push(this.fb.control(uri));
-      this.newPostLogoutRedirectUri.setValue('');
+  addPostLogoutRedirectUri(event: MatChipInputEvent): void {
+    const value = (event.value || '').trim();
+    if (value && !this.postLogoutRedirectUris.includes(value)) {
+      this.postLogoutRedirectUris.push(value);
     }
+    event.chipInput?.clear();
+    this.clientForm.get('newPostLogoutRedirectUri')?.setValue('');
   }
 
   removePostLogoutRedirectUri(index: number): void {
-    this.postLogoutRedirectUris.removeAt(index);
+    this.postLogoutRedirectUris.splice(index, 1);
+  }
+
+  addScope(event: MatChipInputEvent): void {
+    const value = (event.value || '').trim();
+    if (value && !this.scopes.includes(value)) {
+      this.scopes.push(value);
+    }
+    event.chipInput?.clear();
+    this.clientForm.get('newScope')?.setValue('');
+  }
+
+  removeScope(index: number): void {
+    this.scopes.splice(index, 1);
+  }
+
+  addResource(resource: ResourceItemDto): void {
+    if (!this.resourceIds.includes(resource.id)) {
+      this.resourceIds.push(resource.id);
+    }
+  }
+
+  removeResource(index: number): void {
+    this.resourceIds.splice(index, 1);
+  }
+
+  getResourceName(resourceId: string): string {
+    return this.availableResources.find(r => r.id === resourceId)?.displayName || resourceId;
   }
 
   copySecret(): void {
@@ -157,9 +204,10 @@ export class ClientAddComponent implements OnInit {
       requirePkce: formValue.requirePkce,
       consentType: formValue.consentType || null,
       applicationType: formValue.applicationType || null,
-      redirectUris: this.redirectUris.value,
-      postLogoutRedirectUris: this.postLogoutRedirectUris.value,
-      scopeIds: []
+      redirectUris: this.redirectUris,
+      postLogoutRedirectUris: this.postLogoutRedirectUris,
+      scopeIds: this.scopes,
+      resourceIds: this.resourceIds
     };
 
     this.api.clients.createClient(dto).subscribe({
