@@ -49,9 +49,7 @@ public class AdminAuthController(
 
             if (userDetail == null)
             {
-                return Unauthorized(
-                    new { message = _userManager.ErrorMsg ?? "Invalid username or password" }
-                );
+                return Unauthorized(new { message = "Invalid username or password" });
             }
 
             // Get user roles

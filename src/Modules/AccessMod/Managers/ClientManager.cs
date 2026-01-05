@@ -4,6 +4,10 @@ using AccessMod.Models.ClientDtos;
 using AccessMod.Models.ResourceDtos;
 using AccessMod.Models.ScopeDtos;
 using Share.Services;
+using EntityFramework.AppDbFactory;
+using Share.Exceptions;
+using Microsoft.AspNetCore.Http;
+using Mapster;
 
 namespace AccessMod.Managers;
 
@@ -11,10 +15,11 @@ namespace AccessMod.Managers;
 /// Manager for OAuth/OIDC client operations
 /// </summary>
 public class ClientManager(
-    DefaultDbContext dbContext,
-    IPasswordHasher passwordHasher,
-    ILogger<ClientManager> logger)
-    : ManagerBase<DefaultDbContext, Client>(dbContext, logger)
+    TenantDbFactory dbContextFactory,
+    IUserContext userContext,
+    ILogger<ClientManager> logger,
+    IPasswordHasher passwordHasher
+) : ManagerBase<DefaultDbContext, Client>(dbContextFactory, userContext, logger)
 {
     private readonly IPasswordHasher _passwordHasher = passwordHasher;
 
@@ -31,7 +36,20 @@ public class ClientManager(
             .WhereNotNull(filter.Type, q => q.Type == filter.Type)
             .WhereNotNull(filter.ApplicationType, q => q.ApplicationType == filter.ApplicationType);
 
-        return await ToPageAsync<ClientFilterDto, ClientItemDto>(filter);
+        return await PageListAsync<ClientFilterDto, ClientItemDto>(filter);
+    }
+
+    /// <summary>
+    /// Check if user has permission to access client
+    /// </summary>
+    /// <param name="id">Client id</param>
+    /// <returns>True if has permission</returns>
+    public override async Task<bool> HasPermissionAsync(Guid id)
+    {
+        // Client management is accessible by admins for now
+        // TODO: Implement proper permission checking logic
+        // Security safeguard: deny by default until proper permission checks are implemented
+        return await Task.FromResult(false);
     }
 
     /// <summary>
@@ -94,33 +112,19 @@ public class ClientManager(
     /// <returns>Created client detail with secret or null</returns>
     public async Task<(ClientDetailDto? Detail, string? Secret)> AddAsync(ClientAddDto dto)
     {
-        if (await ExistAsync(q => q.ClientId == dto.ClientId))
+        if (await _dbSet.AnyAsync(q => q.ClientId == dto.ClientId))
         {
-            ErrorMsg = "Client ID already exists";
-            return (null, null);
+            throw new BusinessException("ClientIdExists", StatusCodes.Status400BadRequest);
         }
 
         // Generate client secret
         var secret = GenerateClientSecret();
         var hashedSecret = _passwordHasher.HashPassword(secret);
 
-        var entity = new Client
-        {
-            ClientId = dto.ClientId,
-            ClientSecret = hashedSecret,
-            DisplayName = dto.DisplayName,
-            Description = dto.Description,
-            Type = dto.Type,
-            RequirePkce = dto.RequirePkce,
-            ConsentType = dto.ConsentType,
-            ApplicationType = dto.ApplicationType,
-            RedirectUris = dto.RedirectUris,
-            PostLogoutRedirectUris = dto.PostLogoutRedirectUris
-        };
+        var entity = dto.MapTo<Client>();
+        entity.ClientSecret = hashedSecret;
 
-        // Start transaction for consistency
-        using var transaction = await _dbContext.Database.BeginTransactionAsync();
-        try
+        return await ExecuteInTransactionAsync(async () =>
         {
             // Add client scopes
             if (dto.ScopeIds.Count > 0)
@@ -156,22 +160,10 @@ public class ClientManager(
                 }
             }
 
-            var success = await AddAsync(entity);
-            if (!success)
-            {
-                await transaction.RollbackAsync();
-                return (null, null);
-            }
-
-            await transaction.CommitAsync();
+            await InsertAsync(entity);
             var detail = await GetDetailAsync(entity.Id);
             return (detail, secret);
-        }
-        catch
-        {
-            await transaction.RollbackAsync();
-            throw;
-        }
+        });
     }
 
     /// <summary>
@@ -187,15 +179,11 @@ public class ClientManager(
 
         if (entity == null)
         {
-            ErrorMsg = "Client not found";
-            return null;
+            throw new BusinessException("ClientNotFound", StatusCodes.Status404NotFound);
         }
 
-        // Start transaction for consistency
-        using var transaction = await _dbContext.Database.BeginTransactionAsync();
-        try
+        return await ExecuteInTransactionAsync(async () =>
         {
-
             if (dto.DisplayName != null)
             {
                 entity.DisplayName = dto.DisplayName;
@@ -271,21 +259,10 @@ public class ClientManager(
                 }
             }
 
-            var success = await SaveChangesAsync() > 0;
-            if (success)
-            {
-                await transaction.CommitAsync();
-                return await GetDetailAsync(id);
-            }
-
-            await transaction.RollbackAsync();
-            return null;
-        }
-        catch
-        {
-            await transaction.RollbackAsync();
-            throw;
-        }
+            entity.UpdatedTime = DateTime.UtcNow;
+            await _dbContext.SaveChangesAsync();
+            return await GetDetailAsync(id);
+        });
     }
 
     /// <summary>
@@ -298,11 +275,11 @@ public class ClientManager(
         var entity = await FindAsync(id);
         if (entity == null)
         {
-            ErrorMsg = "Client not found";
-            return false;
+            throw new BusinessException("ClientNotFound", StatusCodes.Status404NotFound);
         }
 
-        return await DeleteAsync(entity);
+        await DeleteOrUpdateAsync([id], softDelete: true);
+        return true;
     }
 
     /// <summary>
@@ -315,15 +292,15 @@ public class ClientManager(
         var entity = await FindAsync(id);
         if (entity == null)
         {
-            ErrorMsg = "Client not found";
-            return null;
+            throw new BusinessException("ClientNotFound", StatusCodes.Status404NotFound);
         }
 
         var newSecret = GenerateClientSecret();
         entity.ClientSecret = _passwordHasher.HashPassword(newSecret);
+        entity.UpdatedTime = DateTime.UtcNow;
 
-        var success = await UpdateAsync(entity);
-        return !success ? null : newSecret;
+        await _dbContext.SaveChangesAsync();
+        return newSecret;
     }
 
     /// <summary>
@@ -335,15 +312,12 @@ public class ClientManager(
     public async Task<bool> AssignScopesAsync(Guid id, List<Guid> scopeIds)
     {
         // Verify client exists
-        if (!await ExistAsync(c => c.Id == id))
+        if (!await _dbSet.AnyAsync(c => c.Id == id))
         {
-            ErrorMsg = "Client not found";
-            return false;
+            throw new BusinessException("ClientNotFound", StatusCodes.Status404NotFound);
         }
 
-        // Start transaction for consistency
-        using var transaction = await _dbContext.Database.BeginTransactionAsync();
-        try
+        return await ExecuteInTransactionAsync(async () =>
         {
             // Delete existing scope associations
             await _dbContext.ClientScopes
@@ -360,28 +334,11 @@ public class ClientManager(
                 }).ToList();
 
                 await _dbContext.ClientScopes.AddRangeAsync(clientScopes);
-                var success = await SaveChangesAsync() > 0;
-                if (success)
-                {
-                    await transaction.CommitAsync();
-                    return true;
-                }
-            }
-            else
-            {
-                // No new scopes to add, just return success
-                await transaction.CommitAsync();
-                return true;
+                await _dbContext.SaveChangesAsync();
             }
 
-            await transaction.RollbackAsync();
-            return false;
-        }
-        catch
-        {
-            await transaction.RollbackAsync();
-            throw;
-        }
+            return true;
+        });
     }
 
     /// <summary>
@@ -393,15 +350,12 @@ public class ClientManager(
     public async Task<bool> AssignResourcesAsync(Guid id, List<Guid> resourceIds)
     {
         // Verify client exists
-        if (!await ExistAsync(c => c.Id == id))
+        if (!await _dbSet.AnyAsync(c => c.Id == id))
         {
-            ErrorMsg = "Client not found";
-            return false;
+            throw new BusinessException("ClientNotFound", StatusCodes.Status404NotFound);
         }
 
-        // Start transaction for consistency
-        using var transaction = await _dbContext.Database.BeginTransactionAsync();
-        try
+        return await ExecuteInTransactionAsync(async () =>
         {
             // Delete existing resource associations
             await _dbContext.ClientResources
@@ -418,28 +372,11 @@ public class ClientManager(
                 }).ToList();
 
                 await _dbContext.ClientResources.AddRangeAsync(clientResources);
-                var success = await SaveChangesAsync() > 0;
-                if (success)
-                {
-                    await transaction.CommitAsync();
-                    return true;
-                }
-            }
-            else
-            {
-                // No new resources to add, just return success
-                await transaction.CommitAsync();
-                return true;
+                await _dbContext.SaveChangesAsync();
             }
 
-            await transaction.RollbackAsync();
-            return false;
-        }
-        catch
-        {
-            await transaction.RollbackAsync();
-            throw;
-        }
+            return true;
+        });
     }
 
     /// <summary>

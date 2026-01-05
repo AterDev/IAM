@@ -109,7 +109,7 @@ public class UsersController(
     {
         var result = await _manager.AddAsync(dto);
         return result == null
-            ? BadRequest(_manager.ErrorMsg)
+            ? Problem("Failed to create user", statusCode: StatusCodes.Status400BadRequest)
             : CreatedAtAction(nameof(GetDetail), new { id = result.Id }, result);
     }
 
@@ -135,7 +135,9 @@ public class UsersController(
     )
     {
         var result = await _manager.UpdateAsync(id, dto);
-        return result == null ? BadRequest(_manager.ErrorMsg) : Ok(result);
+        return result == null
+            ? Problem("Failed to update user", statusCode: StatusCodes.Status400BadRequest)
+            : Ok(result);
     }
 
     /// <summary>
@@ -148,7 +150,9 @@ public class UsersController(
     public async Task<ActionResult> UpdateStatus(Guid id, [FromBody] DateTimeOffset? lockoutEnd)
     {
         var success = await _manager.SetLockoutAsync(id, lockoutEnd);
-        return !success ? BadRequest(_manager.ErrorMsg) : NoContent();
+        return !success
+            ? Problem("Failed to update user status", statusCode: StatusCodes.Status400BadRequest)
+            : NoContent();
     }
 
     /// <summary>
@@ -161,7 +165,9 @@ public class UsersController(
     public async Task<ActionResult> DeleteUser(Guid id, [FromQuery] bool hardDelete = false)
     {
         var success = await _manager.DeleteAsync(id, !hardDelete);
-        return !success ? BadRequest(_manager.ErrorMsg) : NoContent();
+        return !success
+            ? Problem("Failed to delete user", statusCode: StatusCodes.Status400BadRequest)
+            : NoContent();
     }
 
     /// <summary>
@@ -179,7 +185,9 @@ public class UsersController(
         }
 
         var success = await _manager.ChangePasswordAsync(id, newPassword);
-        return !success ? BadRequest(_manager.ErrorMsg) : NoContent();
+        return !success
+            ? Problem("Failed to change password", statusCode: StatusCodes.Status400BadRequest)
+            : NoContent();
     }
 
     /// <summary>
@@ -195,6 +203,8 @@ public class UsersController(
         var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
 
         var success = await _manager.AssignRolesAsync(id, roleIds, ipAddress, userAgent);
-        return !success ? BadRequest(_manager.ErrorMsg) : NoContent();
+        return !success
+            ? Problem("Failed to assign roles to user", statusCode: StatusCodes.Status400BadRequest)
+            : NoContent();
     }
 }

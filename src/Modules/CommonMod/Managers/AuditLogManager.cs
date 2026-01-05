@@ -1,12 +1,16 @@
 using CommonMod.Models.AuditLogDtos;
+using EntityFramework.AppDbFactory;
 
 namespace CommonMod.Managers;
 
 /// <summary>
 /// Manager for audit log operations
 /// </summary>
-public class AuditLogManager(DefaultDbContext dbContext, ILogger<AuditLogManager> logger)
-    : ManagerBase<DefaultDbContext, AuditLog>(dbContext, logger)
+public class AuditLogManager(
+    TenantDbFactory dbContextFactory,
+    IUserContext userContext,
+    ILogger<AuditLogManager> logger
+) : ManagerBase<DefaultDbContext, AuditLog>(dbContextFactory, userContext, logger)
 {
     /// <summary>
     /// Get paged audit logs
@@ -22,7 +26,20 @@ public class AuditLogManager(DefaultDbContext dbContext, ILogger<AuditLogManager
             .WhereNotNull(filter.StartDate, q => q.CreatedTime >= filter.StartDate)
             .WhereNotNull(filter.EndDate, q => q.CreatedTime <= filter.EndDate);
 
-        return await ToPageAsync<AuditLogFilterDto, AuditLogItemDto>(filter);
+        return await PageListAsync<AuditLogFilterDto, AuditLogItemDto>(filter);
+    }
+
+    /// <summary>
+    /// Check if user has permission to access audit log
+    /// </summary>
+    /// <param name="id">Audit log id</param>
+    /// <returns>True if has permission</returns>
+    public override async Task<bool> HasPermissionAsync(Guid id)
+    {
+        // Audit logs are accessible by all authenticated users for now
+        // TODO: Implement proper permission checking logic
+        // Security safeguard: deny by default until proper permission checks are implemented
+        return await Task.FromResult(false);
     }
 
     /// <summary>
@@ -64,6 +81,7 @@ public class AuditLogManager(DefaultDbContext dbContext, ILogger<AuditLogManager
             UserAgent = userAgent,
         };
 
-        return await AddAsync(auditLog);
+        await InsertAsync(auditLog);
+        return true;
     }
 }

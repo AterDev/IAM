@@ -1,12 +1,19 @@
 using CommonMod.Models.SystemSettingDtos;
+using EntityFramework.AppDbFactory;
+using Share.Exceptions;
+using Microsoft.AspNetCore.Http;
+using Mapster;
 
 namespace CommonMod.Managers;
 
 /// <summary>
 /// Manager for system setting operations
 /// </summary>
-public class SystemSettingManager(DefaultDbContext dbContext, ILogger<SystemSettingManager> logger)
-    : ManagerBase<DefaultDbContext, SystemSetting>(dbContext, logger)
+public class SystemSettingManager(
+    TenantDbFactory dbContextFactory,
+    IUserContext userContext,
+    ILogger<SystemSettingManager> logger
+) : ManagerBase<DefaultDbContext, SystemSetting>(dbContextFactory, userContext, logger)
 {
     /// <summary>
     /// Get paged system settings
@@ -21,7 +28,20 @@ public class SystemSettingManager(DefaultDbContext dbContext, ILogger<SystemSett
             .WhereNotNull(filter.IsPublic != null, q => q.IsPublic == filter.IsPublic)
             .WhereNotNull(filter.IsEditable != null, q => q.IsEditable == filter.IsEditable);
 
-        return await ToPageAsync<SystemSettingFilterDto, SystemSettingItemDto>(filter);
+        return await PageListAsync<SystemSettingFilterDto, SystemSettingItemDto>(filter);
+    }
+
+    /// <summary>
+    /// Check if user has permission to access system setting
+    /// </summary>
+    /// <param name="id">System setting id</param>
+    /// <returns>True if has permission</returns>
+    public override async Task<bool> HasPermissionAsync(Guid id)
+    {
+        // System settings are accessible by all authenticated users for now
+        // TODO: Implement proper permission checking logic
+        // Security safeguard: deny by default until proper permission checks are implemented
+        return await Task.FromResult(false);
     }
 
     /// <summary>
@@ -52,24 +72,14 @@ public class SystemSettingManager(DefaultDbContext dbContext, ILogger<SystemSett
     public async Task<SystemSettingDetailDto?> AddAsync(SystemSettingAddDto dto)
     {
         // Check if key already exists
-        if (await ExistAsync(q => q.Key == dto.Key))
+        if (await _dbSet.AnyAsync(q => q.Key == dto.Key))
         {
-            ErrorMsg = "Setting key already exists";
-            return null;
+            throw new BusinessException("SettingKeyExists", StatusCodes.Status400BadRequest);
         }
 
-        var entity = new SystemSetting
-        {
-            Key = dto.Key,
-            Value = dto.Value,
-            Description = dto.Description,
-            Category = dto.Category,
-            IsEditable = dto.IsEditable,
-            IsPublic = dto.IsPublic,
-        };
-
-        var success = await AddAsync(entity);
-        return !success ? null : await GetDetailAsync(entity.Id);
+        var entity = dto.MapTo<SystemSetting>();
+        await InsertAsync(entity);
+        return await GetDetailAsync(entity.Id);
     }
 
     /// <summary>
@@ -83,21 +93,24 @@ public class SystemSettingManager(DefaultDbContext dbContext, ILogger<SystemSett
         var entity = await FindAsync(id);
         if (entity == null)
         {
-            ErrorMsg = "Setting not found";
-            return null;
+            throw new BusinessException("SettingNotFound", StatusCodes.Status404NotFound);
         }
 
         if (!entity.IsEditable)
         {
-            ErrorMsg = "Setting is not editable";
-            return null;
+            throw new BusinessException("SettingNotEditable", StatusCodes.Status400BadRequest);
         }
 
+        // Update entity directly to avoid second database round-trip
         entity.Value = dto.Value;
-        entity.Description = dto.Description ?? entity.Description;
-
-        var success = await UpdateAsync(entity);
-        return !success ? null : await GetDetailAsync(id);
+        if (dto.Description != null)
+        {
+            entity.Description = dto.Description;
+        }
+        entity.UpdatedTime = DateTime.UtcNow;
+        
+        await _dbContext.SaveChangesAsync();
+        return await GetDetailAsync(id);
     }
 
     /// <summary>
@@ -110,17 +123,16 @@ public class SystemSettingManager(DefaultDbContext dbContext, ILogger<SystemSett
         var entity = await FindAsync(id);
         if (entity == null)
         {
-            ErrorMsg = "Setting not found";
-            return false;
+            throw new BusinessException("SettingNotFound", StatusCodes.Status404NotFound);
         }
 
         if (!entity.IsEditable)
         {
-            ErrorMsg = "Setting is not editable and cannot be deleted";
-            return false;
+            throw new BusinessException("SettingNotDeletable", StatusCodes.Status400BadRequest);
         }
 
-        return await DeleteAsync(entity);
+        await DeleteOrUpdateAsync([id], softDelete: true);
+        return true;
     }
 
     /// <summary>
@@ -129,6 +141,6 @@ public class SystemSettingManager(DefaultDbContext dbContext, ILogger<SystemSett
     /// <returns>List of public settings</returns>
     public async Task<List<SystemSettingItemDto>> GetPublicSettingsAsync()
     {
-        return await ToListAsync<SystemSettingItemDto>(q => q.IsPublic);
+        return await ListAsync<SystemSettingItemDto>(q => q.IsPublic);
     }
 }

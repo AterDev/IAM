@@ -1,6 +1,10 @@
 using System.Text.Json;
 using CommonMod.Managers;
 using IdentityMod.Models.LoginSessionDtos;
+using EntityFramework.AppDbFactory;
+using Share.Exceptions;
+using Microsoft.AspNetCore.Http;
+using Mapster;
 
 namespace IdentityMod.Managers;
 
@@ -8,10 +12,11 @@ namespace IdentityMod.Managers;
 /// Manager for login session operations
 /// </summary>
 public class SessionManager(
-    DefaultDbContext dbContext,
+    TenantDbFactory dbContextFactory,
+    IUserContext userContext,
     ILogger<SessionManager> logger,
     AuditLogManager auditLogManager
-) : ManagerBase<DefaultDbContext, LoginSession>(dbContext, logger)
+) : ManagerBase<DefaultDbContext, LoginSession>(dbContextFactory, userContext, logger)
 {
     private readonly AuditLogManager _auditLogManager = auditLogManager;
 
@@ -33,7 +38,20 @@ public class SessionManager(
             .WhereNotNull(filter.StartDate != null, q => q.LoginTime >= filter.StartDate)
             .WhereNotNull(filter.EndDate != null, q => q.LoginTime <= filter.EndDate);
 
-        return await ToPageAsync<LoginSessionFilterDto, LoginSessionItemDto>(filter);
+        return await PageListAsync<LoginSessionFilterDto, LoginSessionItemDto>(filter);
+    }
+
+    /// <summary>
+    /// Check if user has permission to access login session
+    /// </summary>
+    /// <param name="id">Login session id</param>
+    /// <returns>True if has permission</returns>
+    public override async Task<bool> HasPermissionAsync(Guid id)
+    {
+        // Session management is accessible by admins or the user who owns the session
+        // TODO: Implement proper permission checking logic
+        // Security safeguard: deny by default until proper permission checks are implemented
+        return await Task.FromResult(false);
     }
 
     /// <summary>
@@ -70,24 +88,12 @@ public class SessionManager(
     )
     {
         var loginTime = DateTimeOffset.UtcNow;
-        var loginSession = new LoginSession
-        {
-            UserId = dto.UserId,
-            SessionId = dto.SessionId,
-            IpAddress = dto.IpAddress,
-            UserAgent = dto.UserAgent,
-            DeviceInfo = dto.DeviceInfo,
-            LoginTime = loginTime,
-            LastActivityTime = loginTime,
-            ExpirationTime = dto.ExpirationTime,
-            IsActive = true,
-        };
+        var loginSession = dto.MapTo<LoginSession>();
+        loginSession.LoginTime = loginTime;
+        loginSession.LastActivityTime = loginTime;
+        loginSession.IsActive = true;
 
-        var result = await AddAsync(loginSession);
-        if (!result)
-        {
-            return null;
-        }
+        await InsertAsync(loginSession);
 
         // Write audit log for session creation
         await _auditLogManager.AddAuditLogAsync(
@@ -118,7 +124,9 @@ public class SessionManager(
         }
 
         session.LastActivityTime = DateTimeOffset.UtcNow;
-        return await UpdateAsync(session);
+        session.UpdatedTime = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
+        return true;
     }
 
     /// <summary>
@@ -136,31 +144,29 @@ public class SessionManager(
         string? userAgent = null
     )
     {
-        var session = await GetCurrentAsync(id);
+        var session = await FindAsync(id);
         if (session == null)
         {
-            return false;
+            throw new BusinessException("SessionNotFound", StatusCodes.Status404NotFound);
         }
 
         session.IsActive = false;
-        var result = await UpdateAsync(session);
+        session.UpdatedTime = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
 
-        if (result)
-        {
-            // Write audit log for session revocation
-            await _auditLogManager.AddAuditLogAsync(
-                category: "Authentication",
-                eventName: "SessionRevoked",
-                subjectId: session.UserId.ToString(),
-                payload: JsonSerializer.Serialize(
-                    new { sessionId = session.SessionId, revokedBy = revokedBy ?? "system" }
-                ),
-                ipAddress: ipAddress,
-                userAgent: userAgent
-            );
-        }
+        // Write audit log for session revocation
+        await _auditLogManager.AddAuditLogAsync(
+            category: "Authentication",
+            eventName: "SessionRevoked",
+            subjectId: session.UserId.ToString(),
+            payload: JsonSerializer.Serialize(
+                new { sessionId = session.SessionId, revokedBy = revokedBy ?? "system" }
+            ),
+            ipAddress: ipAddress,
+            userAgent: userAgent
+        );
 
-        return result;
+        return true;
     }
 
     /// <summary>
@@ -187,17 +193,9 @@ public class SessionManager(
             query = query.Where(q => q.SessionId != exceptSessionId);
         }
 
-        var sessions = await query.ToListAsync();
-        var count = 0;
-
-        foreach (var session in sessions)
-        {
-            session.IsActive = false;
-            if (await UpdateAsync(session))
-            {
-                count++;
-            }
-        }
+        var count = await query.ExecuteUpdateAsync(setters => setters
+            .SetProperty(s => s.IsActive, false)
+            .SetProperty(s => s.UpdatedTime, DateTime.UtcNow));
 
         if (count > 0)
         {
@@ -222,19 +220,11 @@ public class SessionManager(
     public async Task<int> CleanupExpiredSessionsAsync()
     {
         var now = DateTimeOffset.UtcNow;
-        var expiredSessions = await _dbSet
+        var count = await _dbSet
             .Where(q => q.IsActive && q.ExpirationTime != null && q.ExpirationTime < now)
-            .ToListAsync();
-
-        var count = 0;
-        foreach (var session in expiredSessions)
-        {
-            session.IsActive = false;
-            if (await UpdateAsync(session))
-            {
-                count++;
-            }
-        }
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(s => s.IsActive, false)
+                .SetProperty(s => s.UpdatedTime, DateTime.UtcNow));
 
         if (count > 0)
         {

@@ -1,5 +1,6 @@
 global using System;
 global using EntityFramework.AppDbContext;
+global using EntityFramework.AppDbFactory;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.Extensions.Logging;
 global using Perigon.AspNetCore.Abstraction;

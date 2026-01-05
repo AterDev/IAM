@@ -66,7 +66,7 @@ public class OrganizationsController(
     {
         var result = await _manager.AddAsync(dto);
         return result == null
-            ? BadRequest(_manager.ErrorMsg)
+            ? Problem("Failed to create organization", statusCode: StatusCodes.Status400BadRequest)
             : CreatedAtAction(nameof(GetDetail), new { id = result.Id }, result);
     }
 
@@ -83,7 +83,9 @@ public class OrganizationsController(
     )
     {
         var result = await _manager.UpdateAsync(id, dto);
-        return result == null ? BadRequest(_manager.ErrorMsg) : Ok(result);
+        return result == null
+            ? Problem("Failed to update organization", statusCode: StatusCodes.Status400BadRequest)
+            : Ok(result);
     }
 
     /// <summary>
@@ -99,7 +101,9 @@ public class OrganizationsController(
     )
     {
         var success = await _manager.DeleteAsync(id, !hardDelete);
-        return !success ? BadRequest(_manager.ErrorMsg) : NoContent();
+        return !success
+            ? Problem("Failed to delete organization", statusCode: StatusCodes.Status400BadRequest)
+            : NoContent();
     }
 
     /// <summary>
@@ -112,7 +116,9 @@ public class OrganizationsController(
     public async Task<ActionResult> AddUsers(Guid id, [FromBody] List<Guid> userIds)
     {
         var success = await _manager.AddUsersAsync(id, userIds);
-        return !success ? BadRequest(_manager.ErrorMsg) : NoContent();
+        return !success
+            ? Problem("Failed to add users to organization", statusCode: StatusCodes.Status400BadRequest)
+            : NoContent();
     }
 
     /// <summary>
@@ -125,6 +131,8 @@ public class OrganizationsController(
     public async Task<ActionResult> RemoveUsers(Guid id, [FromBody] List<Guid> userIds)
     {
         var success = await _manager.RemoveUsersAsync(id, userIds);
-        return !success ? BadRequest(_manager.ErrorMsg) : NoContent();
+        return !success
+            ? Problem("Failed to remove users from organization", statusCode: StatusCodes.Status400BadRequest)
+            : NoContent();
     }
 }

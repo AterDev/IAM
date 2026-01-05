@@ -1,6 +1,10 @@
 using System.Text.Json;
 using CommonMod.Managers;
 using IdentityMod.Models.UserDtos;
+using EntityFramework.AppDbFactory;
+using Share.Exceptions;
+using Microsoft.AspNetCore.Http;
+using Mapster;
 
 namespace IdentityMod.Managers;
 
@@ -8,11 +12,12 @@ namespace IdentityMod.Managers;
 /// Manager for user operations
 /// </summary>
 public class UserManager(
-    DefaultDbContext dbContext,
+    TenantDbFactory dbContextFactory,
+    IUserContext userContext,
     ILogger<UserManager> logger,
     IPasswordHasher passwordHasher,
     AuditLogManager auditLogManager
-) : ManagerBase<DefaultDbContext, User>(dbContext, logger)
+) : ManagerBase<DefaultDbContext, User>(dbContextFactory, userContext, logger)
 {
     private readonly IPasswordHasher _passwordHasher = passwordHasher;
     private readonly AuditLogManager _auditLogManager = auditLogManager;
@@ -41,7 +46,19 @@ public class UserManager(
             .WhereNotNull(filter.StartDate, q => q.CreatedTime >= filter.StartDate)
             .WhereNotNull(filter.EndDate, q => q.CreatedTime <= filter.EndDate);
 
-        return await ToPageAsync<UserFilterDto, UserItemDto>(filter);
+        return await PageListAsync<UserFilterDto, UserItemDto>(filter);
+    }
+
+    /// <summary>
+    /// Check if user has permission to access user
+    /// </summary>
+    /// <param name="id">User id</param>
+    /// <returns>True if has permission</returns>
+    public override async Task<bool> HasPermissionAsync(Guid id)
+    {
+        // TODO: Implement proper permission checking logic
+        // Security safeguard: deny by default until proper permission checks are implemented
+        return await Task.FromResult(false);
     }
 
     /// <summary>
@@ -75,36 +92,26 @@ public class UserManager(
         var normalizedUserName = dto.UserName.ToUpperInvariant();
 
         // Check if username already exists
-        if (await ExistAsync(q => q.NormalizedUserName == normalizedUserName))
+        if (await _dbSet.AnyAsync(q => q.NormalizedUserName == normalizedUserName))
         {
-            ErrorMsg = "Username already exists";
-            return null;
+            throw new BusinessException("UsernameExists", StatusCodes.Status400BadRequest);
         }
 
         // Check if email already exists
         if (!string.IsNullOrWhiteSpace(dto.Email))
         {
             var normalizedEmail = dto.Email.ToUpperInvariant();
-            if (await ExistAsync(q => q.NormalizedEmail == normalizedEmail))
+            if (await _dbSet.AnyAsync(q => q.NormalizedEmail == normalizedEmail))
             {
-                ErrorMsg = "Email already exists";
-                return null;
+                throw new BusinessException("EmailExists", StatusCodes.Status400BadRequest);
             }
         }
 
-        var entity = new User
-        {
-            UserName = dto.UserName,
-            NormalizedUserName = normalizedUserName,
-            Email = dto.Email,
-            NormalizedEmail = dto.Email?.ToUpperInvariant(),
-            EmailConfirmed = dto.EmailConfirmed,
-            PhoneNumber = dto.PhoneNumber,
-            PhoneNumberConfirmed = dto.PhoneNumberConfirmed,
-            LockoutEnabled = dto.LockoutEnabled,
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-        };
+        var entity = dto.MapTo<User>();
+        entity.NormalizedUserName = normalizedUserName;
+        entity.NormalizedEmail = dto.Email?.ToUpperInvariant();
+        entity.SecurityStamp = Guid.NewGuid().ToString();
+        entity.ConcurrencyStamp = Guid.NewGuid().ToString();
 
         // Hash password if provided
         if (!string.IsNullOrWhiteSpace(dto.Password))
@@ -112,8 +119,8 @@ public class UserManager(
             entity.PasswordHash = _passwordHasher.HashPassword(dto.Password);
         }
 
-        var success = await AddAsync(entity);
-        return !success ? null : await GetDetailAsync(entity.Id);
+        await InsertAsync(entity);
+        return await GetDetailAsync(entity.Id);
     }
 
     /// <summary>
@@ -127,18 +134,16 @@ public class UserManager(
         var entity = await FindAsync(id);
         if (entity == null)
         {
-            ErrorMsg = "User not found";
-            return null;
+            throw new BusinessException("UserNotFound", StatusCodes.Status404NotFound);
         }
 
         // Check if email already exists (if changing)
         if (!string.IsNullOrWhiteSpace(dto.Email) && dto.Email != entity.Email)
         {
             var normalizedEmail = dto.Email.ToUpperInvariant();
-            if (await ExistAsync(q => q.NormalizedEmail == normalizedEmail && q.Id != id))
+            if (await _dbSet.AnyAsync(q => q.NormalizedEmail == normalizedEmail && q.Id != id))
             {
-                ErrorMsg = "Email already exists";
-                return null;
+                throw new BusinessException("EmailExists", StatusCodes.Status400BadRequest);
             }
             entity.Email = dto.Email;
             entity.NormalizedEmail = normalizedEmail;
@@ -170,9 +175,10 @@ public class UserManager(
         }
 
         entity.ConcurrencyStamp = Guid.NewGuid().ToString();
+        entity.UpdatedTime = DateTime.UtcNow;
 
-        var success = await UpdateAsync(entity);
-        return !success ? null : await GetDetailAsync(id);
+        await _dbContext.SaveChangesAsync();
+        return await GetDetailAsync(id);
     }
 
     /// <summary>
@@ -183,14 +189,12 @@ public class UserManager(
     /// <returns>True if successful</returns>
     public async Task<bool> DeleteAsync(Guid id, bool softDelete = true)
     {
-        var entity = await FindAsync(id);
-        if (entity == null)
+        var deleted = await DeleteOrUpdateAsync([id], softDelete);
+        if (deleted == 0)
         {
-            ErrorMsg = "User not found";
-            return false;
+            throw new BusinessException("UserNotFound", StatusCodes.Status404NotFound);
         }
-
-        return await DeleteAsync(entity, softDelete);
+        return true;
     }
 
     /// <summary>
@@ -204,12 +208,13 @@ public class UserManager(
         var entity = await FindAsync(id);
         if (entity == null)
         {
-            ErrorMsg = "User not found";
-            return false;
+            throw new BusinessException("UserNotFound", StatusCodes.Status404NotFound);
         }
 
         entity.LockoutEnd = lockoutEnd;
-        return await UpdateAsync(entity);
+        entity.UpdatedTime = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
+        return true;
     }
 
     /// <summary>
@@ -223,15 +228,16 @@ public class UserManager(
         var entity = await FindAsync(id);
         if (entity == null)
         {
-            ErrorMsg = "User not found";
-            return false;
+            throw new BusinessException("UserNotFound", StatusCodes.Status404NotFound);
         }
 
         entity.PasswordHash = _passwordHasher.HashPassword(newPassword);
         entity.SecurityStamp = Guid.NewGuid().ToString();
         entity.ConcurrencyStamp = Guid.NewGuid().ToString();
+        entity.UpdatedTime = DateTime.UtcNow;
 
-        return await UpdateAsync(entity);
+        await _dbContext.SaveChangesAsync();
+        return true;
     }
 
     /// <summary>
@@ -252,53 +258,55 @@ public class UserManager(
         var user = await FindAsync(userId);
         if (user == null)
         {
-            ErrorMsg = "User not found";
-            return false;
+            throw new BusinessException("UserNotFound", StatusCodes.Status404NotFound);
         }
 
-        // Load current roles
-        await LoadManyAsync(user, u => u.UserRoles);
-
-        // Track changes for audit
-        var oldRoleIds = user.UserRoles.Select(ur => ur.RoleId).ToList();
-
-        // Remove old roles not in the new list
-        var toRemove = user.UserRoles.Where(ur => !roleIds.Contains(ur.RoleId)).ToList();
-        foreach (var userRole in toRemove)
+        return await ExecuteInTransactionAsync(async () =>
         {
-            _dbContext.Set<UserRole>().Remove(userRole);
-        }
+            // Load current roles
+            await LoadManyAsync(user, u => u.UserRoles);
 
-        // Add new roles
-        var existingRoleIds = user.UserRoles.Select(ur => ur.RoleId).ToList();
-        var toAdd = roleIds.Where(rid => !existingRoleIds.Contains(rid)).ToList();
-        foreach (var roleId in toAdd)
-        {
-            user.UserRoles.Add(new UserRole { UserId = userId, RoleId = roleId });
-        }
+            // Track changes for audit
+            var oldRoleIds = user.UserRoles.Select(ur => ur.RoleId).ToList();
 
-        var result = await SaveChangesAsync() > 0;
-
-        if (result)
-        {
-            // Write audit log for role assignment changes
-            var removed = oldRoleIds.Except(roleIds).ToList();
-            var added = roleIds.Except(oldRoleIds).ToList();
-
-            if (removed.Any() || added.Any())
+            // Remove old roles not in the new list
+            var toRemove = user.UserRoles.Where(ur => !roleIds.Contains(ur.RoleId)).ToList();
+            foreach (var userRole in toRemove)
             {
-                await _auditLogManager.AddAuditLogAsync(
-                    category: "Authorization",
-                    eventName: "UserRolesChanged",
-                    subjectId: userId.ToString(),
-                    payload: JsonSerializer.Serialize(new { added, removed }),
-                    ipAddress: ipAddress,
-                    userAgent: userAgent
-                );
+                _dbContext.Set<UserRole>().Remove(userRole);
             }
-        }
 
-        return result;
+            // Add new roles
+            var existingRoleIds = user.UserRoles.Select(ur => ur.RoleId).ToList();
+            var toAdd = roleIds.Where(rid => !existingRoleIds.Contains(rid)).ToList();
+            foreach (var roleId in toAdd)
+            {
+                user.UserRoles.Add(new UserRole { UserId = userId, RoleId = roleId });
+            }
+
+            var result = await _dbContext.SaveChangesAsync() > 0;
+
+            if (result)
+            {
+                // Write audit log for role assignment changes
+                var removed = oldRoleIds.Except(roleIds).ToList();
+                var added = roleIds.Except(oldRoleIds).ToList();
+
+                if (removed.Any() || added.Any())
+                {
+                    await _auditLogManager.AddAuditLogAsync(
+                        category: "Authorization",
+                        eventName: "UserRolesChanged",
+                        subjectId: userId.ToString(),
+                        payload: JsonSerializer.Serialize(new { added, removed }),
+                        ipAddress: ipAddress,
+                        userAgent: userAgent
+                    );
+                }
+            }
+
+            return result;
+        });
     }
 
     /// <summary>
@@ -332,8 +340,7 @@ public class UserManager(
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );
-            ErrorMsg = "Invalid username or password";
-            return null;
+            throw new BusinessException("InvalidCredentials", StatusCodes.Status401Unauthorized);
         }
 
         // Check if user is locked out
@@ -353,8 +360,7 @@ public class UserManager(
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );
-            ErrorMsg = "Account is locked";
-            return null;
+            throw new BusinessException("AccountLocked", StatusCodes.Status403Forbidden);
         }
 
         // Verify password
@@ -372,7 +378,8 @@ public class UserManager(
                 user.LockoutEnd = DateTimeOffset.UtcNow.AddMinutes(30);
             }
 
-            await UpdateAsync(user);
+            user.UpdatedTime = DateTime.UtcNow;
+            await _dbContext.SaveChangesAsync();
 
             await _auditLogManager.AddAuditLogAsync(
                 category: "Authentication",
@@ -384,13 +391,13 @@ public class UserManager(
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );
-            ErrorMsg = "Invalid username or password";
-            return null;
+            throw new BusinessException("InvalidCredentials", StatusCodes.Status401Unauthorized);
         }
 
         // Reset access failed count on successful login
         user.AccessFailedCount = 0;
-        await UpdateAsync(user);
+        user.UpdatedTime = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
 
         // Write audit log for successful login
         await _auditLogManager.AddAuditLogAsync(

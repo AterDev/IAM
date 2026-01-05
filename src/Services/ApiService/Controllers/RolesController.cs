@@ -86,7 +86,7 @@ public class RolesController(
     {
         var result = await _manager.AddAsync(dto);
         return result == null
-            ? BadRequest(_manager.ErrorMsg)
+            ? Problem("Failed to create role", statusCode: StatusCodes.Status400BadRequest)
             : CreatedAtAction(nameof(GetDetail), new { id = result.Id }, result);
     }
 
@@ -103,7 +103,9 @@ public class RolesController(
     )
     {
         var result = await _manager.UpdateAsync(id, dto);
-        return result == null ? BadRequest(_manager.ErrorMsg) : Ok(result);
+        return result == null
+            ? Problem("Failed to update role", statusCode: StatusCodes.Status400BadRequest)
+            : Ok(result);
     }
 
     /// <summary>
@@ -116,7 +118,9 @@ public class RolesController(
     public async Task<ActionResult> DeleteRole(Guid id, [FromQuery] bool hardDelete = false)
     {
         var success = await _manager.DeleteAsync(id, !hardDelete);
-        return !success ? BadRequest(_manager.ErrorMsg) : NoContent();
+        return !success
+            ? Problem("Failed to delete role", statusCode: StatusCodes.Status400BadRequest)
+            : NoContent();
     }
 
     /// <summary>
@@ -164,7 +168,9 @@ public class RolesController(
         var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
 
         var success = await _manager.GrantPermissionsAsync(id, dto, ipAddress, userAgent);
-        return !success ? BadRequest(_manager.ErrorMsg) : NoContent();
+        return !success
+            ? Problem("Failed to grant permissions to role", statusCode: StatusCodes.Status400BadRequest)
+            : NoContent();
     }
 
     /// <summary>
