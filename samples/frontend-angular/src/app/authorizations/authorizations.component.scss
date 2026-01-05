@@ -1,0 +1,146 @@
+.authorizations-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+mat-card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+mat-card-subtitle {
+  color: #666;
+  margin-top: 8px;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 20px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: #999;
+    margin-bottom: 16px;
+  }
+
+  p {
+    font-size: 16px;
+  }
+}
+
+.authorization-item {
+  border-bottom: 1px solid #e0e0e0;
+  padding: 20px 0;
+  height: auto !important;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.authorization-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.authorization-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.app-info {
+  h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .client-id {
+    margin: 4px 0 0 0;
+    font-size: 14px;
+    color: #666;
+  }
+}
+
+.authorization-status {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.authorization-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+
+  mat-icon {
+    color: #666;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  strong {
+    margin-right: 8px;
+  }
+
+  .scopes {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+}
+
+.authorization-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+
+  button {
+    mat-icon {
+      margin-right: 4px;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .authorization-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .authorization-status {
+    width: 100%;
+  }
+}
