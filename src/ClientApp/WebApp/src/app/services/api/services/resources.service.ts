@@ -1,6 +1,7 @@
 import { BaseService } from '../base.service';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { PageList } from '../models/ater/page-list.model';
 import { ResourceItemDto } from '../models/access-mod/resource-item-dto.model';
 import { ResourceAddDto } from '../models/access-mod/resource-add-dto.model';
@@ -11,6 +12,15 @@ import { ResourceUpdateDto } from '../models/access-mod/resource-update-dto.mode
  */
 @Injectable({ providedIn: 'root' })
 export class ResourcesService extends BaseService {
+  /**
+   * Get all resources (for dropdowns/selects)
+   */
+  getList(): Observable<ResourceItemDto[]> {
+    const _url = `/api/Resources?pageIndex=0&pageSize=1000`;
+    return this.request<PageList<ResourceItemDto>>('get', _url).pipe(
+      map((response: PageList<ResourceItemDto>) => response.data)
+    );
+  }
   /**
    * Get paged resources
    * @param name Resource name filter

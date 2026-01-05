@@ -35,10 +35,12 @@
     <div class="border-top pt-1">
       <h3 class="h5 fw-500">{{ 'scope.configuration' | translate }}</h3>
       <div class="d-flex gap-2 align-items-center mb-2">
-        <mat-checkbox [formControl]="required" class="col">
+        <mat-checkbox [formControl]="required" class="col" 
+          [matTooltip]="'scope.requiredTooltip' | translate">
           {{ 'scope.required' | translate }}
         </mat-checkbox>
-        <mat-checkbox [formControl]="emphasize" class="col">
+        <mat-checkbox [formControl]="emphasize" class="col"
+          [matTooltip]="'scope.emphasizeTooltip' | translate">
           {{ 'scope.emphasize' | translate }}
         </mat-checkbox>
       </div>

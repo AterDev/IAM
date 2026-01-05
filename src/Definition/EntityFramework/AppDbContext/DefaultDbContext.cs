@@ -30,6 +30,7 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
     public DbSet<ClientScope> ClientScopes { get; set; }
     public DbSet<ScopeClaim> ScopeClaims { get; set; }
     public DbSet<ApiResource> ApiResources { get; set; }
+    public DbSet<ClientResource> ClientResources { get; set; }
     public DbSet<Authorization> Authorizations { get; set; }
     public DbSet<Token> Tokens { get; set; }
 
@@ -224,6 +225,20 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
         {
             entity.HasIndex(e => e.Name).IsUnique();
             entity.HasIndex(e => e.TenantId);
+        });
+
+        // ClientResource configuration
+        builder.Entity<ClientResource>(entity =>
+        {
+            entity.HasIndex(e => new { e.ClientId, e.ApiResourceId }).IsUnique();
+            entity.HasOne(e => e.Client)
+                .WithMany(c => c.ClientResources)
+                .HasForeignKey(e => e.ClientId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.ApiResource)
+                .WithMany(r => r.ClientResources)
+                .HasForeignKey(e => e.ApiResourceId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Authorization configuration

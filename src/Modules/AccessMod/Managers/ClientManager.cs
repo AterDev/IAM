@@ -1,8 +1,9 @@
 using System.Security.Cryptography;
 using AccessMod.Models.AuthorizationDtos;
 using AccessMod.Models.ClientDtos;
+using AccessMod.Models.ResourceDtos;
+using AccessMod.Models.ScopeDtos;
 using Share.Services;
-using Microsoft.EntityFrameworkCore;
 
 namespace AccessMod.Managers;
 
@@ -43,6 +44,8 @@ public class ClientManager(
         var client = await Queryable
             .Include(c => c.ClientScopes)
             .ThenInclude(cs => cs.Scope)
+            .Include(c => c.ClientResources)
+            .ThenInclude(cr => cr.ApiResource)
             .Where(c => c.Id == id)
             .FirstOrDefaultAsync();
 
@@ -63,7 +66,22 @@ public class ClientManager(
             ApplicationType = client.ApplicationType,
             RedirectUris = client.RedirectUris,
             PostLogoutRedirectUris = client.PostLogoutRedirectUris,
-            Scopes = client.ClientScopes.Select(cs => cs.Scope.Name).ToList(),
+            Scopes = client.ClientScopes.Select(cs => new ScopeItemDto
+            {
+                Id = cs.Scope.Id,
+                Name = cs.Scope.Name,
+                DisplayName = cs.Scope.DisplayName,
+                Required = cs.Scope.Required,
+                CreatedTime = cs.Scope.CreatedTime
+            }).ToList(),
+            Resources = client.ClientResources.Select(cr => new ClientResourceDto
+            {
+                Id = cr.ApiResource.Id,
+                Name = cr.ApiResource.Name,
+                DisplayName = cr.ApiResource.DisplayName,
+                Description = cr.ApiResource.Description,
+                CreatedTime = cr.ApiResource.CreatedTime
+            }).ToList(),
             CreatedTime = client.CreatedTime,
             UpdatedTime = client.UpdatedTime
         };
@@ -100,31 +118,60 @@ public class ClientManager(
             PostLogoutRedirectUris = dto.PostLogoutRedirectUris
         };
 
-        // Add client scopes
-        if (dto.ScopeIds.Count > 0)
+        // Start transaction for consistency
+        using var transaction = await _dbContext.Database.BeginTransactionAsync();
+        try
         {
-            var scopes = await _dbContext.Set<ApiScope>()
-                .Where(s => dto.ScopeIds.Contains(s.Id))
-                .ToListAsync();
-
-            foreach (var scope in scopes)
+            // Add client scopes
+            if (dto.ScopeIds.Count > 0)
             {
-                entity.ClientScopes.Add(new ClientScope
+                var scopes = await _dbContext.ApiScopes
+                    .Where(s => dto.ScopeIds.Contains(s.Id))
+                    .ToListAsync();
+
+                foreach (var scope in scopes)
                 {
-                    Client = entity,
-                    Scope = scope
-                });
+                    entity.ClientScopes.Add(new ClientScope
+                    {
+                        Client = entity,
+                        Scope = scope
+                    });
+                }
             }
-        }
 
-        var success = await AddAsync(entity);
-        if (!success)
+            // Add client resources
+            if (dto.ResourceIds.Count > 0)
+            {
+                var resources = await _dbContext.ApiResources
+                    .Where(r => dto.ResourceIds.Contains(r.Id))
+                    .ToListAsync();
+
+                foreach (var resource in resources)
+                {
+                    entity.ClientResources.Add(new ClientResource
+                    {
+                        Client = entity,
+                        ApiResource = resource
+                    });
+                }
+            }
+
+            var success = await AddAsync(entity);
+            if (!success)
+            {
+                await transaction.RollbackAsync();
+                return (null, null);
+            }
+
+            await transaction.CommitAsync();
+            var detail = await GetDetailAsync(entity.Id);
+            return (detail, secret);
+        }
+        catch
         {
-            return (null, null);
+            await transaction.RollbackAsync();
+            throw;
         }
-
-        var detail = await GetDetailAsync(entity.Id);
-        return (detail, secret);
     }
 
     /// <summary>
@@ -135,48 +182,110 @@ public class ClientManager(
     /// <returns>Updated client detail or null</returns>
     public async Task<ClientDetailDto?> UpdateAsync(Guid id, ClientUpdateDto dto)
     {
-        var entity = await FindAsync(id);
+        var entity = await _dbContext.Set<Client>()
+            .FirstOrDefaultAsync(c => c.Id == id);
+
         if (entity == null)
         {
             ErrorMsg = "Client not found";
             return null;
         }
 
-        if (dto.DisplayName != null)
+        // Start transaction for consistency
+        using var transaction = await _dbContext.Database.BeginTransactionAsync();
+        try
         {
-            entity.DisplayName = dto.DisplayName;
-        }
-        if (dto.Description != null)
-        {
-            entity.Description = dto.Description;
-        }
-        if (dto.Type != null)
-        {
-            entity.Type = dto.Type;
-        }
-        if (dto.RequirePkce.HasValue)
-        {
-            entity.RequirePkce = dto.RequirePkce.Value;
-        }
-        if (dto.ConsentType != null)
-        {
-            entity.ConsentType = dto.ConsentType;
-        }
-        if (dto.ApplicationType != null)
-        {
-            entity.ApplicationType = dto.ApplicationType;
-        }
-        if (dto.RedirectUris != null)
-        {
-            entity.RedirectUris = dto.RedirectUris;
-        }
-        if (dto.PostLogoutRedirectUris != null)
-        {
-            entity.PostLogoutRedirectUris = dto.PostLogoutRedirectUris;
-        }
 
-        var success = await UpdateAsync(entity);
-        return !success ? null : await GetDetailAsync(id);
+            if (dto.DisplayName != null)
+            {
+                entity.DisplayName = dto.DisplayName;
+            }
+            if (dto.Description != null)
+            {
+                entity.Description = dto.Description;
+            }
+            if (dto.Type != null)
+            {
+                entity.Type = dto.Type;
+            }
+            if (dto.RequirePkce.HasValue)
+            {
+                entity.RequirePkce = dto.RequirePkce.Value;
+            }
+            if (dto.ConsentType != null)
+            {
+                entity.ConsentType = dto.ConsentType;
+            }
+            if (dto.ApplicationType != null)
+            {
+                entity.ApplicationType = dto.ApplicationType;
+            }
+            if (dto.RedirectUris != null)
+            {
+                entity.RedirectUris = dto.RedirectUris;
+            }
+            if (dto.PostLogoutRedirectUris != null)
+            {
+                entity.PostLogoutRedirectUris = dto.PostLogoutRedirectUris;
+            }
+
+            // Update scopes if provided - directly manipulate the join table
+            if (dto.ScopeIds != null)
+            {
+                // Delete existing scope associations
+                await _dbContext.ClientScopes
+                    .Where(cs => cs.ClientId == id)
+                    .ExecuteDeleteAsync();
+
+                // Add new scope associations
+                if (dto.ScopeIds.Count > 0)
+                {
+                    var clientScopes = dto.ScopeIds.Select(scopeId => new ClientScope
+                    {
+                        ClientId = id,
+                        ScopeId = scopeId
+                    }).ToList();
+
+                    await _dbContext.ClientScopes.AddRangeAsync(clientScopes);
+                }
+            }
+
+            // Update resources if provided - directly manipulate the join table
+            if (dto.ResourceIds != null)
+            {
+                // Delete existing resource associations
+                await _dbContext.ClientResources
+                    .Where(cr => cr.ClientId == id)
+                    .ExecuteDeleteAsync();
+
+                // Add new resource associations
+                if (dto.ResourceIds.Count > 0)
+                {
+                    var clientResources = dto.ResourceIds.Select(resourceId => new ClientResource
+                    {
+                        ClientId = id,
+                        ApiResourceId = resourceId
+                    }).ToList();
+
+                    await _dbContext.ClientResources.AddRangeAsync(clientResources);
+                }
+            }
+
+            var success = await SaveChangesAsync() > 0;
+            if (success)
+            {
+                await transaction.CommitAsync();
+                return await GetDetailAsync(id);
+            }
+
+            await transaction.RollbackAsync();
+            return null;
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
     }
 
     /// <summary>
@@ -225,34 +334,112 @@ public class ClientManager(
     /// <returns>True if successful</returns>
     public async Task<bool> AssignScopesAsync(Guid id, List<Guid> scopeIds)
     {
-        var entity = await _dbContext.Set<Client>()
-            .Include(c => c.ClientScopes)
-            .FirstOrDefaultAsync(c => c.Id == id);
-
-        if (entity == null)
+        // Verify client exists
+        if (!await ExistAsync(c => c.Id == id))
         {
             ErrorMsg = "Client not found";
             return false;
         }
 
-        // Remove existing scopes
-        entity.ClientScopes.Clear();
-
-        // Add new scopes
-        var scopes = await _dbContext.Set<ApiScope>()
-            .Where(s => scopeIds.Contains(s.Id))
-            .ToListAsync();
-
-        foreach (var scope in scopes)
+        // Start transaction for consistency
+        using var transaction = await _dbContext.Database.BeginTransactionAsync();
+        try
         {
-            entity.ClientScopes.Add(new ClientScope
+            // Delete existing scope associations
+            await _dbContext.ClientScopes
+                .Where(cs => cs.ClientId == id)
+                .ExecuteDeleteAsync();
+
+            // Add new scope associations
+            if (scopeIds.Count > 0)
             {
-                Client = entity,
-                Scope = scope
-            });
+                var clientScopes = scopeIds.Select(scopeId => new ClientScope
+                {
+                    ClientId = id,
+                    ScopeId = scopeId
+                }).ToList();
+
+                await _dbContext.ClientScopes.AddRangeAsync(clientScopes);
+                var success = await SaveChangesAsync() > 0;
+                if (success)
+                {
+                    await transaction.CommitAsync();
+                    return true;
+                }
+            }
+            else
+            {
+                // No new scopes to add, just return success
+                await transaction.CommitAsync();
+                return true;
+            }
+
+            await transaction.RollbackAsync();
+            return false;
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Assign resources to client
+    /// </summary>
+    /// <param name="id">Client id</param>
+    /// <param name="resourceIds">List of resource IDs to assign</param>
+    /// <returns>True if successful</returns>
+    public async Task<bool> AssignResourcesAsync(Guid id, List<Guid> resourceIds)
+    {
+        // Verify client exists
+        if (!await ExistAsync(c => c.Id == id))
+        {
+            ErrorMsg = "Client not found";
+            return false;
         }
 
-        return await SaveChangesAsync() > 0;
+        // Start transaction for consistency
+        using var transaction = await _dbContext.Database.BeginTransactionAsync();
+        try
+        {
+            // Delete existing resource associations
+            await _dbContext.ClientResources
+                .Where(cr => cr.ClientId == id)
+                .ExecuteDeleteAsync();
+
+            // Add new resource associations
+            if (resourceIds.Count > 0)
+            {
+                var clientResources = resourceIds.Select(resourceId => new ClientResource
+                {
+                    ClientId = id,
+                    ApiResourceId = resourceId
+                }).ToList();
+
+                await _dbContext.ClientResources.AddRangeAsync(clientResources);
+                var success = await SaveChangesAsync() > 0;
+                if (success)
+                {
+                    await transaction.CommitAsync();
+                    return true;
+                }
+            }
+            else
+            {
+                // No new resources to add, just return success
+                await transaction.CommitAsync();
+                return true;
+            }
+
+            await transaction.RollbackAsync();
+            return false;
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
     }
 
     /// <summary>

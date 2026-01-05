@@ -28,4 +28,9 @@ public class ApiResource : EntityBase
     /// Properties (JSON object)
     /// </summary>
     public string? Properties { get; set; }
+
+    /// <summary>
+    /// Clients that can access this resource
+    /// </summary>
+    public List<ClientResource> ClientResources { get; set; } = [];
 }

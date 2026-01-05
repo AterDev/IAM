@@ -22,4 +22,6 @@ export interface ClientAddDto {
   postLogoutRedirectUris: string[];
   /** scopeIds */
   scopeIds: string[];
+  /** resourceIds - API resource IDs this client can access */
+  resourceIds?: string[];
 }

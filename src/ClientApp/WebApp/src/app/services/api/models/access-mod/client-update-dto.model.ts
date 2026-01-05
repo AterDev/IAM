@@ -18,4 +18,8 @@ export interface ClientUpdateDto {
   redirectUris?: string[] | null;
   /** postLogoutRedirectUris */
   postLogoutRedirectUris?: string[] | null;
+  /** scopeIds */
+  scopeIds?: string[] | null;
+  /** resourceIds - API resource IDs this client can access */
+  resourceIds?: string[] | null;
 }

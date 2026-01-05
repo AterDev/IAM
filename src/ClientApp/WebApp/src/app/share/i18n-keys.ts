@@ -180,12 +180,15 @@ export const I18N_KEYS = {
     "displayName": "scope.displayName",
     "description": "scope.description",
     "required": "scope.required",
+    "requiredTooltip": "scope.requiredTooltip",
     "optional": "scope.optional",
     "emphasize": "scope.emphasize",
+    "emphasizeTooltip": "scope.emphasizeTooltip",
     "searchPlaceholder": "scope.searchPlaceholder",
     "requiredFilter": "scope.requiredFilter",
     "addScope": "scope.addScope",
     "editScope": "scope.editScope",
+    "scopeDetail": "scope.scopeDetail",
     "basicInfo": "scope.basicInfo",
     "configuration": "scope.configuration",
     "claims": "scope.claims",
@@ -196,7 +199,8 @@ export const I18N_KEYS = {
     "updateSuccess": "scope.updateSuccess",
     "deleteSuccess": "scope.deleteSuccess",
     "deleteConfirmTitle": "scope.deleteConfirmTitle",
-    "deleteConfirmMessage": "scope.deleteConfirmMessage"
+    "deleteConfirmMessage": "scope.deleteConfirmMessage",
+    "deleteConfirmDetailMessage": "scope.deleteConfirmDetailMessage"
   },
   "client": {
     "title": "client.title",
@@ -249,6 +253,9 @@ export const I18N_KEYS = {
     "postLogoutRedirectUrisHint": "client.postLogoutRedirectUrisHint",
     "addPostLogoutRedirectUri": "client.addPostLogoutRedirectUri",
     "noPostLogoutRedirectUris": "client.noPostLogoutRedirectUris",
+    "scopesHint": "client.scopesHint",
+    "addScope": "client.addScope",
+    "noScopes": "client.noScopes",
     "secretTitle": "client.secretTitle",
     "secretWarning": "client.secretWarning",
     "secretWarningText": "client.secretWarningText",
@@ -258,13 +265,20 @@ export const I18N_KEYS = {
     "status": "client.status",
     "creationDate": "client.creationDate",
     "noAuthorizations": "client.noAuthorizations",
+    "rotateSecretTitle": "client.rotateSecretTitle",
+    "rotateSecretMessage": "client.rotateSecretMessage",
+    "secretRotatedAndCopied": "client.secretRotatedAndCopied",
+    "newSecret": "client.newSecret",
+    "clientIdCopied": "client.clientIdCopied",
     "deleteConfirmTitle": "client.deleteConfirmTitle",
     "deleteConfirmMessage": "client.deleteConfirmMessage",
+    "deleteConfirmDetailMessage": "client.deleteConfirmDetailMessage",
     "deleteMultipleConfirmMessage": "client.deleteMultipleConfirmMessage",
     "deleteSuccess": "client.deleteSuccess",
     "deleteMultipleSuccess": "client.deleteMultipleSuccess",
     "deleteMultiplePartial": "client.deleteMultiplePartial",
-    "createSuccess": "client.createSuccess"
+    "createSuccess": "client.createSuccess",
+    "updateSuccess": "client.updateSuccess"
   },
   "resource": {
     "title": "resource.title",
@@ -278,7 +292,13 @@ export const I18N_KEYS = {
     "basicInfo": "resource.basicInfo",
     "searchPlaceholder": "resource.searchPlaceholder",
     "apiResource": "resource.apiResource",
-    "identityResource": "resource.identityResource"
+    "identityResource": "resource.identityResource",
+    "createSuccess": "resource.createSuccess",
+    "updateSuccess": "resource.updateSuccess",
+    "deleteSuccess": "resource.deleteSuccess",
+    "deleteConfirmTitle": "resource.deleteConfirmTitle",
+    "deleteConfirmMessage": "resource.deleteConfirmMessage",
+    "deleteConfirmDetailMessage": "resource.deleteConfirmDetailMessage"
   },
   "dialog": {
     "confirmDelete": {
@@ -315,7 +335,15 @@ export const I18N_KEYS = {
     "createClientFailed": "error.createClientFailed",
     "deleteClientFailed": "error.deleteClientFailed",
     "required": "error.required",
-    "minLength": "error.minLength"
+    "minLength": "error.minLength",
+    "loadResourceFailed": "error.loadResourceFailed",
+    "loadResourcesFailed": "error.loadResourcesFailed",
+    "createResourceFailed": "error.createResourceFailed",
+    "updateResourceFailed": "error.updateResourceFailed",
+    "deleteResourceFailed": "error.deleteResourceFailed",
+    "loadAuthorizationsFailed": "error.loadAuthorizationsFailed",
+    "rotateSecretFailed": "error.rotateSecretFailed",
+    "updateClientFailed": "error.updateClientFailed"
   },
   "permission": {
     "category": {

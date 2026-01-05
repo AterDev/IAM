@@ -1,4 +1,6 @@
 namespace AccessMod.Models.ClientDtos;
+using AccessMod.Models.ScopeDtos;
+using AccessMod.Models.ResourceDtos;
 
 /// <summary>
 /// Client detail DTO
@@ -15,7 +17,11 @@ public class ClientDetailDto
     public string? ApplicationType { get; set; }
     public List<string> RedirectUris { get; set; } = [];
     public List<string> PostLogoutRedirectUris { get; set; } = [];
-    public List<string> Scopes { get; set; } = [];
+    public List<ScopeItemDto> Scopes { get; set; } = [];
+    /// <summary>
+    /// API resources this client can access
+    /// </summary>
+    public List<ClientResourceDto> Resources { get; set; } = [];
     public DateTimeOffset CreatedTime { get; set; }
     public DateTimeOffset UpdatedTime { get; set; }
 }

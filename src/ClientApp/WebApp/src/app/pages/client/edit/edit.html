@@ -47,67 +47,110 @@
       <h3 class="h5 fw-500 mb-2">{{ 'client.redirectUris' | translate }}</h3>
       <p class="small text-muted mb-3">{{ 'client.redirectUrisHint' | translate }}</p>
 
-      <div class="d-flex gap-2 align-items-center mb-2">
-        <mat-form-field appearance="outline" class="col" subscriptSizing="dynamic">
-          <mat-label>{{ 'client.addRedirectUri' | translate }}</mat-label>
-          <input matInput formControlName="newRedirectUri" (keyup.enter)="addRedirectUri()"
-            placeholder="https://example.com/callback">
-        </mat-form-field>
-        <button mat-icon-button class="col-auto" (click)="addRedirectUri()" type="button"
-          [disabled]="!clientForm.get('newRedirectUri')?.value?.trim()">
-          <mat-icon>add_circle</mat-icon>
-        </button>
-      </div>
-
-      @if (redirectUris.controls.length > 0) {
-      <div class="d-flex flex-wrap gap-2 mt-2">
-        <mat-chip-set aria-label="Redirect URIs">
-          @for (uri of redirectUris.controls; track $index; let i = $index) {
-          <mat-chip [removable]="true"
-            (removed)="removeRedirectUri(i)">
-            {{ uri.value }}
-            <button matChipRemove [attr.aria-label]="'Remove ' + uri.value" type="button">
+      <mat-form-field appearance="outline" class="w-100" subscriptSizing="dynamic">
+        <mat-label>{{ 'client.addRedirectUri' | translate }}</mat-label>
+        <mat-chip-grid #redirectUrisGrid aria-label="Redirect URIs">
+          @for (uri of redirectUris(); track $index; let i = $index) {
+          <mat-chip-row [removable]="true" (removed)="removeRedirectUri(i)">
+            {{ uri }}
+            <button matChipRemove [attr.aria-label]="'Remove ' + uri" type="button">
               <mat-icon>close</mat-icon>
             </button>
-          </mat-chip>
+          </mat-chip-row>
           }
-        </mat-chip-set>
-      </div>
-      }
+          <input matInput
+            [matChipInputFor]="redirectUrisGrid"
+            [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+            [matChipInputAddOnBlur]="true"
+            (matChipInputTokenEnd)="addRedirectUri($event)"
+            placeholder="https://example.com/callback" />
+        </mat-chip-grid>
+      </mat-form-field>
     </div>
 
-    <!-- PostLogout重定向URI部分 -->
+    <!-- Scopes部分 -->
+    <div class="border-top pt-1">
+      <h3 class="h5 fw-500 mb-2">{{ 'client.scopes' | translate }}</h3>
+      <p class="small text-muted mb-3">{{ 'client.scopesHint' | translate }}</p>
+
+      <mat-form-field appearance="outline" class="w-100" subscriptSizing="dynamic">
+        <mat-label>{{ 'client.addScope' | translate }}</mat-label>
+        <mat-chip-grid #scopesGrid aria-label="Scopes">
+          @for (scope of scopes(); track $index; let i = $index) {
+          <mat-chip-row [removable]="true" (removed)="removeScope(i)">
+            {{ scope }}
+            <button matChipRemove [attr.aria-label]="'Remove ' + scope" type="button">
+              <mat-icon>close</mat-icon>
+            </button>
+          </mat-chip-row>
+          }
+          <input matInput
+            [matChipInputFor]="scopesGrid"
+            [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+            [matChipInputAddOnBlur]="true"
+            (matChipInputTokenEnd)="addScope($event)"
+            placeholder="e.g., openid, profile" />
+        </mat-chip-grid>
+      </mat-form-field>
+    </div>
+
+    <!-- Resources部分 -->
+    <div class="border-top pt-1">
+      <h3 class="h5 fw-500 mb-2">{{ 'client.resources' | translate }}</h3>
+      <p class="small text-muted mb-3">{{ 'client.resourcesHint' | translate }}</p>
+
+      <div class="mb-3">
+        <p class="small text-muted mb-2">{{ 'client.availableResources' | translate }}</p>
+        @for (resource of availableResources(); track resource.id) {
+          @if (!resourceIds().includes(resource.id)) {
+          <button mat-raised-button color="primary" (click)="addResource(resource)" class="me-2 mb-2">
+            <mat-icon>add</mat-icon>
+            {{ resource.displayName }}
+          </button>
+          }
+        }
+      </div>
+
+      @if (resourceIds().length > 0) {
+      <p class="small text-muted mb-2">{{ 'client.selectedResources' | translate }}</p>
+      <mat-chip-set>
+        @for (resourceId of resourceIds(); track $index; let i = $index) {
+        <mat-chip-row [removable]="true" (removed)="removeResource(i)">
+          {{ getResourceName(resourceId) }}
+          <button matChipRemove [attr.aria-label]="'Remove resource'" type="button">
+            <mat-icon>close</mat-icon>
+          </button>
+        </mat-chip-row>
+        }
+      </mat-chip-set>
+      }
+      @if (resourceIds().length === 0) {
+      <p class="text-muted small">{{ 'client.noResourcesSelected' | translate }}</p>
+      }
+    </div>
     <div class="border-top pt-1">
       <h3 class="h5 fw-500 mb-2">{{ 'client.postLogoutRedirectUris' | translate }}</h3>
       <p class="small text-muted mb-3">{{ 'client.postLogoutRedirectUrisHint' | translate }}</p>
 
-      <div class="d-flex gap-2 align-items-center mb-2">
-        <mat-form-field appearance="outline" class="col" subscriptSizing="dynamic">
-          <mat-label>{{ 'client.addPostLogoutRedirectUri' | translate }}</mat-label>
-          <input matInput formControlName="newPostLogoutRedirectUri" (keyup.enter)="addPostLogoutRedirectUri()"
-            placeholder="https://example.com/logout">
-        </mat-form-field>
-        <button mat-icon-button class="col-auto" (click)="addPostLogoutRedirectUri()" type="button"
-          [disabled]="!clientForm.get('newPostLogoutRedirectUri')?.value?.trim()">
-          <mat-icon>add_circle</mat-icon>
-        </button>
-      </div>
-
-      @if (postLogoutRedirectUris.controls.length > 0) {
-      <div class="d-flex flex-wrap gap-2 mt-2">
-        <mat-chip-set aria-label="Post Logout Redirect URIs">
-          @for (uri of postLogoutRedirectUris.controls; track $index; let i = $index) {
-          <mat-chip [removable]="true"
-            (removed)="removePostLogoutRedirectUri(i)">
-            {{ uri.value }}
-            <button matChipRemove [attr.aria-label]="'Remove ' + uri.value" type="button">
+      <mat-form-field appearance="outline" class="w-100" subscriptSizing="dynamic">
+        <mat-label>{{ 'client.addPostLogoutRedirectUri' | translate }}</mat-label>
+        <mat-chip-grid #postLogoutUrisGrid aria-label="Post Logout Redirect URIs">
+          @for (uri of postLogoutRedirectUris(); track $index; let i = $index) {
+          <mat-chip-row [removable]="true" (removed)="removePostLogoutRedirectUri(i)">
+            {{ uri }}
+            <button matChipRemove [attr.aria-label]="'Remove ' + uri" type="button">
               <mat-icon>close</mat-icon>
             </button>
-          </mat-chip>
+          </mat-chip-row>
           }
-        </mat-chip-set>
-      </div>
-      }
+          <input matInput
+            [matChipInputFor]="postLogoutUrisGrid"
+            [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+            [matChipInputAddOnBlur]="true"
+            (matChipInputTokenEnd)="addPostLogoutRedirectUri($event)"
+            placeholder="https://example.com/logout" />
+        </mat-chip-grid>
+      </mat-form-field>
     </div>
   </form>
   }

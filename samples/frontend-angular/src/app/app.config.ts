@@ -23,7 +23,6 @@ export const appConfig: ApplicationConfig = {
           clientId: 'FrontClient',
           scope: 'openid profile email offline_access',
           responseType: 'code',
-          
           silentRenew: true,
           useRefreshToken: true,
           logLevel: LogLevel.Debug,
