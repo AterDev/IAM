@@ -15,23 +15,14 @@
   </mat-sidenav>
   <mat-sidenav-content>
     <mat-toolbar color="primary" class="gap-2">
-      <button mat-icon-button (click)="sidenav.toggle()" aria-label="Toggle navigation">
-        <mat-icon>menu</mat-icon>
-      </button>
       <span>🔐 IAM示例 - Angular应用</span>
       <span class="flex-grow-1"></span>
       <button *ngIf="!isAuthenticated" mat-raised-button color="accent" (click)="login()" [disabled]="!isInitialized">{{
         isInitialized ? '登录' : '初始化中...' }}</button>
       <button *ngIf="isAuthenticated" mat-raised-button color="warn" (click)="logout()">登出</button>
-      <button mat-icon-button (click)="toggleTheme()" aria-label="Switch theme">
-        <mat-icon>{{ darkMode ? 'light_mode' : 'dark_mode' }}</mat-icon>
-      </button>
     </mat-toolbar>
     <div class="p-3">
       <router-outlet></router-outlet>
     </div>
-    <footer class="text-center py-4 text-secondary small">
-      Angular 19 • OpenID Connect • OAuth 2.0
-    </footer>
   </mat-sidenav-content>
 </mat-sidenav-container>

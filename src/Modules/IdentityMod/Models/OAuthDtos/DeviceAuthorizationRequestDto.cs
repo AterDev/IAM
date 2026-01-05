@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace IdentityMod.Models.OAuthDtos;
 
@@ -10,12 +10,12 @@ public class DeviceAuthorizationRequestDto
     /// <summary>
     /// Client identifier
     /// </summary>
-    [JsonPropertyName("client_id")]
+    [ModelBinder(Name = "client_id")]
     public required string ClientId { get; set; }
 
     /// <summary>
     /// Requested scope
     /// </summary>
-    [JsonPropertyName("scope")]
+    [ModelBinder(Name = "scope")]
     public string? Scope { get; set; }
 }

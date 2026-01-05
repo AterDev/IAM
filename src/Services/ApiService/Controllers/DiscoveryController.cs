@@ -1,11 +1,8 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using Perigon.AspNetCore.Constants;
 using IdentityMod.Managers;
 using IdentityMod.Models.OAuthDtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
-using ClaimTypes = System.Security.Claims.ClaimTypes;
+using Perigon.AspNetCore.Constants;
 
 namespace ApiService.Controllers;
 
@@ -16,7 +13,6 @@ namespace ApiService.Controllers;
 /// Implements OpenID Connect Discovery 1.0 specification endpoints:
 /// - Discovery document (.well-known/openid-configuration)
 /// - JSON Web Key Set (JWKS) for token verification
-/// - UserInfo endpoint for retrieving authenticated user claims
 ///
 /// These endpoints enable clients to discover the OpenID Provider's capabilities
 /// and obtain the public keys needed for JWT signature verification.
@@ -145,123 +141,5 @@ public class DiscoveryController(
             _logger.LogError(ex, "Failed to generate JWKS");
             return Problem("Failed to generate JWKS", statusCode: 500);
         }
-    }
-
-    /// <summary>
-    /// UserInfo endpoint (OIDC)
-    /// </summary>
-    /// <returns>Claims about the authenticated user</returns>
-    /// <response code="200">Returns user information claims</response>
-    /// <response code="401">If the access token is invalid or missing</response>
-    /// <response code="403">If the token does not have sufficient scope</response>
-    /// <remarks>
-    /// Returns claims about the authenticated End-User as defined in OpenID Connect Core 1.0.
-    /// This endpoint requires a valid access token obtained through the OAuth 2.0 flow.
-    ///
-    /// The returned claims depend on:
-    /// - The scopes granted in the access token (profile, email, phone, address)
-    /// - The user's actual profile data
-    /// - The client's allowed scopes
-    ///
-    /// Standard scopes and their claims:
-    /// - profile: name, family_name, given_name, middle_name, nickname, preferred_username,
-    ///   profile, picture, website, gender, birthdate, zoneinfo, locale, updated_at
-    /// - email: email, email_verified
-    /// - phone: phone_number, phone_number_verified
-    /// - address: address (structured claim)
-    ///
-    /// Request must include Authorization header:
-    /// Authorization: Bearer {access_token}
-    ///
-    /// Example:
-    /// GET /connect/userinfo
-    /// Authorization: Bearer eyJhbGciOiJSUzI1NiIs...
-    ///
-    /// Response:
-    /// {
-    ///   "sub": "248289761001",
-    ///   "name": "Jane Doe",
-    ///   "email": "jane.doe@example.com",
-    ///   "email_verified": true
-    /// }
-    /// </remarks>
-    [HttpGet("/connect/userinfo")]
-    [HttpPost("/connect/userinfo")]
-    [Authorize]
-    public async Task<ActionResult<UserInfoDto>> GetUserInfo()
-    {
-        try
-        {
-            // Get user ID from the token claims
-            var userIdClaim =
-                User.FindFirst(ClaimTypes.NameIdentifier)
-                ?? User.FindFirst(JwtRegisteredClaimNames.Sub);
-
-            if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
-            {
-                _logger.LogWarning("UserInfo request with invalid or missing subject claim");
-                return Unauthorized(
-                    new
-                    {
-                        error = "invalid_token",
-                        error_description = "The access token is invalid or does not contain a valid subject",
-                    }
-                );
-            }
-
-            // Parse scopes from token
-            var scopes = ParseScopesFromToken(User);
-
-            // Get user information
-            var userInfo = await _discoveryManager.GetUserInfoAsync(userId, scopes);
-
-            if (userInfo == null)
-            {
-                _logger.LogWarning("User {UserId} not found for UserInfo request", userId);
-                return NotFound(
-                    new
-                    {
-                        error = "user_not_found",
-                        error_description = "The user associated with this token was not found",
-                    }
-                );
-            }
-
-            return Ok(userInfo);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get user info");
-            return Problem("Failed to retrieve user information", statusCode: 500);
-        }
-    }
-
-    /// <summary>
-    /// Parse scopes from the token claims
-    /// </summary>
-    /// <param name="principal">The claims principal from the token</param>
-    /// <returns>List of scope strings</returns>
-    private static List<string> ParseScopesFromToken(ClaimsPrincipal principal)
-    {
-        var scopes = new List<string>();
-
-        // Get all scope claims
-        var scopeClaims = principal.FindAll("scope").Select(c => c.Value).ToList();
-
-        if (scopeClaims.Count > 0)
-        {
-            scopes.AddRange(scopeClaims);
-        }
-        else
-        {
-            // Try alternative scope claim format (space-separated)
-            var scopeValue = principal.FindFirst("scope")?.Value;
-            if (!string.IsNullOrEmpty(scopeValue))
-            {
-                scopes.AddRange(scopeValue.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            }
-        }
-
-        return scopes;
     }
 }

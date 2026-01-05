@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace IdentityMod.Models.OAuthDtos;
 
@@ -10,66 +10,78 @@ public class TokenRequestDto
     /// <summary>
     /// Grant type (authorization_code, refresh_token, client_credentials, password, device_code)
     /// </summary>
-    [JsonPropertyName("grant_type")]
+    [ModelBinder(Name = "grant_type")]
     public required string GrantType { get; set; }
 
     /// <summary>
     /// Client identifier
     /// </summary>
-    [JsonPropertyName("client_id")]
+    [ModelBinder(Name = "client_id")]
     public string? ClientId { get; set; }
 
     /// <summary>
     /// Client secret
     /// </summary>
-    [JsonPropertyName("client_secret")]
+    [ModelBinder(Name = "client_secret")]
     public string? ClientSecret { get; set; }
 
     /// <summary>
     /// Authorization code (for authorization_code grant)
     /// </summary>
-    [JsonPropertyName("code")]
+    [ModelBinder(Name = "code")]
     public string? Code { get; set; }
 
     /// <summary>
     /// Redirect URI (for authorization_code grant)
     /// </summary>
-    [JsonPropertyName("redirect_uri")]
+    [ModelBinder(Name = "redirect_uri")]
     public string? RedirectUri { get; set; }
 
     /// <summary>
     /// PKCE code verifier
     /// </summary>
-    [JsonPropertyName("code_verifier")]
+    [ModelBinder(Name = "code_verifier")]
     public string? CodeVerifier { get; set; }
 
     /// <summary>
     /// Refresh token (for refresh_token grant)
     /// </summary>
-    [JsonPropertyName("refresh_token")]
+    [ModelBinder(Name = "refresh_token")]
     public string? RefreshToken { get; set; }
 
     /// <summary>
     /// Requested scope
     /// </summary>
-    [JsonPropertyName("scope")]
+    [ModelBinder(Name = "scope")]
     public string? Scope { get; set; }
 
     /// <summary>
     /// Username (for password grant)
     /// </summary>
-    [JsonPropertyName("username")]
+    [ModelBinder(Name = "username")]
     public string? Username { get; set; }
 
     /// <summary>
     /// Password (for password grant)
     /// </summary>
-    [JsonPropertyName("password")]
+    [ModelBinder(Name = "password")]
     public string? Password { get; set; }
 
     /// <summary>
     /// Device code (for device_code grant)
     /// </summary>
-    [JsonPropertyName("device_code")]
+    [ModelBinder(Name = "device_code")]
     public string? DeviceCode { get; set; }
+
+    /// <summary>
+    /// Resource/API identifier (audience claim in token)
+    /// </summary>
+    [ModelBinder(Name = "resource")]
+    public string? Resource { get; set; }
+
+    /// <summary>
+    /// Requested audience claim for the token
+    /// </summary>
+    [ModelBinder(Name = "audience")]
+    public string? Audience { get; set; }
 }

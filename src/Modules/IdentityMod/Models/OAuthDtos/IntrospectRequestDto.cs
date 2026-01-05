@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace IdentityMod.Models.OAuthDtos;
 
@@ -10,12 +10,12 @@ public class IntrospectRequestDto
     /// <summary>
     /// Token to introspect
     /// </summary>
-    [JsonPropertyName("token")]
+    [ModelBinder(Name = "token")]
     public required string Token { get; set; }
 
     /// <summary>
     /// Token type hint (access_token, refresh_token)
     /// </summary>
-    [JsonPropertyName("token_type_hint")]
+    [ModelBinder(Name = "token_type_hint")]
     public string? TokenTypeHint { get; set; }
 }

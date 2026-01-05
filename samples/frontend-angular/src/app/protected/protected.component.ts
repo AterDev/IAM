@@ -32,8 +32,36 @@ export class ProtectedComponent implements OnInit {
   loading = false;
 
   ngOnInit() {
+    // 方式1：从 OIDC 库的 userData$ 获取
     this.oidcSecurityService.userData$.subscribe(userData => {
-      this.userData = userData;
+      console.log('📝 Protected 页面 - 库返回的用户数据:', userData);
+      if (userData?.userData) {
+        this.userData = userData.userData;
+      }
+    });
+    
+    // 方式2：直接调用 userinfo 端点（备选方案）
+    this.oidcSecurityService.getAccessToken().subscribe(token => {
+      console.log('🔑 Protected 页面 - AccessToken:', token);
+      
+      if (token) {
+        // 直接调用 IAM 的 userinfo 端点
+        this.http.get('https://localhost:7070/connect/userinfo')
+          .subscribe({
+            next: (userInfo: any) => {
+              console.log('👤 从 userinfo 端点获取的用户信息:', userInfo);
+              this.userData = userInfo;
+            },
+            error: (err) => {
+              console.error('❌ 获取用户信息失败:', err);
+            }
+          });
+      }
+    });
+    
+    // 调试：获取认证状态
+    this.oidcSecurityService.isAuthenticated$.subscribe(authState => {
+      console.log('🔐 Protected 页面 - 认证状态:', authState);
     });
   }
 

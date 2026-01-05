@@ -255,13 +255,20 @@
     "status": "状态",
     "creationDate": "授权时间",
     "noAuthorizations": "暂无授权记录",
+    "rotateSecretTitle": "轮换客户端密钥",
+    "rotateSecretMessage": "确定要轮换客户端密钥吗?旧密钥将不再有效。",
+    "secretRotatedAndCopied": "密钥已轮换并复制到剪贴板",
+    "newSecret": "新密钥",
+    "clientIdCopied": "客户端ID已复制到剪贴板",
     "deleteConfirmTitle": "确认删除应用",
-    "deleteConfirmMessage": "确定要删除该应用吗？此操作不可撤销。",
-    "deleteMultipleConfirmMessage": "确定要删除选中的 {{count}} 个应用吗？此操作不可撤销。",
+    "deleteConfirmMessage": "确定要删除该应用吗?此操作不可撤销。",
+    "deleteConfirmDetailMessage": "确定要删除应用'{{name}}'吗?此操作不可撤销。",
+    "deleteMultipleConfirmMessage": "确定要删除选中的 {{count}} 个应用吗?此操作不可撤销。",
     "deleteSuccess": "应用已删除",
     "deleteMultipleSuccess": "成功删除 {{count}} 个应用",
-    "deleteMultiplePartial": "成功删除 {{success}} 个应用，{{error}} 个失败",
-    "createSuccess": "应用创建成功"
+    "deleteMultiplePartial": "成功删除 {{success}} 个应用,{{error}} 个失败",
+    "createSuccess": "应用创建成功",
+    "updateSuccess": "应用更新成功"
   },
   "resource": {
     "title": "资源管理",
@@ -275,7 +282,13 @@
     "basicInfo": "基本信息",
     "searchPlaceholder": "搜索资源名称或显示名称",
     "apiResource": "API资源",
-    "identityResource": "身份资源"
+    "identityResource": "身份资源",
+    "createSuccess": "资源创建成功",
+    "updateSuccess": "资源更新成功",
+    "deleteSuccess": "资源已删除",
+    "deleteConfirmTitle": "确认删除资源",
+    "deleteConfirmMessage": "确定要删除该资源吗?此操作不可撤销。",
+    "deleteConfirmDetailMessage": "确定要删除资源'{{name}}'吗?此操作不可撤销。"
   },
   "dialog": {
     "confirmDelete": {
@@ -314,7 +327,14 @@
     "deleteClientFailed": "删除应用失败",
     "deleteScopeFailed": "删除作用域失败",
     "loadClientFailed": "加载应用失败",
-    "loadScopeFailed": "加载作用域失败"
+    "loadScopeFailed": "加载作用域失败",
+    "loadResourceFailed": "加载资源失败",
+    "loadResourcesFailed": "加载资源列表失败",
+    "createResourceFailed": "创建资源失败",
+    "updateResourceFailed": "更新资源失败",
+    "deleteResourceFailed": "删除资源失败",
+    "loadAuthorizationsFailed": "加载授权列表失败",
+    "rotateSecretFailed": "轮换密钥失败"
   },
   "permission": {
     "category": {
@@ -386,6 +406,14 @@
     "createClientFailed": "创建应用失败",
     "deleteClientFailed": "删除应用失败",
     "required": "此字段是必填项",
-    "minLength": "最小长度是 {{length}}"
+    "minLength": "最小长度是 {{length}}",
+    "loadResourceFailed": "加载资源失败",
+    "loadResourcesFailed": "加载资源列表失败",
+    "createResourceFailed": "创建资源失败",
+    "updateResourceFailed": "更新资源失败",
+    "deleteResourceFailed": "删除资源失败",
+    "loadAuthorizationsFailed": "加载授权列表失败",
+    "rotateSecretFailed": "轮换密钥失败",
+    "updateClientFailed": "更新应用失败"
   }
 }
