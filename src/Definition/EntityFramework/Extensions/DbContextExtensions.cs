@@ -31,8 +31,11 @@ public static class DbContextExtensions
             return 0;
         }
 
-        // Merge DTO properties into entity
-        dto.Adapt(entity);
+        // Merge DTO properties into entity, ignoring null values in the DTO
+        var config = new TypeAdapterConfig();
+        config.NewConfig<TUpdateDto, TEntity>()
+            .IgnoreNullValues(true);
+        dto.Adapt(entity, config);
 
         if (updateTime)
         {

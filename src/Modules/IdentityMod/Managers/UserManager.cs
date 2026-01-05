@@ -56,8 +56,9 @@ public class UserManager(
     /// <returns>True if has permission</returns>
     public override async Task<bool> HasPermissionAsync(Guid id)
     {
-        // Users can access their own data, or admins can access all users
-        return await Task.FromResult(true);
+        // TODO: Implement proper permission checking logic
+        // Security safeguard: deny by default until proper permission checks are implemented
+        return await Task.FromResult(false);
     }
 
     /// <summary>
@@ -188,13 +189,11 @@ public class UserManager(
     /// <returns>True if successful</returns>
     public async Task<bool> DeleteAsync(Guid id, bool softDelete = true)
     {
-        var entity = await FindAsync(id);
-        if (entity == null)
+        var deleted = await DeleteOrUpdateAsync([id], softDelete);
+        if (deleted == 0)
         {
             throw new BusinessException("UserNotFound", StatusCodes.Status404NotFound);
         }
-
-        await DeleteOrUpdateAsync([id], softDelete);
         return true;
     }
 

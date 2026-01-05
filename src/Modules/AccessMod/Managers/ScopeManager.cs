@@ -38,7 +38,9 @@ public class ScopeManager(
     public override async Task<bool> HasPermissionAsync(Guid id)
     {
         // Scope management is accessible by admins for now
-        return await Task.FromResult(true);
+        // TODO: Implement proper permission checking logic
+        // Security safeguard: deny by default until proper permission checks are implemented
+        return await Task.FromResult(false);
     }
 
     /// <summary>

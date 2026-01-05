@@ -49,7 +49,9 @@ public class SessionManager(
     public override async Task<bool> HasPermissionAsync(Guid id)
     {
         // Session management is accessible by admins or the user who owns the session
-        return await Task.FromResult(true);
+        // TODO: Implement proper permission checking logic
+        // Security safeguard: deny by default until proper permission checks are implemented
+        return await Task.FromResult(false);
     }
 
     /// <summary>
@@ -145,7 +147,7 @@ public class SessionManager(
         var session = await FindAsync(id);
         if (session == null)
         {
-            return false;
+            throw new BusinessException("SessionNotFound", StatusCodes.Status404NotFound);
         }
 
         session.IsActive = false;
@@ -191,20 +193,12 @@ public class SessionManager(
             query = query.Where(q => q.SessionId != exceptSessionId);
         }
 
-        var sessions = await query.ToListAsync();
-        var count = 0;
-
-        foreach (var session in sessions)
-        {
-            session.IsActive = false;
-            session.UpdatedTime = DateTime.UtcNow;
-            count++;
-        }
+        var count = await query.ExecuteUpdateAsync(setters => setters
+            .SetProperty(s => s.IsActive, false)
+            .SetProperty(s => s.UpdatedTime, DateTime.UtcNow));
 
         if (count > 0)
         {
-            await _dbContext.SaveChangesAsync();
-
             // Write audit log for bulk session revocation
             await _auditLogManager.AddAuditLogAsync(
                 category: "Authentication",
@@ -226,21 +220,14 @@ public class SessionManager(
     public async Task<int> CleanupExpiredSessionsAsync()
     {
         var now = DateTimeOffset.UtcNow;
-        var expiredSessions = await _dbSet
+        var count = await _dbSet
             .Where(q => q.IsActive && q.ExpirationTime != null && q.ExpirationTime < now)
-            .ToListAsync();
-
-        var count = 0;
-        foreach (var session in expiredSessions)
-        {
-            session.IsActive = false;
-            session.UpdatedTime = DateTime.UtcNow;
-            count++;
-        }
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(s => s.IsActive, false)
+                .SetProperty(s => s.UpdatedTime, DateTime.UtcNow));
 
         if (count > 0)
         {
-            await _dbContext.SaveChangesAsync();
             _logger.LogInformation("Cleaned up {Count} expired sessions", count);
         }
 

@@ -39,7 +39,9 @@ public class SystemSettingManager(
     public override async Task<bool> HasPermissionAsync(Guid id)
     {
         // System settings are accessible by all authenticated users for now
-        return await Task.FromResult(true);
+        // TODO: Implement proper permission checking logic
+        // Security safeguard: deny by default until proper permission checks are implemented
+        return await Task.FromResult(false);
     }
 
     /// <summary>
@@ -99,7 +101,15 @@ public class SystemSettingManager(
             throw new BusinessException("SettingNotEditable", StatusCodes.Status400BadRequest);
         }
 
-        await UpdateAsync<SystemSettingUpdateDto>(id, dto);
+        // Update entity directly to avoid second database round-trip
+        entity.Value = dto.Value;
+        if (dto.Description != null)
+        {
+            entity.Description = dto.Description;
+        }
+        entity.UpdatedTime = DateTime.UtcNow;
+        
+        await _dbContext.SaveChangesAsync();
         return await GetDetailAsync(id);
     }
 

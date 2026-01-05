@@ -37,7 +37,9 @@ public class AuditLogManager(
     public override async Task<bool> HasPermissionAsync(Guid id)
     {
         // Audit logs are accessible by all authenticated users for now
-        return await Task.FromResult(true);
+        // TODO: Implement proper permission checking logic
+        // Security safeguard: deny by default until proper permission checks are implemented
+        return await Task.FromResult(false);
     }
 
     /// <summary>

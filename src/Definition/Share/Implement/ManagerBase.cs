@@ -71,7 +71,32 @@ public abstract class ManagerBase<TDbContext, TEntity>
     /// <returns>The entity if found; otherwise, null.</returns>
     public async Task<TEntity?> FindAsync(Guid id)
     {
-        return await _dbSet.FindAsync(id);
+        var entity = await _dbSet.FindAsync(id);
+
+        if (entity is null)
+        {
+            return null;
+        }
+
+        // Apply tenant filtering for multi-tenant entities
+        if (_isMultiTenant && entity is ITenantEntityBase tenantEntity)
+        {
+            var currentTenantId = _userContext.TenantId;
+
+            if (currentTenantId != Guid.Empty && tenantEntity.TenantId != currentTenantId)
+            {
+                _logger.LogWarning(
+                    "Attempt to access entity {EntityType} with id {EntityId} from tenant {CurrentTenantId}, but entity belongs to tenant {EntityTenantId}.",
+                    typeof(TEntity).Name,
+                    id,
+                    currentTenantId,
+                    tenantEntity.TenantId);
+
+                return null;
+            }
+        }
+
+        return entity;
     }
 
     /// <summary>
@@ -99,7 +124,9 @@ public abstract class ManagerBase<TDbContext, TEntity>
     /// <returns>True if exists; otherwise, false.</returns>
     public async Task<bool> ExistAsync(Guid id)
     {
-        return await _dbSet.AnyAsync(q => q.Id == id);
+        var query = _dbSet.AsNoTracking();
+        query = ApplyTenantFilter(query);
+        return await query.AnyAsync(q => q.Id == id);
     }
 
     /// <summary>
@@ -155,7 +182,7 @@ public abstract class ManagerBase<TDbContext, TEntity>
                     ? Queryable
                     : Queryable.OrderByDescending(t => t.CreatedTime);
 
-        var count = Queryable.Count();
+        var count = await Queryable.CountAsync(cancellationToken);
         List<TItem> data = await Queryable
             .AsNoTracking()
             .Skip((filter.PageIndex - 1) * filter.PageSize)
@@ -175,25 +202,25 @@ public abstract class ManagerBase<TDbContext, TEntity>
     /// <summary>
     /// Insert new entity to database
     /// </summary>
-    /// <remarks></remarks>
-    /// <param name="entity">The entity to insert or update. Cannot be null.</param>
+    /// <param name="entity">The entity to insert. Cannot be null.</param>
     protected async Task InsertAsync(TEntity entity)
     {
         if (_isMultiTenant && IsTenantScoped)
         {
             ((ITenantEntityBase)entity).TenantId = _userContext.TenantId;
         }
-        await _dbContext.BulkInsertAsync([entity]);
+        await _dbSet.AddAsync(entity);
+        await _dbContext.SaveChangesAsync();
     }
 
     /// <summary>
-    /// update entity data to database
+    /// Update entity data to database
     /// </summary>
-    /// <typeparam name="TUpdateDto"></typeparam>
-    /// <param name="id"></param>
-    /// <param name="dto"></param>
-    /// <param name="updateTime"></param>
-    /// <returns></returns>
+    /// <typeparam name="TUpdateDto">The DTO type that contains the properties to update on the entity.</typeparam>
+    /// <param name="id">The unique identifier of the entity to update.</param>
+    /// <param name="dto">The data transfer object that holds the updated values for the entity.</param>
+    /// <param name="updateTime">Indicates whether the entity's update timestamp should be modified.</param>
+    /// <returns>The number of rows affected by the update operation.</returns>
     protected async Task<int> UpdateAsync<TUpdateDto>(
         Guid id,
         TUpdateDto dto,
@@ -208,16 +235,15 @@ public abstract class ManagerBase<TDbContext, TEntity>
         CancellationToken cancellationToken = default
     )
     {
-        foreach (TEntity entity in entities)
+        var entityList = entities.ToList();
+        foreach (TEntity entity in entityList)
         {
             if (_isMultiTenant && IsTenantScoped)
             {
                 ((ITenantEntityBase)entity).TenantId = _userContext.TenantId;
             }
-
-            entity.UpdatedTime = DateTime.UtcNow;
         }
-        await _dbContext.BulkInsertAsync(entities, cancellationToken: cancellationToken);
+        await _dbContext.BulkInsertAsync(entityList, cancellationToken: cancellationToken);
     }
 
     /// <summary>
@@ -306,16 +332,21 @@ public abstract class ManagerBase<TDbContext, TEntity>
     }
 
     /// <summary>
-    /// 执行事务操作
+    /// Execute operation within a transaction
     /// </summary>
-    /// <param name="operation">要执行的操作</param>
+    /// <param name="operation">The operation to execute</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns></returns>
+    /// <returns>The result of the operation</returns>
     protected async Task<T> ExecuteInTransactionAsync<T>(
         Func<Task<T>> operation,
         CancellationToken cancellationToken = default
     )
     {
+        if (operation is null)
+        {
+            throw new ArgumentNullException(nameof(operation));
+        }
+
         var strategy = _dbContext.Database.CreateExecutionStrategy();
         return await strategy.ExecuteAsync<T>(async (cancellationToken) =>
         {
@@ -336,16 +367,16 @@ public abstract class ManagerBase<TDbContext, TEntity>
                 {
                     // ignore rollback failures, original exception is more important
                 }
-                _logger.LogError(ex, "执行事务操作时发生错误");
+                _logger.LogError(ex, "Error occurred while executing transaction operation");
                 throw;
             }
         }, cancellationToken);
     }
 
     /// <summary>
-    /// 执行事务操作 (无返回值)
+    /// Execute operation within a transaction (no return value)
     /// </summary>
-    /// <param name="operation">要执行的操作</param>
+    /// <param name="operation">The operation to execute</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns></returns>
     protected async Task ExecuteInTransactionAsync(
@@ -353,6 +384,11 @@ public abstract class ManagerBase<TDbContext, TEntity>
         CancellationToken cancellationToken = default
     )
     {
+        if (operation is null)
+        {
+            throw new ArgumentNullException(nameof(operation));
+        }
+
         var strategy = _dbContext.Database.CreateExecutionStrategy();
         await strategy.ExecuteAsync(async (cancellationToken) =>
         {
@@ -372,7 +408,7 @@ public abstract class ManagerBase<TDbContext, TEntity>
                 {
                     // ignore rollback failures
                 }
-                _logger.LogError(ex, "执行事务操作时发生错误");
+                _logger.LogError(ex, "Error occurred while executing transaction operation");
                 throw;
             }
         }, cancellationToken);
@@ -392,10 +428,17 @@ public abstract class ManagerBase<TDbContext, TEntity>
     {
         if (_isMultiTenant && IsTenantScoped)
         {
+            if (_userContext.TenantId == Guid.Empty)
+            {
+                throw new InvalidOperationException("Multi-tenant mode requires a valid, non-empty TenantId in the current user context.");
+            }
+
             return query.Where(e => ((ITenantEntityBase)e).TenantId == _userContext.TenantId);
         }
         return query;
     }
+
+    private bool _disposed = false;
 
     public void Dispose()
     {
@@ -405,16 +448,23 @@ public abstract class ManagerBase<TDbContext, TEntity>
 
     protected virtual void Dispose(bool disposing)
     {
-        if (disposing)
+        if (!_disposed)
         {
-            _dbContext?.Dispose();
+            if (disposing)
+            {
+                _dbContext?.Dispose();
+            }
+            _disposed = true;
         }
     }
 
     public async ValueTask DisposeAsync()
     {
-        await DisposeAsyncCore();
-        Dispose(false);
+        if (!_disposed)
+        {
+            await DisposeAsyncCore();
+            _disposed = true;
+        }
         GC.SuppressFinalize(this);
     }
 
