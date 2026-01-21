@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { ClientAddDto } from 'src/app/services/api/models/access-mod/client-add-dto.model';
 import { ResourceItemDto } from 'src/app/services/api/models/access-mod/resource-item-dto.model';
+import { ScopeItemDto } from 'src/app/services/api/models/access-mod/scope-item-dto.model';
 import { TranslateService } from '@ngx-translate/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Clipboard } from '@angular/cdk/clipboard';
@@ -36,9 +37,10 @@ export class ClientAddComponent implements OnInit {
   
   redirectUris: string[] = [];
   postLogoutRedirectUris: string[] = [];
-  scopes: string[] = [];
+  scopeIds: string[] = [];
   resourceIds: string[] = [];
   availableResources: ResourceItemDto[] = [];
+  availableScopes: ScopeItemDto[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -59,10 +61,10 @@ export class ClientAddComponent implements OnInit {
       consentType: ['explicit'],
       applicationType: ['web'],
       newRedirectUri: [''],
-      newPostLogoutRedirectUri: [''],
-      newScope: ['']
+      newPostLogoutRedirectUri: ['']
     });
 
+    this.loadAvailableScopes();
     this.loadAvailableResources();
   }
 
@@ -73,6 +75,18 @@ export class ClientAddComponent implements OnInit {
       },
       error: (error) => {
         console.error('[ClientAdd] Failed to load resources:', error);
+      }
+    });
+  }
+
+  loadAvailableScopes(): void {
+    this.api.scopes.getScopes(null, null, null, 1, 100, null).subscribe({
+      next: (response) => {
+        console.log('[ClientAdd] Available scopes loaded:', response);
+        this.availableScopes = response.data || [];
+      },
+      error: (error) => {
+        console.error('[ClientAdd] Failed to load scopes:', error);
       }
     });
   }
@@ -113,10 +127,6 @@ export class ClientAddComponent implements OnInit {
     return this.clientForm.get('newPostLogoutRedirectUri') as FormControl;
   }
 
-  get newScope() {
-    return this.clientForm.get('newScope') as FormControl;
-  }
-
   addRedirectUri(event: MatChipInputEvent): void {
     const value = (event.value || '').trim();
     if (value && !this.redirectUris.includes(value)) {
@@ -143,17 +153,18 @@ export class ClientAddComponent implements OnInit {
     this.postLogoutRedirectUris.splice(index, 1);
   }
 
-  addScope(event: MatChipInputEvent): void {
-    const value = (event.value || '').trim();
-    if (value && !this.scopes.includes(value)) {
-      this.scopes.push(value);
+  addScope(scope: ScopeItemDto): void {
+    if (!this.scopeIds.includes(scope.id)) {
+      this.scopeIds.push(scope.id);
     }
-    event.chipInput?.clear();
-    this.clientForm.get('newScope')?.setValue('');
   }
 
   removeScope(index: number): void {
-    this.scopes.splice(index, 1);
+    this.scopeIds.splice(index, 1);
+  }
+
+  getScopeName(scopeId: string): string {
+    return this.availableScopes.find(s => s.id === scopeId)?.displayName || scopeId;
   }
 
   addResource(resource: ResourceItemDto): void {
@@ -206,7 +217,7 @@ export class ClientAddComponent implements OnInit {
       applicationType: formValue.applicationType || null,
       redirectUris: this.redirectUris,
       postLogoutRedirectUris: this.postLogoutRedirectUris,
-      scopeIds: this.scopes,
+      scopeIds: this.scopeIds,
       resourceIds: this.resourceIds
     };
 

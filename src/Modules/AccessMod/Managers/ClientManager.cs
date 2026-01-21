@@ -1,13 +1,11 @@
-using System.Security.Cryptography;
 using AccessMod.Models.AuthorizationDtos;
 using AccessMod.Models.ClientDtos;
 using AccessMod.Models.ResourceDtos;
 using AccessMod.Models.ScopeDtos;
-using Share.Services;
-using EntityFramework.AppDbFactory;
-using Share.Exceptions;
 using Microsoft.AspNetCore.Http;
-using Mapster;
+using Share.Exceptions;
+using Share.Services;
+using System.Security.Cryptography;
 
 namespace AccessMod.Managers;
 
@@ -61,9 +59,9 @@ public class ClientManager(
     {
         var client = await Queryable
             .Include(c => c.ClientScopes)
-            .ThenInclude(cs => cs.Scope)
+                .ThenInclude(cs => cs.Scope)
             .Include(c => c.ClientResources)
-            .ThenInclude(cr => cr.ApiResource)
+                .ThenInclude(cr => cr.ApiResource)
             .Where(c => c.Id == id)
             .FirstOrDefaultAsync();
 

@@ -91,18 +91,12 @@ public class DiscoveryManager(
 
     /// <summary>
     /// Get JSON Web Key Set (JWKS) containing public keys for token verification
+    /// 注意：密钥由调用者提供，符合 Controller 协调 Manager 的规则。
     /// </summary>
     /// <returns>JWKS document with public keys</returns>
-    public async Task<JwksDto> GetJwksAsync()
+    public Task<JwksDto> GetJwksAsync(IEnumerable<SigningKey> signingKeys)
     {
         var keys = new List<JsonWebKeyDto>();
-
-        // Get current signing keys from database
-        var signingKeys = await _dbContext
-            .SigningKeys.Where(k => !k.IsDeleted && k.ExpirationDate > DateTime.UtcNow)
-            .OrderByDescending(k => k.CreatedTime)
-            .Take(2) // Include current and previous key for rotation period
-            .ToListAsync();
 
         foreach (var key in signingKeys)
         {
@@ -116,11 +110,11 @@ public class DiscoveryManager(
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to convert signing key {KeyId} to JWK", key.Id);
+                _logger.LogError(ex, "Failed to convert signing key {KeyId} to JWK", key.KeyId);
             }
         }
 
-        return new JwksDto { Keys = keys };
+        return Task.FromResult(new JwksDto { Keys = keys });
     }
 
     /// <summary>
@@ -145,7 +139,7 @@ public class DiscoveryManager(
                 return null;
             }
 
-            rsa.ImportRSAPublicKey(publicKeyBytes, out _);
+            rsa.ImportSubjectPublicKeyInfo(publicKeyBytes, out _);
             var parameters = rsa.ExportParameters(false);
 
             // Validate that required parameters are present
@@ -155,7 +149,7 @@ public class DiscoveryManager(
                 {
                     Kty = "RSA",
                     Use = "sig",
-                    Kid = key.Id.ToString(),
+                    Kid = key.KeyId,
                     Alg = key.Algorithm ?? "RS256",
                     N = Base64UrlEncoder.Encode(parameters.Modulus),
                     E = Base64UrlEncoder.Encode(parameters.Exponent),

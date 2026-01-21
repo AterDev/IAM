@@ -1,9 +1,9 @@
-using System.Security.Claims;
-using Perigon.AspNetCore.Services;
+using AccessMod.Managers;
 using IdentityMod.Managers;
 using IdentityMod.Models.AdminAuthDtos;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
+using Share.Services;
+using System.Security.Claims;
 using ClaimTypes = System.Security.Claims.ClaimTypes;
 
 namespace ApiService.Controllers;
@@ -16,13 +16,15 @@ namespace ApiService.Controllers;
 public class AdminAuthController(
     UserManager userManager,
     RoleManager roleManager,
-    JwtService jwtService,
+    OAuthService oauthService,
+    SigningKeyManager signingKeyManager,
     ILogger<AdminAuthController> logger
 ) : ControllerBase
 {
     private readonly UserManager _userManager = userManager;
     private readonly RoleManager _roleManager = roleManager;
-    private readonly JwtService _jwtService = jwtService;
+    private readonly OAuthService _oauthService = oauthService;
+    private readonly SigningKeyManager _signingKeyManager = signingKeyManager;
     private readonly ILogger<AdminAuthController> _logger = logger;
 
     /// <summary>
@@ -66,12 +68,28 @@ public class AdminAuthController(
             var roles = await _roleManager.GetRoleNamesByIdsAsync(roleIds);
 
             var expiresIn = 3600 * 24 * 7; // 7 day
-            _jwtService.Claims =
-            [
-                new Claim(ClaimTypes.Name, user.UserName),
-                new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
-            ];
-            var accessToken = _jwtService.GetToken(user.Id.ToString(), [.. roles]);
+
+            // 获取活跃的签名密钥
+            var signingKey = await _signingKeyManager.GetActiveSigningKeyAsync();
+            if (signingKey == null)
+            {
+                return StatusCode(500, new { message = "No active signing key available" });
+            }
+
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new(ClaimTypes.Name, user.UserName),
+                new(ClaimTypes.Email, user.Email ?? string.Empty),
+            };
+
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
+            var accessToken = _oauthService.GenerateToken(claims, signingKey, expiresIn);
+
             var response = new AdminLoginResponseDto
             {
                 AccessToken = accessToken,

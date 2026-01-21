@@ -34,8 +34,6 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
     public DbSet<Authorization> Authorizations { get; set; }
     public DbSet<Token> Tokens { get; set; }
 
-
-
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -173,20 +171,6 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
         {
             entity.HasIndex(e => e.ClientId).IsUnique();
             entity.HasIndex(e => e.TenantId);
-
-            // Configure RedirectUris as JSON
-            entity.Property(e => e.RedirectUris)
-                .HasConversion(
-                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                    v => System.Text.Json.JsonSerializer.Deserialize<List<string>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<string>()
-                );
-
-            // Configure PostLogoutRedirectUris as JSON
-            entity.Property(e => e.PostLogoutRedirectUris)
-                .HasConversion(
-                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                    v => System.Text.Json.JsonSerializer.Deserialize<List<string>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<string>()
-                );
         });
 
         // ApiScope configuration

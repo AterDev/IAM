@@ -1,9 +1,9 @@
-using System.Diagnostics;
 using Entity.AccessMod;
 using Entity.IdentityMod;
 using Microsoft.EntityFrameworkCore;
 using Perigon.AspNetCore.Constants;
 using Share.Services;
+using System.Diagnostics;
 
 namespace MigrationService;
 
@@ -115,10 +115,10 @@ public class Worker(
             {
                 UserName = adminUserName,
                 NormalizedUserName = normalizedAdminUserName,
-                Email = "admin@iam.local",
-                NormalizedEmail = "ADMIN@IAM.LOCAL",
+                Email = "admin@default.com",
+                NormalizedEmail = "ADMIN@DEFAULT.COM",
                 EmailConfirmed = true,
-                PasswordHash = passwordHasher.HashPassword("MakeDotnetGreatAgain"),
+                PasswordHash = passwordHasher.HashPassword("Perigon.2026"),
                 SecurityStamp = Guid.NewGuid().ToString(),
                 ConcurrencyStamp = Guid.NewGuid().ToString(),
                 LockoutEnabled = true,
@@ -221,18 +221,6 @@ public class Worker(
                     "http://localhost:4201",
                     "https://localhost:4201"
                 ],
-                Permissions = System.Text.Json.JsonSerializer.Serialize(new[]
-                {
-                    "ept:authorization",
-                    "ept:logout",
-                    "ept:token",
-                    "gt:authorization_code",
-                    "gt:refresh_token",
-                    "rst:code",
-                    "rst:id_token",
-                    "rst:id_token token",
-                    "rst:token"
-                })
             };
 
             dbContext.Set<Client>().Add(frontClient);
@@ -270,13 +258,6 @@ public class Worker(
                 ApplicationType = "web",
                 RequirePkce = false,
                 ConsentType = "implicit",
-                Permissions = System.Text.Json.JsonSerializer.Serialize(new[]
-                {
-                    "ept:token",
-                    "ept:introspection",
-                    "ept:revocation",
-                    "gt:client_credentials"
-                })
             };
 
             dbContext.Set<Client>().Add(apiClient);

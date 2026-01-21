@@ -53,28 +53,14 @@ public class Client : EntityBase
     [MaxLength(50)]
     public string? ApplicationType { get; set; }
 
-    /// <summary>
-    /// Permissions (JSON array)
-    /// </summary>
-    public string? Permissions { get; set; }
 
     /// <summary>
-    /// Requirements (JSON object)
-    /// </summary>
-    public string? Requirements { get; set; }
-
-    /// <summary>
-    /// Settings (JSON object)
-    /// </summary>
-    public string? Settings { get; set; }
-
-    /// <summary>
-    /// Redirect URIs (JSON array)
+    /// Redirect URIs
     /// </summary>
     public List<string> RedirectUris { get; set; } = [];
 
     /// <summary>
-    /// Post logout redirect URIs (JSON array)
+    /// Post logout redirect URIs 
     /// </summary>
     public List<string> PostLogoutRedirectUris { get; set; } = [];
 

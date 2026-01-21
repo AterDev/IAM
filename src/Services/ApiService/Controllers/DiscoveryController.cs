@@ -1,3 +1,4 @@
+using AccessMod.Managers;
 using IdentityMod.Managers;
 using IdentityMod.Models.OAuthDtos;
 using Microsoft.AspNetCore.Authorization;
@@ -22,11 +23,13 @@ namespace ApiService.Controllers;
 [Produces("application/json")]
 public class DiscoveryController(
     DiscoveryManager discoveryManager,
+    SigningKeyManager signingKeyManager,
     IConfiguration configuration,
     ILogger<DiscoveryController> logger
 ) : ControllerBase
 {
     private readonly DiscoveryManager _discoveryManager = discoveryManager;
+    private readonly SigningKeyManager _signingKeyManager = signingKeyManager;
     private readonly IConfiguration _configuration = configuration;
     private readonly ILogger<DiscoveryController> _logger = logger;
 
@@ -133,7 +136,9 @@ public class DiscoveryController(
     {
         try
         {
-            var jwks = await _discoveryManager.GetJwksAsync();
+            // 从 SigningKeyManager 获取有效公钥
+            var validKeys = await _signingKeyManager.GetValidPublicKeysAsync();
+            var jwks = await _discoveryManager.GetJwksAsync(validKeys);
             return Ok(jwks);
         }
         catch (Exception ex)

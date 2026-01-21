@@ -73,25 +73,34 @@
       <h3 class="h5 fw-500 mb-2">{{ 'client.scopes' | translate }}</h3>
       <p class="small text-muted mb-3">{{ 'client.scopesHint' | translate }}</p>
 
-      <mat-form-field appearance="outline" class="w-100" subscriptSizing="dynamic">
-        <mat-label>{{ 'client.addScope' | translate }}</mat-label>
-        <mat-chip-grid #scopesGrid aria-label="Scopes">
-          @for (scope of scopes(); track $index; let i = $index) {
-          <mat-chip-row [removable]="true" (removed)="removeScope(i)">
-            {{ scope }}
-            <button matChipRemove [attr.aria-label]="'Remove ' + scope" type="button">
-              <mat-icon>close</mat-icon>
-            </button>
-          </mat-chip-row>
+      <div class="mb-3">
+        <p class="small text-muted mb-2">{{ 'client.availableScopes' | translate }}</p>
+        @for (scope of availableScopes(); track scope.id) {
+          @if (!scopeIds().includes(scope.id)) {
+          <button mat-raised-button color="primary" (click)="addScope(scope)" class="me-2 mb-2">
+            <mat-icon>add</mat-icon>
+            {{ scope.displayName }}
+          </button>
           }
-          <input matInput
-            [matChipInputFor]="scopesGrid"
-            [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
-            [matChipInputAddOnBlur]="true"
-            (matChipInputTokenEnd)="addScope($event)"
-            placeholder="e.g., openid, profile" />
-        </mat-chip-grid>
-      </mat-form-field>
+        }
+      </div>
+
+      @if (scopeIds().length > 0) {
+      <p class="small text-muted mb-2">{{ 'client.selectedScopes' | translate }}</p>
+      <mat-chip-set>
+        @for (scopeId of scopeIds(); track $index; let i = $index) {
+        <mat-chip-row [removable]="true" (removed)="removeScope(i)">
+          {{ getScopeName(scopeId) }}
+          <button matChipRemove [attr.aria-label]="'Remove scope'" type="button">
+            <mat-icon>close</mat-icon>
+          </button>
+        </mat-chip-row>
+        }
+      </mat-chip-set>
+      }
+      @if (scopeIds().length === 0) {
+      <p class="text-muted small">{{ 'client.noScopesSelected' | translate }}</p>
+      }
     </div>
 
     <!-- Resources部分 -->

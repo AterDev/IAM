@@ -46,6 +46,7 @@
         <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
         <!-- Security & Authentication -->
         <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
+        <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.15.0" />
         <!-- Third-party Packages -->
         <PackageVersion Include="AWSSDK.S3" Version="4.0.15.2" />
         <PackageVersion Include="EPPlus" Version="8.4.0" />
@@ -59,6 +60,7 @@
         <PackageVersion Include="xunit" Version="2.9.3" />
         <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
         <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+        <PackageVersion Include="Moq" Version="4.20.70" />
         <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0-rc.2.25502.107" />
         <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.0-rc.2.25502.107" />
     </ItemGroup>

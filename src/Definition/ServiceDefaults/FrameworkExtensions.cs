@@ -7,6 +7,7 @@ using Perigon.AspNetCore.Abstraction;
 using Perigon.AspNetCore.Services;
 using Perigon.AspNetCore.Toolkit.Services;
 using Share.Implement;
+using Share.Services;
 
 namespace ServiceDefaults;
 
@@ -33,8 +34,12 @@ public static class FrameworkExtensions
         builder.AddDbFactory(components);
         builder.AddDbContext(components);
 
+        // 注册 JWT 服务（基础 token 操作）
         builder.Services.AddScoped<JwtService>();
+        
+        // 注册 SMTP 服务
         builder.Services.AddScoped<SmtpService>();
+        
         return builder;
     }
 

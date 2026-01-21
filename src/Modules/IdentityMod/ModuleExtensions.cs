@@ -1,4 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace IdentityMod;
@@ -8,17 +7,8 @@ public static class ModuleExtensions
     /// <summary>
     /// module services or init task
     /// </summary>
-    public static IHostApplicationBuilder AddIdentityModMod(this IHostApplicationBuilder builder)
+    public static IHostApplicationBuilder AddIdentityMod(this IHostApplicationBuilder builder)
     {
-        // Register managers
-        builder.Services.AddScoped<AuthorizationManager>();
-        builder.Services.AddScoped<TokenManager>();
-        builder.Services.AddScoped<DeviceFlowManager>();
-        builder.Services.AddScoped<DiscoveryManager>();
-        builder.Services.AddScoped<UserManager>();
-        builder.Services.AddScoped<RoleManager>();
-        builder.Services.AddScoped<OrganizationManager>();
-
         return builder;
     }
 }

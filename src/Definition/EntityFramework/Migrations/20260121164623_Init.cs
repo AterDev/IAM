@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -86,11 +87,8 @@ namespace EntityFramework.Migrations
                     RequirePkce = table.Column<bool>(type: "boolean", nullable: false),
                     ConsentType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     ApplicationType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    Permissions = table.Column<string>(type: "text", nullable: true),
-                    Requirements = table.Column<string>(type: "text", nullable: true),
-                    Settings = table.Column<string>(type: "text", nullable: true),
-                    RedirectUris = table.Column<string>(type: "text", nullable: false),
-                    PostLogoutRedirectUris = table.Column<string>(type: "text", nullable: false),
+                    RedirectUris = table.Column<List<string>>(type: "text[]", nullable: false),
+                    PostLogoutRedirectUris = table.Column<List<string>>(type: "text[]", nullable: false),
                     CreatedTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UpdatedTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
@@ -201,10 +199,13 @@ namespace EntityFramework.Migrations
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     DbConnectionString = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    AnalysisConnectionString = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    Domain = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Type = table.Column<int>(type: "integer", nullable: false),
+                    Disabled = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UpdatedTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
-                    TenantId = table.Column<Guid>(type: "uuid", nullable: true)
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -286,6 +287,35 @@ namespace EntityFramework.Migrations
                     table.PrimaryKey("PK_Authorizations", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Authorizations_Clients_ClientId",
+                        column: x => x.ClientId,
+                        principalTable: "Clients",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ClientResources",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ClientId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ApiResourceId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CreatedTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    UpdatedTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ClientResources", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ClientResources_ApiResources_ApiResourceId",
+                        column: x => x.ApiResourceId,
+                        principalTable: "ApiResources",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ClientResources_Clients_ClientId",
                         column: x => x.ClientId,
                         principalTable: "Clients",
                         principalColumn: "Id",
@@ -577,6 +607,17 @@ namespace EntityFramework.Migrations
                 column: "TenantId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ClientResources_ApiResourceId",
+                table: "ClientResources",
+                column: "ApiResourceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ClientResources_ClientId_ApiResourceId",
+                table: "ClientResources",
+                columns: new[] { "ClientId", "ApiResourceId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Clients_ClientId",
                 table: "Clients",
                 column: "ClientId",
@@ -667,6 +708,12 @@ namespace EntityFramework.Migrations
                 column: "TenantId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Tenants_Domain",
+                table: "Tenants",
+                column: "Domain",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Tokens_AuthorizationId",
                 table: "Tokens",
                 column: "AuthorizationId");
@@ -735,10 +782,10 @@ namespace EntityFramework.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "ApiResources");
+                name: "AuditLogs");
 
             migrationBuilder.DropTable(
-                name: "AuditLogs");
+                name: "ClientResources");
 
             migrationBuilder.DropTable(
                 name: "ClientScopes");
@@ -778,6 +825,9 @@ namespace EntityFramework.Migrations
 
             migrationBuilder.DropTable(
                 name: "UserTokens");
+
+            migrationBuilder.DropTable(
+                name: "ApiResources");
 
             migrationBuilder.DropTable(
                 name: "Organizations");

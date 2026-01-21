@@ -31,4 +31,7 @@
         <ProjectReference Include="..\..\Perigon\Perigon.AspNetCore\Perigon.AspNetCore.csproj" />
         <ProjectReference Include="..\Share\Share.csproj" />
     </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Workers\" />
+    </ItemGroup>
 </Project>

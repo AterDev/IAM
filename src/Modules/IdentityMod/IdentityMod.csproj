@@ -12,5 +12,6 @@
     </ItemGroup>
     <ItemGroup>
         <Folder Include="Managers\" />
+        <Folder Include="Services\" />
     </ItemGroup>
 </Project>

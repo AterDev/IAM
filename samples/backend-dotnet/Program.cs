@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+builder.AddServiceDefaults();
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -30,16 +33,12 @@ builder
             builder.Configuration["Authentication:Authority"] ?? "https://localhost:7000";
 
         // API resource name (audience) - must match the client registered in IAM
-        options.Audience = builder.Configuration["Authentication:Audience"] ?? "ApiTest";
+        options.Audience = builder.Configuration["Authentication:Audience"] ?? string.Empty;
 
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidateAudience = builder.Configuration.GetValue<bool>(
-                "Authentication:ValidateAudience",
-                true
-            ),
-            ValidateLifetime = true,
+            ValidateAudience = true,
             ValidateIssuerSigningKey = true,
             ClockSkew = TimeSpan.FromMinutes(5), // Allow 5 minutes clock skew
         };
@@ -58,7 +57,7 @@ builder
                 var logger = context.HttpContext.RequestServices.GetRequiredService<
                     ILogger<Program>
                 >();
-                logger.LogError(context.Exception, "Authentication failed");
+                logger.LogWarning(context.Exception, "Authentication failed");
                 return Task.CompletedTask;
             },
             OnTokenValidated = context =>
@@ -66,7 +65,7 @@ builder
                 var logger = context.HttpContext.RequestServices.GetRequiredService<
                     ILogger<Program>
                 >();
-                logger.LogDebug(
+                logger.LogWarning(
                     "Token validated for user: {User}",
                     context.Principal?.Identity?.Name
                 );

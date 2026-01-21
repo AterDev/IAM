@@ -41,48 +41,59 @@ public class JwtMiddleware(RequestDelegate next, CacheService cache, ILogger<Jwt
             return;
         }
 
-        var id = JwtService.GetClaimValue(token, ClaimTypes.NameIdentifier);
-        // 策略判断
-        if (id.NotEmpty())
+        try
         {
-            var securityPolicyStr = await _cache.GetValueAsync<string>(
-                WebConst.LoginSecurityPolicy
-            );
-            if (securityPolicyStr == null)
+            var jwtToken = tokenHandler.ReadToken(token) as JwtSecurityToken;
+            var id = jwtToken?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+
+            // 策略判断
+            if (id.NotEmpty())
             {
+                var securityPolicyStr = await _cache.GetValueAsync<string>(
+                    WebConst.LoginSecurityPolicy
+                );
+                if (securityPolicyStr == null)
+                {
+                    await _next(context);
+                    return;
+                }
+                var securityPolicy = JsonSerializer.Deserialize<LoginSecurityPolicyOption>(
+                    securityPolicyStr!
+                );
+
+                if (securityPolicy == null || !securityPolicy.IsEnable)
+                {
+                    await _next(context);
+                    return;
+                }
+                if (securityPolicy.SessionLevel == SessionLevel.OnlyOne)
+                {
+                    client = WebConst.AllPlatform;
+                }
+                var key = WebConst.LoginCachePrefix + client + id;
+                var cacheToken = await _cache.GetValueAsync<string>(key);
+                if (cacheToken.IsEmpty())
+                {
+                    await SetResponseAndComplete(context, 401);
+                    return;
+                }
+
+                if (securityPolicy.SessionLevel != SessionLevel.None && cacheToken != token)
+                {
+                    await SetResponseAndComplete(context, 401, "账号已在其他客户端登录");
+                    return;
+                }
+
                 await _next(context);
                 return;
             }
-            var securityPolicy = JsonSerializer.Deserialize<LoginSecurityPolicyOption>(
-                securityPolicyStr!
-            );
-
-            if (securityPolicy == null || !securityPolicy.IsEnable)
-            {
-                await _next(context);
-                return;
-            }
-            if (securityPolicy.SessionLevel == SessionLevel.OnlyOne)
-            {
-                client = WebConst.AllPlatform;
-            }
-            var key = WebConst.LoginCachePrefix + client + id;
-            var cacheToken = await _cache.GetValueAsync<string>(key);
-            if (cacheToken.IsEmpty())
-            {
-                await SetResponseAndComplete(context, 401);
-                return;
-            }
-
-            if (securityPolicy.SessionLevel != SessionLevel.None && cacheToken != token)
-            {
-                await SetResponseAndComplete(context, 401, "账号已在其他客户端登录");
-                return;
-            }
-
-            await _next(context);
-            return;
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "JWT Token 验证失败");
+        }
+
+        await SetResponseAndComplete(context, 401);
     }
 
     private static async Task SetResponseAndComplete(

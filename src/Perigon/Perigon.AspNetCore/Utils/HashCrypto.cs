@@ -283,6 +283,109 @@ public class HashCrypto
         }
         return null;
     }
+
+    /// <summary>
+    /// 生成 RSA 密钥对
+    /// </summary>
+    /// <param name="keySize">密钥大小，推荐 2048 或 4096</param>
+    /// <returns>包含公钥和私钥的元组</returns>
+    public static (string PublicKey, string PrivateKey) GenerateRsaKeyPair(int keySize = 2048)
+    {
+        using var rsa = RSA.Create(keySize);
+
+        var publicKeyBytes = rsa.ExportSubjectPublicKeyInfo();
+        var privateKeyBytes = rsa.ExportPkcs8PrivateKey();
+
+        return (
+            Convert.ToBase64String(publicKeyBytes),
+            Convert.ToBase64String(privateKeyBytes)
+        );
+    }
+
+    /// <summary>
+    /// 从 Base64 字符串导入 RSA 公钥
+    /// </summary>
+    public static RSA ImportRsaPublicKey(string publicKeyBase64)
+    {
+        var publicKeyBytes = Convert.FromBase64String(publicKeyBase64);
+        var rsa = RSA.Create();
+        rsa.ImportSubjectPublicKeyInfo(publicKeyBytes, out _);
+        return rsa;
+    }
+
+    /// <summary>
+    /// 从 Base64 字符串导入 RSA 私钥
+    /// </summary>
+    public static RSA ImportRsaPrivateKey(string privateKeyBase64)
+    {
+        var privateKeyBytes = Convert.FromBase64String(privateKeyBase64);
+        var rsa = RSA.Create();
+        rsa.ImportPkcs8PrivateKey(privateKeyBytes, out _);
+        return rsa;
+    }
+
+    /// <summary>
+    /// 使用 RSA 私钥签名
+    /// </summary>
+    public static string SignWithRsa(string data, string privateKeyBase64)
+    {
+        ArgumentNullException.ThrowIfNull(data);
+        ArgumentNullException.ThrowIfNull(privateKeyBase64);
+
+        using var rsa = ImportRsaPrivateKey(privateKeyBase64);
+        var dataBytes = Encoding.UTF8.GetBytes(data);
+        var signatureBytes = rsa.SignData(dataBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        return Convert.ToBase64String(signatureBytes);
+    }
+
+    /// <summary>
+    /// 使用 RSA 公钥验证签名
+    /// </summary>
+    public static bool VerifyWithRsa(string data, string signature, string publicKeyBase64)
+    {
+        if (string.IsNullOrEmpty(data) || string.IsNullOrEmpty(publicKeyBase64))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var rsa = ImportRsaPublicKey(publicKeyBase64);
+            var dataBytes = Encoding.UTF8.GetBytes(data);
+
+            if (string.IsNullOrEmpty(signature))
+            {
+                return false;
+            }
+
+            var signatureBytes = Convert.FromBase64String(signature);
+            return rsa.VerifyData(dataBytes, signatureBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        }
+        catch (FormatException)
+        {
+            // Base64 解码失败
+            return false;
+        }
+        catch (CryptographicException)
+        {
+            // 密钥格式错误或签名验证失败
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// 从 RSA 密钥提取 JWK 格式的模数和指数
+    /// </summary>
+    public static (string n, string e) ExtractRsaJwkComponents(string publicKeyBase64)
+    {
+        using var rsa = ImportRsaPublicKey(publicKeyBase64);
+        var parameters = rsa.ExportParameters(false);
+
+        var n = Convert.ToBase64String(parameters.Modulus!);
+        var e = Convert.ToBase64String(parameters.Exponent!);
+
+        return (n, e);
+    }
 }
 
 /// <summary>

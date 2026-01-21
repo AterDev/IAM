@@ -50,7 +50,7 @@ _ = aspireSetting.CacheType?.ToLowerInvariant() switch
 
 devPassword.WithParentRelationship(database!);
 var migration = builder.AddProject<Projects.MigrationService>("MigrationService");
-var apiService = builder.AddProject<Projects.ApiService>("ApiService").WaitForCompletion(migration);
+var apiService = builder.AddProject<Projects.ApiService>("ApiService");
 
 var sampleApi = builder.AddProject<Projects.SampleApi>("SampleApi");
 

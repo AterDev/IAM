@@ -1,7 +1,6 @@
-using System.Security.Claims;
+using Entity.CommonMod;
 using IdentityMod.Models.OAuthDtos;
-using IdentityMod.Services;
-using Perigon.AspNetCore.Services;
+using System.Security.Claims;
 
 namespace IdentityMod.Managers;
 
@@ -11,25 +10,28 @@ namespace IdentityMod.Managers;
 public class TokenManager(
     DefaultDbContext dbContext,
     ILogger<TokenManager> logger,
-    JwtService jwtService,
+    OAuthService oauthService,
     IPasswordHasher passwordHasher
 ) : ManagerBase<DefaultDbContext>(dbContext, logger)
 {
-    private readonly JwtService _jwtService = jwtService;
+    private readonly OAuthService _oauthService = oauthService;
     private readonly IPasswordHasher _passwordHasher = passwordHasher;
 
     /// <summary>
-    /// Process token request (authorization_code, refresh_token, client_credentials, password)
+    /// Process token request with provided signing key
     /// </summary>
-    public async Task<TokenResponseDto> ProcessTokenRequestAsync(TokenRequestDto request)
+    public async Task<TokenResponseDto> ProcessTokenRequestAsync(
+        TokenRequestDto request,
+        SigningKey signingKey
+    )
     {
         return request.GrantType switch
         {
-            GrantTypes.AuthorizationCode => await ProcessAuthorizationCodeGrantAsync(request),
-            GrantTypes.RefreshToken => await ProcessRefreshTokenGrantAsync(request),
-            GrantTypes.ClientCredentials => await ProcessClientCredentialsGrantAsync(request),
-            GrantTypes.Password => await ProcessPasswordGrantAsync(request),
-            GrantTypes.DeviceCode => await ProcessDeviceCodeGrantAsync(request),
+            GrantTypes.AuthorizationCode => await ProcessAuthorizationCodeGrantAsync(request, signingKey),
+            GrantTypes.RefreshToken => await ProcessRefreshTokenGrantAsync(request, signingKey),
+            GrantTypes.ClientCredentials => await ProcessClientCredentialsGrantAsync(request, signingKey),
+            GrantTypes.Password => await ProcessPasswordGrantAsync(request, signingKey),
+            GrantTypes.DeviceCode => await ProcessDeviceCodeGrantAsync(request, signingKey),
             _ => new TokenResponseDto
             {
                 Error = ErrorCodes.UnsupportedGrantType,
@@ -41,7 +43,10 @@ public class TokenManager(
     /// <summary>
     /// Process authorization code grant
     /// </summary>
-    private async Task<TokenResponseDto> ProcessAuthorizationCodeGrantAsync(TokenRequestDto request)
+    private async Task<TokenResponseDto> ProcessAuthorizationCodeGrantAsync(
+        TokenRequestDto request,
+        SigningKey signingKey
+    )
     {
         if (string.IsNullOrEmpty(request.Code) || string.IsNullOrEmpty(request.ClientId))
         {
@@ -166,13 +171,16 @@ public class TokenManager(
         }
 
         // Generate tokens
-        return await GenerateTokensAsync(user, client, authorization.Scopes, authorization.Id);
+        return await GenerateTokensAsync(user, client, authorization.Scopes, signingKey, authorization.Id);
     }
 
     /// <summary>
     /// Process refresh token grant
     /// </summary>
-    private async Task<TokenResponseDto> ProcessRefreshTokenGrantAsync(TokenRequestDto request)
+    private async Task<TokenResponseDto> ProcessRefreshTokenGrantAsync(
+        TokenRequestDto request,
+        SigningKey signingKey
+    )
     {
         if (string.IsNullOrEmpty(request.RefreshToken))
         {
@@ -243,6 +251,7 @@ public class TokenManager(
             user,
             tokenEntity.Authorization.Client,
             tokenEntity.Authorization.Scopes,
+            signingKey,
             tokenEntity.AuthorizationId
         );
     }
@@ -250,7 +259,10 @@ public class TokenManager(
     /// <summary>
     /// Process client credentials grant
     /// </summary>
-    private async Task<TokenResponseDto> ProcessClientCredentialsGrantAsync(TokenRequestDto request)
+    private async Task<TokenResponseDto> ProcessClientCredentialsGrantAsync(
+        TokenRequestDto request,
+        SigningKey signingKey
+    )
     {
         if (string.IsNullOrEmpty(request.ClientId) || string.IsNullOrEmpty(request.ClientSecret))
         {
@@ -295,7 +307,7 @@ public class TokenManager(
             new(OAuthConstants.ClaimTypes.Scope, request.Scope ?? ""),
         };
 
-        var accessToken = _jwtService.GetToken(claims, 3600);
+        var accessToken = _oauthService.GenerateToken(claims, signingKey, 3600);
         var refreshTokenValue = OAuthService.GenerateTokenReference();
 
         // Store token
@@ -326,7 +338,10 @@ public class TokenManager(
     /// <summary>
     /// Process password grant
     /// </summary>
-    private async Task<TokenResponseDto> ProcessPasswordGrantAsync(TokenRequestDto request)
+    private async Task<TokenResponseDto> ProcessPasswordGrantAsync(
+        TokenRequestDto request,
+        SigningKey signingKey
+    )
     {
         if (string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.Password))
         {
@@ -374,13 +389,16 @@ public class TokenManager(
         }
 
         // Generate tokens
-        return await GenerateTokensAsync(user, client, request.Scope);
+        return await GenerateTokensAsync(user, client, request.Scope, signingKey);
     }
 
     /// <summary>
     /// Process device code grant
     /// </summary>
-    private async Task<TokenResponseDto> ProcessDeviceCodeGrantAsync(TokenRequestDto request)
+    private async Task<TokenResponseDto> ProcessDeviceCodeGrantAsync(
+        TokenRequestDto request,
+        SigningKey signingKey
+    )
     {
         if (string.IsNullOrEmpty(request.DeviceCode))
         {
@@ -461,6 +479,7 @@ public class TokenManager(
             user,
             tokenEntity.Authorization.Client,
             tokenEntity.Authorization.Scopes,
+            signingKey,
             tokenEntity.AuthorizationId
         );
     }
@@ -472,6 +491,7 @@ public class TokenManager(
         User user,
         Client client,
         string? scope,
+        SigningKey signingKey,
         Guid? authorizationId = null
     )
     {
@@ -494,7 +514,7 @@ public class TokenManager(
         }
 
         // Generate access token
-        var accessToken = _jwtService.GetToken(claims, 3600);
+        var accessToken = _oauthService.GenerateToken(claims, signingKey, 3600);
         var refreshTokenValue = OAuthService.GenerateTokenReference();
 
         // Create authorization if not exists
@@ -561,7 +581,7 @@ public class TokenManager(
                 idClaims.Add(new Claim(OAuthConstants.ClaimTypes.Email, user.Email));
             }
 
-            idToken = _jwtService.GetToken(idClaims, 3600);
+            idToken = _oauthService.GenerateToken(idClaims, signingKey, 3600);
         }
 
         return new TokenResponseDto

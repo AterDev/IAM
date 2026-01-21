@@ -133,7 +133,7 @@
             @if (client()!.scopes.length > 0) {
             <mat-chip-set>
               @for (scope of client()!.scopes; track scope) {
-              <mat-chip>{{ scope }}</mat-chip>
+              <mat-chip>{{ scope.name }}</mat-chip>
               }
             </mat-chip-set>
             }

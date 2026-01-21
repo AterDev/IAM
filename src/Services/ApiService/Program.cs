@@ -1,3 +1,4 @@
+using AccessMod;
 using ApiService.Extension;
 using CommonMod;
 using IdentityMod;
@@ -11,13 +12,16 @@ builder.AddServiceDefaults();
 // 框架依赖服务:options, cache, dbContext
 builder.AddFrameworkServices();
 
-// 添加CommonMod服务
+// 添加 CommonMod 服务
 builder.AddCommonMod();
 
-// 添加IdentityMod服务
-builder.AddIdentityModMod();
+// 添加 AccessMod 服务（包括密钥管理）
+builder.AddAccessMod();
 
-// Web中间件服务:route, openapi, jwt, cors, auth, rateLimiter etc.
+// 添加 IdentityMod 服务
+builder.AddIdentityMod();
+
+// Web 中间件服务:route, openapi, jwt, cors, auth, rateLimiter etc.
 builder.AddMiddlewareServices();
 
 builder.Services.AddDistributedMemoryCache();
@@ -52,6 +56,7 @@ WebApplication app = builder.Build();
 
 app.MapDefaultEndpoints();
 
+
 // Enable session middleware
 app.UseSession();
 
@@ -61,4 +66,15 @@ app.UseMiddlewareServices();
 // Map Razor Pages
 app.MapRazorPages();
 
-await app.RunAsync();
+using (app)
+{
+    // 在启动前执行初始化操作
+    await using (var scope = app.Services.CreateAsyncScope())
+    {
+        IServiceProvider provider = scope.ServiceProvider;
+        await InitModule.InitializeAsync(provider);
+    }
+    app.Run();
+}
+
+

@@ -14,7 +14,7 @@ public static class ModuleExtensions
         // Register cross-module services
         builder.Services.AddScoped<IAuditTrailService, AuditTrailService>();
         builder.Services.AddSingleton<IPasswordHasher, PasswordHasherService>();
-        builder.Services.AddSingleton<IKeyManagementService, KeyManagementService>();
+        // Note: IKeyManagementService and IKeyManagementServiceEx are registered in FrameworkExtensions
         return builder;
     }
 }

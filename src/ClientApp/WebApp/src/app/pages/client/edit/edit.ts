@@ -10,6 +10,7 @@ import { ApiClient } from 'src/app/services/api/api-client';
 import { ClientUpdateDto } from 'src/app/services/api/models/access-mod/client-update-dto.model';
 import { ClientDetailDto } from 'src/app/services/api/models/access-mod/client-detail-dto.model';
 import { ResourceItemDto } from 'src/app/services/api/models/access-mod/resource-item-dto.model';
+import { ScopeItemDto } from 'src/app/services/api/models/access-mod/scope-item-dto.model';
 import { TranslateService } from '@ngx-translate/core';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
@@ -35,11 +36,12 @@ export class ClientEditComponent implements OnInit {
   isLoading = signal(true);
   client?: ClientDetailDto;
   availableResources = signal<ResourceItemDto[]>([]);
+  availableScopes = signal<ScopeItemDto[]>([]);
   separatorKeysCodes = [ENTER, COMMA];
-  
+
   redirectUris = signal<string[]>([]);
   postLogoutRedirectUris = signal<string[]>([]);
-  scopes = signal<string[]>([]);
+  scopeIds = signal<string[]>([]);
   resourceIds = signal<string[]>([]);
 
   constructor(
@@ -49,7 +51,7 @@ export class ClientEditComponent implements OnInit {
     private snackBar: MatSnackBar,
     private translate: TranslateService,
     @Inject(MAT_DIALOG_DATA) public data: { clientId: string }
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.clientForm = this.fb.group({
@@ -66,34 +68,23 @@ export class ClientEditComponent implements OnInit {
   }
 
   loadClient(): void {
-    console.log('[ClientEdit] Loading client:', this.data.clientId);
     this.api.clients.getDetail(this.data.clientId).subscribe({
       next: (client) => {
-        console.log('[ClientEdit] Client loaded:', client);
-        console.log('[ClientEdit] Client scopes raw:', client.scopes);
-        console.log('[ClientEdit] Client resources raw:', client.resources);
         this.client = client;
-
         this.redirectUris.set(client.redirectUris || []);
-        console.log('[ClientEdit] Redirect URIs set:', this.redirectUris());
-        
+
         this.postLogoutRedirectUris.set(client.postLogoutRedirectUris || []);
-        console.log('[ClientEdit] Post logout URIs set:', this.postLogoutRedirectUris());
         
-        // 从 ScopeItemDto 数组中提取 scope names
-        const scopeNames = (client.scopes || []).map(s => {
-          console.log('[ClientEdit] Processing scope:', s);
-          return (s as any).name || (typeof s === 'string' ? s : '');
-        }).filter(name => !!name);
-        console.log('[ClientEdit] Extracted scope names:', scopeNames);
-        
-        this.scopes.set(scopeNames);
-        console.log('[ClientEdit] Scopes signal set, current value:', this.scopes());
+        // Extract scope IDs (from ScopeItemDto objects)
+        const scopeIds = (client.scopes || []).map(s => s.id).filter(id => !!id);
+        console.log('[ClientEdit] Extracted scope IDs:', scopeIds);
+        this.scopeIds.set(scopeIds);
+        console.log('[ClientEdit] Scope IDs signal set, current value:', this.scopeIds());
 
         // 提取 resource IDs (从 ResourceItemDto 中提取 id)
         const resIds = (client.resources || []).map(r => r.id).filter(id => !!id);
         console.log('[ClientEdit] Extracted resource IDs:', resIds);
-        
+
         this.resourceIds.set(resIds);
         console.log('[ClientEdit] Resource IDs signal set, current value:', this.resourceIds());
 
@@ -104,6 +95,7 @@ export class ClientEditComponent implements OnInit {
           requirePkce: client.requirePkce
         });
 
+        this.loadAvailableScopes();
         this.loadAvailableResources();
         this.isLoading.set(false);
       },
@@ -127,6 +119,18 @@ export class ClientEditComponent implements OnInit {
       },
       error: (error) => {
         console.error('[ClientEdit] Failed to load resources:', error);
+      }
+    });
+  }
+
+  loadAvailableScopes(): void {
+    this.api.scopes.getScopes(null, null, null, 1, 100, null).subscribe({
+      next: (response) => {
+        console.log('[ClientEdit] Available scopes loaded:', response);
+        this.availableScopes.set(response.data || []);
+      },
+      error: (error) => {
+        console.error('[ClientEdit] Failed to load scopes:', error);
       }
     });
   }
@@ -157,17 +161,18 @@ export class ClientEditComponent implements OnInit {
     this.postLogoutRedirectUris.update(uris => uris.filter((_, i) => i !== index));
   }
 
-  addScope(event: MatChipInputEvent): void {
-    const value = (event.value || '').trim();
-    if (value && !this.scopes().includes(value)) {
-      this.scopes.update(scopes => [...scopes, value]);
+  addScope(scope: ScopeItemDto): void {
+    if (!this.scopeIds().includes(scope.id)) {
+      this.scopeIds.update(ids => [...ids, scope.id]);
     }
-    event.chipInput?.clear();
-    this.clientForm.get('newScope')?.setValue('');
   }
 
   removeScope(index: number): void {
-    this.scopes.update(scopes => scopes.filter((_, i) => i !== index));
+    this.scopeIds.update(ids => ids.filter((_, i) => i !== index));
+  }
+
+  getScopeName(scopeId: string): string {
+    return this.availableScopes().find(s => s.id === scopeId)?.displayName || scopeId;
   }
 
   addResource(resource: ResourceItemDto): void {
@@ -186,9 +191,6 @@ export class ClientEditComponent implements OnInit {
 
   onSubmit(): void {
     if (this.clientForm.invalid) {
-      Object.keys(this.clientForm.controls).forEach(key => {
-        this.clientForm.get(key)?.markAsTouched();
-      });
       return;
     }
 
@@ -201,7 +203,7 @@ export class ClientEditComponent implements OnInit {
       requirePkce: formValue.requirePkce,
       redirectUris: this.redirectUris(),
       postLogoutRedirectUris: this.postLogoutRedirectUris(),
-      scopeIds: this.scopes(),
+      scopeIds: this.scopeIds(),
       resourceIds: this.resourceIds()
     };
 
