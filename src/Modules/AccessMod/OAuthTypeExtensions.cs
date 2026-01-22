@@ -1,6 +1,6 @@
-using IdentityMod.Models;
+using AccessMod.Models;
 
-namespace IdentityMod;
+namespace AccessMod;
 
 /// <summary>
 /// Extension methods for OAuth types

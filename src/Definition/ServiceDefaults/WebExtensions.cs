@@ -1,6 +1,3 @@
-using System.Text.Encodings.Web;
-using System.Text.Unicode;
-using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
@@ -11,6 +8,9 @@ using Microsoft.OpenApi;
 using Perigon.AspNetCore.Converters;
 using Perigon.AspNetCore.Utils;
 using ServiceDefaults.Middleware;
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
+using System.Threading.RateLimiting;
 
 namespace ServiceDefaults;
 
@@ -41,24 +41,21 @@ public static class WebExtensions
     /// <param name="services"></param>
     /// <param name="configuration"></param>
     /// <returns></returns>
-    public static IServiceCollection ConfigureWebMiddleware(
-        this IServiceCollection services,
-        IConfiguration configuration
-    )
+    public static IServiceCollection ConfigureWebMiddleware(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddJwtAuthentication(configuration);
+        services.AddAuthentication(configuration);
         services.AddThirdAuthentication(configuration);
 
         services.AddAuthorize();
         services.AddCors(configuration);
         services.AddRateLimiter();
 
-        services.AddOutputCache(options =>
-        {
-            options.AddPolicy("openapi", policy => policy.Expire(TimeSpan.FromMinutes(10)));
-        });
+        //services.AddOutputCache(options =>
+        //{
+        //    options.AddPolicy("openapi", policy => policy.Expire(TimeSpan.FromMinutes(10)));
+        //});
 
-        services.AddSwagger();
+        //services.AddSwagger();
 
         services.AddLocalizer();
         return services;
@@ -82,9 +79,12 @@ public static class WebExtensions
         app.UseRateLimiter();
         app.UseStaticFiles();
         app.UseRequestLocalization();
-        app.UseOutputCache();
-        app.MapSwagger().CacheOutput("openapi");
+        //app.UseOutputCache();
+        //app.MapSwagger().CacheOutput("openapi");
+
         //app.UseMiddleware<JwtMiddleware>();
+
+        app.UseMiddleware<GlobalExceptionMiddleware>();
         app.UseAuthentication();
         app.UseAuthorization();
         app.MapControllers();
@@ -246,31 +246,32 @@ public static class WebExtensions
     /// <param name="configuration"></param>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
-    public static IServiceCollection AddJwtAuthentication(
-        this IServiceCollection services,
-        IConfiguration configuration
-    )
+    public static IServiceCollection AddAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
-        services
-            .AddAuthentication(options =>
+        services.AddAuthentication(options =>
+        {
+            // 对于 API 默认使用 JWT
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            // 但对于 Razor Pages 使用 Cookie
+            options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.SaveToken = true;
+            var jwtOption = configuration.GetSection(JwtOption.ConfigPath).Get<JwtOption>();
+            var oauthOption = configuration.GetSection(OAuthOption.ConfigPath).Get<OAuthOption>();
+
+            if (jwtOption != null)
             {
-                // 对于 API 默认使用 JWT
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                // 但对于 Razor Pages 使用 Cookie
-                options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(cfg =>
-            {
-                cfg.SaveToken = true;
-                var jwtOption = configuration.GetSection(JwtOption.ConfigPath).Get<JwtOption>();
                 var sign = jwtOption?.Sign;
                 if (string.IsNullOrEmpty(sign))
                 {
                     throw new Exception("未找到有效的Jwt配置");
                 }
-                cfg.TokenValidationParameters = new TokenValidationParameters()
+                options.TokenValidationParameters = new TokenValidationParameters()
                 {
+
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(sign)),
                     ValidIssuer = jwtOption?.ValidIssuer,
                     ValidAudience = jwtOption?.ValidAudiences,
@@ -279,18 +280,34 @@ public static class WebExtensions
                     RequireExpirationTime = true,
                     ValidateIssuerSigningKey = true,
                 };
-            })
-            .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+            }
+            else if (oauthOption != null)
             {
-                options.LoginPath = "/Account/Login";
-                options.LogoutPath = "/Account/Logout";
-                options.AccessDeniedPath = "/Account/AccessDenied";
-                options.ExpireTimeSpan = TimeSpan.FromDays(1);
-                options.SlidingExpiration = true;
-                options.Cookie.HttpOnly = true;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-                options.Cookie.SameSite = SameSiteMode.Lax;
-            });
+                options.Authority = oauthOption.Authority;
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidAudiences = oauthOption.Audiences,
+                    ClockSkew = TimeSpan.FromMinutes(5),
+                };
+                options.RequireHttpsMetadata = oauthOption.RequireHttpsMetadata;
+            }
+            options.Events = new JwtBearerEvents
+            {
+                OnAuthenticationFailed = context =>
+                {
+                    Console.WriteLine("Authentication failed: {0}", context.Exception);
+                    return Task.CompletedTask;
+                },
+                OnTokenValidated = context =>
+                {
+                    Console.WriteLine("Token validated for user: {0}", context.Principal?.Identity?.Name);
+                    return Task.CompletedTask;
+                },
+            };
+        });
         return services;
     }
 
@@ -349,10 +366,7 @@ public static class WebExtensions
         return services;
     }
 
-    public static IServiceCollection AddCors(
-        this IServiceCollection services,
-        IConfiguration configuration
-    )
+    public static IServiceCollection AddCors(this IServiceCollection services, IConfiguration configuration)
     {
         var section = configuration.GetSection("Cors");
         //get origins array

@@ -1,6 +1,4 @@
-using IdentityMod.Models.OAuthDtos;
-
-namespace IdentityMod.Managers;
+namespace AccessMod.Managers;
 
 /// <summary>
 /// Manager for OAuth/OIDC authorization operations

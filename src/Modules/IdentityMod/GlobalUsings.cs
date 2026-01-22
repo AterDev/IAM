@@ -1,9 +1,7 @@
-global using System.ComponentModel.DataAnnotations;
 global using Entity.AccessMod;
 global using Entity.IdentityMod;
 global using EntityFramework.AppDbContext;
 global using EntityFramework.AppDbFactory;
-global using IdentityMod.Managers;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.Extensions.Logging;
 global using Perigon.AspNetCore.Abstraction;
@@ -11,4 +9,4 @@ global using Perigon.AspNetCore.Models;
 global using Perigon.AspNetCore.Utils;
 global using Share.Implement;
 global using Share.Services;
-global using static IdentityMod.OAuthConstants;
+global using System.ComponentModel.DataAnnotations;

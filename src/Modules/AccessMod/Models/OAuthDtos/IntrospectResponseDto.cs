@@ -1,4 +1,4 @@
-namespace IdentityMod.Models.OAuthDtos;
+namespace AccessMod.Models.OAuthDtos;
 
 /// <summary>
 /// Token introspection response DTO

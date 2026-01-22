@@ -1,5 +1,7 @@
 using Entity.CommonMod;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Perigon.AspNetCore.Options;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -10,9 +12,11 @@ namespace Share.Services;
 /// <summary>
 /// OAuth/OIDC 核心业务逻辑服务
 /// </summary>
-public class OAuthService(ILogger<OAuthService> logger)
+public class OAuthService(ILogger<OAuthService> logger, IOptions<JwtOption> options)
 {
     private readonly ILogger<OAuthService> _logger = logger;
+    private readonly string Audience = options.Value.ValidAudiences;
+    private readonly string Issuer = options.Value.ValidIssuer;
 
     /// <summary>
     /// 生成 JWT Token
@@ -25,16 +29,23 @@ public class OAuthService(ILogger<OAuthService> logger)
         string? audience = null
     )
     {
+        issuer ??= Issuer;
+        audience ??= Audience;
         ArgumentNullException.ThrowIfNull(claims);
         ArgumentNullException.ThrowIfNull(signingKey);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(expiresInSeconds);
 
+        RSA rsa = HashCrypto.ImportRsaPrivateKey(signingKey.PrivateKey);
         try
         {
-            using var rsa = HashCrypto.ImportRsaPrivateKey(signingKey.PrivateKey);
-
             var rsaKey = new RsaSecurityKey(rsa) { KeyId = signingKey.KeyId };
-            var signingCredentials = new SigningCredentials(rsaKey, SecurityAlgorithms.RsaSha256);
+            var signingCredentials = new SigningCredentials(rsaKey, SecurityAlgorithms.RsaSha256)
+            {
+                CryptoProviderFactory = new CryptoProviderFactory
+                {
+                    CacheSignatureProviders = false
+                }
+            };
 
             var jwt = new JwtSecurityToken(
                 issuer: issuer,
@@ -45,12 +56,17 @@ public class OAuthService(ILogger<OAuthService> logger)
             );
 
             var handler = new JwtSecurityTokenHandler();
-            return handler.WriteToken(jwt);
+            var token = handler.WriteToken(jwt);
+            return token;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error generating JWT token");
             throw;
+        }
+        finally
+        {
+            rsa.Dispose();
         }
     }
 

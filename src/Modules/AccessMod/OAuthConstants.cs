@@ -1,4 +1,4 @@
-namespace IdentityMod;
+namespace AccessMod;
 
 /// <summary>
 /// OAuth 2.0 and OpenID Connect constants

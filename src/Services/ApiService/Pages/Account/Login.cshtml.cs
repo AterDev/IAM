@@ -1,22 +1,17 @@
-using System.ComponentModel.DataAnnotations;
-using System.Security.Claims;
-using IdentityMod;
+using AccessMod;
 using IdentityMod.Managers;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 using SysClaimTypes = System.Security.Claims.ClaimTypes;
 
 namespace ApiService.Pages.Account;
 
-public class LoginModel(
-    UserManager userManager,
-    AuthorizationManager authorizationManager,
-    ILogger<LoginModel> logger) : PageModel
+public class LoginModel(UserManager userManager, ILogger<LoginModel> logger) : PageModel
 {
     private readonly UserManager _userManager = userManager;
-    private readonly AuthorizationManager _authorizationManager = authorizationManager;
     private readonly ILogger<LoginModel> _logger = logger;
 
     [BindProperty]
@@ -115,8 +110,8 @@ public class LoginModel(
             var authProperties = new AuthenticationProperties
             {
                 IsPersistent = RememberMe,
-                ExpiresUtc = RememberMe 
-                    ? DateTimeOffset.UtcNow.AddDays(30) 
+                ExpiresUtc = RememberMe
+                    ? DateTimeOffset.UtcNow.AddDays(30)
                     : DateTimeOffset.UtcNow.AddHours(2)
             };
 

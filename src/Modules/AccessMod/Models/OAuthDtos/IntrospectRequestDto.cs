@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace IdentityMod.Models.OAuthDtos;
+namespace AccessMod.Models.OAuthDtos;
 
 /// <summary>
 /// Token introspection request DTO

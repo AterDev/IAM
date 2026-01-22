@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace IdentityMod.Models.OAuthDtos;
+namespace AccessMod.Models.OAuthDtos;
 
 /// <summary>
 /// OpenID Connect Discovery Document

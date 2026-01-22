@@ -12,6 +12,6 @@
         <ProjectReference Include="..\IdentityMod\IdentityMod.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <Folder Include="Services\" />
+      <Folder Include="Services\" />
     </ItemGroup>
 </Project>

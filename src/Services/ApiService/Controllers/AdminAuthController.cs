@@ -1,8 +1,8 @@
-using AccessMod.Managers;
 using IdentityMod.Managers;
 using IdentityMod.Models.AdminAuthDtos;
 using Microsoft.AspNetCore.Authorization;
-using Share.Services;
+using Perigon.AspNetCore.Services;
+using Share;
 using System.Security.Claims;
 using ClaimTypes = System.Security.Claims.ClaimTypes;
 
@@ -16,15 +16,13 @@ namespace ApiService.Controllers;
 public class AdminAuthController(
     UserManager userManager,
     RoleManager roleManager,
-    OAuthService oauthService,
-    SigningKeyManager signingKeyManager,
+    JwtService jwtService,
     ILogger<AdminAuthController> logger
 ) : ControllerBase
 {
     private readonly UserManager _userManager = userManager;
     private readonly RoleManager _roleManager = roleManager;
-    private readonly OAuthService _oauthService = oauthService;
-    private readonly SigningKeyManager _signingKeyManager = signingKeyManager;
+    private readonly JwtService _jwtService = jwtService;
     private readonly ILogger<AdminAuthController> _logger = logger;
 
     /// <summary>
@@ -36,83 +34,56 @@ public class AdminAuthController(
     [AllowAnonymous]
     public async Task<ActionResult<AdminLoginResponseDto>> Login([FromBody] AdminLoginDto loginDto)
     {
-        try
+
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
+
+        // Validate credentials using UserManager
+        var userDetail = await _userManager.ValidateCredentialsAsync(
+            loginDto.UserName,
+            loginDto.Password,
+            ipAddress,
+            userAgent
+        );
+
+        if (userDetail == null)
         {
-            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-            var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
-
-            // Validate credentials using UserManager
-            var userDetail = await _userManager.ValidateCredentialsAsync(
-                loginDto.UserName,
-                loginDto.Password,
-                ipAddress,
-                userAgent
-            );
-
-            if (userDetail == null)
-            {
-                return Unauthorized(new { message = "Invalid username or password" });
-            }
-
-            // Get user roles
-            var user = await _userManager.FindAsync(userDetail.Id);
-            if (user == null)
-            {
-                return Unauthorized(new { message = "User not found" });
-            }
-
-            // Load user roles
-            await _userManager.LoadManyAsync(user, u => u.UserRoles);
-
-            var roleIds = user.UserRoles.Select(ur => ur.RoleId).ToList();
-            var roles = await _roleManager.GetRoleNamesByIdsAsync(roleIds);
-
-            var expiresIn = 3600 * 24 * 7; // 7 day
-
-            // 获取活跃的签名密钥
-            var signingKey = await _signingKeyManager.GetActiveSigningKeyAsync();
-            if (signingKey == null)
-            {
-                return StatusCode(500, new { message = "No active signing key available" });
-            }
-
-            var claims = new List<Claim>
-            {
-                new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new(ClaimTypes.Name, user.UserName),
-                new(ClaimTypes.Email, user.Email ?? string.Empty),
-            };
-
-            foreach (var role in roles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-            }
-
-            var accessToken = _oauthService.GenerateToken(claims, signingKey, expiresIn);
-
-            var response = new AdminLoginResponseDto
-            {
-                AccessToken = accessToken,
-                TokenType = "Bearer",
-                ExpiresIn = expiresIn,
-                User = new AdminUserInfo
-                {
-                    Id = user.Id,
-                    UserName = user.UserName,
-                    Email = user.Email,
-                    Roles = roles,
-                },
-            };
-
-            _logger.LogInformation("Admin user {UserName} logged in successfully", user.UserName);
-
-            return Ok(response);
+            return Problem(Localizer.InvalidUserOrPassword);
         }
-        catch (Exception ex)
+
+        // Get user roles
+        var user = await _userManager.FindAsync(userDetail.Id);
+        if (user == null)
         {
-            _logger.LogError(ex, "Error during admin login for user {UserName}", loginDto.UserName);
-            return StatusCode(500, new { message = "An error occurred during login" });
+            return Problem(Localizer.NotFoundUser);
         }
+
+        // Load user roles
+        await _userManager.LoadManyAsync(user, u => u.UserRoles);
+
+        var roleIds = user.UserRoles.Select(ur => ur.RoleId).ToList();
+        var roles = await _roleManager.GetRoleNamesByIdsAsync(roleIds);
+
+        var expiresIn = 3600 * 24 * 7; // 7 day
+        _jwtService.Claims =
+        [
+            new Claim(ClaimTypes.Name, user.UserName),
+                new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
+            ];
+        var accessToken = _jwtService.GetToken(user.Id.ToString(), [.. roles]);
+        return new AdminLoginResponseDto
+        {
+            AccessToken = accessToken,
+            TokenType = "Bearer",
+            ExpiresIn = expiresIn,
+            User = new AdminUserInfo
+            {
+                Id = user.Id,
+                UserName = user.UserName,
+                Email = user.Email,
+                Roles = roles,
+            },
+        };
     }
 
     /// <summary>

@@ -1,8 +1,12 @@
 using AccessMod;
 using ApiService.Extension;
-using CommonMod;
-using IdentityMod;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Perigon.AspNetCore.Constants;
+using Perigon.AspNetCore.Options;
+using ServiceDefaults.Middleware;
+using System.Text;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -12,17 +16,13 @@ builder.AddServiceDefaults();
 // 框架依赖服务:options, cache, dbContext
 builder.AddFrameworkServices();
 
-// 添加 CommonMod 服务
-builder.AddCommonMod();
-
-// 添加 AccessMod 服务（包括密钥管理）
-builder.AddAccessMod();
-
-// 添加 IdentityMod 服务
-builder.AddIdentityMod();
-
-// Web 中间件服务:route, openapi, jwt, cors, auth, rateLimiter etc.
-builder.AddMiddlewareServices();
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+    });
+});
 
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -33,38 +33,78 @@ builder.Services.AddSession(options =>
     options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
-// Add Razor Pages for OAuth UI (login, consent, logout)
-builder.Services.AddRazorPages();
+builder.Services.AddAuthentication(options =>
+{
+    // 对于 API 默认使用 JWT
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    // 但对于 Razor Pages 使用 Cookie
+    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(cfg =>
+{
+    cfg.SaveToken = true;
+    var jwtOption = builder.Configuration.GetSection(JwtOption.ConfigPath).Get<JwtOption>();
+    var sign = jwtOption?.Sign;
+    if (string.IsNullOrEmpty(sign))
+    {
+        throw new Exception("未找到有效的Jwt配置");
+    }
+    cfg.TokenValidationParameters = new TokenValidationParameters()
+    {
 
-builder
-    .Services.AddAuthorizationBuilder()
-    .AddPolicy(
-        WebConst.User,
-        policy =>
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(sign)),
+        ValidIssuer = jwtOption?.ValidIssuer,
+        ValidAudience = jwtOption?.ValidAudiences,
+        ValidateIssuer = true,
+        ValidateLifetime = true,
+        RequireExpirationTime = true,
+        ValidateIssuerSigningKey = true,
+    };
+})
+.AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+{
+    options.LoginPath = "/Account/Login";
+    options.LogoutPath = "/Account/Logout";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+    options.ExpireTimeSpan = TimeSpan.FromDays(1);
+    options.SlidingExpiration = true;
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+});
+
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy(WebConst.User, policy =>
         {
             policy.RequireRole(WebConst.User);
         }
     );
 
-// Managers, auto generate by source generator
-builder.Services.AddManagers();
+// Add Razor Pages for OAuth UI (login, consent, logout)
+builder.Services.AddRazorPages();
 
-// Modules, auto generate by source generator
+builder.Services.AddManagers();
 builder.AddModules();
+
+
 
 WebApplication app = builder.Build();
 
 app.MapDefaultEndpoints();
 
 
-// Enable session middleware
 app.UseSession();
-
-// 使用中间件
-app.UseMiddlewareServices();
-
-// Map Razor Pages
+app.UseRouting();
+app.UseStaticFiles();
+app.UseRequestLocalization();
+app.UseMiddleware<GlobalExceptionMiddleware>();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
 app.MapRazorPages();
+app.MapFallbackToFile("index.html");
+
 
 using (app)
 {

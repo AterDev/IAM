@@ -1,10 +1,10 @@
 using System.Security.Cryptography;
+using AccessMod.Models.OAuthDtos;
 using Entity.CommonMod;
-using IdentityMod.Models.OAuthDtos;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
-namespace IdentityMod.Managers;
+namespace AccessMod.Managers;
 
 /// <summary>
 /// Manager for OIDC Discovery and JWKS endpoints

@@ -1,8 +1,7 @@
-using Entity.CommonMod;
-using IdentityMod.Models.OAuthDtos;
+using Entity.IdentityMod;
 using System.Security.Claims;
 
-namespace IdentityMod.Managers;
+namespace AccessMod.Managers;
 
 /// <summary>
 /// Manager for OAuth/OIDC token operations

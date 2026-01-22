@@ -1,26 +1,20 @@
 using System.Text.Json.Serialization;
 
-namespace IdentityMod.Models.OAuthDtos;
+namespace AccessMod.Models.OAuthDtos;
 
 /// <summary>
-/// OAuth/OIDC authorization response DTO
+/// OAuth/OIDC token response DTO
 /// </summary>
-public class AuthorizeResponseDto
+public class TokenResponseDto
 {
     /// <summary>
-    /// Authorization code
-    /// </summary>
-    [JsonPropertyName("code")]
-    public string? Code { get; set; }
-
-    /// <summary>
-    /// Access token (for implicit flow)
+    /// Access token
     /// </summary>
     [JsonPropertyName("access_token")]
-    public string? AccessToken { get; set; }
+    public string AccessToken { get; set; } = string.Empty;
 
     /// <summary>
-    /// Token type
+    /// Token type (usually "Bearer")
     /// </summary>
     [JsonPropertyName("token_type")]
     public string? TokenType { get; set; }
@@ -32,16 +26,16 @@ public class AuthorizeResponseDto
     public int? ExpiresIn { get; set; }
 
     /// <summary>
-    /// ID token (for OIDC)
+    /// Refresh token
+    /// </summary>
+    [JsonPropertyName("refresh_token")]
+    public string? RefreshToken { get; set; }
+
+    /// <summary>
+    /// ID token (OIDC)
     /// </summary>
     [JsonPropertyName("id_token")]
     public string? IdToken { get; set; }
-
-    /// <summary>
-    /// State parameter
-    /// </summary>
-    [JsonPropertyName("state")]
-    public string? State { get; set; }
 
     /// <summary>
     /// Scope granted

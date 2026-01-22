@@ -154,14 +154,12 @@ public class Worker(
             ("openid", "OpenID", "OpenID Connect身份认证", true),
             ("profile", "Profile", "用户基本信息", false),
             ("email", "Email", "用户邮箱地址", false),
-            ("address", "Address", "用户地址信息", false),
-            ("phone", "Phone", "用户电话号码", false),
             ("offline_access", "Offline Access", "离线访问权限(刷新令牌)", false)
         };
 
         foreach (var (name, displayName, description, required) in defaultScopes)
         {
-            var scopeExists = await dbContext.Set<ApiScope>().AnyAsync(
+            var scopeExists = await dbContext.ApiScopes.AnyAsync(
                 s => s.Name == name,
                 cancellationToken
             );
@@ -177,21 +175,35 @@ public class Worker(
                     Emphasize = required
                 };
 
-                dbContext.Set<ApiScope>().Add(scope);
+                dbContext.ApiScopes.Add(scope);
             }
+        }
+
+        // add dfault API resource
+        var defaultResource = await dbContext.ApiResources.FirstOrDefaultAsync();
+        if (defaultResource == null)
+        {
+
+            defaultResource = new ApiResource
+            {
+                Name = "SampleAPI",
+                DisplayName = "SampleAPI",
+                Description = "示例API资源",
+            };
+            dbContext.ApiResources.Add(defaultResource);
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
         // Get all scopes for client assignment
-        var openidScope = await dbContext.Set<ApiScope>().FirstAsync(s => s.Name == "openid", cancellationToken);
-        var profileScope = await dbContext.Set<ApiScope>().FirstAsync(s => s.Name == "profile", cancellationToken);
-        var emailScope = await dbContext.Set<ApiScope>().FirstAsync(s => s.Name == "email", cancellationToken);
-        var offlineAccessScope = await dbContext.Set<ApiScope>().FirstAsync(s => s.Name == "offline_access", cancellationToken);
+        var openidScope = await dbContext.ApiScopes.FirstAsync(s => s.Name == "openid", cancellationToken);
+        var profileScope = await dbContext.ApiScopes.FirstAsync(s => s.Name == "profile", cancellationToken);
+        var emailScope = await dbContext.ApiScopes.FirstAsync(s => s.Name == "email", cancellationToken);
+        var offlineAccessScope = await dbContext.ApiScopes.FirstAsync(s => s.Name == "offline_access", cancellationToken);
 
         // Create FrontClient for frontend applications
         var frontClientId = "FrontClient";
-        var frontClientExists = await dbContext.Set<Client>().AnyAsync(
+        var frontClientExists = await dbContext.Clients.AnyAsync(
             c => c.ClientId == frontClientId,
             cancellationToken
         );
@@ -223,7 +235,7 @@ public class Worker(
                 ],
             };
 
-            dbContext.Set<Client>().Add(frontClient);
+            dbContext.Clients.Add(frontClient);
             await dbContext.SaveChangesAsync(cancellationToken);
 
             // Assign scopes to FrontClient
@@ -234,8 +246,12 @@ public class Worker(
                 new ClientScope { ClientId = frontClient.Id, ScopeId = emailScope.Id },
                 new ClientScope { ClientId = frontClient.Id, ScopeId = offlineAccessScope.Id }
             };
-
-            dbContext.Set<ClientScope>().AddRange(frontClientScopes);
+            var frontClientResources = new[]
+            {
+                new ClientResource { ClientId = frontClient.Id, ApiResourceId = defaultResource.Id }
+            };
+            dbContext.ClientResources.AddRange(frontClientResources);
+            dbContext.ClientScopes.AddRange(frontClientScopes);
         }
 
         // Create ApiClient for backend API services
@@ -269,7 +285,7 @@ public class Worker(
                 new ClientScope { ClientId = apiClient.Id, ScopeId = openidScope.Id }
             };
 
-            dbContext.Set<ClientScope>().AddRange(apiClientScopes);
+            dbContext.ClientScopes.AddRange(apiClientScopes);
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);

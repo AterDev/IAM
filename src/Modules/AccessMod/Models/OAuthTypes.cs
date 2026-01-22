@@ -1,4 +1,4 @@
-namespace IdentityMod.Models;
+namespace AccessMod.Models;
 
 /// <summary>
 /// OAuth 2.0 grant types

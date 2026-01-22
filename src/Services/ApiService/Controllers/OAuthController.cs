@@ -1,7 +1,6 @@
+using AccessMod;
 using AccessMod.Managers;
-using IdentityMod;
-using IdentityMod.Managers;
-using IdentityMod.Models.OAuthDtos;
+using AccessMod.Models.OAuthDtos;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;

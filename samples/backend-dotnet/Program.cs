@@ -1,96 +1,15 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
 
 builder.AddServiceDefaults();
-// Add services to the container
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-
-// Configure CORS - read from configuration
-var allowedOrigins =
-    builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? new[] { "http://localhost:4200" };
-
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
-    {
-        policy.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
-    });
-});
-
-// Configure JWT Bearer Authentication with IAM
-builder
-    .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        // IAM authority URL - the OpenID Connect discovery endpoint
-        options.Authority =
-            builder.Configuration["Authentication:Authority"] ?? "https://localhost:7000";
-
-        // API resource name (audience) - must match the client registered in IAM
-        options.Audience = builder.Configuration["Authentication:Audience"] ?? string.Empty;
-
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateIssuerSigningKey = true,
-            ClockSkew = TimeSpan.FromMinutes(5), // Allow 5 minutes clock skew
-        };
-
-        // For development - allow HTTP metadata endpoint
-        options.RequireHttpsMetadata = builder.Configuration.GetValue<bool>(
-            "Authentication:RequireHttpsMetadata",
-            !builder.Environment.IsDevelopment()
-        );
-
-        // Event handlers for debugging
-        options.Events = new JwtBearerEvents
-        {
-            OnAuthenticationFailed = context =>
-            {
-                var logger = context.HttpContext.RequestServices.GetRequiredService<
-                    ILogger<Program>
-                >();
-                logger.LogWarning(context.Exception, "Authentication failed");
-                return Task.CompletedTask;
-            },
-            OnTokenValidated = context =>
-            {
-                var logger = context.HttpContext.RequestServices.GetRequiredService<
-                    ILogger<Program>
-                >();
-                logger.LogWarning(
-                    "Token validated for user: {User}",
-                    context.Principal?.Identity?.Name
-                );
-                return Task.CompletedTask;
-            },
-        };
-    });
-
-builder.Services.AddAuthorization();
+builder.AddFrameworkServices();
+builder.AddMiddlewareServices();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment()) { }
-
-app.UseHttpsRedirection();
-
-// CORS must be before Authentication/Authorization
-app.UseCors();
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllers();
-
+app.UseMiddlewareServices();
 // Public endpoint - no authentication required
 app.MapGet(
         "/api/public",

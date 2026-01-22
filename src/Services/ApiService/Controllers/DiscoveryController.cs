@@ -1,6 +1,5 @@
 using AccessMod.Managers;
-using IdentityMod.Managers;
-using IdentityMod.Models.OAuthDtos;
+using AccessMod.Models.OAuthDtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Perigon.AspNetCore.Constants;

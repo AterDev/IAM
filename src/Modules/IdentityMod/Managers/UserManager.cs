@@ -1,10 +1,9 @@
-using System.Text.Json;
 using CommonMod.Managers;
 using IdentityMod.Models.UserDtos;
-using EntityFramework.AppDbFactory;
-using Share.Exceptions;
 using Microsoft.AspNetCore.Http;
-using Mapster;
+using Share;
+using Share.Exceptions;
+using System.Text.Json;
 
 namespace IdentityMod.Managers;
 
@@ -340,7 +339,7 @@ public class UserManager(
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );
-            throw new BusinessException("InvalidCredentials", StatusCodes.Status401Unauthorized);
+            throw new BusinessException(Localizer.UserNotFound, StatusCodes.Status401Unauthorized);
         }
 
         // Check if user is locked out
@@ -360,7 +359,7 @@ public class UserManager(
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );
-            throw new BusinessException("AccountLocked", StatusCodes.Status403Forbidden);
+            throw new BusinessException(Localizer.LockAccountForManyTimes, StatusCodes.Status403Forbidden);
         }
 
         // Verify password
@@ -391,7 +390,7 @@ public class UserManager(
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );
-            throw new BusinessException("InvalidCredentials", StatusCodes.Status401Unauthorized);
+            throw new BusinessException(Localizer.InvalidUserOrPassword, StatusCodes.Status401Unauthorized);
         }
 
         // Reset access failed count on successful login

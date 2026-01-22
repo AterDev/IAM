@@ -1,9 +1,9 @@
 using System.Security.Cryptography;
+using AccessMod.Models.OAuthDtos;
 using Entity.AccessMod;
 using EntityFramework.AppDbContext;
-using IdentityMod.Models.OAuthDtos;
 
-namespace IdentityMod.Managers;
+namespace AccessMod.Managers;
 
 /// <summary>
 /// Manager for OAuth device flow operations

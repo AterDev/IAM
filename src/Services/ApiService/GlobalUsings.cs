@@ -4,4 +4,4 @@ global using Perigon.AspNetCore.Abstraction;
 global using Microsoft.AspNetCore.Mvc;
 global using ServiceDefaults;
 global using Share.Implement;
-global using static IdentityMod.OAuthConstants;
+global using static AccessMod.OAuthConstants;
