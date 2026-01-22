@@ -7,7 +7,6 @@ using Perigon.AspNetCore.Abstraction;
 using Perigon.AspNetCore.Services;
 using Perigon.AspNetCore.Toolkit.Services;
 using Share.Implement;
-using Share.Services;
 
 namespace ServiceDefaults;
 
@@ -24,22 +23,19 @@ public static class FrameworkExtensions
         builder.Services.AddScoped<IUserContext, UserContext>();
         builder.Services.AddScoped<ITenantContext, TenantContext>();
 
-
-        var components =
-            builder.Configuration.GetSection(ComponentOption.ConfigPath).Get<ComponentOption>()
-            ?? throw new Exception($"can't get {ComponentOption.ConfigPath} config");
-
-        builder.AddOptions(components);
+        var components = builder.Configuration.GetSection(ComponentOption.ConfigPath)
+            .Get<ComponentOption>() ?? new ComponentOption(); ;
+        builder.AddOptions();
         builder.AddCache(components);
         builder.AddDbFactory(components);
         builder.AddDbContext(components);
 
         // 注册 JWT 服务（基础 token 操作）
         builder.Services.AddScoped<JwtService>();
-        
+
         // 注册 SMTP 服务
         builder.Services.AddScoped<SmtpService>();
-        
+
         return builder;
     }
 
@@ -47,21 +43,13 @@ public static class FrameworkExtensions
     /// config options
     /// </summary>
     /// <param name="builder"></param>
-    /// <param name="components"></param>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
-    public static IHostApplicationBuilder AddOptions(
-        this IHostApplicationBuilder builder,
-        ComponentOption components
-    )
+    public static IHostApplicationBuilder AddOptions(this IHostApplicationBuilder builder)
     {
         var config = builder.Configuration;
         builder.Services.Configure<ComponentOption>(config.GetSection(ComponentOption.ConfigPath));
-
-        builder.Services.Configure<LoginSecurityPolicyOption>(
-            config.GetSection(LoginSecurityPolicyOption.ConfigPath)
-        );
-
+        builder.Services.Configure<LoginSecurityPolicyOption>(config.GetSection(LoginSecurityPolicyOption.ConfigPath));
         builder.Services.Configure<JwtOption>(config.GetSection(JwtOption.ConfigPath));
         builder.Services.Configure<CacheOption>(config.GetSection(CacheOption.ConfigPath));
 

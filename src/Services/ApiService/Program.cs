@@ -80,7 +80,7 @@ builder.Services.AddAuthorizationBuilder()
             policy.RequireRole(WebConst.User);
         }
     );
-
+builder.Services.AddLocalizer();
 // Add Razor Pages for OAuth UI (login, consent, logout)
 builder.Services.AddRazorPages();
 
@@ -88,11 +88,7 @@ builder.Services.AddManagers();
 builder.AddModules();
 
 
-
 WebApplication app = builder.Build();
-
-app.MapDefaultEndpoints();
-
 
 app.UseSession();
 app.UseRouting();
@@ -101,6 +97,7 @@ app.UseRequestLocalization();
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapDefaultEndpoints();
 app.MapControllers();
 app.MapRazorPages();
 app.MapFallbackToFile("index.html");
