@@ -11,7 +11,4 @@
         <ProjectReference Include="..\..\Perigon\Perigon.AspNetCore\Perigon.AspNetCore.csproj" />
         <ProjectReference Include="..\IdentityMod\IdentityMod.csproj" />
     </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Services\" />
-    </ItemGroup>
 </Project>

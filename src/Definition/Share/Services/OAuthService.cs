@@ -2,6 +2,7 @@ using Entity.CommonMod;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Perigon.AspNetCore.Options;
+using Share.Constants;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -25,12 +26,10 @@ public class OAuthService(ILogger<OAuthService> logger, IOptions<JwtOption> opti
         IEnumerable<Claim> claims,
         SigningKey signingKey,
         int expiresInSeconds = 3600,
-        string? issuer = null,
-        string? audience = null
+        string? issuer = null
     )
     {
         issuer ??= Issuer;
-        audience ??= Audience;
         ArgumentNullException.ThrowIfNull(claims);
         ArgumentNullException.ThrowIfNull(signingKey);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(expiresInSeconds);
@@ -47,9 +46,9 @@ public class OAuthService(ILogger<OAuthService> logger, IOptions<JwtOption> opti
                 }
             };
 
+            claims = claims.Append(new Claim(OAuthConst.ClaimTypes.Audience, Audience));
             var jwt = new JwtSecurityToken(
                 issuer: issuer,
-                audience: audience,
                 claims: claims,
                 expires: DateTime.UtcNow.AddSeconds(expiresInSeconds),
                 signingCredentials: signingCredentials

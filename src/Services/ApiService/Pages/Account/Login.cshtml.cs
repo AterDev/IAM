@@ -1,8 +1,8 @@
-using AccessMod;
 using IdentityMod.Managers;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Share.Constants;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using SysClaimTypes = System.Security.Claims.ClaimTypes;
@@ -96,7 +96,7 @@ public class LoginModel(UserManager userManager, ILogger<LoginModel> logger) : P
             {
                 new Claim(SysClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(SysClaimTypes.Name, user.UserName),
-                new Claim(OAuthConstants.ClaimTypes.Subject, user.Id.ToString())
+                new Claim(OAuthConst.ClaimTypes.Subject, user.Id.ToString())
             };
 
             if (!string.IsNullOrEmpty(user.Email))

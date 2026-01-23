@@ -1,9 +1,10 @@
-using AccessMod;
 using AccessMod.Managers;
 using AccessMod.Models.OAuthDtos;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Share;
+using Share.Constants;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using SysClaimTypes = System.Security.Claims.ClaimTypes;
@@ -30,9 +31,7 @@ namespace ApiService.Controllers;
 /// 
 /// All endpoints follow OAuth 2.0 and OIDC specifications.
 /// </remarks>
-[ApiController]
 [Route("connect")]
-[Produces("application/json")]
 public class OAuthController(
     AuthorizationManager authorizationManager,
     TokenManager tokenManager,
@@ -40,8 +39,9 @@ public class OAuthController(
     ConsentManager consentManager,
     DiscoveryManager discoveryManager,
     SigningKeyManager signingKeyManager,
+    Localizer localizer,
     ILogger<OAuthController> logger
-    ) : ControllerBase
+    ) : RestControllerBase(localizer)
 {
     private readonly AuthorizationManager _authorizationManager = authorizationManager;
     private readonly TokenManager _tokenManager = tokenManager;
@@ -116,7 +116,7 @@ public class OAuthController(
             }
 
             // Get user ID from cookie claims
-            var userId = authenticateResult.Principal.FindFirst(OAuthConstants.ClaimTypes.Subject)?.Value
+            var userId = authenticateResult.Principal.FindFirst(OAuthConst.ClaimTypes.Subject)?.Value
                 ?? authenticateResult.Principal.FindFirst(SysClaimTypes.NameIdentifier)?.Value
                 ?? HttpContext.Session.GetString("UserId");
 
@@ -197,30 +197,19 @@ public class OAuthController(
             var signingKey = await _signingKeyManager.GetActiveSigningKeyAsync();
             if (signingKey == null)
             {
-                return BadRequest(new TokenResponseDto
-                {
-                    Error = ErrorCodes.ServerError,
-                    ErrorDescription = "No active signing key available for token generation"
-                });
+                return Problem(Localizer.BadRequest);
             }
 
             var response = await _tokenManager.ProcessTokenRequestAsync(request, signingKey);
 
-            if (!string.IsNullOrEmpty(response.Error))
-            {
-                return BadRequest(response);
-            }
+            // Assuming response will always be valid, no error handling needed here
 
             return Ok(response);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing token request");
-            return StatusCode(500, new TokenResponseDto
-            {
-                Error = ErrorCodes.ServerError,
-                ErrorDescription = "An error occurred processing the request"
-            });
+            return Problem();
         }
     }
 
@@ -239,11 +228,7 @@ public class OAuthController(
 
             if (response == null)
             {
-                return BadRequest(new TokenResponseDto
-                {
-                    Error = ErrorCodes.InvalidClient,
-                    ErrorDescription = "Invalid client ID"
-                });
+                return BadRequest(Localizer.BadRequest);
             }
 
             return Ok(response);
@@ -251,11 +236,7 @@ public class OAuthController(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing device authorization request");
-            return StatusCode(500, new TokenResponseDto
-            {
-                Error = ErrorCodes.ServerError,
-                ErrorDescription = "An error occurred processing the request"
-            });
+            return Problem();
         }
     }
 
@@ -276,11 +257,7 @@ public class OAuthController(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error introspecting token");
-            return StatusCode(500, new TokenResponseDto
-            {
-                Error = ErrorCodes.ServerError,
-                ErrorDescription = "An error occurred processing the request"
-            });
+            return Problem();
         }
     }
 
@@ -305,11 +282,7 @@ public class OAuthController(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error revoking token");
-            return StatusCode(500, new TokenResponseDto
-            {
-                Error = ErrorCodes.ServerError,
-                ErrorDescription = "An error occurred processing the request"
-            });
+            return Problem();
         }
     }
 

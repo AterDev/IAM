@@ -5,19 +5,12 @@ namespace SampleApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class WeatherForecastController : ControllerBase
+public class WeatherForecastController(ILogger<WeatherForecastController> logger) : ControllerBase
 {
     private static readonly string[] Summaries =
     [
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
     ];
-
-    private readonly ILogger<WeatherForecastController> _logger;
-
-    public WeatherForecastController(ILogger<WeatherForecastController> logger)
-    {
-        _logger = logger;
-    }
 
     /// <summary>
     /// 获取天气预报 - 需要认证
@@ -53,7 +46,7 @@ public class WeatherForecastController : ControllerBase
             Claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList()
         };
 
-        _logger.LogInformation("Weather forecast requested by user: {UserId}", userInfo.UserId);
+        logger.LogInformation("Weather forecast requested by user: {UserId}", userInfo.UserId);
 
         return Ok(new 
         { 

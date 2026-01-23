@@ -134,16 +134,10 @@ public class LocalizerConstGen : IIncrementalGenerator
 
     #region 数据结构
 
-    private readonly struct ResxData : IEquatable<ResxData>
+    private readonly struct ResxData(string className, ImmutableArray<string> keys) : IEquatable<ResxData>
     {
-        public string ClassName { get; }
-        public ImmutableArray<string> Keys { get; }
-
-        public ResxData(string className, ImmutableArray<string> keys)
-        {
-            ClassName = className;
-            Keys = keys;
-        }
+        public string ClassName { get; } = className;
+        public ImmutableArray<string> Keys { get; } = keys;
 
         public bool Equals(ResxData other)
         {
@@ -163,16 +157,10 @@ public class LocalizerConstGen : IIncrementalGenerator
         }
     }
 
-    private readonly struct ClassInfo : IEquatable<ClassInfo>
+    private readonly struct ClassInfo(string className, string ns) : IEquatable<ClassInfo>
     {
-        public string ClassName { get; }
-        public string Namespace { get; }
-
-        public ClassInfo(string className, string ns)
-        {
-            ClassName = className;
-            Namespace = ns;
-        }
+        public string ClassName { get; } = className;
+        public string Namespace { get; } = ns;
 
         public bool Equals(ClassInfo other)
         {

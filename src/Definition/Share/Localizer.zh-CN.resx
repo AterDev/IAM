@@ -221,4 +221,58 @@
   <data name="TenantNotExist" xml:space="preserve">
     <value>租户不存在</value>
   </data>
+  <data name="OAuthInvalidClient" xml:space="preserve">
+    <value>客户端凭据无效</value>
+  </data>
+  <data name="OAuthUnsupportedGrantType" xml:space="preserve">
+    <value>不支持的授权类型</value>
+  </data>
+  <data name="OAuthMissingParameters" xml:space="preserve">
+    <value>缺少必要参数</value>
+  </data>
+  <data name="OAuthInvalidAuthorizationCode" xml:space="preserve">
+    <value>授权码无效</value>
+  </data>
+  <data name="OAuthAuthorizationCodeExpired" xml:space="preserve">
+    <value>授权码已过期</value>
+  </data>
+  <data name="OAuthClientMismatch" xml:space="preserve">
+    <value>客户端不匹配</value>
+  </data>
+  <data name="OAuthInvalidRedirectUri" xml:space="preserve">
+    <value>回调地址无效</value>
+  </data>
+  <data name="OAuthMissingCodeVerifier" xml:space="preserve">
+    <value>缺少 Code Verifier</value>
+  </data>
+  <data name="OAuthInvalidCodeVerifier" xml:space="preserve">
+    <value>Code Verifier 无效</value>
+  </data>
+  <data name="OAuthMissingRefreshToken" xml:space="preserve">
+    <value>缺少刷新令牌</value>
+  </data>
+  <data name="OAuthInvalidRefreshToken" xml:space="preserve">
+    <value>刷新令牌无效</value>
+  </data>
+  <data name="OAuthRefreshTokenExpired" xml:space="preserve">
+    <value>刷新令牌已过期</value>
+  </data>
+  <data name="OAuthMissingUsernameOrPassword" xml:space="preserve">
+    <value>缺少用户名或密码</value>
+  </data>
+  <data name="OAuthMissingDeviceCode" xml:space="preserve">
+    <value>缺少设备码</value>
+  </data>
+  <data name="OAuthInvalidDeviceCode" xml:space="preserve">
+    <value>设备码无效</value>
+  </data>
+  <data name="OAuthAuthorizationPending" xml:space="preserve">
+    <value>用户尚未完成设备授权</value>
+  </data>
+  <data name="OAuthAccessDenied" xml:space="preserve">
+    <value>用户拒绝了授权</value>
+  </data>
+  <data name="OAuthDeviceCodeExpired" xml:space="preserve">
+    <value>设备码已过期</value>
+  </data>
 </root>

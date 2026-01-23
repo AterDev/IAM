@@ -278,14 +278,9 @@ public class ManagerSourceGen : IIncrementalGenerator
     /// <summary>
     /// Manager 类信息
     /// </summary>
-    private readonly struct ManagerInfo : IEquatable<ManagerInfo>
+    private readonly struct ManagerInfo(string fullName) : IEquatable<ManagerInfo>
     {
-        public string FullName { get; }
-
-        public ManagerInfo(string fullName)
-        {
-            FullName = fullName;
-        }
+        public string FullName { get; } = fullName;
 
         public bool Equals(ManagerInfo other) => FullName == other.FullName;
 
@@ -297,14 +292,9 @@ public class ManagerSourceGen : IIncrementalGenerator
     /// <summary>
     /// 模块信息
     /// </summary>
-    private readonly struct ModuleInfo : IEquatable<ModuleInfo>
+    private readonly struct ModuleInfo(string assemblyName) : IEquatable<ModuleInfo>
     {
-        public string AssemblyName { get; }
-
-        public ModuleInfo(string assemblyName)
-        {
-            AssemblyName = assemblyName;
-        }
+        public string AssemblyName { get; } = assemblyName;
 
         public bool Equals(ModuleInfo other) => AssemblyName == other.AssemblyName;
 
@@ -316,19 +306,13 @@ public class ManagerSourceGen : IIncrementalGenerator
     /// <summary>
     /// 引用程序集的数据
     /// </summary>
-    private readonly struct ReferencedData : IEquatable<ReferencedData>
+    private readonly struct ReferencedData(
+        ImmutableArray<ManagerSourceGen.ManagerInfo> managers,
+        ImmutableArray<ManagerSourceGen.ModuleInfo> modules
+        ) : IEquatable<ReferencedData>
     {
-        public ImmutableArray<ManagerInfo> Managers { get; }
-        public ImmutableArray<ModuleInfo> Modules { get; }
-
-        public ReferencedData(
-            ImmutableArray<ManagerInfo> managers,
-            ImmutableArray<ModuleInfo> modules
-        )
-        {
-            Managers = managers;
-            Modules = modules;
-        }
+        public ImmutableArray<ManagerInfo> Managers { get; } = managers;
+        public ImmutableArray<ModuleInfo> Modules { get; } = modules;
 
         public bool Equals(ReferencedData other)
         {

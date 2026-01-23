@@ -78,18 +78,12 @@ public class SwaggerSchemaFilter : ISchemaFilter
 
     private sealed record EnumItem(string Name, int Value, string? Description);
 
-    private sealed class EnumDataExtension : IOpenApiExtension
+    private sealed class EnumDataExtension(IReadOnlyList<SwaggerSchemaFilter.EnumItem> items) : IOpenApiExtension
     {
-        private readonly IReadOnlyList<EnumItem> _items;
-        public EnumDataExtension(IReadOnlyList<EnumItem> items)
-        {
-            _items = items;
-        }
-
         public void Write(IOpenApiWriter writer, OpenApiSpecVersion specVersion)
         {
             writer.WriteStartArray();
-            foreach (var item in _items)
+            foreach (var item in items)
             {
                 writer.WriteStartObject();
                 writer.WritePropertyName("name");

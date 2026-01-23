@@ -7,17 +7,8 @@ namespace Share.Services;
 /// <summary>
 /// Implementation of audit trail service
 /// </summary>
-public class AuditTrailService : IAuditTrailService
+public class AuditTrailService(ILogger<AuditTrailService> logger, IServiceProvider serviceProvider) : IAuditTrailService
 {
-    private readonly ILogger<AuditTrailService> _logger;
-    private readonly IServiceProvider _serviceProvider;
-
-    public AuditTrailService(ILogger<AuditTrailService> logger, IServiceProvider serviceProvider)
-    {
-        _logger = logger;
-        _serviceProvider = serviceProvider;
-    }
-
     public async Task LogEventAsync(
         string category,
         string eventName,
@@ -30,7 +21,7 @@ public class AuditTrailService : IAuditTrailService
         try
         {
             // Use a scoped service to avoid circular dependencies
-            using var scope = _serviceProvider.CreateScope();
+            using var scope = serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<DefaultDbContext>();
 
             var auditLog = new AuditLog
@@ -48,7 +39,7 @@ public class AuditTrailService : IAuditTrailService
         }
         catch (Exception ex)
         {
-            _logger.LogError(
+            logger.LogError(
                 ex,
                 "Failed to log audit event: {Category}/{Event}",
                 category,

@@ -1,4 +1,7 @@
 using Entity.IdentityMod;
+using Share;
+using Share.Constants;
+using Share.Exceptions;
 using System.Security.Claims;
 
 namespace AccessMod.Managers;
@@ -16,6 +19,8 @@ public class TokenManager(
     private readonly OAuthService _oauthService = oauthService;
     private readonly IPasswordHasher _passwordHasher = passwordHasher;
 
+
+
     /// <summary>
     /// Process token request with provided signing key
     /// </summary>
@@ -31,11 +36,7 @@ public class TokenManager(
             GrantTypes.ClientCredentials => await ProcessClientCredentialsGrantAsync(request, signingKey),
             GrantTypes.Password => await ProcessPasswordGrantAsync(request, signingKey),
             GrantTypes.DeviceCode => await ProcessDeviceCodeGrantAsync(request, signingKey),
-            _ => new TokenResponseDto
-            {
-                Error = ErrorCodes.UnsupportedGrantType,
-                ErrorDescription = "The grant type is not supported",
-            },
+            _ => throw new BusinessException(Localizer.OAuthUnsupportedGrantType),
         };
     }
 
@@ -49,23 +50,15 @@ public class TokenManager(
     {
         if (string.IsNullOrEmpty(request.Code) || string.IsNullOrEmpty(request.ClientId))
         {
-            return new TokenResponseDto
-            {
-                Error = ErrorCodes.InvalidRequest,
-                ErrorDescription = "Missing required parameters",
-            };
+            throw new BusinessException(Localizer.OAuthMissingParameters);
         }
 
         // Validate client
-        var client = await ValidateClientAsync(request.ClientId, request.ClientSecret);
-        if (client == null)
-        {
-            return new TokenResponseDto
-            {
-                Error = ErrorCodes.InvalidClient,
-                ErrorDescription = "Invalid client credentials",
-            };
-        }
+        var client = await GetValidatedClientAsync(
+            request.ClientId,
+            request.ClientSecret,
+            missingDescription: "Missing required parameters"
+        );
 
         // Validate authorization code
         var token = await _dbContext
@@ -79,31 +72,19 @@ public class TokenManager(
 
         if (token == null || token.Authorization == null)
         {
-            return new TokenResponseDto
-            {
-                Error = ErrorCodes.InvalidGrant,
-                ErrorDescription = "Invalid authorization code",
-            };
+            throw new BusinessException(Localizer.OAuthInvalidAuthorizationCode);
         }
 
         // Check expiration
         if (token.ExpirationDate < DateTimeOffset.UtcNow)
         {
-            return new TokenResponseDto
-            {
-                Error = ErrorCodes.InvalidGrant,
-                ErrorDescription = "Authorization code expired",
-            };
+            throw new BusinessException(Localizer.OAuthAuthorizationCodeExpired);
         }
 
         // Validate client
         if (token.Authorization.Client.ClientId != request.ClientId)
         {
-            return new TokenResponseDto
-            {
-                Error = ErrorCodes.InvalidClient,
-                ErrorDescription = "Client mismatch",
-            };
+            throw new BusinessException(Localizer.OAuthClientMismatch);
         }
 
         // Validate redirect URI
@@ -112,11 +93,7 @@ public class TokenManager(
         );
         if (properties?.GetValueOrDefault("redirect_uri") != request.RedirectUri)
         {
-            return new TokenResponseDto
-            {
-                Error = ErrorCodes.InvalidRequest,
-                ErrorDescription = "Invalid redirect URI",
-            };
+            throw new BusinessException(Localizer.OAuthInvalidRedirectUri);
         }
 
         // Validate PKCE if present
@@ -127,11 +104,7 @@ public class TokenManager(
         {
             if (string.IsNullOrEmpty(request.CodeVerifier))
             {
-                return new TokenResponseDto
-                {
-                    Error = ErrorCodes.InvalidRequest,
-                    ErrorDescription = "Missing code verifier",
-                };
+                throw new BusinessException(Localizer.OAuthMissingCodeVerifier);
             }
 
             var isValidPkce = OAuthService.ValidatePkce(
@@ -141,11 +114,7 @@ public class TokenManager(
             );
             if (!isValidPkce)
             {
-                return new TokenResponseDto
-                {
-                    Error = ErrorCodes.InvalidGrant,
-                    ErrorDescription = "Invalid code verifier",
-                };
+                throw new BusinessException(Localizer.OAuthInvalidCodeVerifier);
             }
         }
 
@@ -162,11 +131,7 @@ public class TokenManager(
         );
         if (user == null)
         {
-            return new TokenResponseDto
-            {
-                Error = ErrorCodes.InvalidGrant,
-                ErrorDescription = "User not found",
-            };
+            throw new BusinessException(Localizer.UserNotFound);
         }
 
         // Generate tokens
@@ -183,11 +148,7 @@ public class TokenManager(
     {
         if (string.IsNullOrEmpty(request.RefreshToken))
         {
-            return new TokenResponseDto
-            {
-                Error = ErrorCodes.InvalidRequest,
-                ErrorDescription = "Missing refresh token",
-            };
+            throw new BusinessException(Localizer.OAuthMissingRefreshToken);
         }
 
         // Find refresh token
@@ -202,21 +163,13 @@ public class TokenManager(
 
         if (tokenEntity == null || tokenEntity.Authorization == null)
         {
-            return new TokenResponseDto
-            {
-                Error = ErrorCodes.InvalidGrant,
-                ErrorDescription = "Invalid refresh token",
-            };
+            throw new BusinessException(Localizer.OAuthInvalidRefreshToken);
         }
 
         // Check expiration
         if (tokenEntity.ExpirationDate < DateTimeOffset.UtcNow)
         {
-            return new TokenResponseDto
-            {
-                Error = ErrorCodes.InvalidGrant,
-                ErrorDescription = "Refresh token expired",
-            };
+            throw new BusinessException(Localizer.OAuthRefreshTokenExpired);
         }
 
         // Validate client
@@ -225,11 +178,7 @@ public class TokenManager(
             && tokenEntity.Authorization.Client.ClientId != request.ClientId
         )
         {
-            return new TokenResponseDto
-            {
-                Error = ErrorCodes.InvalidClient,
-                ErrorDescription = "Client mismatch",
-            };
+            throw new BusinessException(Localizer.OAuthClientMismatch);
         }
 
         // Get user
@@ -238,11 +187,7 @@ public class TokenManager(
         );
         if (user == null)
         {
-            return new TokenResponseDto
-            {
-                Error = ErrorCodes.InvalidGrant,
-                ErrorDescription = "User not found",
-            };
+            throw new BusinessException(Localizer.UserNotFound);
         }
 
         // Generate new tokens
@@ -255,6 +200,57 @@ public class TokenManager(
         );
     }
 
+    private async Task<Client> GetValidatedClientAsync(
+       string? clientId,
+       string? clientSecret,
+       string missingDescription = "Missing client credentials"
+   )
+    {
+        if (string.IsNullOrEmpty(clientId))
+        {
+            throw new BusinessException(Localizer.BadRequest);
+        }
+
+        var client = await ValidateClientAsync(clientId, clientSecret);
+        return client ?? throw new BusinessException(Localizer.OAuthInvalidClient);
+    }
+
+    private async Task<Guid> CreateAuthorizationAsync(
+        Client client,
+        string subjectId,
+        string type,
+        string? scopes,
+        DateTimeOffset expirationDate,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var authorization = new Authorization
+        {
+            SubjectId = subjectId,
+            ClientId = client.Id,
+            Type = type,
+            Status = AuthorizationStatuses.Valid,
+            Scopes = scopes,
+            CreationDate = DateTimeOffset.UtcNow,
+            ExpirationDate = expirationDate,
+        };
+
+        await _dbContext.Authorizations.AddAsync(authorization, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return authorization.Id;
+    }
+
+    private static IEnumerable<Claim> BuildAudienceClaims(Client client)
+    {
+        var audiences = client.ClientResources
+            .Select(cr => cr.ApiResource?.Name)
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        return audiences.Select(aud => new Claim(OAuthConst.ClaimTypes.Audience, aud!));
+    }
+
     /// <summary>
     /// Process client credentials grant
     /// </summary>
@@ -263,48 +259,29 @@ public class TokenManager(
         SigningKey signingKey
     )
     {
-        if (string.IsNullOrEmpty(request.ClientId) || string.IsNullOrEmpty(request.ClientSecret))
-        {
-            return new TokenResponseDto
-            {
-                Error = ErrorCodes.InvalidRequest,
-                ErrorDescription = "Missing client credentials",
-            };
-        }
+        var client = await GetValidatedClientAsync(
+            request.ClientId,
+            request.ClientSecret,
+            missingDescription: "Missing client credentials"
+        );
 
-        // Validate client
-        var client = await ValidateClientAsync(request.ClientId, request.ClientSecret);
-        if (client == null)
-        {
-            return new TokenResponseDto
-            {
-                Error = ErrorCodes.InvalidClient,
-                ErrorDescription = "Invalid client credentials",
-            };
-        }
-
-        // Create authorization for client
-        var authorization = new Authorization
-        {
-            SubjectId = client.Id.ToString(),
-            ClientId = client.Id,
-            Type = AuthorizationTypes.ClientCredentials,
-            Status = AuthorizationStatuses.Valid,
-            Scopes = request.Scope,
-            CreationDate = DateTimeOffset.UtcNow,
-            ExpirationDate = DateTimeOffset.UtcNow.AddHours(1),
-        };
-
-        await _dbContext.Authorizations.AddAsync(authorization);
-        await _dbContext.SaveChangesAsync();
+        var authorizationId = await CreateAuthorizationAsync(
+            client,
+            subjectId: client.Id.ToString(),
+            type: AuthorizationTypes.ClientCredentials,
+            scopes: request.Scope,
+            expirationDate: DateTimeOffset.UtcNow.AddHours(1)
+        );
 
         // Generate access token
         var claims = new List<Claim>
         {
-            new(OAuthConstants.ClaimTypes.Subject, client.Id.ToString()),
-            new(OAuthConstants.ClaimTypes.ClientId, client.ClientId),
-            new(OAuthConstants.ClaimTypes.Scope, request.Scope ?? ""),
+            new(OAuthConst.ClaimTypes.Subject, client.Id.ToString()),
+            new(OAuthConst.ClaimTypes.ClientId, client.ClientId),
+            new(OAuthConst.ClaimTypes.Scope, request.Scope ?? ""),
         };
+
+        claims.AddRange(BuildAudienceClaims(client));
 
         var accessToken = _oauthService.GenerateToken(claims, signingKey, 3600);
         var refreshTokenValue = OAuthService.GenerateTokenReference();
@@ -312,7 +289,7 @@ public class TokenManager(
         // Store token
         var token = new Token
         {
-            AuthorizationId = authorization.Id,
+            AuthorizationId = authorizationId,
             ReferenceId = OAuthService.GenerateTokenReference(),
             Type = TokenTypes.AccessToken,
             Status = TokenStatuses.Valid,
@@ -344,23 +321,15 @@ public class TokenManager(
     {
         if (string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.Password))
         {
-            return new TokenResponseDto
-            {
-                Error = ErrorCodes.InvalidRequest,
-                ErrorDescription = "Missing username or password",
-            };
+            throw new BusinessException(Localizer.OAuthMissingUsernameOrPassword);
         }
 
         // Validate client
-        var client = await ValidateClientAsync(request.ClientId, request.ClientSecret);
-        if (client == null)
-        {
-            return new TokenResponseDto
-            {
-                Error = ErrorCodes.InvalidClient,
-                ErrorDescription = "Invalid client credentials",
-            };
-        }
+        var client = await GetValidatedClientAsync(
+            request.ClientId,
+            request.ClientSecret,
+            missingDescription: "Missing client credentials"
+        );
 
         // Find user
         var user = await _dbContext.Users.FirstOrDefaultAsync(u =>
@@ -369,22 +338,14 @@ public class TokenManager(
 
         if (user == null || string.IsNullOrEmpty(user.PasswordHash))
         {
-            return new TokenResponseDto
-            {
-                Error = ErrorCodes.InvalidGrant,
-                ErrorDescription = "Invalid username or password",
-            };
+            throw new BusinessException(Localizer.InvalidUserOrPassword);
         }
 
         // Verify password
         var passwordValid = _passwordHasher.VerifyPassword(user.PasswordHash, request.Password);
         if (!passwordValid)
         {
-            return new TokenResponseDto
-            {
-                Error = ErrorCodes.InvalidGrant,
-                ErrorDescription = "Invalid username or password",
-            };
+            throw new BusinessException(Localizer.InvalidUserOrPassword);
         }
 
         // Generate tokens
@@ -401,11 +362,7 @@ public class TokenManager(
     {
         if (string.IsNullOrEmpty(request.DeviceCode))
         {
-            return new TokenResponseDto
-            {
-                Error = ErrorCodes.InvalidRequest,
-                ErrorDescription = "Missing device code",
-            };
+            throw new BusinessException(Localizer.OAuthMissingDeviceCode);
         }
 
         // Find device code
@@ -418,41 +375,25 @@ public class TokenManager(
 
         if (tokenEntity == null || tokenEntity.Authorization == null)
         {
-            return new TokenResponseDto
-            {
-                Error = ErrorCodes.InvalidGrant,
-                ErrorDescription = "Invalid device code",
-            };
+            throw new BusinessException(Localizer.OAuthInvalidDeviceCode);
         }
 
         // Check if pending
         if (tokenEntity.Status == TokenStatuses.Pending)
         {
-            return new TokenResponseDto
-            {
-                Error = ErrorCodes.AuthorizationPending,
-                ErrorDescription = "User has not yet authorized the device",
-            };
+            throw new BusinessException(Localizer.OAuthAuthorizationPending);
         }
 
         // Check if denied
         if (tokenEntity.Status == TokenStatuses.Denied)
         {
-            return new TokenResponseDto
-            {
-                Error = ErrorCodes.AccessDenied,
-                ErrorDescription = "User denied the authorization",
-            };
+            throw new BusinessException(Localizer.OAuthAccessDenied);
         }
 
         // Check expiration
         if (tokenEntity.ExpirationDate < DateTimeOffset.UtcNow)
         {
-            return new TokenResponseDto
-            {
-                Error = ErrorCodes.ExpiredToken,
-                ErrorDescription = "Device code expired",
-            };
+            throw new BusinessException(Localizer.OAuthDeviceCodeExpired);
         }
 
         // Get user
@@ -461,11 +402,7 @@ public class TokenManager(
         );
         if (user == null)
         {
-            return new TokenResponseDto
-            {
-                Error = ErrorCodes.InvalidGrant,
-                ErrorDescription = "User not found",
-            };
+            throw new BusinessException(Localizer.UserNotFound);
         }
 
         // Mark as redeemed
@@ -497,19 +434,21 @@ public class TokenManager(
         // Build claims
         var claims = new List<Claim>
         {
-            new(OAuthConstants.ClaimTypes.Subject, user.Id.ToString()),
-            new(OAuthConstants.ClaimTypes.Name, user.UserName),
-            new(OAuthConstants.ClaimTypes.ClientId, client.ClientId),
+            new(OAuthConst.ClaimTypes.Subject, user.Id.ToString()),
+            new(OAuthConst.ClaimTypes.Name, user.UserName),
+            new(OAuthConst.ClaimTypes.ClientId, client.ClientId),
         };
+
+        claims.AddRange(BuildAudienceClaims(client));
 
         if (!string.IsNullOrEmpty(user.Email))
         {
-            claims.Add(new Claim(OAuthConstants.ClaimTypes.Email, user.Email));
+            claims.Add(new Claim(OAuthConst.ClaimTypes.Email, user.Email));
         }
 
         if (!string.IsNullOrEmpty(scope))
         {
-            claims.Add(new Claim(OAuthConstants.ClaimTypes.Scope, scope));
+            claims.Add(new Claim(OAuthConst.ClaimTypes.Scope, scope));
         }
 
         // Generate access token
@@ -519,20 +458,13 @@ public class TokenManager(
         // Create authorization if not exists
         if (!authorizationId.HasValue)
         {
-            var authorization = new Authorization
-            {
-                SubjectId = user.Id.ToString(),
-                ClientId = client.Id,
-                Type = AuthorizationTypes.Password,
-                Status = AuthorizationStatuses.Valid,
-                Scopes = scope,
-                CreationDate = DateTimeOffset.UtcNow,
-                ExpirationDate = DateTimeOffset.UtcNow.AddDays(30),
-            };
-
-            await _dbContext.Authorizations.AddAsync(authorization);
-            await _dbContext.SaveChangesAsync();
-            authorizationId = authorization.Id;
+            authorizationId = await CreateAuthorizationAsync(
+                client,
+                subjectId: user.Id.ToString(),
+                type: AuthorizationTypes.Password,
+                scopes: scope,
+                expirationDate: DateTimeOffset.UtcNow.AddDays(30)
+            );
         }
 
         // Store access token
@@ -570,14 +502,15 @@ public class TokenManager(
         {
             var idClaims = new List<Claim>
             {
-                new(OAuthConstants.ClaimTypes.Subject, user.Id.ToString()),
-                new(OAuthConstants.ClaimTypes.Name, user.UserName),
-                new(OAuthConstants.ClaimTypes.Audience, client.ClientId),
+                new(OAuthConst.ClaimTypes.Subject, user.Id.ToString()),
+                new(OAuthConst.ClaimTypes.Name, user.UserName),
             };
+
+            idClaims.AddRange(BuildAudienceClaims(client));
 
             if (!string.IsNullOrEmpty(user.Email))
             {
-                idClaims.Add(new Claim(OAuthConstants.ClaimTypes.Email, user.Email));
+                idClaims.Add(new Claim(OAuthConst.ClaimTypes.Email, user.Email));
             }
 
             idToken = _oauthService.GenerateToken(idClaims, signingKey, 3600);
@@ -607,6 +540,8 @@ public class TokenManager(
         var client = await _dbContext
             .Clients.Include(c => c.ClientScopes)
             .ThenInclude(cs => cs.Scope)
+            .Include(c => c.ClientResources)
+            .ThenInclude(cr => cr.ApiResource)
             .FirstOrDefaultAsync(c => c.ClientId == clientId);
 
         if (client == null)

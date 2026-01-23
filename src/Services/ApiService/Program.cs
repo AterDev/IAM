@@ -1,12 +1,13 @@
 using AccessMod;
+using AccessMod.Services;
 using ApiService.Extension;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Perigon.AspNetCore.Constants;
 using Perigon.AspNetCore.Options;
 using ServiceDefaults.Middleware;
-using System.Text;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +19,7 @@ builder.AddFrameworkServices();
 
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
+    options.AddPolicy(AppConst.Default, policy =>
     {
         policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
     });
@@ -34,35 +35,15 @@ builder.Services.AddSession(options =>
 });
 
 builder.Services.AddAuthentication(options =>
-{
-    // 对于 API 默认使用 JWT
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    // 但对于 Razor Pages 使用 Cookie
-    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(cfg =>
-{
-    cfg.SaveToken = true;
-    var jwtOption = builder.Configuration.GetSection(JwtOption.ConfigPath).Get<JwtOption>();
-    var sign = jwtOption?.Sign;
-    if (string.IsNullOrEmpty(sign))
     {
-        throw new Exception("未找到有效的Jwt配置");
-    }
-    cfg.TokenValidationParameters = new TokenValidationParameters()
-    {
-
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(sign)),
-        ValidIssuer = jwtOption?.ValidIssuer,
-        ValidAudience = jwtOption?.ValidAudiences,
-        ValidateIssuer = true,
-        ValidateLifetime = true,
-        RequireExpirationTime = true,
-        ValidateIssuerSigningKey = true,
-    };
-})
-.AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+        // 对于 API 默认使用 JWT
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        // 但对于 Razor Pages 使用 Cookie
+        options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer()
+    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
 {
     options.LoginPath = "/Account/Login";
     options.LogoutPath = "/Account/Logout";
@@ -85,6 +66,31 @@ builder.Services.AddLocalizer();
 builder.Services.AddRazorPages();
 
 builder.Services.AddManagers();
+builder.Services.AddSingleton<SigningKeyResolver>();
+builder.Services.AddSingleton<IConfigureOptions<JwtBearerOptions>>(sp =>
+    new ConfigureNamedOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
+    {
+        var jwtOption = sp.GetRequiredService<IOptions<JwtOption>>().Value;
+        if (string.IsNullOrWhiteSpace(jwtOption.ValidIssuer) || string.IsNullOrWhiteSpace(jwtOption.ValidAudiences))
+        {
+            throw new InvalidOperationException("未找到有效的Jwt配置");
+        }
+
+        options.SaveToken = true;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            IssuerSigningKeyResolver = (token, securityToken, keyId, parameters) =>
+                sp.GetRequiredService<SigningKeyResolver>().Resolve(keyId),
+
+            ValidIssuer = jwtOption.ValidIssuer,
+            ValidAudience = jwtOption.ValidAudiences,
+            ValidateIssuer = true,
+            ValidateLifetime = true,
+            RequireExpirationTime = true,
+            ValidateIssuerSigningKey = true,
+        };
+    })
+);
 builder.AddModules();
 
 
@@ -92,6 +98,7 @@ WebApplication app = builder.Build();
 
 app.UseSession();
 app.UseRouting();
+app.UseCors(AppConst.Default);
 app.UseStaticFiles();
 app.UseRequestLocalization();
 app.UseMiddleware<GlobalExceptionMiddleware>();
@@ -108,8 +115,11 @@ using (app)
     // 在启动前执行初始化操作
     await using (var scope = app.Services.CreateAsyncScope())
     {
-        IServiceProvider provider = scope.ServiceProvider;
+        var provider = scope.ServiceProvider;
         await InitModule.InitializeAsync(provider);
+
+        var signingKeyResolver = provider.GetRequiredService<SigningKeyResolver>();
+        await signingKeyResolver.PreloadSigningKeysAsync();
     }
     app.Run();
 }

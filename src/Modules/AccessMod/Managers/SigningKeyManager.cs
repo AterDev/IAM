@@ -15,7 +15,6 @@ public class SigningKeyManager(
 ) : ManagerBase<DefaultDbContext, SigningKey>(dbContextFactory, userContext, logger)
 {
     private readonly CacheService _cacheService = cacheService;
-    private const string ActiveKeyCacheKey = "SigningKey:Active";
 
     public override Task<bool> HasPermissionAsync(Guid id)
     {
@@ -28,7 +27,7 @@ public class SigningKeyManager(
     /// </summary>
     public async Task<SigningKey?> GetActiveSigningKeyAsync(CancellationToken cancellationToken = default)
     {
-        return await _cacheService.GetOrCreateAsync(ActiveKeyCacheKey, async ct =>
+        return await _cacheService.GetOrCreateAsync(SigningKeyCacheKeys.Active, async ct =>
             {
                 var now = DateTimeOffset.UtcNow;
                 return await _dbSet
@@ -87,7 +86,8 @@ public class SigningKeyManager(
 
         await _dbSet.AddAsync(signingKey, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
-        await _cacheService.RemoveAsync(ActiveKeyCacheKey);
+        await _cacheService.RemoveAsync(SigningKeyCacheKeys.Active);
+        await _cacheService.RemoveAsync(SigningKeyCacheKeys.Resolver);
 
         return signingKey;
     }
@@ -106,7 +106,8 @@ public class SigningKeyManager(
         key.IsActive = false;
         key.IsDeleted = true;
         await _dbContext.SaveChangesAsync(cancellationToken);
-        await _cacheService.RemoveAsync(ActiveKeyCacheKey);
+        await _cacheService.RemoveAsync(SigningKeyCacheKeys.Active);
+        await _cacheService.RemoveAsync(SigningKeyCacheKeys.Resolver);
 
         return true;
     }

@@ -12,4 +12,4 @@ global using Perigon.AspNetCore.Utils;
 global using Share.Implement;
 global using Share.Services;
 global using System.ComponentModel.DataAnnotations;
-global using static AccessMod.OAuthConstants;
+global using static Share.Constants.OAuthConst;

@@ -42,16 +42,4 @@ public class TokenResponseDto
     /// </summary>
     [JsonPropertyName("scope")]
     public string? Scope { get; set; }
-
-    /// <summary>
-    /// Error code
-    /// </summary>
-    [JsonPropertyName("error")]
-    public string? Error { get; set; }
-
-    /// <summary>
-    /// Error description
-    /// </summary>
-    [JsonPropertyName("error_description")]
-    public string? ErrorDescription { get; set; }
 }

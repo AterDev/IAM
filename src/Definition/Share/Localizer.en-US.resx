@@ -221,4 +221,58 @@
   <data name="TenantNotExist" xml:space="preserve">
     <value>The tenant does not exist</value>
   </data>
+  <data name="OAuthInvalidClient" xml:space="preserve">
+    <value>Invalid client credentials</value>
+  </data>
+  <data name="OAuthUnsupportedGrantType" xml:space="preserve">
+    <value>The grant type is not supported</value>
+  </data>
+  <data name="OAuthMissingParameters" xml:space="preserve">
+    <value>Missing required parameters</value>
+  </data>
+  <data name="OAuthInvalidAuthorizationCode" xml:space="preserve">
+    <value>Invalid authorization code</value>
+  </data>
+  <data name="OAuthAuthorizationCodeExpired" xml:space="preserve">
+    <value>Authorization code expired</value>
+  </data>
+  <data name="OAuthClientMismatch" xml:space="preserve">
+    <value>Client mismatch</value>
+  </data>
+  <data name="OAuthInvalidRedirectUri" xml:space="preserve">
+    <value>Invalid redirect URI</value>
+  </data>
+  <data name="OAuthMissingCodeVerifier" xml:space="preserve">
+    <value>Missing code verifier</value>
+  </data>
+  <data name="OAuthInvalidCodeVerifier" xml:space="preserve">
+    <value>Invalid code verifier</value>
+  </data>
+  <data name="OAuthMissingRefreshToken" xml:space="preserve">
+    <value>Missing refresh token</value>
+  </data>
+  <data name="OAuthInvalidRefreshToken" xml:space="preserve">
+    <value>Invalid refresh token</value>
+  </data>
+  <data name="OAuthRefreshTokenExpired" xml:space="preserve">
+    <value>Refresh token expired</value>
+  </data>
+  <data name="OAuthMissingUsernameOrPassword" xml:space="preserve">
+    <value>Missing username or password</value>
+  </data>
+  <data name="OAuthMissingDeviceCode" xml:space="preserve">
+    <value>Missing device code</value>
+  </data>
+  <data name="OAuthInvalidDeviceCode" xml:space="preserve">
+    <value>Invalid device code</value>
+  </data>
+  <data name="OAuthAuthorizationPending" xml:space="preserve">
+    <value>User has not yet authorized the device</value>
+  </data>
+  <data name="OAuthAccessDenied" xml:space="preserve">
+    <value>User denied the authorization</value>
+  </data>
+  <data name="OAuthDeviceCodeExpired" xml:space="preserve">
+    <value>Device code expired</value>
+  </data>
 </root>

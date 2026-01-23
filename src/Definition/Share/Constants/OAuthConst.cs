@@ -1,9 +1,9 @@
-namespace AccessMod;
+namespace Share.Constants;
 
 /// <summary>
 /// OAuth 2.0 and OpenID Connect constants
 /// </summary>
-public static class OAuthConstants
+public static class OAuthConst
 {
     /// <summary>
     /// OAuth 2.0 grant type values
