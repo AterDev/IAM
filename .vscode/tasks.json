@@ -1,0 +1,19 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build ApiService",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"src/Services/ApiService/ApiService.csproj",
+				"-v",
+				"normal"
+			],
+			"problemMatcher": [
+				"$msCompile"
+			]
+		}
+	]
+}

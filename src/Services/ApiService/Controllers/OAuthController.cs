@@ -1,9 +1,8 @@
-using AccessMod.Managers;
-using AccessMod.Models.OAuthDtos;
+using IAMMod.Managers;
+using IAMMod.Models.OAuthDtos;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
-using Share;
 using Share.Constants;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -193,7 +192,6 @@ public class OAuthController(
     {
         try
         {
-            // 获取活跃的签名密钥 (遵循 Controller 协调多个 Manager 的规则)
             var signingKey = await _signingKeyManager.GetActiveSigningKeyAsync();
             if (signingKey == null)
             {

@@ -1,5 +1,5 @@
-using AccessMod.Managers;
-using AccessMod.Models.ResourceDtos;
+using IAMMod.Managers;
+using IAMMod.Models.ResourceDtos;
 
 namespace ApiService.Controllers;
 

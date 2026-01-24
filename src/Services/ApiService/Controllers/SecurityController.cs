@@ -1,7 +1,7 @@
 using CommonMod.Managers;
 using CommonMod.Models.AuditLogDtos;
-using IdentityMod.Managers;
-using IdentityMod.Models.LoginSessionDtos;
+using IAMMod.Managers;
+using IAMMod.Models.LoginSessionDtos;
 
 namespace ApiService.Controllers;
 

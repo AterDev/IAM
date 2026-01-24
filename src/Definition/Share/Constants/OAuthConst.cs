@@ -5,6 +5,9 @@ namespace Share.Constants;
 /// </summary>
 public static class OAuthConst
 {
+    public const string SigningKeyCacheKey = "SigningKey:Resolver";
+    public const string SigningActiveKeyCacheKey = "SigningKey:Active";
+
     /// <summary>
     /// OAuth 2.0 grant type values
     /// </summary>

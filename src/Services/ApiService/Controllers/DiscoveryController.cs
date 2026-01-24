@@ -1,5 +1,5 @@
-using AccessMod.Managers;
-using AccessMod.Models.OAuthDtos;
+using IAMMod.Managers;
+using IAMMod.Models.OAuthDtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Perigon.AspNetCore.Constants;
@@ -17,15 +17,16 @@ namespace ApiService.Controllers;
 /// These endpoints enable clients to discover the OpenID Provider's capabilities
 /// and obtain the public keys needed for JWT signature verification.
 /// </remarks>
-[ApiController]
+[Route(".well-known")]
 [AllowAnonymous]
 [Produces("application/json")]
 public class DiscoveryController(
+    Share.Localizer localizer,
     DiscoveryManager discoveryManager,
     SigningKeyManager signingKeyManager,
     IConfiguration configuration,
     ILogger<DiscoveryController> logger
-) : ControllerBase
+) : RestControllerBase(localizer)
 {
     private readonly DiscoveryManager _discoveryManager = discoveryManager;
     private readonly SigningKeyManager _signingKeyManager = signingKeyManager;

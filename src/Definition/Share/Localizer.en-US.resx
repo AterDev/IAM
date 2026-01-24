@@ -174,6 +174,9 @@
   <data name="EntityNotFound" xml:space="preserve">
     <value>Entity to delete not found</value>
   </data>
+  <data name="ClientNotFound" xml:space="preserve">
+    <value>Client not found</value>
+  </data>
   <data name="MenuUpdateFailed" xml:space="preserve">
     <value>Menu update failed</value>
   </data>

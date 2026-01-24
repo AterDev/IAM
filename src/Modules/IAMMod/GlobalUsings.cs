@@ -1,0 +1,13 @@
+global using Entity.IAMMod;
+global using EntityFramework.AppDbContext;
+global using EntityFramework.AppDbFactory;
+global using IAMMod.Models.OAuthDtos;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.Extensions.Logging;
+global using Perigon.AspNetCore.Abstraction;
+global using Perigon.AspNetCore.Models;
+// global using IAMMod.Managers;
+global using Perigon.AspNetCore.Utils;
+global using Share.Implement;
+global using System.ComponentModel.DataAnnotations;
+global using static Share.Constants.OAuthConst;

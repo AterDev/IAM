@@ -15,6 +15,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Options\" />
+    <Folder Include="Services\" />
     <Folder Include="Utilities\" />
   </ItemGroup>
   <ItemGroup>

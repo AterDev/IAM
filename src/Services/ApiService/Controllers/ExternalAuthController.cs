@@ -5,9 +5,10 @@ using ClaimTypes = System.Security.Claims.ClaimTypes;
 
 namespace ApiService.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
-public class ExternalAuthController(ILogger<ExternalAuthController> logger) : ControllerBase
+public class ExternalAuthController(
+    Localizer localizer,
+    ILogger<ExternalAuthController> logger
+) : RestControllerBase(localizer)
 {
     /// <summary>
     /// Microsft login

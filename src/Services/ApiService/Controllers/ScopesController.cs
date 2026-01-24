@@ -1,5 +1,5 @@
-using AccessMod.Managers;
-using AccessMod.Models.ScopeDtos;
+using IAMMod.Managers;
+using IAMMod.Models.ScopeDtos;
 
 namespace ApiService.Controllers;
 

@@ -1,8 +1,7 @@
-using IdentityMod.Managers;
-using IdentityMod.Models.AdminAuthDtos;
+using IAMMod.Managers;
+using IAMMod.Models.AdminAuthDtos;
 using Microsoft.AspNetCore.Authorization;
 using Perigon.AspNetCore.Services;
-using Share;
 using System.Security.Claims;
 using ClaimTypes = System.Security.Claims.ClaimTypes;
 
@@ -11,14 +10,14 @@ namespace ApiService.Controllers;
 /// <summary>
 /// Admin authentication controller for management portal login
 /// </summary>
-[ApiController]
 [Route("api/admin")]
 public class AdminAuthController(
+    Share.Localizer localizer,
     UserManager userManager,
     RoleManager roleManager,
     JwtService jwtService,
     ILogger<AdminAuthController> logger
-) : ControllerBase
+) : RestControllerBase(localizer)
 {
     private readonly UserManager _userManager = userManager;
     private readonly RoleManager _roleManager = roleManager;

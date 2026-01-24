@@ -1,21 +1,18 @@
-using AccessMod.Managers;
-using AccessMod.Models.AuthorizationDtos;
-using Entity.AccessMod;
+using IAMMod.Managers;
+using IAMMod.Models.AuthorizationDtos;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 
 namespace ApiService.Controllers;
 
 /// <summary>
 /// Authorization management controller for users to view and manage their authorizations
 /// </summary>
-[ApiController]
-[Route("api/[controller]")]
 [Authorize]
 public class AuthorizationController(
+    Share.Localizer localizer,
     ConsentManager consentManager,
     ILogger<AuthorizationController> logger
-) : ControllerBase
+) : RestControllerBase(localizer)
 {
     private readonly ConsentManager _consentManager = consentManager;
     private readonly ILogger<AuthorizationController> _logger = logger;
@@ -34,7 +31,7 @@ public class AuthorizationController(
         }
 
         var authorizations = await _consentManager.GetUserConsentsAsync(userId);
-        
+
         var result = authorizations.Select(a => new UserAuthorizationDto
         {
             Id = a.Id,
@@ -70,7 +67,7 @@ public class AuthorizationController(
         }
 
         var result = await _consentManager.RevokeAuthorizationAsync(userId, id);
-        
+
         if (!result)
         {
             return NotFound(new { message = "Authorization not found or already revoked" });
@@ -100,7 +97,7 @@ public class AuthorizationController(
         }
 
         var result = await _consentManager.RevokeConsentAsync(userId, clientId);
-        
+
         if (!result)
         {
             return NotFound(new { message = "No authorizations found for this client" });

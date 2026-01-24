@@ -1,4 +1,5 @@
 using CommonMod.Models.AuditLogDtos;
+using Entity.IAMMod;
 using EntityFramework.AppDbFactory;
 
 namespace CommonMod.Managers;

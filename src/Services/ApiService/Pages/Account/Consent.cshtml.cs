@@ -1,7 +1,4 @@
-using AccessMod.Managers;
-using Entity.AccessMod;
-using IdentityMod;
-using Microsoft.AspNetCore.Mvc;
+using IAMMod.Managers;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace ApiService.Pages.Account;

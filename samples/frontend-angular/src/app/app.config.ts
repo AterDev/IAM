@@ -30,7 +30,6 @@ export const appConfig: ApplicationConfig = {
           customParamsAuthRequest: {},
           renewUserInfoAfterTokenRenew: false,
           unauthorizedRoute: '/unauthorized',
-          // 关键：禁用各种验证（开发环境）
           disableIdTokenValidation: true,
           disableIatOffsetValidation: true,
           ignoreNonceAfterRefresh: true,

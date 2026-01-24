@@ -1,6 +1,6 @@
-using AccessMod;
-using AccessMod.Services;
 using ApiService.Extension;
+using IAMMod;
+using IAMMod.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
@@ -65,7 +65,6 @@ builder.Services.AddLocalizer();
 // Add Razor Pages for OAuth UI (login, consent, logout)
 builder.Services.AddRazorPages();
 
-builder.Services.AddManagers();
 builder.Services.AddSingleton<SigningKeyResolver>();
 builder.Services.AddSingleton<IConfigureOptions<JwtBearerOptions>>(sp =>
     new ConfigureNamedOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
@@ -80,7 +79,11 @@ builder.Services.AddSingleton<IConfigureOptions<JwtBearerOptions>>(sp =>
         options.TokenValidationParameters = new TokenValidationParameters
         {
             IssuerSigningKeyResolver = (token, securityToken, keyId, parameters) =>
-                sp.GetRequiredService<SigningKeyResolver>().Resolve(keyId),
+            {
+                // Auth center validates tokens it issued: use local DB-cached signing keys.
+                var resolver = sp.GetRequiredService<SigningKeyResolver>();
+                return resolver.Resolve(keyId);
+            },
 
             ValidIssuer = jwtOption.ValidIssuer,
             ValidAudience = jwtOption.ValidAudiences,
@@ -91,6 +94,7 @@ builder.Services.AddSingleton<IConfigureOptions<JwtBearerOptions>>(sp =>
         };
     })
 );
+builder.Services.AddManagers();
 builder.AddModules();
 
 
@@ -117,11 +121,6 @@ using (app)
     {
         var provider = scope.ServiceProvider;
         await InitModule.InitializeAsync(provider);
-
-        var signingKeyResolver = provider.GetRequiredService<SigningKeyResolver>();
-        await signingKeyResolver.PreloadSigningKeysAsync();
     }
     app.Run();
 }
-
-

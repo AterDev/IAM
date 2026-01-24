@@ -1,5 +1,5 @@
-using IdentityMod.Managers;
-using IdentityMod.Models.UserDtos;
+using IAMMod.Managers;
+using IAMMod.Models.UserDtos;
 
 namespace ApiService.Controllers;
 

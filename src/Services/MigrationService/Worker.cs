@@ -1,8 +1,7 @@
-using Entity.AccessMod;
-using Entity.IdentityMod;
+using Entity.IAMMod;
 using Microsoft.EntityFrameworkCore;
 using Perigon.AspNetCore.Constants;
-using Share.Services;
+using Perigon.AspNetCore.Utils;
 using System.Diagnostics;
 
 namespace MigrationService;
@@ -84,9 +83,6 @@ public class Worker(
 
         if (!adminExists)
         {
-            // Create password hasher
-            var passwordHasher = new PasswordHasherService();
-
             // Create default admin role if not exists
             var adminRoleName = WebConst.SuperAdmin;
             var normalizedAdminRoleName = adminRoleName.ToUpperInvariant();
@@ -111,6 +107,7 @@ public class Worker(
             }
 
             // Create admin user
+            var salt = HashCrypto.BuildSalt();
             var adminUser = new User
             {
                 UserName = adminUserName,
@@ -118,7 +115,8 @@ public class Worker(
                 Email = "admin@default.com",
                 NormalizedEmail = "ADMIN@DEFAULT.COM",
                 EmailConfirmed = true,
-                PasswordHash = passwordHasher.HashPassword("Perigon.2026"),
+                PasswordSalt = salt,
+                PasswordHash = HashCrypto.GeneratePwd("Perigon.2026", salt),
                 SecurityStamp = Guid.NewGuid().ToString(),
                 ConcurrencyStamp = Guid.NewGuid().ToString(),
                 LockoutEnabled = true,
@@ -146,8 +144,6 @@ public class Worker(
         CancellationToken cancellationToken
     )
     {
-        var passwordHasher = new PasswordHasherService();
-
         // Create default scopes
         var defaultScopes = new List<(string Name, string DisplayName, string Description, bool Required)>
         {
@@ -215,10 +211,10 @@ public class Worker(
                 ClientId = frontClientId,
                 DisplayName = "前端客户端",
                 Description = "默认的前端单页应用客户端，支持OIDC授权码流程+PKCE",
-                Type = "public",
-                ApplicationType = "spa",
+                Type = ClientType.Public,
+                ApplicationType = ApplicationType.Spa,
                 RequirePkce = true,
-                ConsentType = "implicit",
+                ConsentType = ConsentType.Implicit,
                 RedirectUris =
                 [
                     "http://localhost:4200",
@@ -264,16 +260,18 @@ public class Worker(
         if (!apiClientExists)
         {
             var apiClientSecret = "ApiClient_Secret_2025";
+            var salt = HashCrypto.BuildSalt();
             var apiClient = new Client
             {
                 ClientId = apiClientId,
-                ClientSecret = passwordHasher.HashPassword(apiClientSecret),
+                SecretSalt = salt,
+                SecretHash = HashCrypto.GeneratePwd(apiClientSecret, salt),
                 DisplayName = "API客户端",
                 Description = "默认的后端API服务客户端，支持客户端凭证流程",
-                Type = "confidential",
-                ApplicationType = "web",
+                Type = ClientType.Confidential,
+                ApplicationType = ApplicationType.Web,
                 RequirePkce = false,
-                ConsentType = "implicit",
+                ConsentType = ConsentType.Implicit,
             };
 
             dbContext.Set<Client>().Add(apiClient);

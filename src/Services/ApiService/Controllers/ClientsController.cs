@@ -1,6 +1,6 @@
-using AccessMod.Managers;
-using AccessMod.Models.AuthorizationDtos;
-using AccessMod.Models.ClientDtos;
+using IAMMod.Managers;
+using IAMMod.Models.AuthorizationDtos;
+using IAMMod.Models.ClientDtos;
 
 namespace ApiService.Controllers;
 
@@ -23,10 +23,8 @@ namespace ApiService.Controllers;
 /// 
 /// All endpoints require appropriate administrative permissions.
 /// </remarks>
-[Route("api/[controller]")]
-[Produces("application/json")]
 public class ClientsController(
-    Share.Localizer localizer,
+    Localizer localizer,
     ClientManager manager,
     IUserContext user,
     ILogger<ClientsController> logger
@@ -64,19 +62,10 @@ public class ClientsController(
     /// <param name="dto">Client data</param>
     /// <returns>Created client detail with secret</returns>
     [HttpPost]
-    public async Task<ActionResult<object>> CreateClient([FromBody] ClientAddDto dto)
+    public async Task<string?> CreateClient([FromBody] ClientAddDto dto)
     {
-        var (detail, secret) = await _manager.AddAsync(dto);
-        if (detail == null || secret == null)
-        {
-            return Problem("Failed to create client", statusCode: StatusCodes.Status400BadRequest);
-        }
-
-        return CreatedAtAction(
-            nameof(GetDetail),
-            new { id = detail.Id },
-            new { client = detail, secret }
-        );
+        var secret = await _manager.AddAsync(dto);
+        return secret;
     }
 
     /// <summary>
@@ -131,10 +120,6 @@ public class ClientsController(
     /// - When rotating credentials for compliance
     /// </remarks>
     [HttpPost("{id}/secret:rotate")]
-    [ProducesResponseType(typeof(ClientSecretDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ClientSecretDto>> RotateSecret(Guid id)
     {
         var newSecret = await _manager.RotateSecretAsync(id);

@@ -9,7 +9,6 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
 {
     // Common entities
     public DbSet<AuditLog> AuditLogs { get; set; }
-    public DbSet<SystemSetting> SystemSettings { get; set; }
     public DbSet<SigningKey> SigningKeys { get; set; }
 
     // Identity entities
