@@ -7,7 +7,7 @@ namespace ApiService.Controllers;
 /// API scope management controller
 /// </summary>
 public class ScopesController(
-    Share.Localizer localizer,
+    Localizer localizer,
     ScopeManager manager,
     IUserContext user,
     ILogger<ScopesController> logger

@@ -21,7 +21,7 @@ namespace ApiService.Controllers;
 /// All endpoints require appropriate administrative permissions.
 /// </remarks>
 public class RolesController(
-    Share.Localizer localizer,
+    Localizer localizer,
     RoleManager manager,
     IUserContext user,
     ILogger<RolesController> logger

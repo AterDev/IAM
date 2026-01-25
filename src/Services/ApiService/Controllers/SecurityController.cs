@@ -9,7 +9,7 @@ namespace ApiService.Controllers;
 /// Security controller for session and audit log management
 /// </summary>
 public class SecurityController(
-    Share.Localizer localizer,
+    Localizer localizer,
     SessionManager sessionManager,
     AuditLogManager auditLogManager,
     IUserContext user,

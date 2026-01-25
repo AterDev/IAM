@@ -24,8 +24,7 @@ public static class WebExtensions
     public static IServiceCollection AddMiddlewareServices(this WebApplicationBuilder builder)
     {
         builder.Services.ConfigureWebMiddleware(builder.Configuration);
-        builder
-            .Services.AddControllers()
+        builder.Services.AddControllers()
             .AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
@@ -50,12 +49,12 @@ public static class WebExtensions
         services.AddCors(configuration);
         services.AddRateLimiter();
 
-        //services.AddOutputCache(options =>
-        //{
-        //    options.AddPolicy("openapi", policy => policy.Expire(TimeSpan.FromMinutes(10)));
-        //});
+        services.AddOutputCache(options =>
+        {
+            options.AddPolicy("openapi", policy => policy.Expire(TimeSpan.FromMinutes(10)));
+        });
 
-        //services.AddSwagger();
+        services.AddSwagger();
 
         services.AddLocalizer();
         return services;
@@ -79,8 +78,8 @@ public static class WebExtensions
         app.UseRateLimiter();
         app.UseStaticFiles();
         app.UseRequestLocalization();
-        //app.UseOutputCache();
-        //app.MapSwagger().CacheOutput("openapi");
+        app.UseOutputCache();
+        app.MapSwagger().CacheOutput("openapi");
 
         //app.UseMiddleware<JwtMiddleware>();
 

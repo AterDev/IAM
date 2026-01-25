@@ -21,7 +21,7 @@ namespace ApiService.Controllers;
 [AllowAnonymous]
 [Produces("application/json")]
 public class DiscoveryController(
-    Share.Localizer localizer,
+    Localizer localizer,
     DiscoveryManager discoveryManager,
     SigningKeyManager signingKeyManager,
     IConfiguration configuration,

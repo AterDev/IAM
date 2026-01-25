@@ -1,4 +1,3 @@
-using Entity.IAMMod;
 using Perigon.AspNetCore.Services;
 using Share.Constants;
 
@@ -80,7 +79,6 @@ public class SigningKeyManager(
             ExpirationDate = DateTimeOffset.UtcNow.AddDays(365),
             IsActive = true,
             IsDeleted = false,
-            CreatedTime = DateTimeOffset.UtcNow,
             UpdatedTime = DateTimeOffset.UtcNow,
         };
 

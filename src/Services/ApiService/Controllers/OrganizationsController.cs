@@ -7,7 +7,7 @@ namespace ApiService.Controllers;
 /// Organization management controller
 /// </summary>
 public class OrganizationsController(
-    Share.Localizer localizer,
+    Localizer localizer,
     OrganizationManager manager,
     IUserContext user,
     ILogger<OrganizationsController> logger

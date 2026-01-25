@@ -17,7 +17,7 @@ namespace ApiService.Controllers;
 /// Most operations require appropriate permissions.
 /// </remarks>
 public class UsersController(
-    Share.Localizer localizer,
+    Localizer localizer,
     UserManager manager,
     IUserContext user,
     ILogger<UsersController> logger
@@ -36,15 +36,10 @@ public class UsersController(
     /// GET /api/users?page=1&amp;pageSize=20&amp;search=john
     /// </example>
     [HttpGet]
-    [ProducesResponseType(typeof(PageList<UserItemDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<PageList<UserItemDto>>> GetUsers(
-        [FromQuery] UserFilterDto filter
-    )
+    public async Task<PageList<UserItemDto>> GetUsers([FromQuery] UserFilterDto filter)
     {
         var result = await _manager.GetPageAsync(filter);
-        return Ok(result);
+        return result;
     }
 
     /// <summary>
@@ -57,9 +52,6 @@ public class UsersController(
     /// <response code="401">If the user is not authenticated</response>
     /// <response code="403">If the user lacks permission to view user details</response>
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(UserDetailDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<UserDetailDto>> GetDetail(Guid id)
     {
         var result = await _manager.GetDetailAsync(id);

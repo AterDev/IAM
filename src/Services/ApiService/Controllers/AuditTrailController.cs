@@ -7,7 +7,7 @@ namespace ApiService.Controllers;
 /// Audit trail controller
 /// </summary>
 public class AuditTrailController(
-    Share.Localizer localizer,
+    Localizer localizer,
     AuditLogManager manager,
     IUserContext user,
     ILogger<AuditTrailController> logger

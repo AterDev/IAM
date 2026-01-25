@@ -6,8 +6,12 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Perigon.AspNetCore.Constants;
+using Perigon.AspNetCore.Converters;
 using Perigon.AspNetCore.Options;
 using ServiceDefaults.Middleware;
+using System.Text.Encodings.Web;
+using System.Text.Json.Serialization;
+using System.Text.Unicode;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +20,7 @@ builder.AddServiceDefaults();
 
 // 框架依赖服务:options, cache, dbContext
 builder.AddFrameworkServices();
+builder.Services.AddSwagger();
 
 builder.Services.AddCors(options =>
 {
@@ -42,30 +47,38 @@ builder.Services.AddAuthentication(options =>
         // 但对于 Razor Pages 使用 Cookie
         options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
     })
-    .AddJwtBearer()
+    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme)
     .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
-{
-    options.LoginPath = "/Account/Login";
-    options.LogoutPath = "/Account/Logout";
-    options.AccessDeniedPath = "/Account/AccessDenied";
-    options.ExpireTimeSpan = TimeSpan.FromDays(1);
-    options.SlidingExpiration = true;
-    options.Cookie.HttpOnly = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-    options.Cookie.SameSite = SameSiteMode.Lax;
-});
+    {
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+        options.AccessDeniedPath = "/Account/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromDays(1);
+        options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+    });
 
 builder.Services.AddAuthorizationBuilder()
-    .AddPolicy(WebConst.User, policy =>
+    .AddPolicy(WebConst.AdminUser, policy =>
         {
-            policy.RequireRole(WebConst.User);
+            policy.RequireRole(WebConst.AdminUser, WebConst.SuperAdmin);
         }
     );
 builder.Services.AddLocalizer();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
+        options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
+    });
 // Add Razor Pages for OAuth UI (login, consent, logout)
 builder.Services.AddRazorPages();
 
 builder.Services.AddSingleton<SigningKeyResolver>();
+
 builder.Services.AddSingleton<IConfigureOptions<JwtBearerOptions>>(sp =>
     new ConfigureNamedOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
     {
@@ -97,7 +110,6 @@ builder.Services.AddSingleton<IConfigureOptions<JwtBearerOptions>>(sp =>
 builder.Services.AddManagers();
 builder.AddModules();
 
-
 WebApplication app = builder.Build();
 
 app.UseSession();
@@ -106,6 +118,7 @@ app.UseCors(AppConst.Default);
 app.UseStaticFiles();
 app.UseRequestLocalization();
 app.UseMiddleware<GlobalExceptionMiddleware>();
+app.MapSwagger();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapDefaultEndpoints();

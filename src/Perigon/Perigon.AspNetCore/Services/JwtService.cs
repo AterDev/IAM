@@ -26,10 +26,8 @@ public class JwtService(IOptions<JwtOption> options)
     /// <param name="claims">Token claims</param>
     /// <param name="expiresIn">Expiration time in seconds (default: 3600)</param>
     /// <returns>JWT token string</returns>
-    public string GetToken(IEnumerable<Claim> claims, int expiresIn = 3600)
+    public string GetToken(IEnumerable<Claim> claims, SigningCredentials signingCredentials, int expiresIn = 3600)
     {
-        SymmetricSecurityKey signingKey = new(Encoding.UTF8.GetBytes(Sign));
-        SigningCredentials signingCredentials = new(signingKey, SecurityAlgorithms.HmacSha256);
         JwtSecurityToken jwt = new(
             Issuer,
             Audience,
@@ -47,7 +45,7 @@ public class JwtService(IOptions<JwtOption> options)
     /// <param name="id"></param>
     /// <param name="roles">角色</param>
     /// <returns></returns>
-    public string GetToken(string id, string[] roles)
+    public string GetToken(SigningCredentials signingCredentials, string id, string[] roles)
     {
         List<Claim> claims = [new Claim(ClaimTypes.NameIdentifier, id)];
         if (roles.Length != 0)
@@ -61,7 +59,7 @@ public class JwtService(IOptions<JwtOption> options)
         {
             claims.AddRange(Claims);
         }
-        return GetToken(claims, ExpiredSecond);
+        return GetToken(claims, signingCredentials, ExpiredSecond);
     }
 
     /// <summary>

@@ -1,6 +1,7 @@
 using IAMMod.Managers;
 using IAMMod.Models.AdminAuthDtos;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.Tokens;
 using Perigon.AspNetCore.Services;
 using System.Security.Claims;
 using ClaimTypes = System.Security.Claims.ClaimTypes;
@@ -12,9 +13,10 @@ namespace ApiService.Controllers;
 /// </summary>
 [Route("api/admin")]
 public class AdminAuthController(
-    Share.Localizer localizer,
+    Localizer localizer,
     UserManager userManager,
     RoleManager roleManager,
+    SigningKeyManager signingKeyManager,
     JwtService jwtService,
     ILogger<AdminAuthController> logger
 ) : RestControllerBase(localizer)
@@ -67,9 +69,27 @@ public class AdminAuthController(
         _jwtService.Claims =
         [
             new Claim(ClaimTypes.Name, user.UserName),
-                new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
-            ];
-        var accessToken = _jwtService.GetToken(user.Id.ToString(), [.. roles]);
+            new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
+        ];
+
+        var signingKey = await signingKeyManager.GetActiveSigningKeyAsync();
+        if (signingKey == null)
+        {
+            _logger.LogError("No active signing key found for JWT generation.");
+            return Problem("no active signing key found for JWT generation.");
+        }
+        var rsa = HashCrypto.ImportRsaPrivateKey(signingKey.PrivateKey);
+        var rsaKey = new RsaSecurityKey(rsa) { KeyId = signingKey.KeyId };
+
+        var signingCredentials = new SigningCredentials(rsaKey, SecurityAlgorithms.RsaSha256)
+        {
+            CryptoProviderFactory = new CryptoProviderFactory
+            {
+                CacheSignatureProviders = false
+            }
+        };
+
+        var accessToken = _jwtService.GetToken(signingCredentials, user.Id.ToString(), [.. roles]);
         return new AdminLoginResponseDto
         {
             AccessToken = accessToken,

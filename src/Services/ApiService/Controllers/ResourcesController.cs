@@ -7,7 +7,7 @@ namespace ApiService.Controllers;
 /// API resource management controller
 /// </summary>
 public class ResourcesController(
-    Share.Localizer localizer,
+    Localizer localizer,
     ResourceManager manager,
     IUserContext user,
     ILogger<ResourcesController> logger

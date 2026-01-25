@@ -9,7 +9,7 @@ namespace ApiService.Controllers;
 /// </summary>
 [Authorize]
 public class AuthorizationController(
-    Share.Localizer localizer,
+    Localizer localizer,
     ConsentManager consentManager,
     ILogger<AuthorizationController> logger
 ) : RestControllerBase(localizer)
