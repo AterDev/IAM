@@ -1,7 +1,7 @@
 import { BaseService } from '../base.service';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { PageList } from '../models/ater/page-list.model';
+import { PageList } from '../models/perigon/page-list.model';
 import { AuditLogItemDto } from '../models/common-mod/audit-log-item-dto.model';
 import { AuditLogDetailDto } from '../models/common-mod/audit-log-detail-dto.model';
 /**

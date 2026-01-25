@@ -1,4 +1,4 @@
-import { AdminUserInfo } from '../identity-mod/admin-user-info.model';
+import { AdminUserInfo } from '../iammod/admin-user-info.model';
 
 /**
  * Admin login response DTO

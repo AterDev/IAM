@@ -5,9 +5,9 @@ import { MatDialogRef, MatDialogModule, MAT_DIALOG_DATA } from '@angular/materia
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiClient } from 'src/app/services/api/api-client';
-import { OrganizationUpdateDto } from 'src/app/services/api/models/identity-mod/organization-update-dto.model';
-import { OrganizationDetailDto } from 'src/app/services/api/models/identity-mod/organization-detail-dto.model';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
+import { OrganizationDetailDto } from 'src/app/services/api/models/iammod/organization-detail-dto.model';
+import { OrganizationUpdateDto } from 'src/app/services/api/models/iammod/organization-update-dto.model';
 
 @Component({
   selector: 'app-edit',

@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms'
 import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiClient } from 'src/app/services/api/api-client';
-import { ResourceAddDto } from 'src/app/services/api/models/access-mod/resource-add-dto.model';
+import { ResourceAddDto } from 'src/app/services/api/models/iammod/resource-add-dto.model';
 import { TranslateService } from '@ngx-translate/core';
 
 @Component({

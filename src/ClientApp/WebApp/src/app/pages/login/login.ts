@@ -11,8 +11,8 @@ import { AuthService } from 'src/app/services/auth.service';
 import { I18N_KEYS } from 'src/app/share/i18n-keys';
 import { initStarfield } from './starfield';
 import { ApiClient } from 'src/app/services/api/api-client';
-import { AdminLoginResponseDto } from 'src/app/services/api/models/identity-mod/admin-login-response-dto.model';
-import { AdminLoginDto } from 'src/app/services/api/models/identity-mod/admin-login-dto.model';
+import { AdminLoginDto } from 'src/app/services/api/models/iammod/admin-login-dto.model';
+import { AdminLoginResponseDto } from 'src/app/services/api/models/iammod/admin-login-response-dto.model';
 
 @Component({
   selector: 'app-login',

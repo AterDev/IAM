@@ -1,4 +1,4 @@
-import { AddressClaimDto } from '../identity-mod/address-claim-dto.model';
+import { AddressClaimDto } from '../iammod/address-claim-dto.model';
 
 /**
  * UserInfo endpoint response

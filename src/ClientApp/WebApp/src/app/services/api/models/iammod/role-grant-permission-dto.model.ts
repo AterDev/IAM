@@ -1,4 +1,4 @@
-import { PermissionClaim } from '../identity-mod/permission-claim.model';
+import { PermissionClaim } from '../iammod/permission-claim.model';
 
 /**
  * Role grant permission DTO

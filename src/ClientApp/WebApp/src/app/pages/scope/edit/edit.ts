@@ -8,8 +8,8 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ApiClient } from 'src/app/services/api/api-client';
-import { ScopeUpdateDto } from 'src/app/services/api/models/access-mod/scope-update-dto.model';
-import { ScopeDetailDto } from 'src/app/services/api/models/access-mod/scope-detail-dto.model';
+import { ScopeUpdateDto } from 'src/app/services/api/models/iammod/scope-update-dto.model';
+import { ScopeDetailDto } from 'src/app/services/api/models/iammod/scope-detail-dto.model';
 import { TranslateService } from '@ngx-translate/core';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 

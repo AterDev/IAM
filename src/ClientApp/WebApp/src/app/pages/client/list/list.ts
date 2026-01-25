@@ -7,14 +7,18 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { ApiClient } from 'src/app/services/api/api-client';
-import { ClientItemDto } from 'src/app/services/api/models/access-mod/client-item-dto.model';
-import { PageList } from 'src/app/services/api/models/ater/page-list.model';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslateService } from '@ngx-translate/core';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { ClientAddComponent } from '../add/add';
+import { ClientItemDto } from 'src/app/services/api/models/iammod/client-item-dto.model';
+import { PageList } from 'src/app/services/api/models/perigon/page-list.model';
+import { ClientType } from 'src/app/services/api/models/entity/client-type.model';
+import { ApplicationType } from 'src/app/services/api/models/entity/application-type.model';
+import { EnumTextPipe } from 'src/app/pipe/api/enum-text.pipe';
+
 
 @Component({
   selector: 'app-list',
@@ -28,7 +32,8 @@ import { ClientAddComponent } from '../add/add';
     MatChipsModule,
     MatDialogModule,
     MatMenuModule,
-    FormsModule
+    FormsModule,
+    EnumTextPipe
   ],
   templateUrl: './list.html',
   styleUrls: ['./list.scss']
@@ -44,8 +49,8 @@ export class ClientListComponent implements OnInit {
   pageIndex = 0;
   isLoading = signal(false);
   searchText = '';
-  typeFilter: string | null = null;
-  applicationTypeFilter: string | null = null;
+  typeFilter: ClientType | null = null;
+  applicationTypeFilter: ApplicationType | null = null;
 
   allSelected = computed(() => {
     const data = this.dataSource();
@@ -65,14 +70,14 @@ export class ClientListComponent implements OnInit {
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private translate: TranslateService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadData();
   }
 
   loadData(): void {
-  this.isLoading.set(true);
+    this.isLoading.set(true);
 
     this.api.clients.getClients(
       this.searchText || null,
@@ -84,9 +89,11 @@ export class ClientListComponent implements OnInit {
       null
     ).subscribe({
       next: (res: PageList<ClientItemDto>) => {
+        console.log(res.data);
+
         this.dataSource.set(res.data);
         this.total.set(res.count);
-  this.isLoading.set(false);
+        this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Failed to load clients:', error);
@@ -95,7 +102,7 @@ export class ClientListComponent implements OnInit {
           this.translate.instant('common.close'),
           { duration: 3000 }
         );
-  this.isLoading.set(false);
+        this.isLoading.set(false);
       }
     });
   }

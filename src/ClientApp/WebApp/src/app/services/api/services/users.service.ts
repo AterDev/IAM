@@ -1,11 +1,11 @@
 import { BaseService } from '../base.service';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { PageList } from '../models/ater/page-list.model';
-import { UserItemDto } from '../models/identity-mod/user-item-dto.model';
-import { UserAddDto } from '../models/identity-mod/user-add-dto.model';
-import { UserDetailDto } from '../models/identity-mod/user-detail-dto.model';
-import { UserUpdateDto } from '../models/identity-mod/user-update-dto.model';
+import { PageList } from '../models/perigon/page-list.model';
+import { UserItemDto } from '../models/iammod/user-item-dto.model';
+import { UserAddDto } from '../models/iammod/user-add-dto.model';
+import { UserDetailDto } from '../models/iammod/user-detail-dto.model';
+import { UserUpdateDto } from '../models/iammod/user-update-dto.model';
 /**
  * User management controller
  */

@@ -19,5 +19,5 @@ export interface JsonWebKeyDto {
   /** X.509 certificate SHA-1 thumbprint (base64url encoded) */
   x5t?: string | null;
   /** X.509 certificate SHA-256 thumbprint (base64url encoded) */
-  x5tS256?: string | null;
+  X5tS256?: string | null;
 }

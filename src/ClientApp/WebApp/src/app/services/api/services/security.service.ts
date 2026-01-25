@@ -1,9 +1,9 @@
 import { BaseService } from '../base.service';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { PageList } from '../models/ater/page-list.model';
-import { LoginSessionItemDto } from '../models/identity-mod/login-session-item-dto.model';
-import { LoginSessionDetailDto } from '../models/identity-mod/login-session-detail-dto.model';
+import { PageList } from '../models/perigon/page-list.model';
+import { LoginSessionItemDto } from '../models/iammod/login-session-item-dto.model';
+import { LoginSessionDetailDto } from '../models/iammod/login-session-detail-dto.model';
 import { AuditLogFilterDto } from '../models/common-mod/audit-log-filter-dto.model';
 import { AuditLogItemDto } from '../models/common-mod/audit-log-item-dto.model';
 import { AuditLogDetailDto } from '../models/common-mod/audit-log-detail-dto.model';

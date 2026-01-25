@@ -1,9 +1,9 @@
 import { inject, Injectable } from '@angular/core';
 import { AdminAuthService } from './services/admin-auth.service';
 import { AuditTrailService } from './services/audit-trail.service';
+import { AuthorizationService } from './services/authorization.service';
 import { ClientsService } from './services/clients.service';
 import { CommonService } from './services/common.service';
-import { CommonSettingsService } from './services/common-settings.service';
 import { DiscoveryService } from './services/discovery.service';
 import { ExternalAuthService } from './services/external-auth.service';
 import { OAuthService } from './services/oauth.service';
@@ -21,12 +21,12 @@ export class ApiClient {
   public adminAuth = inject(AdminAuthService);
   /** Audit trail controller */
   public auditTrail = inject(AuditTrailService);
+  /** Authorization management controller for users to view and manage their authorizations */
+  public authorization = inject(AuthorizationService);
   /** OAuth/OIDC client management controller */
   public clients = inject(ClientsService);
   /** CommonController */
   public common = inject(CommonService);
-  /** Common settings controller */
-  public commonSettings = inject(CommonSettingsService);
   /** OpenID Connect Discovery endpoint controller */
   public discovery = inject(DiscoveryService);
   /** ExternalAuth */

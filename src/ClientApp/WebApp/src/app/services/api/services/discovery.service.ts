@@ -1,9 +1,8 @@
 import { BaseService } from '../base.service';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { OidcConfigurationDto } from '../models/identity-mod/oidc-configuration-dto.model';
-import { JwksDto } from '../models/identity-mod/jwks-dto.model';
-import { UserInfoDto } from '../models/identity-mod/user-info-dto.model';
+import { OidcConfigurationDto } from '../models/iammod/oidc-configuration-dto.model';
+import { JwksDto } from '../models/iammod/jwks-dto.model';
 /**
  * OpenID Connect Discovery endpoint controller
  */
@@ -22,19 +21,5 @@ export class DiscoveryService extends BaseService {
   getJwks(): Observable<JwksDto> {
     const _url = `/.well-known/jwks`;
     return this.request<JwksDto>('get', _url);
-  }
-  /**
-   * UserInfo endpoint (OIDC)
-   */
-  getUserInfo(): Observable<UserInfoDto> {
-    const _url = `/connect/userinfo`;
-    return this.request<UserInfoDto>('get', _url);
-  }
-  /**
-   * UserInfo endpoint (OIDC)
-   */
-  getUserInfoPOST(): Observable<UserInfoDto> {
-    const _url = `/connect/userinfo`;
-    return this.request<UserInfoDto>('post', _url);
   }
 }

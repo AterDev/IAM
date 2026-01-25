@@ -9,8 +9,8 @@ import { FormsModule } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslateService } from '@ngx-translate/core';
 import { ApiClient } from 'src/app/services/api/api-client';
-import { ResourceItemDto } from 'src/app/services/api/models/access-mod/resource-item-dto.model';
-import { PageList } from 'src/app/services/api/models/ater/page-list.model';
+import { ResourceItemDto } from 'src/app/services/api/models/iammod/resource-item-dto.model';
+import { PageList } from 'src/app/services/api/models/perigon/page-list.model';
 import { ResourceAddComponent } from '../add/add';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 

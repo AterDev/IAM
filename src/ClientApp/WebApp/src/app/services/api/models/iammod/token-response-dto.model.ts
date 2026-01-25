@@ -3,19 +3,15 @@
  */
 export interface TokenResponseDto {
   /** Access token */
-  accessToken: string;
+  access_token: string;
   /** Token type (usually "Bearer") */
-  tokenType?: string | null;
+  token_type?: string | null;
   /** Expires in seconds */
-  expiresIn?: number | null;
+  expires_in?: number | null;
   /** Refresh token */
-  refreshToken?: string | null;
+  refresh_token?: string | null;
   /** ID token (OIDC) */
-  idToken?: string | null;
+  id_token?: string | null;
   /** Scope granted */
   scope?: string | null;
-  /** Error code */
-  error?: string | null;
-  /** Error description */
-  errorDescription?: string | null;
 }

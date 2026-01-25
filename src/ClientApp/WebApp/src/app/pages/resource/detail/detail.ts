@@ -6,7 +6,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiClient } from 'src/app/services/api/api-client';
-import { ResourceDetailDto } from 'src/app/services/api/models/access-mod/resource-detail-dto.model';
+import { ResourceDetailDto } from 'src/app/services/api/models/iammod/resource-detail-dto.model';
 import { ResourceEditComponent } from '../edit/edit';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { TranslateService } from '@ngx-translate/core';

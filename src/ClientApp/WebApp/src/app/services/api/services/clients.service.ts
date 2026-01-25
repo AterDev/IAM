@@ -1,14 +1,16 @@
 import { BaseService } from '../base.service';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { PageList } from '../models/ater/page-list.model';
-import { ClientItemDto } from '../models/access-mod/client-item-dto.model';
-import { ClientAddDto } from '../models/access-mod/client-add-dto.model';
-import { ClientDetailDto } from '../models/access-mod/client-detail-dto.model';
-import { ClientUpdateDto } from '../models/access-mod/client-update-dto.model';
-import { ClientSecretDto } from '../models/access-mod/client-secret-dto.model';
-import { ClientScopeAssignDto } from '../models/access-mod/client-scope-assign-dto.model';
-import { AuthorizationItemDto } from '../models/access-mod/authorization-item-dto.model';
+import { PageList } from '../models/perigon/page-list.model';
+import { ClientType } from '../models/entity/client-type.model';
+import { ApplicationType } from '../models/entity/application-type.model';
+import { ClientItemDto } from '../models/iammod/client-item-dto.model';
+import { ClientAddDto } from '../models/iammod/client-add-dto.model';
+import { ClientDetailDto } from '../models/iammod/client-detail-dto.model';
+import { ClientUpdateDto } from '../models/iammod/client-update-dto.model';
+import { ClientSecretDto } from '../models/iammod/client-secret-dto.model';
+import { ClientScopeAssignDto } from '../models/iammod/client-scope-assign-dto.model';
+import { AuthorizationItemDto } from '../models/iammod/authorization-item-dto.model';
 /**
  * OAuth/OIDC client management controller
  */
@@ -24,7 +26,7 @@ export class ClientsService extends BaseService {
    * @param pageSize number
    * @param orderBy Record<string, boolean>
    */
-  getClients(clientId: string | null, displayName: string | null, type: string | null, applicationType: string | null, pageIndex: number | null, pageSize: number | null, orderBy: Record<string, boolean> | null): Observable<PageList<ClientItemDto>> {
+  getClients(clientId: string | null, displayName: string | null, type: ClientType | null, applicationType: ApplicationType | null, pageIndex: number | null, pageSize: number | null, orderBy: Record<string, boolean> | null): Observable<PageList<ClientItemDto>> {
     const _url = `/api/Clients?clientId=${clientId ?? ''}&displayName=${displayName ?? ''}&type=${type ?? ''}&applicationType=${applicationType ?? ''}&pageIndex=${pageIndex ?? ''}&pageSize=${pageSize ?? ''}&orderBy=${orderBy ?? ''}`;
     return this.request<PageList<ClientItemDto>>('get', _url);
   }
@@ -32,9 +34,9 @@ export class ClientsService extends BaseService {
    * Create new client
    * @param data ClientAddDto
    */
-  createClient(data: ClientAddDto): Observable<any> {
+  createClient(data: ClientAddDto): Observable<string> {
     const _url = `/api/Clients`;
-    return this.request<any>('post', _url, data);
+    return this.request<string>('post', _url, data);
   }
   /**
    * Get client detail by id

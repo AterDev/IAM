@@ -5,7 +5,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { TranslateService } from '@ngx-translate/core';
 import { ApiClient } from 'src/app/services/api/api-client';
-import { RoleDetailDto } from 'src/app/services/api/models/identity-mod/role-detail-dto.model';
+import { RoleDetailDto } from 'src/app/services/api/models/iammod/role-detail-dto.model';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { RoleEditComponent } from '../edit/edit';
 import { RolePermissionsComponent } from '../permissions/permissions';

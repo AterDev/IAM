@@ -1,12 +1,12 @@
 import { BaseService } from '../base.service';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { PageList } from '../models/ater/page-list.model';
-import { OrganizationItemDto } from '../models/identity-mod/organization-item-dto.model';
-import { OrganizationAddDto } from '../models/identity-mod/organization-add-dto.model';
-import { OrganizationDetailDto } from '../models/identity-mod/organization-detail-dto.model';
-import { OrganizationTreeDto } from '../models/identity-mod/organization-tree-dto.model';
-import { OrganizationUpdateDto } from '../models/identity-mod/organization-update-dto.model';
+import { PageList } from '../models/perigon/page-list.model';
+import { OrganizationItemDto } from '../models/iammod/organization-item-dto.model';
+import { OrganizationAddDto } from '../models/iammod/organization-add-dto.model';
+import { OrganizationDetailDto } from '../models/iammod/organization-detail-dto.model';
+import { OrganizationTreeDto } from '../models/iammod/organization-tree-dto.model';
+import { OrganizationUpdateDto } from '../models/iammod/organization-update-dto.model';
 /**
  * Organization management controller
  */

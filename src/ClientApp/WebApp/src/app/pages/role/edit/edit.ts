@@ -5,8 +5,8 @@ import { MatDialogRef, MatDialogModule, MAT_DIALOG_DATA } from '@angular/materia
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslateService } from '@ngx-translate/core';
 import { ApiClient } from 'src/app/services/api/api-client';
-import { RoleItemDto } from 'src/app/services/api/models/identity-mod/role-item-dto.model';
-import { RoleUpdateDto } from 'src/app/services/api/models/identity-mod/role-update-dto.model';
+import { RoleItemDto } from 'src/app/services/api/models/iammod/role-item-dto.model';
+import { RoleUpdateDto } from 'src/app/services/api/models/iammod/role-update-dto.model';
 
 @Component({
   selector: 'app-edit',

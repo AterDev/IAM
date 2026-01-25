@@ -5,8 +5,8 @@ import { MatDialogRef, MatDialogModule, MAT_DIALOG_DATA } from '@angular/materia
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiClient } from 'src/app/services/api/api-client';
-import { ResourceUpdateDto } from 'src/app/services/api/models/access-mod/resource-update-dto.model';
-import { ResourceDetailDto } from 'src/app/services/api/models/access-mod/resource-detail-dto.model';
+import { ResourceUpdateDto } from 'src/app/services/api/models/iammod/resource-update-dto.model';
+import { ResourceDetailDto } from 'src/app/services/api/models/iammod/resource-detail-dto.model';
 import { TranslateService } from '@ngx-translate/core';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 

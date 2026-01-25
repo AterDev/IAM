@@ -6,13 +6,13 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCardModule } from '@angular/material/card';
 import { ApiClient } from 'src/app/services/api/api-client';
-import { OrganizationTreeDto } from 'src/app/services/api/models/identity-mod/organization-tree-dto.model';
 import { NestedTreeControl } from '@angular/cdk/tree';
 import { MatTreeNestedDataSource } from '@angular/material/tree';
 import { OrganizationAddComponent } from '../add/add';
 import { OrganizationEditComponent } from '../edit/edit';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { OrganizationMembersComponent } from '../members/members';
+import { OrganizationTreeDto } from 'src/app/services/api/models/iammod/organization-tree-dto.model';
 
 @Component({
   selector: 'app-list',

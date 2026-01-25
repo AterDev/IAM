@@ -7,7 +7,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { ApiClient } from 'src/app/services/api/api-client';
-import { ScopeDetailDto } from 'src/app/services/api/models/access-mod/scope-detail-dto.model';
+import { ScopeDetailDto } from 'src/app/services/api/models/iammod/scope-detail-dto.model';
 import { ScopeEditComponent } from '../edit/edit';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { TranslateService } from '@ngx-translate/core';

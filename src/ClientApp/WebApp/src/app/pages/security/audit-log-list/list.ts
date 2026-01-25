@@ -10,7 +10,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { AuditLogItemDto } from 'src/app/services/api/models/common-mod/audit-log-item-dto.model';
 import { AuditLogFilterDto } from 'src/app/services/api/models/common-mod/audit-log-filter-dto.model';
-import { PageList } from 'src/app/services/api/models/ater/page-list.model';
+import { PageList } from 'src/app/services/api/models/perigon/page-list.model';
 import { Router } from '@angular/router';
 import { FormControl, FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';

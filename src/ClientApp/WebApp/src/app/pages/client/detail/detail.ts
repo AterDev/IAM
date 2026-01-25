@@ -9,13 +9,13 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { ApiClient } from 'src/app/services/api/api-client';
-import { ClientDetailDto } from 'src/app/services/api/models/access-mod/client-detail-dto.model';
-import { AuthorizationItemDto } from 'src/app/services/api/models/access-mod/authorization-item-dto.model';
 import { ClientEditComponent } from '../edit/edit';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { TranslateService } from '@ngx-translate/core';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
+import { AuthorizationItemDto } from 'src/app/services/api/models/iammod/authorization-item-dto.model';
+import { ClientDetailDto } from 'src/app/services/api/models/iammod/client-detail-dto.model';
 
 @Component({
   selector: 'app-detail',

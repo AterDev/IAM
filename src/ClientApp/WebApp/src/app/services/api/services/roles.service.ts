@@ -1,13 +1,13 @@
 import { BaseService } from '../base.service';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { PageList } from '../models/ater/page-list.model';
-import { RoleItemDto } from '../models/identity-mod/role-item-dto.model';
-import { RoleAddDto } from '../models/identity-mod/role-add-dto.model';
-import { RoleDetailDto } from '../models/identity-mod/role-detail-dto.model';
-import { RoleUpdateDto } from '../models/identity-mod/role-update-dto.model';
-import { RoleGrantPermissionDto } from '../models/identity-mod/role-grant-permission-dto.model';
-import { PermissionClaim } from '../models/identity-mod/permission-claim.model';
+import { PageList } from '../models/perigon/page-list.model';
+import { RoleItemDto } from '../models/iammod/role-item-dto.model';
+import { RoleAddDto } from '../models/iammod/role-add-dto.model';
+import { RoleDetailDto } from '../models/iammod/role-detail-dto.model';
+import { RoleUpdateDto } from '../models/iammod/role-update-dto.model';
+import { RoleGrantPermissionDto } from '../models/iammod/role-grant-permission-dto.model';
+import { PermissionClaim } from '../models/iammod/permission-claim.model';
 /**
  * Role management controller
  */

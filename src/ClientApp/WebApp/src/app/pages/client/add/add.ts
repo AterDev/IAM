@@ -6,14 +6,14 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { ApiClient } from 'src/app/services/api/api-client';
-import { ClientAddDto } from 'src/app/services/api/models/access-mod/client-add-dto.model';
-import { ResourceItemDto } from 'src/app/services/api/models/access-mod/resource-item-dto.model';
-import { ScopeItemDto } from 'src/app/services/api/models/access-mod/scope-item-dto.model';
 import { TranslateService } from '@ngx-translate/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { MatChipInputEvent } from '@angular/material/chips';
+import { ClientAddDto } from 'src/app/services/api/models/iammod/client-add-dto.model';
+import { ResourceItemDto } from 'src/app/services/api/models/iammod/resource-item-dto.model';
+import { ScopeItemDto } from 'src/app/services/api/models/iammod/scope-item-dto.model';
 
 @Component({
   selector: 'app-add',
@@ -69,7 +69,7 @@ export class ClientAddComponent implements OnInit {
   }
 
   loadAvailableResources(): void {
-    this.api.resources.getList().subscribe({
+    this.api.resources.getAll().subscribe({
       next: (resources) => {
         this.availableResources = resources || [];
       },
@@ -223,7 +223,7 @@ export class ClientAddComponent implements OnInit {
 
     this.api.clients.createClient(dto).subscribe({
       next: (response) => {
-        this.clientSecret = response.secret;
+        this.clientSecret = response;
         this.snackBar.open(
           this.translate.instant('client.createSuccess'),
           this.translate.instant('common.close'),

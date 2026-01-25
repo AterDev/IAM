@@ -1,11 +1,11 @@
 import { BaseService } from '../base.service';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { PageList } from '../models/ater/page-list.model';
-import { ScopeItemDto } from '../models/access-mod/scope-item-dto.model';
-import { ScopeAddDto } from '../models/access-mod/scope-add-dto.model';
-import { ScopeDetailDto } from '../models/access-mod/scope-detail-dto.model';
-import { ScopeUpdateDto } from '../models/access-mod/scope-update-dto.model';
+import { PageList } from '../models/perigon/page-list.model';
+import { ScopeItemDto } from '../models/iammod/scope-item-dto.model';
+import { ScopeAddDto } from '../models/iammod/scope-add-dto.model';
+import { ScopeDetailDto } from '../models/iammod/scope-detail-dto.model';
+import { ScopeUpdateDto } from '../models/iammod/scope-update-dto.model';
 /**
  * API scope management controller
  */

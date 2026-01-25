@@ -1,25 +1,22 @@
 import { BaseService } from '../base.service';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { PageList } from '../models/ater/page-list.model';
-import { ResourceItemDto } from '../models/access-mod/resource-item-dto.model';
-import { ResourceAddDto } from '../models/access-mod/resource-add-dto.model';
-import { ResourceDetailDto } from '../models/access-mod/resource-detail-dto.model';
-import { ResourceUpdateDto } from '../models/access-mod/resource-update-dto.model';
+import { ResourceItemDto } from '../models/iammod/resource-item-dto.model';
+import { PageList } from '../models/perigon/page-list.model';
+import { ResourceAddDto } from '../models/iammod/resource-add-dto.model';
+import { ResourceDetailDto } from '../models/iammod/resource-detail-dto.model';
+import { ResourceUpdateDto } from '../models/iammod/resource-update-dto.model';
 /**
  * API resource management controller
  */
 @Injectable({ providedIn: 'root' })
 export class ResourcesService extends BaseService {
   /**
-   * Get all resources (for dropdowns/selects)
+   * Get all resources (for dropdown/selection)
    */
-  getList(): Observable<ResourceItemDto[]> {
-    const _url = `/api/Resources?pageIndex=0&pageSize=1000`;
-    return this.request<PageList<ResourceItemDto>>('get', _url).pipe(
-      map((response: PageList<ResourceItemDto>) => response.data)
-    );
+  getAll(): Observable<ResourceItemDto[]> {
+    const _url = `/api/Resources/all`;
+    return this.request<ResourceItemDto[]>('get', _url);
   }
   /**
    * Get paged resources

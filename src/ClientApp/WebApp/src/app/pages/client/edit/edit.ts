@@ -7,14 +7,14 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { ApiClient } from 'src/app/services/api/api-client';
-import { ClientUpdateDto } from 'src/app/services/api/models/access-mod/client-update-dto.model';
-import { ClientDetailDto } from 'src/app/services/api/models/access-mod/client-detail-dto.model';
-import { ResourceItemDto } from 'src/app/services/api/models/access-mod/resource-item-dto.model';
-import { ScopeItemDto } from 'src/app/services/api/models/access-mod/scope-item-dto.model';
 import { TranslateService } from '@ngx-translate/core';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { MatChipInputEvent } from '@angular/material/chips';
+import { ClientDetailDto } from 'src/app/services/api/models/iammod/client-detail-dto.model';
+import { ClientUpdateDto } from 'src/app/services/api/models/iammod/client-update-dto.model';
+import { ResourceItemDto } from 'src/app/services/api/models/iammod/resource-item-dto.model';
+import { ScopeItemDto } from 'src/app/services/api/models/iammod/scope-item-dto.model';
 
 @Component({
   selector: 'app-edit',
@@ -112,7 +112,7 @@ export class ClientEditComponent implements OnInit {
   }
 
   loadAvailableResources(): void {
-    this.api.resources.getList().subscribe({
+    this.api.resources.getAll().subscribe({
       next: (resources) => {
         console.log('[ClientEdit] Available resources loaded:', resources);
         this.availableResources.set(resources || []);

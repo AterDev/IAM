@@ -8,9 +8,9 @@ import { MatChipsModule } from '@angular/material/chips';
 import { FormsModule } from '@angular/forms';
 import { TranslateService } from '@ngx-translate/core';
 import { ApiClient } from 'src/app/services/api/api-client';
-import { RoleItemDto } from 'src/app/services/api/models/identity-mod/role-item-dto.model';
-import { PermissionClaim } from 'src/app/services/api/models/identity-mod/permission-claim.model';
-import { RoleGrantPermissionDto } from 'src/app/services/api/models/identity-mod/role-grant-permission-dto.model';
+import { RoleItemDto } from 'src/app/services/api/models/iammod/role-item-dto.model';
+import { PermissionClaim } from 'src/app/services/api/models/iammod/permission-claim.model';
+import { RoleGrantPermissionDto } from 'src/app/services/api/models/iammod/role-grant-permission-dto.model';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 
 interface PermissionGroup {

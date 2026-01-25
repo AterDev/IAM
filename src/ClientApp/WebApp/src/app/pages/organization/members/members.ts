@@ -6,7 +6,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormsModule } from '@angular/forms';
 import { ApiClient } from 'src/app/services/api/api-client';
-import { UserItemDto } from 'src/app/services/api/models/identity-mod/user-item-dto.model';
+import { UserItemDto } from 'src/app/services/api/models/iammod/user-item-dto.model';
 
 @Component({
   selector: 'app-members',

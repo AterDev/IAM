@@ -5,7 +5,7 @@ import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslateService } from '@ngx-translate/core';
 import { ApiClient } from 'src/app/services/api/api-client';
-import { RoleAddDto } from 'src/app/services/api/models/identity-mod/role-add-dto.model';
+import { RoleAddDto } from 'src/app/services/api/models/iammod/role-add-dto.model';
 
 @Component({
   selector: 'app-add',

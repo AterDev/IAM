@@ -10,8 +10,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { ApiClient } from 'src/app/services/api/api-client';
-import { ScopeItemDto } from 'src/app/services/api/models/access-mod/scope-item-dto.model';
-import { PageList } from 'src/app/services/api/models/ater/page-list.model';
+import { ScopeItemDto } from 'src/app/services/api/models/iammod/scope-item-dto.model';
+import { PageList } from 'src/app/services/api/models/perigon/page-list.model';
 import { ScopeAddComponent } from '../add/add';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 

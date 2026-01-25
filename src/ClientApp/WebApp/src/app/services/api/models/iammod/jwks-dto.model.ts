@@ -1,4 +1,4 @@
-import { JsonWebKeyDto } from '../identity-mod/json-web-key-dto.model';
+import { JsonWebKeyDto } from '../iammod/json-web-key-dto.model';
 
 /**
  * JSON Web Key Set

@@ -1,9 +1,9 @@
 import { BaseService } from '../base.service';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { AdminLoginDto } from '../models/identity-mod/admin-login-dto.model';
-import { AdminLoginResponseDto } from '../models/identity-mod/admin-login-response-dto.model';
-import { AdminUserInfo } from '../models/identity-mod/admin-user-info.model';
+import { AdminLoginDto } from '../models/iammod/admin-login-dto.model';
+import { AdminLoginResponseDto } from '../models/iammod/admin-login-response-dto.model';
+import { AdminUserInfo } from '../models/iammod/admin-user-info.model';
 /**
  * Admin authentication controller for management portal login
  */

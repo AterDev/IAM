@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms'
 import { MatDialogRef, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiClient } from 'src/app/services/api/api-client';
-import { OrganizationAddDto } from 'src/app/services/api/models/identity-mod/organization-add-dto.model';
+import { OrganizationAddDto } from 'src/app/services/api/models/iammod/organization-add-dto.model';
 
 @Component({
   selector: 'app-add',

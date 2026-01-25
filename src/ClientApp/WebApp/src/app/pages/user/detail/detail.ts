@@ -7,7 +7,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { ApiClient } from 'src/app/services/api/api-client';
-import { UserDetailDto } from 'src/app/services/api/models/identity-mod/user-detail-dto.model';
+import { UserDetailDto } from 'src/app/services/api/models/iammod/user-detail-dto.model';
 import { UserEditComponent } from '../edit/edit';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
