@@ -1,11 +1,8 @@
-using System.Text.Json;
 using CommonMod.Managers;
-using EntityFramework.AppDbFactory;
-using Share.Exceptions;
-using Microsoft.AspNetCore.Http;
-using Mapster;
-using Entity.IAMMod;
 using IAMMod.Models.LoginSessionDtos;
+using Microsoft.AspNetCore.Http;
+using Share.Exceptions;
+using System.Text.Json;
 
 namespace IAMMod.Managers;
 
@@ -49,9 +46,6 @@ public class SessionManager(
     /// <returns>True if has permission</returns>
     public override async Task<bool> HasPermissionAsync(Guid id)
     {
-        // Session management is accessible by admins or the user who owns the session
-        // TODO: Implement proper permission checking logic
-        // Security safeguard: deny by default until proper permission checks are implemented
         return await Task.FromResult(false);
     }
 

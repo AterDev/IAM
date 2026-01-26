@@ -28,7 +28,6 @@
   </Folder>
   <Folder Name="/src/Modules/">
     <Project Path="src/Modules/IAMMod/IAMMod.csproj" />
-    <Project Path="src/Modules/CommonMod/CommonMod.csproj" Id="f2def1d4-f065-d84e-4e7b-454a998f4dfc" />
   </Folder>
   <Folder Name="/src/Perigon/">
     <Project Path="src/Perigon/Perigon.AspNetCore.SourceGeneration/Perigon.AspNetCore.SourceGeneration.csproj" />

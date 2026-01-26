@@ -8,16 +8,20 @@
         <UserSecretsId>1e75aae5-d684-4140-a34b-a1afb03ab13f</UserSecretsId>
     </PropertyGroup>
     <ItemGroup>
+      <Compile Remove="Middleware\**" />
+      <Content Remove="Middleware\**" />
+      <EmbeddedResource Remove="Middleware\**" />
+      <None Remove="Middleware\**" />
+    </ItemGroup>
+    <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.SpaProxy" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\Perigon\Perigon.AspNetCore.SourceGeneration\Perigon.AspNetCore.SourceGeneration.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
         <ProjectReference Include="..\..\Definition\ServiceDefaults\ServiceDefaults.csproj" />
         <ProjectReference Include="..\..\Modules\IAMMod\IAMMod.csproj" />
-        <ProjectReference Include="..\..\Modules\CommonMod\CommonMod.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <Folder Include="Middleware\" />
         <Folder Include="Services\" />
     </ItemGroup>
 </Project>
