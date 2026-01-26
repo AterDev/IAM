@@ -1,6 +1,6 @@
-<div class="user-list-container">
+<div>
   <div class="d-flex justify-content-between align-items-center">
-    <div class="d-flex align-items-center gap-1">
+    <div class="d-flex align-items-center gap-1 p-1">
       <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
         <mat-label>{{ 'common.search' | translate }}</mat-label>
         <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()" placeholder="Username, Email or Phone" />

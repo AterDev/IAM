@@ -14,8 +14,9 @@
         <mat-label>{{ 'client.type' | translate }}</mat-label>
         <mat-select [(ngModel)]="typeFilter" (selectionChange)="onFilterChange()">
           <mat-option [value]="null">{{ 'common.all' | translate }}</mat-option>
-          <mat-option value="confidential">{{ 'client.confidential' | translate }}</mat-option>
-          <mat-option value="public">{{ 'client.public' | translate }}</mat-option>
+          @for (item of ClientType| toKeyValue; track $index) {
+          <mat-option [value]="item.key">{{ item.value | enumText:'ClientType'}}</mat-option>
+          }
         </mat-select>
       </mat-form-field>
 
@@ -23,9 +24,9 @@
         <mat-label>{{ 'client.applicationType' | translate }}</mat-label>
         <mat-select [(ngModel)]="applicationTypeFilter" (selectionChange)="onFilterChange()">
           <mat-option [value]="null">{{ 'common.all' | translate }}</mat-option>
-          <mat-option value="web">{{ 'client.web' | translate }}</mat-option>
-          <mat-option value="native">{{ 'client.native' | translate }}</mat-option>
-          <mat-option value="spa">{{ 'client.spa' | translate }}</mat-option>
+          @for (item of ApplicationType| toKeyValue; track $index) {
+          <mat-option [value]="item.key">{{ item.value | enumText:'ApplicationType'}}</mat-option>
+          }
         </mat-select>
       </mat-form-field>
 
@@ -85,11 +86,9 @@
       <ng-container matColumnDef="type">
         <th mat-header-cell *matHeaderCellDef>{{ 'client.type' | translate }}</th>
         <td mat-cell *matCellDef="let client">
-          @if (client.type) {
           <mat-chip class="small">
             {{ client.type | enumText: 'ClientType' }}
           </mat-chip>
-          }
         </td>
       </ng-container>
 
@@ -97,11 +96,9 @@
       <ng-container matColumnDef="applicationType">
         <th mat-header-cell *matHeaderCellDef>{{ 'client.applicationType' | translate }}</th>
         <td mat-cell *matCellDef="let client">
-          @if (client.applicationType) {
           <mat-chip class="small">
             {{ client.applicationType | enumText: 'ApplicationType' }}
           </mat-chip>
-          }
         </td>
       </ng-container>
 

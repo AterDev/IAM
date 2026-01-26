@@ -16,6 +16,7 @@ import { Clipboard } from '@angular/cdk/clipboard';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 import { AuthorizationItemDto } from 'src/app/services/api/models/iammod/authorization-item-dto.model';
 import { ClientDetailDto } from 'src/app/services/api/models/iammod/client-detail-dto.model';
+import { EnumTextPipe } from 'src/app/pipe/api/enum-text.pipe';
 
 @Component({
   selector: 'app-detail',
@@ -26,8 +27,9 @@ import { ClientDetailDto } from 'src/app/services/api/models/iammod/client-detai
     MatProgressSpinnerModule,
     MatChipsModule,
     MatTableModule,
-  MatTabsModule,
-  AppLoadingComponent
+    MatTabsModule,
+    AppLoadingComponent,
+    EnumTextPipe
   ],
   templateUrl: './detail.html',
   styleUrls: ['./detail.scss']
@@ -35,7 +37,6 @@ import { ClientDetailDto } from 'src/app/services/api/models/iammod/client-detai
 export class ClientDetailComponent implements OnInit {
   client = signal<ClientDetailDto | null>(null);
   authorizations = signal<AuthorizationItemDto[]>([]);
-
   isLoading = signal(false);
   isLoadingAuthorizations = signal(false);
   clientId?: string;
@@ -50,7 +51,7 @@ export class ClientDetailComponent implements OnInit {
     private snackBar: MatSnackBar,
     private translate: TranslateService,
     private clipboard: Clipboard
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.clientId = this.route.snapshot.paramMap.get('id') || '';
@@ -61,14 +62,14 @@ export class ClientDetailComponent implements OnInit {
   }
 
   loadClient(): void {
-  this.isLoading.set(true);
+    this.isLoading.set(true);
     this.api.clients.getDetail(this.clientId!).subscribe({
       next: (client) => {
-  this.client.set(client);
-  this.isLoading.set(false);
+        this.client.set(client);
+        this.isLoading.set(false);
       },
       error: () => {
-  this.isLoading.set(false);
+        this.isLoading.set(false);
         this.snackBar.open(
           this.translate.instant('error.loadClientFailed'),
           this.translate.instant('common.close'),
@@ -80,14 +81,14 @@ export class ClientDetailComponent implements OnInit {
   }
 
   loadAuthorizations(): void {
-  this.isLoadingAuthorizations.set(true);
+    this.isLoadingAuthorizations.set(true);
     this.api.clients.getAuthorizations(this.clientId!).subscribe({
       next: (authorizations) => {
-  this.authorizations.set(authorizations);
-  this.isLoadingAuthorizations.set(false);
+        this.authorizations.set(authorizations);
+        this.isLoadingAuthorizations.set(false);
       },
       error: () => {
-  this.isLoadingAuthorizations.set(false);
+        this.isLoadingAuthorizations.set(false);
         this.snackBar.open(
           this.translate.instant('error.loadAuthorizationsFailed'),
           this.translate.instant('common.close'),

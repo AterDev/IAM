@@ -66,14 +66,14 @@ export class UserListComponent implements OnInit {
     private router: Router,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadData();
   }
 
   loadData(): void {
-  this.isLoading.set(true);
+    this.isLoading.set(true);
 
     this.api.users.getUsers(
       this.searchText || null,
@@ -89,10 +89,10 @@ export class UserListComponent implements OnInit {
       next: (result: PageList<UserItemDto>) => {
         this.dataSource.set(result.data);
         this.total.set(result.count);
-  this.isLoading.set(false);
+        this.isLoading.set(false);
       },
       error: () => {
-  this.isLoading.set(false);
+        this.isLoading.set(false);
         this.snackBar.open('Failed to load users', 'Close', { duration: 3000 });
       }
     });

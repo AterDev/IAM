@@ -39,23 +39,23 @@ export class OrganizationListComponent implements OnInit {
     private api: ApiClient,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadTree();
   }
 
   loadTree(): void {
-  this.isLoading.set(true);
+    this.isLoading.set(true);
     this.api.organizations.getTree(null).subscribe({
       next: (tree) => {
         this.dataSource.data = tree;
-  this.isLoading.set(false);
+        this.isLoading.set(false);
         // Expand root nodes by default
         tree.forEach(node => this.treeControl.expand(node));
       },
       error: () => {
-  this.isLoading.set(false);
+        this.isLoading.set(false);
         this.snackBar.open('Failed to load organization tree', 'Close', { duration: 3000 });
       }
     });

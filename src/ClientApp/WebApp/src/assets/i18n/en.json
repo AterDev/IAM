@@ -216,7 +216,9 @@
     "deleteMultipleSuccess": "Successfully deleted {{count}} applications",
     "deleteMultiplePartial": "Successfully deleted {{success}} applications, {{error}} failed",
     "createSuccess": "Application created successfully",
-    "updateSuccess": "Application updated successfully"
+    "updateSuccess": "Application updated successfully",
+    "availableScopes": "Available Scopes",
+    "selectedScopes": "Selected Scopes"
   },
   "resource": {
     "title": "Resource Management",
@@ -275,7 +277,19 @@
     "deleteClientFailed": "Failed to delete application",
     "deleteScopeFailed": "Failed to delete scope",
     "loadClientFailed": "Failed to load application",
-    "loadScopeFailed": "Failed to load scope"
+    "loadScopeFailed": "Failed to load scope",
+    "loadSessionsFailed": "Failed to load sessions",
+    "revokeSessionFailed": "Failed to revoke session",
+    "loadAuditLogsFailed": "Failed to load audit logs",
+    "loadAuditLogDetailFailed": "Failed to load audit log detail",
+    "loadClientsFailed": "Failed to load applications",
+    "loadResourceFailed": "Failed to load resource",
+    "loadResourcesFailed": "Failed to load resources",
+    "createResourceFailed": "Failed to create resource",
+    "updateResourceFailed": "Failed to update resource",
+    "deleteResourceFailed": "Failed to delete resource",
+    "loadAuthorizationsFailed": "Failed to load authorizations",
+    "rotateSecretFailed": "Failed to rotate secret"
   },
   "permission": {
     "category": {
@@ -328,33 +342,5 @@
     "exportNotImplemented": "Export feature not yet implemented",
     "startAutoRefresh": "Auto Refresh",
     "stopAutoRefresh": "Stop Refresh"
-  },
-  "error": {
-    "loadSessionsFailed": "Failed to load sessions",
-    "revokeSessionFailed": "Failed to revoke session",
-    "loadAuditLogsFailed": "Failed to load audit logs",
-    "loadAuditLogDetailFailed": "Failed to load audit log detail",
-    "loadRolesFailed": "Failed to load roles",
-    "loadPermissionsFailed": "Failed to load permissions",
-    "savePermissionsFailed": "Failed to save permissions",
-    "createRoleFailed": "Failed to create role",
-    "updateRoleFailed": "Failed to update role",
-    "deleteRoleFailed": "Failed to delete role",
-    "batchDeletePartialFailed": "Some roles failed to delete",
-    "loadRoleDetailFailed": "Failed to load role detail",
-    "loadScopesFailed": "Failed to load scopes",
-    "loadClientsFailed": "Failed to load applications",
-    "createClientFailed": "Failed to create application",
-    "deleteClientFailed": "Failed to delete application",
-    "required": "This field is required",
-    "minLength": "The minimum length is {{length}}",
-    "loadResourceFailed": "Failed to load resource",
-    "loadResourcesFailed": "Failed to load resources",
-    "createResourceFailed": "Failed to create resource",
-    "updateResourceFailed": "Failed to update resource",
-    "deleteResourceFailed": "Failed to delete resource",
-    "loadAuthorizationsFailed": "Failed to load authorizations",
-    "rotateSecretFailed": "Failed to rotate secret",
-    "updateClientFailed": "Failed to update application"
   }
 }

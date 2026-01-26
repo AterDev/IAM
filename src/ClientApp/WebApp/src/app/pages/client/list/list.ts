@@ -18,6 +18,7 @@ import { PageList } from 'src/app/services/api/models/perigon/page-list.model';
 import { ClientType } from 'src/app/services/api/models/entity/client-type.model';
 import { ApplicationType } from 'src/app/services/api/models/entity/application-type.model';
 import { EnumTextPipe } from 'src/app/pipe/api/enum-text.pipe';
+import { ToKeyValuePipe } from 'src/app/share/pipe/to-key-value.pipe';
 
 
 @Component({
@@ -33,14 +34,17 @@ import { EnumTextPipe } from 'src/app/pipe/api/enum-text.pipe';
     MatDialogModule,
     MatMenuModule,
     FormsModule,
-    EnumTextPipe
+    EnumTextPipe,
+    ToKeyValuePipe
   ],
   templateUrl: './list.html',
   styleUrls: ['./list.scss']
 })
 export class ClientListComponent implements OnInit {
-  displayedColumns: string[] = ['select', 'clientId', 'displayName', 'type', 'applicationType', 'createdTime', 'actions'];
 
+  ApplicationType = ApplicationType;
+  ClientType = ClientType;
+  displayedColumns: string[] = ['select', 'clientId', 'displayName', 'type', 'applicationType', 'createdTime', 'actions'];
   dataSource = signal<ClientItemDto[]>([]);
   total = signal(0);
   selectedIds = signal<Set<string>>(new Set());
@@ -89,8 +93,6 @@ export class ClientListComponent implements OnInit {
       null
     ).subscribe({
       next: (res: PageList<ClientItemDto>) => {
-        console.log(res.data);
-
         this.dataSource.set(res.data);
         this.total.set(res.count);
         this.isLoading.set(false);

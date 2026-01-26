@@ -251,7 +251,7 @@ public class Worker(
         }
 
         // Create ApiClient for backend API services
-        var apiClientId = "ApiClient";
+        var apiClientId = "ApiService";
         var apiClientExists = await dbContext.Set<Client>().AnyAsync(
             c => c.ClientId == apiClientId,
             cancellationToken
@@ -274,7 +274,7 @@ public class Worker(
                 ConsentType = ConsentType.Implicit,
             };
 
-            dbContext.Set<Client>().Add(apiClient);
+            dbContext.Clients.Add(apiClient);
             await dbContext.SaveChangesAsync(cancellationToken);
 
             // Assign scopes to ApiClient

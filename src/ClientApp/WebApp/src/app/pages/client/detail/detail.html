@@ -52,18 +52,18 @@
               <div class="col-md-6 mb-4">
                 <label class="fw-500 d-block mb-2">{{ 'client.type' | translate }}:</label>
                 <span>
-                  <mat-chip>{{ client()!.type }}</mat-chip>
+                  <mat-chip>{{ client()!.type |enumText:'ClientType'}}</mat-chip>
                 </span>
               </div>
               <div class="col-md-6 mb-4">
                 <label class="fw-500 d-block mb-2">{{ 'client.applicationType' | translate }}:</label>
                 <span>
-                  <mat-chip>{{ client()!.applicationType }}</mat-chip>
+                  <mat-chip>{{ client()!.applicationType |enumText:'ApplicationType' }}</mat-chip>
                 </span>
               </div>
               <div class="col-md-6 mb-4">
                 <label class="fw-500 d-block mb-2">{{ 'client.consentType' | translate }}:</label>
-                <span>{{ client()!.consentType || '-' }}</span>
+                <span>{{ client()!.consentType |enumText:'ConsentType' }}</span>
               </div>
               <div class="col-md-6 mb-4">
                 <label class="fw-500 d-block mb-2">{{ 'client.requirePkce' | translate }}:</label>

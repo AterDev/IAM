@@ -77,7 +77,7 @@ export class SessionListComponent implements OnInit {
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private translate: TranslateService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadData();
@@ -88,7 +88,7 @@ export class SessionListComponent implements OnInit {
   }
 
   loadData(): void {
-  this.isLoading.set(true);
+    this.isLoading.set(true);
 
     this.api.security.getSessions(
       null,
@@ -104,7 +104,7 @@ export class SessionListComponent implements OnInit {
       next: (res: PageList<LoginSessionItemDto>) => {
         this.dataSource.set(res.data);
         this.total.set(res.count);
-  this.isLoading.set(false);
+        this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Failed to load sessions:', error);
@@ -113,7 +113,7 @@ export class SessionListComponent implements OnInit {
           this.translate.instant('common.close'),
           { duration: 3000 }
         );
-  this.isLoading.set(false);
+        this.isLoading.set(false);
       }
     });
   }
