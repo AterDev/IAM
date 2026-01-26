@@ -284,7 +284,9 @@ export const I18N_KEYS = {
     "deleteMultipleSuccess": "client.deleteMultipleSuccess",
     "deleteMultiplePartial": "client.deleteMultiplePartial",
     "createSuccess": "client.createSuccess",
-    "updateSuccess": "client.updateSuccess"
+    "updateSuccess": "client.updateSuccess",
+    "availableScopes": "client.availableScopes",
+    "selectedScopes": "client.selectedScopes"
   },
   "resource": {
     "title": "resource.title",
@@ -324,10 +326,6 @@ export const I18N_KEYS = {
     "permissionsSaved": "success.permissionsSaved"
   },
   "error": {
-    "loadSessionsFailed": "error.loadSessionsFailed",
-    "revokeSessionFailed": "error.revokeSessionFailed",
-    "loadAuditLogsFailed": "error.loadAuditLogsFailed",
-    "loadAuditLogDetailFailed": "error.loadAuditLogDetailFailed",
     "loadRolesFailed": "error.loadRolesFailed",
     "loadPermissionsFailed": "error.loadPermissionsFailed",
     "savePermissionsFailed": "error.savePermissionsFailed",
@@ -337,19 +335,29 @@ export const I18N_KEYS = {
     "batchDeletePartialFailed": "error.batchDeletePartialFailed",
     "loadRoleDetailFailed": "error.loadRoleDetailFailed",
     "loadScopesFailed": "error.loadScopesFailed",
-    "loadClientsFailed": "error.loadClientsFailed",
-    "createClientFailed": "error.createClientFailed",
-    "deleteClientFailed": "error.deleteClientFailed",
     "required": "error.required",
     "minLength": "error.minLength",
+    "maxLength": "error.maxLength",
+    "createClientFailed": "error.createClientFailed",
+    "createScopeFailed": "error.createScopeFailed",
+    "updateClientFailed": "error.updateClientFailed",
+    "updateScopeFailed": "error.updateScopeFailed",
+    "deleteClientFailed": "error.deleteClientFailed",
+    "deleteScopeFailed": "error.deleteScopeFailed",
+    "loadClientFailed": "error.loadClientFailed",
+    "loadScopeFailed": "error.loadScopeFailed",
+    "loadSessionsFailed": "error.loadSessionsFailed",
+    "revokeSessionFailed": "error.revokeSessionFailed",
+    "loadAuditLogsFailed": "error.loadAuditLogsFailed",
+    "loadAuditLogDetailFailed": "error.loadAuditLogDetailFailed",
+    "loadClientsFailed": "error.loadClientsFailed",
     "loadResourceFailed": "error.loadResourceFailed",
     "loadResourcesFailed": "error.loadResourcesFailed",
     "createResourceFailed": "error.createResourceFailed",
     "updateResourceFailed": "error.updateResourceFailed",
     "deleteResourceFailed": "error.deleteResourceFailed",
     "loadAuthorizationsFailed": "error.loadAuthorizationsFailed",
-    "rotateSecretFailed": "error.rotateSecretFailed",
-    "updateClientFailed": "error.updateClientFailed"
+    "rotateSecretFailed": "error.rotateSecretFailed"
   },
   "permission": {
     "category": {

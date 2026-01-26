@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
 using ClaimTypes = System.Security.Claims.ClaimTypes;
 
-namespace ApiService.Controllers;
+namespace ApiService.Controllers.IAMMod;
 
 public class ExternalAuthController(
     Localizer localizer,

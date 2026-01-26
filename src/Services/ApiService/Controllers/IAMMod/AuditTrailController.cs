@@ -1,7 +1,7 @@
-using CommonMod.Managers;
-using CommonMod.Models.AuditLogDtos;
+using IAMMod.Managers;
+using IAMMod.Models.AuditLogDtos;
 
-namespace ApiService.Controllers;
+namespace ApiService.Controllers.IAMMod;
 
 /// <summary>
 /// Audit trail controller

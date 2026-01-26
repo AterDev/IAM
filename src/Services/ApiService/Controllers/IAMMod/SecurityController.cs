@@ -1,9 +1,8 @@
-using CommonMod.Managers;
-using CommonMod.Models.AuditLogDtos;
 using IAMMod.Managers;
+using IAMMod.Models.AuditLogDtos;
 using IAMMod.Models.LoginSessionDtos;
 
-namespace ApiService.Controllers;
+namespace ApiService.Controllers.IAMMod;
 
 /// <summary>
 /// Security controller for session and audit log management

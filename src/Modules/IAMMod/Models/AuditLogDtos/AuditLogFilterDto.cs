@@ -1,4 +1,4 @@
-namespace CommonMod.Models.AuditLogDtos;
+namespace IAMMod.Models.AuditLogDtos;
 
 /// <summary>
 /// Audit log filter DTO

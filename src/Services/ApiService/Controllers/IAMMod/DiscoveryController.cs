@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Perigon.AspNetCore.Constants;
 
-namespace ApiService.Controllers;
+namespace ApiService.Controllers.IAMMod;
 
 /// <summary>
 /// OpenID Connect Discovery endpoint controller

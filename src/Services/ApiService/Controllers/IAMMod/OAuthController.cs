@@ -8,7 +8,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using SysClaimTypes = System.Security.Claims.ClaimTypes;
 
-namespace ApiService.Controllers;
+namespace ApiService.Controllers.IAMMod;
 
 /// <summary>
 /// OAuth 2.0 / OpenID Connect endpoint controller

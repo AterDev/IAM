@@ -2,7 +2,7 @@ using IAMMod.Managers;
 using IAMMod.Models.AuthorizationDtos;
 using Microsoft.AspNetCore.Authorization;
 
-namespace ApiService.Controllers;
+namespace ApiService.Controllers.IAMMod;
 
 /// <summary>
 /// Authorization management controller for users to view and manage their authorizations

@@ -1,8 +1,6 @@
-using CommonMod.Models.AuditLogDtos;
-using Entity.IAMMod;
-using EntityFramework.AppDbFactory;
+using IAMMod.Models.AuditLogDtos;
 
-namespace CommonMod.Managers;
+namespace IAMMod.Managers;
 
 /// <summary>
 /// Manager for audit log operations

@@ -1,7 +1,7 @@
 using IAMMod.Managers;
 using IAMMod.Models.OrganizationDtos;
 
-namespace ApiService.Controllers;
+namespace ApiService.Controllers.IAMMod;
 
 /// <summary>
 /// Organization management controller

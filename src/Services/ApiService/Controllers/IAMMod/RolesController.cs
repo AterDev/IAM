@@ -1,7 +1,7 @@
 using IAMMod.Managers;
 using IAMMod.Models.RoleDtos;
 
-namespace ApiService.Controllers;
+namespace ApiService.Controllers.IAMMod;
 
 /// <summary>
 /// Role management controller

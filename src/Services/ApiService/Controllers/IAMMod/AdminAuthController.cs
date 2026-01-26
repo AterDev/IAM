@@ -6,7 +6,7 @@ using Perigon.AspNetCore.Services;
 using System.Security.Claims;
 using ClaimTypes = System.Security.Claims.ClaimTypes;
 
-namespace ApiService.Controllers;
+namespace ApiService.Controllers.IAMMod;
 
 /// <summary>
 /// Admin authentication controller for management portal login

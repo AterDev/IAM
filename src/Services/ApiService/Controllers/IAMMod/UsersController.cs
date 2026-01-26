@@ -1,7 +1,7 @@
 using IAMMod.Managers;
 using IAMMod.Models.UserDtos;
 
-namespace ApiService.Controllers;
+namespace ApiService.Controllers.IAMMod;
 
 /// <summary>
 /// User management controller

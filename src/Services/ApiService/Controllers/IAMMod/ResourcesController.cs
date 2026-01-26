@@ -1,7 +1,7 @@
 using IAMMod.Managers;
 using IAMMod.Models.ResourceDtos;
 
-namespace ApiService.Controllers;
+namespace ApiService.Controllers.IAMMod;
 
 /// <summary>
 /// API resource management controller

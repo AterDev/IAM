@@ -1,7 +1,7 @@
 using IAMMod.Managers;
 using IAMMod.Models.ScopeDtos;
 
-namespace ApiService.Controllers;
+namespace ApiService.Controllers.IAMMod;
 
 /// <summary>
 /// API scope management controller
