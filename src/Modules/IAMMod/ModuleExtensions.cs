@@ -23,8 +23,8 @@ public static class ModuleExtensions
     [Description("注册 IAMMod 模块服务，包括密钥管理与 OAuth 核心逻辑")]
     public static IHostApplicationBuilder AddIAMMod(this IHostApplicationBuilder builder)
     {
-        // 注册 Share 层的 OAuthService
         builder.Services.AddScoped<OAuthService>();
+        builder.Services.AddHostedService<InitHostService>();
         builder.AddModServices();
         return builder;
     }
@@ -49,6 +49,7 @@ public static class ModuleExtensions
             options.Cookie.IsEssential = true;
             options.Cookie.SameSite = SameSiteMode.Lax;
         });
+
 
         builder.Services.AddAuthentication(options =>
         {
@@ -75,8 +76,7 @@ public static class ModuleExtensions
             .AddPolicy(WebConst.AdminUser, policy =>
             {
                 policy.RequireRole(WebConst.AdminUser, WebConst.SuperAdmin);
-            }
-            );
+            });
         builder.Services.AddLocalizer();
         builder.Services.AddControllers()
             .AddJsonOptions(options =>
@@ -134,14 +134,6 @@ public static class ModuleExtensions
         app.MapControllers();
         app.MapRazorPages();
         app.MapFallbackToFile("index.html");
-
-
-        using (var scope = app.Services.CreateScope())
-        {
-            var provider = scope.ServiceProvider;
-            var task = InitModule.InitializeAsync(provider);
-            task.Wait(new TimeSpan(0, 0, 30));
-        }
         return app;
     }
 

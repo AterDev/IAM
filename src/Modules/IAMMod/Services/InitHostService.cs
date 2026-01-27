@@ -1,23 +1,28 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
-namespace IAMMod;
+namespace IAMMod.Services;
 
 /// <summary>
-/// AccessMod 模块初始化逻辑
+/// Application initialization hosted service that runs data seeding and setup
 /// </summary>
-public static class InitModule
+public class InitHostService(
+    IServiceProvider serviceProvider,
+    ILogger<InitHostService> logger
+) : BackgroundService
 {
-    public static async Task InitializeAsync(IServiceProvider serviceProvider)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using var scope = serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<DefaultDbContext>();
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<DefaultDbContext>>();
 
         try
         {
+            logger.LogInformation("Starting application initialization...");
+
             var now = DateTimeOffset.UtcNow;
             var hasActiveKey = await dbContext.SigningKeys
-                .AnyAsync(k => k.IsActive && k.ActivationDate <= now && (k.ExpirationDate == null || k.ExpirationDate > now));
+                .AnyAsync(k => k.IsActive && k.ActivationDate <= now && (k.ExpirationDate == null || k.ExpirationDate > now), stoppingToken);
 
             if (!hasActiveKey)
             {
@@ -38,28 +43,34 @@ public static class InitModule
                 };
 
                 dbContext.SigningKeys.Add(signingKey);
-                await dbContext.SaveChangesAsync();
+                await dbContext.SaveChangesAsync(stoppingToken);
 
                 logger.LogInformation("Initial signing key generated: {KeyId}", signingKey.KeyId);
             }
 
-            await SeedInitialDataAsync(dbContext, CancellationToken.None);
-            await SeedOAuthDataAsync(dbContext, CancellationToken.None);
+            await SeedInitialDataAsync(dbContext, stoppingToken);
+            await SeedOAuthDataAsync(dbContext, stoppingToken);
 
             // Preload signing keys into cache for JWT validation
             var signingKeyResolver = scope.ServiceProvider.GetRequiredService<SigningKeyResolver>();
             await signingKeyResolver.PreloadSigningKeysAsync();
+
+            logger.LogInformation("Application initialization completed successfully");
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error initializing signing keys");
+            logger.LogError(ex, "Application initialization failed");
+            return;
+        }
+        finally
+        {
         }
     }
 
     /// <summary>
     /// Seed initial data including default admin account
     /// </summary>
-    private static async Task SeedInitialDataAsync(
+    private async Task SeedInitialDataAsync(
         DefaultDbContext dbContext,
         CancellationToken cancellationToken
     )
@@ -131,7 +142,7 @@ public static class InitModule
     /// <summary>
     /// Seed OAuth/OIDC initial data including default clients and scopes
     /// </summary>
-    private static async Task SeedOAuthDataAsync(
+    private async Task SeedOAuthDataAsync(
         DefaultDbContext dbContext,
         CancellationToken cancellationToken
     )
@@ -167,11 +178,10 @@ public static class InitModule
             }
         }
 
-        // add dfault API resource
+        // add default API resource
         var defaultResource = await dbContext.ApiResources.FirstOrDefaultAsync();
         if (defaultResource == null)
         {
-
             defaultResource = new ApiResource
             {
                 Name = "SampleAPI",
