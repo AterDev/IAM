@@ -18,7 +18,7 @@
 ## 可用示例
 
 ### 1. 后端示例 (ASP.NET Core)
-位置: `backend-dotnet/`
+位置: `src/Services/ApiSampleService/`
 
 ASP.NET Core Web API示例，演示：
 - JWT Bearer认证
@@ -28,12 +28,10 @@ ASP.NET Core Web API示例，演示：
 - Swagger UI集成，支持JWT测试
 
 **服务端口**: `https://localhost:7000`  
-**使用的客户端**: `ApiClient`（自动创建的默认客户端）
-
-[查看后端示例文档](backend-dotnet/README.md)
+**使用的客户端/资源标识**: `ApiTest`
 
 ### 2. 前端示例 (Angular)
-位置: `frontend-angular/`
+位置: `src/Services/FrontSampleService/`
 
 Angular应用示例，演示：
 - OAuth 2.0 / OpenID Connect认证
@@ -45,16 +43,14 @@ Angular应用示例，演示：
 **服务端口**: `http://localhost:4201`  
 **使用的客户端**: `FrontClient`（自动创建的默认客户端）
 
-[查看前端示例文档](frontend-angular/README.md)
-
 ## 快速开始指南
 
 ### 前置要求
 
 1. **开发工具**
-   - .NET 9 SDK
+   - .NET 10 SDK
    - Node.js 20+ 和 pnpm
-   - Docker（用于运行PostgreSQL和Redis容器）
+   - 本地无需 Docker；默认通过 `src/AppHost/appsettings.Development.json` 中的外部 PostgreSQL / Redis 连接启动
 
 ### 步骤 1: 使用 Aspire 启动所有服务
 
@@ -66,8 +62,8 @@ dotnet run
 ```
 
 这将自动启动：
-- PostgreSQL 数据库
-- Redis 缓存
+- 外部 PostgreSQL 数据库连接
+- 外部 Redis 缓存连接
 - IAM 数据库迁移服务
 - IAM API 服务 (https://localhost:7070)
 - IAM 管理前端 (http://localhost:4200)
@@ -108,12 +104,10 @@ Aspire Dashboard 将在浏览器中自动打开，您可以在其中监控所有
   - `http://localhost:4201`
   - `https://localhost:4201`
 
-#### ApiClient 客户端（后端API）
-- **客户端ID**: `ApiClient`
-- **客户端密钥**: `ApiClient_Secret_2025`
-- **客户端类型**: 机密客户端
-- **授权流程**: 客户端凭证流程
-- **允许的作用域**: openid
+#### ApiTest 资源标识（示例后端）
+- **Audience/Resource**: `ApiTest`
+- **用途**: 供 `ApiSampleService` 验证访问令牌受众
+- **前端请求作用域**: `openid profile email offline_access ApiTest`
 
 ### 步骤 4: 测试集成
 
@@ -344,15 +338,15 @@ curl -X POST https://localhost:7070/connect/token \
 
 ### 问题: 服务无法启动
 **解决方案**: 
-- 确保Docker正在运行
 - 检查端口是否被占用 (7070, 7000, 4200, 4201)
-- 查看Aspire Dashboard中的服务日志
+- 确认 `src/AppHost/appsettings.Development.json` 中的外部 PostgreSQL / Redis 连接可用
+- 查看 Aspire Dashboard 或控制台中的服务日志
 
 ### 问题: 数据库连接失败
 **解决方案**: 
-- 确保PostgreSQL容器已启动
-- 在Aspire Dashboard中检查数据库服务状态
-- 等待迁移服务完成
+- 确认外部 PostgreSQL 可访问
+- 查看 `MigrationService` 日志是否执行完迁移
+- 检查 `AppHost` 中的数据库连接字符串配置是否正确
 
 ### 问题: CORS错误
 **解决方案**: 
@@ -392,19 +386,19 @@ curl -X POST https://localhost:7070/connect/token \
 ## 配置检查清单
 
 ### Aspire 运行环境
-- [ ] Docker Desktop 正在运行
-- [ ] .NET 9 SDK 已安装
+- [ ] .NET 10 SDK 已安装
 - [ ] Node.js 20+ 和 pnpm 已安装
 - [ ] 端口 7070, 7000, 4200, 4201 未被占用
+- [ ] 外部 PostgreSQL / Redis 连接可用
 
 ### IAM 服务配置（自动完成）
-- [x] PostgreSQL 数据库容器已启动
-- [x] Redis 缓存容器已启动
+- [x] PostgreSQL 外部连接已配置
+- [x] Redis 外部连接已配置
 - [x] 数据库迁移已完成
 - [x] 管理员账号已创建 (admin / MakeDotnetGreatAgain)
 - [x] 默认作用域已创建 (openid, profile, email等)
 - [x] FrontClient 客户端已创建
-- [x] ApiClient 客户端已创建
+- [x] ApiTest 资源标识已配置
 - [x] IAM API 服务运行在 https://localhost:7070
 - [x] IAM 管理前端运行在 http://localhost:4200
 
@@ -418,7 +412,7 @@ curl -X POST https://localhost:7070/connect/token \
 
 ### 验证步骤
 - [ ] 访问 IAM 管理后台并成功登录
-- [ ] 在应用管理中查看 FrontClient 和 ApiClient
+- [ ] 在应用管理中查看 FrontClient，并确认示例后端使用的 `ApiTest` audience 配置一致
 - [ ] 访问示例前端应用
 - [ ] 在示例应用中完成登录流程
 - [ ] 成功调用示例 API 的受保护端点

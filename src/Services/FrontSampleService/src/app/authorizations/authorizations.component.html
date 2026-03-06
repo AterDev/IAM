@@ -1,0 +1,70 @@
+<div class="authorizations-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>security</mat-icon>
+        我的授权管理
+      </mat-card-title>
+      <mat-card-subtitle>管理您授予各客户端应用的访问权限</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div *ngIf="loading" class="loading-container">
+        <mat-spinner></mat-spinner>
+      </div>
+
+      <div *ngIf="!loading && authorizations.length === 0" class="empty-state">
+        <mat-icon>info</mat-icon>
+        <p>当前没有授权记录</p>
+      </div>
+
+      <mat-list *ngIf="!loading && authorizations.length > 0">
+        <mat-list-item *ngFor="let auth of authorizations" class="authorization-item">
+          <div class="authorization-content">
+            <div class="authorization-header">
+              <div class="app-info">
+                <h3>{{ auth.clientName }}</h3>
+                <p class="client-id">客户端ID: {{ auth.clientId }}</p>
+              </div>
+              <div class="authorization-status">
+                <mat-chip [color]="getStatusColor(auth.status)" selected>
+                  {{ getStatusLabel(auth.status) }}
+                </mat-chip>
+                <mat-chip>{{ getTypeLabel(auth.type) }}</mat-chip>
+              </div>
+            </div>
+
+            <div class="authorization-details">
+              <div class="detail-row">
+                <mat-icon>vpn_key</mat-icon>
+                <strong>授权范围：</strong>
+                <div class="scopes">
+                  <mat-chip *ngFor="let scope of getScopesList(auth.scopes)">{{ scope }}</mat-chip>
+                </div>
+              </div>
+
+              <div class="detail-row">
+                <mat-icon>event</mat-icon>
+                <strong>授权时间：</strong>
+                <span>{{ formatDate(auth.creationDate) }}</span>
+              </div>
+
+              <div class="detail-row" *ngIf="auth.expirationDate">
+                <mat-icon>schedule</mat-icon>
+                <strong>过期时间：</strong>
+                <span>{{ formatDate(auth.expirationDate) }}</span>
+              </div>
+            </div>
+
+            <div class="authorization-actions">
+              <button mat-raised-button color="warn" (click)="revokeAuthorization(auth.id, auth.clientName)" [disabled]="auth.status.toLowerCase() === 'revoked'">
+                <mat-icon>block</mat-icon>
+                撤销授权
+              </button>
+            </div>
+          </div>
+        </mat-list-item>
+      </mat-list>
+    </mat-card-content>
+  </mat-card>
+</div>

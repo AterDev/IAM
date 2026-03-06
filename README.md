@@ -68,9 +68,9 @@
 ## 🚀 快速开始
 
 ### 环境要求
-- .NET 9.0 SDK
+- .NET 10.0 SDK
 - Node.js 20+ / pnpm 9+
-- Docker Desktop（用于数据库和缓存容器）
+- 可访问的 PostgreSQL / Redis（本地开发默认读取 `src/AppHost/appsettings.Development.json` 中的外部连接）
 
 ### 使用 .NET Aspire 一键启动（推荐）
 
@@ -87,8 +87,8 @@ dotnet run
 ```
 
 这将自动启动：
-- **PostgreSQL** 数据库容器 (端口 15432)
-- **Redis** 缓存容器 (端口 16379)
+- **PostgreSQL** 外部数据库连接
+- **Redis** 外部缓存连接
 - **数据库迁移服务** - 自动执行数据库迁移和数据种子
 - **IAM API 服务** - `https://localhost:7070`
 - **IAM 管理前端** - `http://localhost:4200`
@@ -113,7 +113,7 @@ Aspire Dashboard 将自动在浏览器中打开，提供：
 - 管理员账号: `admin` / `MakeDotnetGreatAgain`
 - OAuth作用域: openid, profile, email, address, phone, offline_access
 - 前端客户端: `FrontClient` (支持授权码+PKCE流程)
-- API客户端: `ApiClient` (支持客户端凭证流程)
+- 示例 API 资源标识: `ApiTest`
 
 ### 手动启动（高级用户）
 
@@ -122,7 +122,7 @@ Aspire Dashboard 将自动在浏览器中打开，提供：
 #### 后端启动
 
 ```bash
-# 确保 PostgreSQL 和 Redis 正在运行
+# 确保 PostgreSQL 和 Redis 可访问
 
 # 运行数据库迁移
 cd src/Services/MigrationService
@@ -149,15 +149,7 @@ pnpm start
 
 管理门户将在 `http://localhost:4200` 启动
 
-### Docker部署
-
-```bash
-# 构建镜像
-docker-compose build
-
-# 启动服务
-docker-compose up -d
-```
+当前仓库默认以 Aspire + 外部资源方式进行本地开发，`AppHost` 中的容器编排代码已保留为注释示例；如需恢复容器模式，可在 `src/AppHost/Program.cs` 中重新启用对应资源定义。
 
 ## 📁 项目结构
 
@@ -165,29 +157,23 @@ docker-compose up -d
 IAM/
 ├── src/
 │   ├── AppHost/                  # .NET Aspire 应用编排
-│   ├── Ater/                    # 基础类库
-│   │   ├── Ater.Common/         # 通用帮助类
-│   │   ├── Ater.Web.Convention/ # Web约定
-│   │   └── Ater.Web.Extension/  # Web扩展
 │   ├── Definition/              # 定义层
 │   │   ├── Entity/              # 实体模型
 │   │   ├── EntityFramework/     # EF Core上下文
 │   │   ├── ServiceDefaults/     # 服务默认配置
 │   │   └── Share/               # 共享服务
 │   ├── Modules/                 # 业务模块
-│   │   ├── CommonMod/           # 公共模块
-│   │   ├── IdentityMod/         # 身份认证模块
-│   │   └── AccessMod/           # 访问控制模块
+│   │   └── IAMMod/              # IAM 业务模块
+│   ├── Perigon/                 # Perigon 基础库与工具
 │   ├── Services/                # 服务层
-│   │   ├── ApiService/          # API服务
+│   │   ├── ApiService/          # IAM API 服务
+│   │   ├── ApiSampleService/    # 示例后端服务
+│   │   ├── FrontSampleService/  # 示例前端服务（Angular）
 │   │   └── MigrationService/    # 数据库迁移服务
 │   └── ClientApp/               # 前端应用
 │       └── WebApp/              # Angular管理门户
 ├── tests/                       # 测试项目
-│   └── Integration/             # 集成测试
-├── samples/                     # 示例项目
-│   ├── backend-dotnet/          # .NET后端集成示例
-│   └── frontend-angular/        # Angular前端集成示例
+├── samples/                     # 示例说明文档
 ├── docs/                        # 文档
 └── scripts/                     # 脚本工具
 ```
@@ -209,7 +195,7 @@ IAM/
 ## 🔧 技术栈
 
 ### 后端
-- **框架**: ASP.NET Core 9.0
+- **框架**: ASP.NET Core 10.0
 - **编排**: .NET Aspire (开发环境)
 - **ORM**: Entity Framework Core
 - **数据库**: PostgreSQL
@@ -294,10 +280,10 @@ pnpm test:coverage
 
 IAM 提供了完整的前后端集成示例，展示如何使用 OAuth 2.0 / OIDC 进行身份认证和授权。
 
-所有示例项目都已集成到 .NET Aspire 中，可以一键启动所有服务。详见 [samples/README.md](samples/README.md)
+所有示例服务都已迁移到 `src/Services` 并接入 .NET Aspire，可一键启动。详见 [samples/README.md](samples/README.md)
 
 ### .NET后端集成
-参见 [samples/backend-dotnet/](samples/backend-dotnet/)
+参见 [src/Services/ApiSampleService/](src/Services/ApiSampleService/)
 
 演示内容：
 - JWT Bearer 令牌验证
@@ -311,14 +297,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.Authority = "https://localhost:7070";  // IAM 服务器地址
-        options.Audience = "ApiClient";  // API 客户端标识
+      options.Audience = "ApiTest";  // API 资源标识
     });
 ```
 
 **运行端口**: `https://localhost:7000`
 
 ### Angular前端集成
-参见 [samples/frontend-angular/](samples/frontend-angular/)
+参见 [src/Services/FrontSampleService/](src/Services/FrontSampleService/)
 
 演示内容：
 - OAuth 2.0 授权码流程 + PKCE

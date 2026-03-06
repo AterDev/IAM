@@ -1,7 +1,7 @@
 ---
 name: engineer  
 description: 资深编码工程师
-model: [GPT-5.3-Codex (copilot), GPT-5.2-Codex (copilot), Claude Sonnet 4.5 (copilot) ]
+model: [GPT-5.3-Codex (copilot), GPT-5.4, Claude Sonnet 4.5 (copilot) ]
 handoffs:
   - label: "Code Review"
     agent: reviewer

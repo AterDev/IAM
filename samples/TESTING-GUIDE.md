@@ -12,31 +12,27 @@ cd src/AppHost
 dotnet run
 ```
 
-IAM服务器应该运行在 `https://localhost:7001`
+IAM服务器应该运行在 `https://localhost:7070`
 
 ### 2. 验证客户端配置
 
-登录IAM管理后台：`https://localhost:7001`
+登录IAM管理后台：`http://localhost:4200`
 - 用户名: `admin`
 - 密码: `MakeDotnetGreatAgain`
 
-#### 验证ApiTest客户端
+#### 验证 ApiTest 资源标识
 
 1. 导航到"应用管理"
-2. 查找客户端ID为 `ApiTest` 的客户端
+2. 确认示例后端配置的 audience 为 `ApiTest`
 3. 确认配置：
    - 客户端类型: 资源服务器/API
    - 允许的作用域: 根据需要配置
 
-如果不存在，创建新客户端：
-- 客户端ID: `ApiTest`
-- 客户端名称: API测试
-- 应用类型: Web应用/资源服务器
-- 保存并记录客户端ID
+如果需要排查，请确认 `src/Services/ApiSampleService/appsettings*.json` 中 `Authentication:OAuth:Audiences` 包含 `ApiTest`。
 
-#### 验证FrontTest客户端
+#### 验证 FrontClient 客户端
 
-1. 在"应用管理"中查找客户端ID为 `FrontTest` 的客户端
+1. 在"应用管理"中查找客户端ID为 `FrontClient` 的客户端
 2. 确认配置：
    - 客户端类型: 公共客户端
    - 应用类型: 单页应用(SPA)
@@ -45,13 +41,13 @@ IAM服务器应该运行在 `https://localhost:7001`
    - 需要客户端密钥: 否
    - 重定向URI: 必须包含以下URL
      ```
-     http://localhost:4200
-     http://localhost:4200/
+   http://localhost:4201
+   https://localhost:4201
      ```
    - 登出后重定向URI:
      ```
-     http://localhost:4200
-     http://localhost:4200/
+   http://localhost:4201
+   https://localhost:4201
      ```
    - 允许的作用域:
      ```
@@ -62,7 +58,7 @@ IAM服务器应该运行在 `https://localhost:7001`
      ```
 
 如果不存在，创建新客户端：
-- 客户端ID: `FrontTest`
+- 客户端ID: `FrontClient`
 - 客户端名称: 前端测试
 - 应用类型: 单页应用(SPA)
 - 客户端类型: 公共客户端
@@ -79,18 +75,18 @@ IAM服务器应该运行在 `https://localhost:7001`
 #### 1.1 启动后端示例
 
 ```bash
-cd samples/backend-dotnet
+cd src/Services/ApiSampleService
 dotnet run
 ```
 
-API应该运行在 `https://localhost:5001`
+API应该运行在 `https://localhost:7000`
 
 #### 1.2 测试公开端点
 
 使用curl或浏览器访问：
 
 ```bash
-curl https://localhost:5001/api/public
+curl https://localhost:7000/api/public
 ```
 
 预期响应：
@@ -103,7 +99,7 @@ curl https://localhost:5001/api/public
 
 #### 1.3 测试Swagger UI
 
-1. 访问 `https://localhost:5001/swagger`
+1. 访问 `https://localhost:7000/swagger`
 2. 确认Swagger UI加载成功
 3. 查看可用的端点：
    - GET /api/public
@@ -116,10 +112,10 @@ curl https://localhost:5001/api/public
 使用密码流程获取令牌（仅用于测试）：
 
 ```bash
-curl -X POST https://localhost:7001/connect/token \
+curl -X POST https://localhost:7070/connect/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=password" \
-  -d "client_id=FrontTest" \
+   -d "grant_type=password" \
+   -d "client_id=FrontClient" \
   -d "username=admin" \
   -d "password=MakeDotnetGreatAgain" \
   -d "scope=openid profile email ApiTest"
@@ -133,7 +129,7 @@ curl -X POST https://localhost:7001/connect/token \
 
 ```bash
 curl -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  https://localhost:5001/api/protected
+   https://localhost:7000/api/protected
 ```
 
 预期响应应包含：
@@ -168,16 +164,16 @@ curl -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
 在新终端窗口中：
 
 ```bash
-cd samples/frontend-angular
-npm install
-npm start
+cd src/Services/FrontSampleService
+pnpm install
+pnpm start
 ```
 
-应用应该运行在 `http://localhost:4200`
+应用应该运行在 `http://localhost:4201`
 
 #### 2.2 访问首页
 
-1. 在浏览器中打开 `http://localhost:4200`
+1. 在浏览器中打开 `http://localhost:4201`
 2. 确认页面加载成功
 3. 验证显示：
    - 应用标题: "🔐 IAM示例 - Angular应用"
@@ -187,12 +183,12 @@ npm start
 #### 2.3 测试登录流程
 
 1. 点击导航栏中的"登录"按钮
-2. 验证被重定向到IAM登录页面 (`https://localhost:7001/...`)
+2. 验证被重定向到 IAM 登录页面 (`https://localhost:7070/...`)
 3. 输入管理员凭据：
    - 用户名: `admin`
    - 密码: `MakeDotnetGreatAgain`
 4. 点击登录
-5. 验证被重定向回Angular应用 (`http://localhost:4200`)
+5. 验证被重定向回 Angular 应用 (`http://localhost:4201`)
 6. 确认导航栏显示：
    - "登出"按钮
    - 用户名（例如: "👤 admin"）
@@ -235,13 +231,13 @@ npm start
 #### 3.1 同时运行所有服务
 
 确保以下服务都在运行：
-- IAM服务器: `https://localhost:7001`
-- 后端API: `https://localhost:5001`
-- 前端应用: `http://localhost:4200`
+- IAM服务器: `https://localhost:7070`
+- 后端API: `https://localhost:7000`
+- 前端应用: `http://localhost:4201`
 
 #### 3.2 端到端测试流程
 
-1. **启动状态**: 打开 `http://localhost:4200`，未登录
+1. **启动状态**: 打开 `http://localhost:4201`，未登录
 2. **尝试访问受保护资源**: 点击"受保护页面"
 3. **自动重定向**: 重定向到IAM登录
 4. **用户认证**: 输入凭据并登录
@@ -277,12 +273,12 @@ npm start
 **检查**:
 - IAM服务器是否运行
 - 浏览器控制台是否有CORS错误
-- FrontTest客户端配置是否正确
+- FrontClient 客户端配置是否正确
 
 **解决**:
 ```bash
 # 确认IAM运行
-curl https://localhost:7001/.well-known/openid-configuration
+curl https://localhost:7070/.well-known/openid-configuration
 
 # 检查响应是否包含正确的端点
 ```
@@ -308,16 +304,16 @@ curl https://localhost:7001/.well-known/openid-configuration
 **检查**:
 - 后端API的CORS配置
 - IAM的CORS配置
-- FrontTest客户端的允许源配置
+- FrontClient 客户端的允许源配置
 
 **解决**:
-在backend-dotnet的appsettings.json中确认：
+在 `src/Services/ApiSampleService/appsettings.json` 中确认：
 ```json
 {
   "Cors": {
     "AllowedOrigins": [
-      "http://localhost:4200",
-      "https://localhost:4200"
+      "http://localhost:4201",
+      "https://localhost:4201"
     ]
   }
 }
@@ -328,13 +324,13 @@ curl https://localhost:7001/.well-known/openid-configuration
 **症状**: 登录后出现"redirect_uri_mismatch"错误
 
 **检查**:
-- FrontTest客户端的重定向URI配置
+- FrontClient 客户端的重定向 URI 配置
 - 注意尾部斜杠
 
 **解决**:
-确保IAM中FrontTest客户端包含：
-- `http://localhost:4200`
-- `http://localhost:4200/`
+确保 IAM 中 FrontClient 客户端包含：
+- `http://localhost:4201`
+- `https://localhost:4201`
 
 ## 性能验证
 
@@ -365,7 +361,7 @@ curl https://localhost:7001/.well-known/openid-configuration
 
 - [ ] IAM服务器成功启动
 - [ ] ApiTest客户端存在并配置正确
-- [ ] FrontTest客户端存在并配置正确
+- [ ] FrontClient 客户端存在并配置正确
 - [ ] 后端API成功启动并响应
 - [ ] Swagger UI可访问
 - [ ] 公开端点无需认证即可访问

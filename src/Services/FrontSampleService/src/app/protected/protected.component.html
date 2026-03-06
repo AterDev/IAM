@@ -1,0 +1,49 @@
+<div class="d-flex flex-column gap-4">
+  <mat-card appearance="outlined">
+    <mat-card-title>受保护资源</mat-card-title>
+    <mat-card-content>
+      <div *ngIf="userData; else loadingUser">
+        <mat-list>
+          <mat-list-item>姓名: {{ userData['name'] || userData['preferred_username'] || 'N/A' }}</mat-list-item>
+          <mat-list-item>邮箱: {{ userData['email'] || 'N/A' }}</mat-list-item>
+          <mat-list-item>用户ID: <code>{{ userData['sub'] || 'N/A' }}</code></mat-list-item>
+        </mat-list>
+        <mat-expansion-panel class="mt-2">
+          <mat-expansion-panel-header>
+            <mat-panel-title>🔑 查看用户声明</mat-panel-title>
+          </mat-expansion-panel-header>
+          <pre class="mb-0">{{ userData | json }}</pre>
+        </mat-expansion-panel>
+      </div>
+      <ng-template #loadingUser>
+        <p>正在加载用户信息...</p>
+      </ng-template>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card appearance="outlined">
+    <mat-card-title>API 调用测试</mat-card-title>
+    <mat-card-content>
+      <p>访问令牌会自动通过 HTTP 拦截器附加到请求头中。</p>
+      <div class="d-flex flex-wrap gap-2 my-2">
+        <button mat-stroked-button color="primary" (click)="callPublicApi()" [disabled]="loading">
+          {{ loading ? '加载中...' : '调用公开 API' }}
+        </button>
+        <button mat-raised-button color="primary" (click)="callProtectedApi()" [disabled]="loading">
+          {{ loading ? '加载中...' : '调用受保护 API' }}
+        </button>
+        <button mat-raised-button color="accent" (click)="callWeatherApi()" [disabled]="loading">
+          {{ loading ? '加载中...' : '获取天气预报' }}
+        </button>
+        <mat-progress-spinner *ngIf="loading" mode="indeterminate" diameter="28"></mat-progress-spinner>
+      </div>
+
+      <mat-card *ngIf="apiResponse" class="mt-2" appearance="outlined">
+        <mat-card-title>API 响应</mat-card-title>
+        <mat-card-content>
+          <pre class="mb-0">{{ apiResponse | json }}</pre>
+        </mat-card-content>
+      </mat-card>
+    </mat-card-content>
+  </mat-card>
+</div>

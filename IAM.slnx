@@ -10,9 +10,6 @@
     <File Path="docs/IAM解决方案设计文档.md" />
     <File Path="README.md" />
   </Folder>
-  <Folder Name="/samples/">
-    <Project Path="samples/backend-dotnet/SampleApi.csproj" />
-  </Folder>
   <Folder Name="/scripts/">
     <File Path="scripts/EFMigrations.ps1" />
     <File Path="scripts/UpdateMenus.ps1" />
@@ -36,6 +33,7 @@
   </Folder>
   <Folder Name="/src/Services/" Id="02ea681e-c7d8-13c7-8484-4ac65e1b71e8">
     <Project Path="src/Services/ApiService/ApiService.csproj" />
+    <Project Path="src/Services/ApiSampleService/ApiSampleService.csproj" />
     <Project Path="src/Services/MigrationService/MigrationService.csproj" />
   </Folder>
   <Folder Name="/tests/" />
