@@ -26,7 +26,7 @@ export const appConfig: ApplicationConfig = {
           redirectUrl: window.location.origin,
           postLogoutRedirectUri: window.location.origin,
           clientId: 'FrontClient',
-          scope: 'openid profile email offline_access ApiTest',
+          scope: 'openid profile email offline_access SampleAPI',
           responseType: 'code',
           silentRenew: true,
           useRefreshToken: true,

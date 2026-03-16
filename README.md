@@ -152,24 +152,15 @@ dotnet run
 
 ### 第三步：检查示例项目所需配置
 
-这里有一个**当前仓库必须注意的配置差异**：
+当前示例工程已经统一使用默认种子资源 **`SampleAPI`**。
 
-- 初始化种子默认创建的 API 资源名称是：`SampleAPI`
-- 示例前端与示例 API 当前使用的目标标识是：`ApiTest`
+建议确认以下配置存在：
 
-也就是说，**示例项目默认并不是完全开箱即用一致的**。要跑通示例，需要二选一：
+- 默认客户端：`FrontClient`
+- 默认作用域：`openid`、`profile`、`email`、`offline_access`
+- 默认 API 资源：`SampleAPI`
 
-1. 在管理后台中补充一套与示例一致的配置（推荐不改代码时使用）
-   - 新建作用域：`ApiTest`
-   - 新建 API 资源：`ApiTest`
-   - 将 `ApiTest` 作用域分配给 `FrontClient`
-   - 将 `ApiTest` 资源分配给 `FrontClient`
-
-2. 或者把示例工程中的 `ApiTest` 改成 `SampleAPI`
-   - `src/Services/ApiSampleService/appsettings.Development.json`
-   - `src/Services/FrontSampleService/src/app/app.config.ts`
-
-如果只是为了最快验证样例链路，建议优先在管理后台补齐 `ApiTest` 的作用域和资源配置。
+如果你在本地数据库中已经保留了较早版本的初始化数据，建议登录管理后台检查 `FrontClient` 是否已关联 `SampleAPI` 对应的资源与作用域配置；如无，则补齐后再测试示例登录与 API 调用。
 
 ### 第四步：访问示例前端
 
@@ -227,6 +218,6 @@ pnpm start
 - 忘记密码 / 重置密码完整后端链路
 - 权限校验与后台授权策略细化
 - Token 安全策略与刷新令牌轮换加固
-- 样例配置与初始化种子的一致性
+- 统一注销与跨客户端会话传播
 
 详细清单见 [`docs/IAM功能清单.md`](docs/IAM功能清单.md)。
