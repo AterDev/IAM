@@ -44,8 +44,6 @@ export class CustomerHttpInterceptor implements HttpInterceptor {
     return this.showError(error);
   }
   showError(error: HttpErrorResponse) {
-    console.log(error);
-
     const errors = {
       detail: 'Server Error',
       status: 500,
@@ -53,12 +51,18 @@ export class CustomerHttpInterceptor implements HttpInterceptor {
 
     switch (error.status) {
       case 401:
-        errors.detail = '401: Unauthorized request';
-        this.auth.logout();
-        this.router.navigateByUrl('/login');
+        errors.detail = error.error?.detail === 'session_revoked'
+          ? '401: Session revoked'
+          : '401: Unauthorized request';
+        this.auth.handleUnauthorized();
+        this.router.navigate(['/login'], {
+          queryParams: {
+            returnUrl: this.router.url
+          }
+        });
         break;
       case 403:
-        errors.detail = '403: Forbidden request';
+        errors.detail = error.error?.detail || error.error?.title || '403: 没有访问权限';
         break;
       case 404:
       case 409:

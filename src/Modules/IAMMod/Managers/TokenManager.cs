@@ -3,6 +3,8 @@ using Share;
 using Share.Constants;
 using Share.Exceptions;
 using System.Security.Claims;
+using System.Text.Json;
+using ClaimTypes = System.Security.Claims.ClaimTypes;
 
 namespace IAMMod.Managers;
 
@@ -12,10 +14,12 @@ namespace IAMMod.Managers;
 public class TokenManager(
     DefaultDbContext dbContext,
     ILogger<TokenManager> logger,
-    OAuthService oauthService
+    OAuthService oauthService,
+    AuditLogManager auditLogManager
 ) : ManagerBase<DefaultDbContext>(dbContext, logger)
 {
     private readonly OAuthService _oauthService = oauthService;
+    private readonly AuditLogManager _auditLogManager = auditLogManager;
 
     /// <summary>
     /// Process token request with provided signing key
@@ -95,6 +99,7 @@ public class TokenManager(
         // Validate PKCE if present
         var codeChallenge = properties?.GetValueOrDefault("code_challenge");
         var codeChallengeMethod = properties?.GetValueOrDefault("code_challenge_method");
+        var sessionId = properties?.GetValueOrDefault("sid");
 
         if (!string.IsNullOrEmpty(codeChallenge))
         {
@@ -122,16 +127,22 @@ public class TokenManager(
         var authorization = token.Authorization;
 
         // Get user
-        var user = await _dbContext.Users.FirstOrDefaultAsync(u =>
-            u.Id.ToString() == authorization.SubjectId
-        );
+        var user = await GetUserWithRolesAsync(authorization.SubjectId);
         if (user == null)
         {
             throw new BusinessException(Localizer.UserNotFound);
         }
 
         // Generate tokens
-        return await GenerateTokensAsync(user, client, authorization.Scopes, signingKey, authorization.Id);
+        return await GenerateTokensAsync(
+            user,
+            client,
+            authorization.Scopes,
+            signingKey,
+            authorization.Id,
+            null,
+            sessionId
+        );
     }
 
     /// <summary>
@@ -154,11 +165,20 @@ public class TokenManager(
             .FirstOrDefaultAsync(t =>
                 t.ReferenceId == request.RefreshToken
                 && t.Type == TokenTypes.RefreshToken
-                && t.Status == TokenStatuses.Valid
             );
 
         if (tokenEntity == null || tokenEntity.Authorization == null)
         {
+            throw new BusinessException(Localizer.OAuthInvalidRefreshToken);
+        }
+
+        if (tokenEntity.Status != TokenStatuses.Valid)
+        {
+            if (tokenEntity.Status == TokenStatuses.Redeemed)
+            {
+                await HandleRefreshTokenReuseAsync(tokenEntity);
+            }
+
             throw new BusinessException(Localizer.OAuthInvalidRefreshToken);
         }
 
@@ -169,18 +189,19 @@ public class TokenManager(
         }
 
         // Validate client
-        if (
-            !string.IsNullOrEmpty(request.ClientId)
-            && tokenEntity.Authorization.Client.ClientId != request.ClientId
-        )
+        var client = await GetValidatedClientAsync(
+            request.ClientId ?? tokenEntity.Authorization.Client.ClientId,
+            request.ClientSecret,
+            missingDescription: "Missing client credentials"
+        );
+
+        if (client.Id != tokenEntity.Authorization.ClientId)
         {
             throw new BusinessException(Localizer.OAuthClientMismatch);
         }
 
         // Get user
-        var user = await _dbContext.Users.FirstOrDefaultAsync(u =>
-            u.Id.ToString() == tokenEntity.SubjectId
-        );
+        var user = await GetUserWithRolesAsync(tokenEntity.SubjectId);
         if (user == null)
         {
             throw new BusinessException(Localizer.UserNotFound);
@@ -189,10 +210,12 @@ public class TokenManager(
         // Generate new tokens
         return await GenerateTokensAsync(
             user,
-            tokenEntity.Authorization.Client,
+            client,
             tokenEntity.Authorization.Scopes,
             signingKey,
-            tokenEntity.AuthorizationId
+            tokenEntity.AuthorizationId,
+            tokenEntity,
+            ReadTokenProperties(tokenEntity).GetValueOrDefault("session_id")
         );
     }
 
@@ -245,6 +268,20 @@ public class TokenManager(
             .ToArray();
 
         return audiences.Select(aud => new Claim(OAuthConst.ClaimTypes.Audience, aud!));
+    }
+
+    private async Task<User?> GetUserWithRolesAsync(string? subjectId)
+    {
+        if (string.IsNullOrWhiteSpace(subjectId) || !Guid.TryParse(subjectId, out var userId))
+        {
+            return null;
+        }
+
+        return await _dbContext.Users
+            .Include(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
+            .ThenInclude(role => role!.RoleClaims)
+            .FirstOrDefaultAsync(u => u.Id == userId);
     }
 
     /// <summary>
@@ -328,9 +365,11 @@ public class TokenManager(
         );
 
         // Find user
-        var user = await _dbContext.Users.FirstOrDefaultAsync(u =>
-            u.NormalizedUserName == request.Username.ToUpper()
-        );
+        var user = await _dbContext.Users
+            .Include(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
+            .ThenInclude(role => role!.RoleClaims)
+            .FirstOrDefaultAsync(u => u.NormalizedUserName == request.Username.ToUpper());
 
         if (user == null || string.IsNullOrEmpty(user.PasswordHash))
         {
@@ -393,9 +432,7 @@ public class TokenManager(
         }
 
         // Get user
-        var user = await _dbContext.Users.FirstOrDefaultAsync(u =>
-            u.Id.ToString() == tokenEntity.SubjectId
-        );
+        var user = await GetUserWithRolesAsync(tokenEntity.SubjectId);
         if (user == null)
         {
             throw new BusinessException(Localizer.UserNotFound);
@@ -424,27 +461,55 @@ public class TokenManager(
         Client client,
         string? scope,
         SigningKey signingKey,
-        Guid? authorizationId = null
+        Guid? authorizationId = null,
+        Token? rotatedRefreshToken = null,
+        string? sessionId = null
     )
     {
+        var roles = user.UserRoles
+            .Select(ur => ur.Role?.Name)
+            .Where(role => !string.IsNullOrWhiteSpace(role))
+            .Distinct(StringComparer.Ordinal)
+            .Cast<string>()
+            .ToArray();
+
+        var permissions = user.UserRoles
+            .Where(ur => ur.Role != null)
+            .SelectMany(ur => ur.Role!.RoleClaims)
+            .Where(rc => rc.ClaimType == PermissionsConst.ClaimType && !string.IsNullOrWhiteSpace(rc.ClaimValue))
+            .Select(rc => rc.ClaimValue!)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
         // Build claims
         var claims = new List<Claim>
         {
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(ClaimTypes.Name, user.UserName),
             new(OAuthConst.ClaimTypes.Subject, user.Id.ToString()),
             new(OAuthConst.ClaimTypes.Name, user.UserName),
             new(OAuthConst.ClaimTypes.ClientId, client.ClientId),
         };
 
+        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+        claims.AddRange(permissions.Select(permission => new Claim(PermissionsConst.ClaimType, permission)));
+
         claims.AddRange(BuildAudienceClaims(client));
 
         if (!string.IsNullOrEmpty(user.Email))
         {
+            claims.Add(new Claim(ClaimTypes.Email, user.Email));
             claims.Add(new Claim(OAuthConst.ClaimTypes.Email, user.Email));
         }
 
         if (!string.IsNullOrEmpty(scope))
         {
             claims.Add(new Claim(OAuthConst.ClaimTypes.Scope, scope));
+        }
+
+        if (!string.IsNullOrWhiteSpace(sessionId))
+        {
+            claims.Add(new Claim("sid", sessionId));
         }
 
         // Generate access token
@@ -484,13 +549,48 @@ public class TokenManager(
             Type = TokenTypes.RefreshToken,
             Status = TokenStatuses.Valid,
             SubjectId = user.Id.ToString(),
+            Properties = SerializeTokenProperties(
+                new Dictionary<string, string>()
+                {
+                    ["root_token"] = GetRootRefreshTokenReference(rotatedRefreshToken),
+                    ["rotated_from"] = rotatedRefreshToken?.ReferenceId ?? string.Empty,
+                    ["session_id"] = sessionId ?? string.Empty,
+                }
+            ),
             CreationDate = DateTimeOffset.UtcNow,
             ExpirationDate = DateTimeOffset.UtcNow.AddDays(30),
         };
 
+        if (rotatedRefreshToken != null)
+        {
+            var rotatedProperties = ReadTokenProperties(rotatedRefreshToken);
+            rotatedProperties["rotated_to"] = refreshTokenValue;
+            rotatedProperties["rotated_at"] = DateTimeOffset.UtcNow.ToString("O");
+            rotatedRefreshToken.Status = TokenStatuses.Redeemed;
+            rotatedRefreshToken.RedemptionDate = DateTimeOffset.UtcNow;
+            rotatedRefreshToken.Properties = SerializeTokenProperties(rotatedProperties);
+        }
+
         await _dbContext.Tokens.AddAsync(accessTokenEntity);
         await _dbContext.Tokens.AddAsync(refreshTokenEntity);
         await _dbContext.SaveChangesAsync();
+
+        if (rotatedRefreshToken != null)
+        {
+            await _auditLogManager.AddAuditLogAsync(
+                category: "Authentication",
+                eventName: "RefreshTokenRotated",
+                subjectId: user.Id.ToString(),
+                payload: JsonSerializer.Serialize(
+                    new
+                    {
+                        authorizationId,
+                        previousRefreshToken = rotatedRefreshToken.ReferenceId,
+                        newRefreshToken = refreshTokenValue,
+                    }
+                )
+            );
+        }
 
         // Generate ID token if openid scope is present
         string? idToken = null;
@@ -498,15 +598,25 @@ public class TokenManager(
         {
             var idClaims = new List<Claim>
             {
+                new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new(ClaimTypes.Name, user.UserName),
                 new(OAuthConst.ClaimTypes.Subject, user.Id.ToString()),
                 new(OAuthConst.ClaimTypes.Name, user.UserName),
             };
+
+            idClaims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
             idClaims.AddRange(BuildAudienceClaims(client));
 
             if (!string.IsNullOrEmpty(user.Email))
             {
+                idClaims.Add(new Claim(ClaimTypes.Email, user.Email));
                 idClaims.Add(new Claim(OAuthConst.ClaimTypes.Email, user.Email));
+            }
+
+            if (!string.IsNullOrWhiteSpace(sessionId))
+            {
+                idClaims.Add(new Claim("sid", sessionId));
             }
 
             idToken = _oauthService.GenerateToken(idClaims, signingKey, 3600);
@@ -583,6 +693,52 @@ public class TokenManager(
         return true;
     }
 
+    public async Task<int> RevokeAuthorizationChainAsync(
+        Guid userId,
+        string? sessionId = null,
+        string? ipAddress = null,
+        string? userAgent = null
+    )
+    {
+        var activeRefreshTokens = await _dbContext
+            .Tokens.Where(t =>
+                t.SubjectId == userId.ToString()
+                && t.Type == TokenTypes.RefreshToken
+                && t.Status == TokenStatuses.Valid
+            )
+            .ToListAsync();
+
+        if (activeRefreshTokens.Count == 0)
+        {
+            return 0;
+        }
+
+        foreach (var token in activeRefreshTokens)
+        {
+            token.Status = TokenStatuses.Revoked;
+            var properties = ReadTokenProperties(token);
+            properties["revoked_at"] = DateTimeOffset.UtcNow.ToString("O");
+            if (!string.IsNullOrWhiteSpace(sessionId))
+            {
+                properties["revoked_session_id"] = sessionId;
+            }
+
+            token.Properties = SerializeTokenProperties(properties);
+        }
+
+        await _dbContext.SaveChangesAsync();
+        await _auditLogManager.AddAuditLogAsync(
+            category: "Authentication",
+            eventName: "AuthorizationChainRevoked",
+            subjectId: userId.ToString(),
+            payload: JsonSerializer.Serialize(new { count = activeRefreshTokens.Count, sessionId }),
+            ipAddress: ipAddress,
+            userAgent: userAgent
+        );
+
+        return activeRefreshTokens.Count;
+    }
+
     /// <summary>
     /// Introspect token
     /// </summary>
@@ -623,5 +779,90 @@ public class TokenManager(
         }
 
         return response;
+    }
+
+    private async Task HandleRefreshTokenReuseAsync(Token reusedToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var properties = ReadTokenProperties(reusedToken);
+        properties["reuse_detected_at"] = now.ToString("O");
+        properties["compromised"] = bool.TrueString;
+        reusedToken.Properties = SerializeTokenProperties(properties);
+        reusedToken.Status = TokenStatuses.Revoked;
+
+        if (reusedToken.AuthorizationId.HasValue)
+        {
+            var relatedTokens = await _dbContext
+                .Tokens.Where(t =>
+                    t.AuthorizationId == reusedToken.AuthorizationId
+                    && t.Type == TokenTypes.RefreshToken
+                    && t.Status == TokenStatuses.Valid
+                )
+                .ToListAsync();
+
+            foreach (var token in relatedTokens)
+            {
+                var tokenProperties = ReadTokenProperties(token);
+                tokenProperties["revoked_reason"] = "refresh_token_reuse";
+                tokenProperties["revoked_at"] = now.ToString("O");
+                token.Properties = SerializeTokenProperties(tokenProperties);
+                token.Status = TokenStatuses.Revoked;
+            }
+
+            var authorization = await _dbContext.Authorizations.FirstOrDefaultAsync(a =>
+                a.Id == reusedToken.AuthorizationId.Value
+            );
+            if (authorization != null)
+            {
+                authorization.Status = AuthorizationStatuses.Revoked;
+            }
+        }
+
+        await _dbContext.SaveChangesAsync();
+
+        await _auditLogManager.AddAuditLogAsync(
+            category: "Authentication",
+            eventName: "RefreshTokenReuseDetected",
+            subjectId: reusedToken.SubjectId,
+            payload: JsonSerializer.Serialize(
+                new
+                {
+                    authorizationId = reusedToken.AuthorizationId,
+                    refreshToken = reusedToken.ReferenceId,
+                }
+            )
+        );
+    }
+
+    private static Dictionary<string, string> ReadTokenProperties(Token token)
+    {
+        if (string.IsNullOrWhiteSpace(token.Properties))
+        {
+            return [];
+        }
+
+        return JsonSerializer.Deserialize<Dictionary<string, string>>(token.Properties) ?? [];
+    }
+
+    private static string SerializeTokenProperties(Dictionary<string, string> properties)
+    {
+        var sanitized = properties
+            .Where(static pair => !string.IsNullOrWhiteSpace(pair.Value))
+            .ToDictionary(static pair => pair.Key, static pair => pair.Value);
+
+        return JsonSerializer.Serialize(sanitized);
+    }
+
+    private static string GetRootRefreshTokenReference(Token? rotatedRefreshToken)
+    {
+        if (rotatedRefreshToken == null)
+        {
+            return string.Empty;
+        }
+
+        var properties = ReadTokenProperties(rotatedRefreshToken);
+        return properties.GetValueOrDefault("root_token")
+            ?? rotatedRefreshToken.ReferenceId
+            ?? string.Empty;
     }
 }

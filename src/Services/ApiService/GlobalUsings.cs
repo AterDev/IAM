@@ -8,5 +8,6 @@ global using Perigon.AspNetCore.Utils;
 global using ServiceDefaults;
 global using ServiceDefaults.Middleware;
 global using Share;
+global using Share.Constants;
 global using Share.Implement;
 global using static Share.Constants.OAuthConst;

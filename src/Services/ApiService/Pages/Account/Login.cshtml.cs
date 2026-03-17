@@ -1,4 +1,5 @@
 using IAMMod.Managers;
+using IAMMod.Models.LoginSessionDtos;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -9,9 +10,10 @@ using SysClaimTypes = System.Security.Claims.ClaimTypes;
 
 namespace ApiService.Pages.Account;
 
-public class LoginModel(UserManager userManager, ILogger<LoginModel> logger) : PageModel
+public class LoginModel(UserManager userManager, SessionManager sessionManager, ILogger<LoginModel> logger) : PageModel
 {
     private readonly UserManager _userManager = userManager;
+    private readonly SessionManager _sessionManager = sessionManager;
     private readonly ILogger<LoginModel> _logger = logger;
 
     [BindProperty]
@@ -91,12 +93,32 @@ public class LoginModel(UserManager userManager, ILogger<LoginModel> logger) : P
 
             _logger.LogInformation("User {Username} logged in successfully", Username);
 
+            var sessionId = Guid.CreateVersion7().ToString();
+            var sessionExpiresAt = RememberMe
+                ? DateTimeOffset.UtcNow.AddDays(30)
+                : DateTimeOffset.UtcNow.AddHours(2);
+
+            await _sessionManager.AddAsync(
+                new LoginSessionAddDto
+                {
+                    UserId = user.Id,
+                    SessionId = sessionId,
+                    IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    UserAgent = HttpContext.Request.Headers.UserAgent.ToString(),
+                    DeviceInfo = HttpContext.Request.Headers.UserAgent.ToString(),
+                    ExpirationTime = sessionExpiresAt,
+                },
+                HttpContext.Connection.RemoteIpAddress?.ToString(),
+                HttpContext.Request.Headers.UserAgent.ToString()
+            );
+
             // Create claims for the user
             var claims = new List<Claim>
             {
                 new Claim(SysClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(SysClaimTypes.Name, user.UserName),
-                new Claim(OAuthConst.ClaimTypes.Subject, user.Id.ToString())
+                new Claim(OAuthConst.ClaimTypes.Subject, user.Id.ToString()),
+                new Claim("sid", sessionId)
             };
 
             if (!string.IsNullOrEmpty(user.Email))
@@ -125,6 +147,7 @@ public class LoginModel(UserManager userManager, ILogger<LoginModel> logger) : P
             // Store user info in session for OAuth flow (as backup)
             HttpContext.Session.SetString("UserId", user.Id.ToString());
             HttpContext.Session.SetString("UserName", user.UserName);
+            HttpContext.Session.SetString("SessionId", sessionId);
 
             // Redirect to return URL or default page
             if (!string.IsNullOrEmpty(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))
@@ -132,7 +155,7 @@ public class LoginModel(UserManager userManager, ILogger<LoginModel> logger) : P
                 return Redirect(ReturnUrl);
             }
 
-            return RedirectToPage("/Account/LoginSuccess");
+            return Redirect("~/");
         }
         catch (Exception ex)
         {

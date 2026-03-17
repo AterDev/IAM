@@ -18,11 +18,15 @@ export class AuthGuard implements CanActivate {
       return true;
     }
     
-    if (this.auth.isLogin) {
+    if (this.auth.isAuthenticated()) {
       return true;
     }
     
-    return this.router.parseUrl('/login');
+    return this.router.createUrlTree(['/login'], {
+      queryParams: {
+        returnUrl: url
+      }
+    });
   }
   
   canActivateChild(

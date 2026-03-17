@@ -13,7 +13,7 @@ describe('AuthGuard', () => {
       isAuthenticated: jest.fn()
     };
     const routerMock = {
-      parseUrl: jest.fn()
+      createUrlTree: jest.fn()
     };
 
     TestBed.configureTestingModule({
@@ -56,7 +56,7 @@ describe('AuthGuard', () => {
   it('should redirect to login when user is not authenticated', () => {
     (authService.isAuthenticated as jest.Mock).mockReturnValue(false);
     const loginUrl = {} as UrlTree;
-    (router.parseUrl as jest.Mock).mockReturnValue(loginUrl);
+    (router.createUrlTree as jest.Mock).mockReturnValue(loginUrl);
 
     const route = {} as ActivatedRouteSnapshot;
     const state = { url: '/dashboard' } as RouterStateSnapshot;
@@ -64,7 +64,11 @@ describe('AuthGuard', () => {
     const result = guard.canActivate(route, state);
 
     expect(result).toBe(loginUrl);
-    expect(router.parseUrl).toHaveBeenCalledWith('/login');
+    expect(router.createUrlTree).toHaveBeenCalledWith(['/login'], {
+      queryParams: {
+        returnUrl: '/dashboard'
+      }
+    });
     expect(authService.isAuthenticated).toHaveBeenCalled();
   });
 

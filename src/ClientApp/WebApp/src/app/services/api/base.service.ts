@@ -1,12 +1,16 @@
 import { Inject, Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { from, map, Observable, switchMap } from 'rxjs';
+import { inject } from '@angular/core';
+import { AuthService } from '../auth.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class BaseService {
   protected baseUrl: string | null;
+  private readonly auth = inject(AuthService);
+
   constructor(
     protected http: HttpClient,
     @Inject('API_BASE_URL') baseUrl: string
@@ -77,10 +81,16 @@ export class BaseService {
   }
 
   protected getHeaders(): HttpHeaders {
-    return new HttpHeaders({
+    const token = this.auth.getAccessToken();
+    const headers: Record<string, string> = {
       Accept: 'application/json, text/plain, */*',
-      Authorization: 'Bearer ' + localStorage.getItem('accessToken')
-    });
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    return new HttpHeaders(headers);
   }
   public isMobile(): boolean {
     const ua = navigator.userAgent;

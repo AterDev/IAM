@@ -1,5 +1,7 @@
 using IAMMod.Managers;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Share.Constants;
+using SysClaimTypes = System.Security.Claims.ClaimTypes;
 
 namespace ApiService.Pages.Account;
 
@@ -54,9 +56,14 @@ public class ConsentModel(
 
     public async Task<IActionResult> OnGetAsync()
     {
-        // Get user from session
-        var userId = HttpContext.Session.GetString("UserId");
-        UserName = HttpContext.Session.GetString("UserName") ?? "Unknown User";
+        // Get user from cookie principal first, then fall back to session.
+        var userId = User.FindFirst(SysClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst(OAuthConst.ClaimTypes.Subject)?.Value
+            ?? HttpContext.Session.GetString("UserId");
+        UserName = User.FindFirst(SysClaimTypes.Name)?.Value
+            ?? User.FindFirst(ClaimTypes.Name)?.Value
+            ?? HttpContext.Session.GetString("UserName")
+            ?? "Unknown User";
 
         if (string.IsNullOrEmpty(userId))
         {
@@ -151,7 +158,9 @@ public class ConsentModel(
 
     public async Task<IActionResult> OnPostAsync(string action)
     {
-        var userId = HttpContext.Session.GetString("UserId");
+        var userId = User.FindFirst(SysClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst(OAuthConst.ClaimTypes.Subject)?.Value
+            ?? HttpContext.Session.GetString("UserId");
 
         if (string.IsNullOrEmpty(userId))
         {

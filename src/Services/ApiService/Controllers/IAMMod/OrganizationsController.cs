@@ -1,6 +1,5 @@
 using IAMMod.Managers;
 using IAMMod.Models.OrganizationDtos;
-
 namespace ApiService.Controllers.IAMMod;
 
 /// <summary>

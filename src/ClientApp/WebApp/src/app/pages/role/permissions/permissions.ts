@@ -51,9 +51,10 @@ export class RolePermissionsComponent implements OnInit {
     'roles': ['read', 'create', 'update', 'delete', 'assign'],
     'organizations': ['read', 'create', 'update', 'delete', 'manage-members'],
     'clients': ['read', 'create', 'update', 'delete', 'manage-secrets'],
+    'resources': ['read', 'create', 'update', 'delete'],
     'scopes': ['read', 'create', 'update', 'delete'],
+    'sessions': ['read', 'revoke', 'manage'],
     'audit': ['read', 'export'],
-    'system': ['read', 'configure', 'manage']
   };
 
   constructor(

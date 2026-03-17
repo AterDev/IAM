@@ -7,8 +7,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
-import { ApiClient } from 'src/app/services/api/api-client';
-import { UserAddDto } from 'src/app/services/api/models/iammod/user-add-dto.model';
+import { firstValueFrom } from 'rxjs';
+import { AccountService } from 'src/app/services/account.service';
 
 @Component({
   selector: 'app-register',
@@ -26,7 +26,7 @@ import { UserAddDto } from 'src/app/services/api/models/iammod/user-add-dto.mode
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Register implements OnInit {
-  private apiClient = inject(ApiClient);
+  private accountService = inject(AccountService);
   private router = inject(Router);
   private translate = inject(TranslateService);
 
@@ -152,31 +152,25 @@ export class Register implements OnInit {
     this.successMessage = '';
 
     const formValue = this.registerForm.value;
-    const userData: UserAddDto = {
+    const userData = {
       userName: formValue.username,
       email: formValue.email,
       password: formValue.password,
-      phoneNumber: formValue.phoneNumber || null,
-      emailConfirmed: false,
-      phoneNumberConfirmed: false,
-      lockoutEnabled: false
+      phoneNumber: formValue.phoneNumber || null
     };
 
-    this.apiClient.users.createUser(userData).subscribe({
-      next: () => {
-        this.successMessage = this.translate.instant('register.success');
-        this.isLoading = false;
-        
-        // Redirect to login after 2 seconds
-        setTimeout(() => {
-          this.router.navigate(['/login']);
-        }, 2000);
-      },
-      error: (error) => {
-        this.errorMessage = error.detail || this.translate.instant('register.failed');
-        this.isLoading = false;
-      }
-    });
+    try {
+      await firstValueFrom(this.accountService.register(userData));
+      this.successMessage = this.translate.instant('register.success');
+
+      setTimeout(() => {
+        this.router.navigate(['/login']);
+      }, 2000);
+    } catch (error: any) {
+      this.errorMessage = error?.detail || this.translate.instant('register.failed');
+    } finally {
+      this.isLoading = false;
+    }
   }
 
   goToLogin(): void {

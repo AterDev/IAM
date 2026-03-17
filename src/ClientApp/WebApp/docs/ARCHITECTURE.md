@@ -14,36 +14,28 @@ The application follows Angular best practices with a **standalone component** a
 
 ### OIDC/OAuth2 Authentication Service
 
-The application uses a comprehensive OIDC/OAuth2 authentication system with PKCE (Proof Key for Code Exchange) support.
+The admin portal now uses the IAM server itself as its OIDC provider via **Authorization Code + PKCE**.
 
-**OidcAuthService** (`src/app/services/oidc-auth.service.ts`):
-- Signal-based state management for reactive authentication state
-- PKCE flow implementation (S256 method)
-- Multiple grant types support:
-  - Authorization Code with PKCE
-  - Resource Owner Password Credentials
-  - Refresh Token
-- Automatic token refresh before expiration
-- Secure token storage in localStorage
-- JWT ID token parsing for user information
+**AuthService** (`src/app/services/auth.service.ts`):
+- Implements a lightweight in-app Authorization Code + PKCE client against the existing IAM endpoints
+- Tracks unified authentication state used by guards, layout, and API services
+- Mirrors the current access token, username, and `sessionId` into local cache for compatibility with existing generated API clients
+- Extracts `sid` from the access token so the admin UI can correlate with server-side `LoginSession`
+- Initiates centralized login/logout against the IAM server
 
 **Authentication Flow**:
-1. **Authorization Code Flow (recommended)**:
-   - `startAuthorizationCodeFlow()` - Initiates PKCE flow
-   - `handleCallback()` - Processes authorization code and exchanges for tokens
-2. **Password Flow** (for trusted clients):
-   - `loginWithPassword()` - Direct username/password authentication
-3. **Token Management**:
-   - Automatic refresh 5 minutes before expiration
-   - `refreshAccessToken()` - Manual token refresh
-   - `logout()` - Clear tokens and navigate to login
+1. User enters `/login` in the admin portal
+2. The login page launches the IAM server's `/connect/authorize` flow using `AdminWebClient`
+3. The IAM server authenticates the user on `/Account/Login`
+4. The IAM server completes consent on `/Account/Consent` when required
+5. The SPA receives the authorization code callback on `/auth/callback`
+6. The admin SPA exchanges the authorization code for tokens on `/connect/token`
 
 **State Management**:
 ```typescript
-// Reactive signals for authentication state
-readonly isAuthenticated = computed(() => this.authState().isAuthenticated);
-readonly user = computed(() => this.authState().user);
-readonly accessToken = computed(() => this.authState().accessToken);
+authService.isAuthenticated();
+authService.getAccessToken();
+authService.getSessionId();
 ```
 
 ### HTTP Interceptor
@@ -64,9 +56,9 @@ readonly accessToken = computed(() => this.authState().accessToken);
 ## Authentication Pages
 
 ### Login (`src/app/pages/login/`)
-- Username/password authentication
-- Form validation with reactive forms
-- Integration with OidcAuthService
+- Unified sign-in launcher page
+- Redirects users into the IAM server's own login page
+- Preserves return URL before starting the OIDC flow
 - Links to register and forgot password pages
 - Starfield canvas background animation
 
@@ -96,6 +88,12 @@ readonly accessToken = computed(() => this.authState().accessToken);
 - User can approve or deny access
 - Required and optional scopes indication
 - Privacy notice and user context
+
+> Note: the real consent page used by the admin login flow is the backend Razor Page at `/Account/Consent`. The Angular `authorize` page remains a frontend task area for future Stage1 work on custom consent UX and related flows.
+
+> Note: the admin callback route is `/auth/callback`, so `AdminWebClient` must include `http://localhost:4200/auth/callback` / `https://localhost:4200/auth/callback` in its redirect URI list.
+
+> Note: the sample SPA uses a separate OIDC client, `FrontSampleClient`, and should not reuse `AdminWebClient`. This keeps the admin portal and sample application isolated at the client-registration level.
 
 ## API Client
 

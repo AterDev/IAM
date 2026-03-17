@@ -1,10 +1,15 @@
+using IAMMod.Managers;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using SysClaimTypes = System.Security.Claims.ClaimTypes;
 
 namespace ApiService.Pages.Account;
 
-public class LogoutModel(ILogger<LogoutModel> logger) : PageModel
+public class LogoutModel(SessionManager sessionManager, ILogger<LogoutModel> logger) : PageModel
 {
+    private readonly SessionManager _sessionManager = sessionManager;
     private readonly ILogger<LogoutModel> _logger = logger;
 
     [BindProperty(SupportsGet = true, Name = "post_logout_redirect_uri")]
@@ -23,15 +28,32 @@ public class LogoutModel(ILogger<LogoutModel> logger) : PageModel
         UserName = HttpContext.Session.GetString("UserName");
     }
 
-    public IActionResult OnPost()
+    public async Task<IActionResult> OnPostAsync()
     {
         try
         {
+            var sid = User.FindFirst("sid")?.Value ?? HttpContext.Session.GetString("SessionId");
+            var userIdClaim = User.FindFirst(SysClaimTypes.NameIdentifier)?.Value;
+
+            if (!string.IsNullOrWhiteSpace(sid) && Guid.TryParse(userIdClaim, out var userId))
+            {
+                var session = await _sessionManager.GetBySessionIdAsync(sid);
+                if (session != null)
+                {
+                    await _sessionManager.RevokeSessionAsync(
+                        session.Id,
+                        userId.ToString(),
+                        HttpContext.Connection.RemoteIpAddress?.ToString(),
+                        HttpContext.Request.Headers.UserAgent.ToString()
+                    );
+                }
+            }
+
             // Clear session
             HttpContext.Session.Clear();
 
             // Clear authentication cookies (if using cookie authentication)
-            // HttpContext.SignOutAsync();
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
             _logger.LogInformation("User logged out successfully");
 

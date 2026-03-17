@@ -1,7 +1,6 @@
 using IAMMod.Managers;
 using IAMMod.Models.AuditLogDtos;
 using IAMMod.Models.LoginSessionDtos;
-
 namespace ApiService.Controllers.IAMMod;
 
 /// <summary>

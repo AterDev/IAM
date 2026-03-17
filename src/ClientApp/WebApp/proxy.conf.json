@@ -4,8 +4,18 @@
       "changeOrigin": true,
         "secure": false
   },
+  "/.well-known/": {
+    "target": "https://localhost:7070",
+      "changeOrigin": true,
+        "secure": false
+  },
   "/connect/": {
-    "target": "https://localhost:7000",
+    "target": "https://localhost:7070",
+      "changeOrigin": true,
+        "secure": false
+  },
+  "/Account/": {
+    "target": "https://localhost:7070",
       "changeOrigin": true,
         "secure": false
   },

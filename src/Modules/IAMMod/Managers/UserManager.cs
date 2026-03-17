@@ -16,6 +16,8 @@ public class UserManager(
 ) : ManagerBase<DefaultDbContext, User>(dbContextFactory, userContext, logger)
 {
     private readonly AuditLogManager _auditLogManager = auditLogManager;
+    private const string SelfServiceProvider = "SelfService";
+    private const string PasswordResetTokenName = "PasswordReset";
 
     /// <summary>
     /// Get paged users
@@ -51,9 +53,7 @@ public class UserManager(
     /// <returns>True if has permission</returns>
     public override async Task<bool> HasPermissionAsync(Guid id)
     {
-        // TODO: Implement proper permission checking logic
-        // Security safeguard: deny by default until proper permission checks are implemented
-        return await Task.FromResult(false);
+        return await Task.FromResult(_userContext.IsAdmin);
     }
 
     /// <summary>
@@ -118,6 +118,34 @@ public class UserManager(
 
         await InsertAsync(entity);
         return await GetDetailAsync(entity.Id);
+    }
+
+    public async Task<UserDetailDto?> RegisterSelfServiceAsync(
+        UserAddDto dto,
+        string? ipAddress = null,
+        string? userAgent = null
+    )
+    {
+        dto.EmailConfirmed = false;
+        dto.PhoneNumberConfirmed = false;
+        dto.LockoutEnabled = true;
+
+        var createdUser = await AddAsync(dto);
+        if (createdUser != null)
+        {
+            await _auditLogManager.AddAuditLogAsync(
+                category: "Authentication",
+                eventName: "SelfServiceRegister",
+                subjectId: createdUser.Id.ToString(),
+                payload: JsonSerializer.Serialize(
+                    new { createdUser.UserName, createdUser.Email, createdUser.PhoneNumber }
+                ),
+                ipAddress: ipAddress,
+                userAgent: userAgent
+            );
+        }
+
+        return createdUser;
     }
 
     /// <summary>
@@ -236,6 +264,145 @@ public class UserManager(
         entity.UpdatedTime = DateTime.UtcNow;
 
         await _dbContext.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<string?> RequestPasswordResetAsync(
+        string email,
+        string? ipAddress = null,
+        string? userAgent = null
+    )
+    {
+        var normalizedEmail = email.Trim().ToUpperInvariant();
+        var user = await _dbSet.FirstOrDefaultAsync(q => q.NormalizedEmail == normalizedEmail);
+
+        await _auditLogManager.AddAuditLogAsync(
+            category: "Authentication",
+            eventName: "PasswordResetRequested",
+            subjectId: user?.Id.ToString() ?? normalizedEmail,
+            payload: JsonSerializer.Serialize(new { email = user?.Email ?? email }),
+            ipAddress: ipAddress,
+            userAgent: userAgent
+        );
+
+        if (user == null)
+        {
+            return null;
+        }
+
+        var token = OAuthService.GenerateTokenReference()[..8].ToUpperInvariant();
+        var salt = HashCrypto.BuildSalt();
+        var hash = HashCrypto.GeneratePwd(token, salt);
+        var expiresAt = DateTimeOffset.UtcNow.AddMinutes(15);
+
+        var entity = await _dbContext.UserTokens.FirstOrDefaultAsync(q =>
+            q.UserId == user.Id
+            && q.LoginProvider == SelfServiceProvider
+            && q.Name == PasswordResetTokenName
+        );
+
+        var payload = JsonSerializer.Serialize(
+            new PasswordResetTokenPayload(hash, salt, expiresAt, null, user.SecurityStamp)
+        );
+
+        if (entity == null)
+        {
+            entity = new UserToken
+            {
+                UserId = user.Id,
+                LoginProvider = SelfServiceProvider,
+                Name = PasswordResetTokenName,
+                Value = payload,
+            };
+
+            await _dbContext.UserTokens.AddAsync(entity);
+        }
+        else
+        {
+            entity.Value = payload;
+            entity.UpdatedTime = DateTime.UtcNow;
+        }
+
+        await _dbContext.SaveChangesAsync();
+        _logger.LogInformation(
+            "Generated password reset code for {Email}. Development code: {Token}",
+            user.Email,
+            token
+        );
+
+        return token;
+    }
+
+    public async Task<bool> ResetPasswordAsync(
+        string email,
+        string code,
+        string newPassword,
+        string? ipAddress = null,
+        string? userAgent = null
+    )
+    {
+        var normalizedEmail = email.Trim().ToUpperInvariant();
+        var user = await _dbSet.FirstOrDefaultAsync(q => q.NormalizedEmail == normalizedEmail);
+        if (user == null)
+        {
+            throw new BusinessException(Localizer.UserNotFound, StatusCodes.Status404NotFound);
+        }
+
+        var entity = await _dbContext.UserTokens.FirstOrDefaultAsync(q =>
+            q.UserId == user.Id
+            && q.LoginProvider == SelfServiceProvider
+            && q.Name == PasswordResetTokenName
+        );
+
+        if (entity?.Value == null)
+        {
+            throw new BusinessException(Localizer.BadRequest, StatusCodes.Status400BadRequest);
+        }
+
+        var payload = JsonSerializer.Deserialize<PasswordResetTokenPayload>(entity.Value);
+        if (payload == null)
+        {
+            throw new BusinessException(Localizer.BadRequest, StatusCodes.Status400BadRequest);
+        }
+
+        if (payload.ConsumedAt.HasValue || payload.ExpiresAt <= DateTimeOffset.UtcNow)
+        {
+            throw new BusinessException(Localizer.BadRequest, StatusCodes.Status400BadRequest);
+        }
+
+        if (!string.Equals(payload.SecurityStamp, user.SecurityStamp, StringComparison.Ordinal))
+        {
+            throw new BusinessException(Localizer.BadRequest, StatusCodes.Status400BadRequest);
+        }
+
+        var validCode = HashCrypto.Validate(code.ToUpperInvariant(), payload.Salt, payload.Hash);
+        if (!validCode)
+        {
+            await _auditLogManager.AddAuditLogAsync(
+                category: "Authentication",
+                eventName: "PasswordResetFailed",
+                subjectId: user.Id.ToString(),
+                payload: JsonSerializer.Serialize(new { reason = "InvalidCode" }),
+                ipAddress: ipAddress,
+                userAgent: userAgent
+            );
+            throw new BusinessException(Localizer.BadRequest, StatusCodes.Status400BadRequest);
+        }
+
+        await ChangePasswordAsync(user.Id, newPassword);
+        entity.Value = JsonSerializer.Serialize(payload with { ConsumedAt = DateTimeOffset.UtcNow });
+        entity.UpdatedTime = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
+
+        await _auditLogManager.AddAuditLogAsync(
+            category: "Authentication",
+            eventName: "PasswordResetCompleted",
+            subjectId: user.Id.ToString(),
+            payload: JsonSerializer.Serialize(new { email = user.Email }),
+            ipAddress: ipAddress,
+            userAgent: userAgent
+        );
+
         return true;
     }
 
@@ -410,4 +577,12 @@ public class UserManager(
 
         return await GetDetailAsync(user.Id);
     }
+
+    private sealed record PasswordResetTokenPayload(
+        string Hash,
+        string Salt,
+        DateTimeOffset ExpiresAt,
+        DateTimeOffset? ConsumedAt,
+        string? SecurityStamp
+    );
 }

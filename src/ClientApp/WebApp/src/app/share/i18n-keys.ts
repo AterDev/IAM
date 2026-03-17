@@ -8,9 +8,13 @@ export const I18N_KEYS = {
     "username": "login.username",
     "password": "login.password",
     "login": "login.login",
+    "continue": "login.continue",
     "logout": "login.logout",
     "failed": "login.failed",
-    "error": "login.error"
+    "error": "login.error",
+    "unifiedDescription": "login.unifiedDescription",
+    "unifiedHint": "login.unifiedHint",
+    "unifiedError": "login.unifiedError"
   },
   "register": {
     "title": "register.title",

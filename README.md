@@ -2,19 +2,8 @@
 
 基于 **.NET 10 / ASP.NET Core / EF Core / Angular 20 / .NET Aspire** 的集中式身份认证与授权中心，目标是为多个业务系统提供统一的登录、授权、令牌签发与管理能力。
 
-当前仓库已经具备 **OAuth 2.0 / OpenID Connect 核心服务雏形**，并提供：
-
-- 认证中心后端：发现文档、授权、令牌、JWKS、UserInfo、撤销、自省、设备码等端点
-- 管理后台前端：用户、角色、组织、客户端、作用域、资源、会话、审计日志等管理页面
-- 示例项目：一个受保护的示例 API 与一个 OIDC 前端示例应用
-- Aspire 编排：本地一键拉起 API、管理端、示例服务和迁移任务
-
-> 说明：当前版本更适合看作“可运行的认证中心骨架 + 管理平台基础能力”。
-> 核心协议链路已具备，但在 MFA、外部身份联邦落地、自助找回密码、样例开箱即用一致性、安全加固等方面仍需继续完善。
-
 ## 文档导航
 
-- [IAM解决方案设计文档](docs/IAM解决方案设计文档.md)
 - [IAM功能清单](docs/IAM功能清单.md)
 
 ## 项目作用
@@ -79,20 +68,7 @@
 
 ## 本地配置
 
-本地开发默认通过 `src/AppHost/appsettings.Development.json` 读取数据库与缓存连接。
-
-你至少需要准备：
-
-- `ConnectionStrings:Default`：PostgreSQL 连接字符串
-- `ConnectionStrings:Cache`：Redis 连接字符串
-
-推荐做法：
-
-- 使用本机或开发环境专用的 PostgreSQL / Redis
-- 使用本地覆盖配置、用户机密或环境变量管理连接信息
-- 不要把真实生产凭据直接提交到仓库
-
-如果希望 Discovery 文档在反向代理或非本地地址下工作稳定，建议同时配置认证服务的发行者地址（Issuer）。
+通过Aspire提供本地开发环境，或使用现有资源。主要依赖数据库和缓存。
 
 ## 运行项目
 
@@ -115,12 +91,12 @@ dotnet run
 
 ### 默认访问地址
 
-| 服务 | 地址 | 说明 |
-| --- | --- | --- |
-| IAM API | `https://localhost:7070` | 认证与授权服务 |
-| 管理后台 | `http://localhost:4200` | Angular 管理端 |
-| 示例 API | `https://localhost:7000` | 受保护 API |
-| 示例前端 | `http://localhost:4201` | OIDC 客户端样例 |
+| 服务     | 地址                     | 说明            |
+| -------- | ------------------------ | --------------- |
+| IAM API  | `https://localhost:7070` | 认证与授权服务  |
+| 管理后台 | `http://localhost:4200`  | Angular 管理端  |
+| 示例 API | `https://localhost:7000` | 受保护 API      |
+| 示例前端 | `http://localhost:4201`  | OIDC 客户端样例 |
 
 ## 初始化数据
 
@@ -131,11 +107,33 @@ dotnet run
   - 密码：`Perigon.2026`
 - 一个默认签名密钥（RSA）
 - 默认作用域：`openid`、`profile`、`email`、`offline_access`
-- 一个默认前端客户端：`FrontClient`
+- 一个管理后台客户端：`AdminWebClient`
+- 一个示例前端客户端：`FrontSampleClient`
 - 一个默认 API 客户端：`ApiService`
 - 一个默认 API 资源：`SampleAPI`
 
 > 建议仅将默认管理员口令用于本地开发，首次登录后立即修改。
+
+### 管理后台统一认证默认数据说明
+
+管理后台现在默认复用系统自身的 OAuth 2.0 / OIDC 能力，不再以“独立管理员 JWT 登录”作为主入口。
+
+IAM 自身管理接口继续通过现有管理员策略（`WebConst.AdminUser`）与角色来控制访问；权限 claims 主要用于对外下发给业务系统消费，而不是统一替代 IAM 内部业务接口判断。
+
+本地开箱即用**不需要手工新增额外种子数据**，因为启动时会确保默认种子里分别存在管理后台与示例前端的独立客户端：
+
+- `AdminWebClient`
+  - 管理后台回调地址：`http://localhost:4200`、`https://localhost:4200`
+  - 管理后台 OIDC callback：`http://localhost:4200/auth/callback`、`https://localhost:4200/auth/callback`
+  - 对应登出回调地址（4200）
+- `FrontSampleClient`
+  - 示例前端回调地址：`http://localhost:4201`、`https://localhost:4201`
+  - 对应登出回调地址（4201）
+- 默认作用域：`openid profile email offline_access`
+
+如果你使用的是较早版本数据库，`InitHostService` 会在启动时自动补齐缺失的客户端与回调地址。
+
+旧的 `api/admin/login` 端点仍保留作兼容入口，但管理后台 WebApp 的默认登录方式已经切换为统一 OIDC 授权码 + PKCE 流程。
 
 ## 如何运行并验证示例项目
 
@@ -145,10 +143,12 @@ dotnet run
 
 ### 第二步：登录管理后台
 
-打开 `http://localhost:4200`，使用默认管理员账号登录：
+打开 `http://localhost:4200`，点击“前往统一登录”，然后在 IAM 登录页使用默认管理员账号登录：
 
 - 用户名：`admin`
 - 密码：`Perigon.2026`
+
+登录成功后，如首次授权，会看到认证中心提供的授权确认页；确认后会自动回到管理后台。
 
 ### 第三步：检查示例项目所需配置
 
@@ -156,11 +156,16 @@ dotnet run
 
 建议确认以下配置存在：
 
-- 默认客户端：`FrontClient`
+- 默认管理后台客户端：`AdminWebClient`
+- 默认示例前端客户端：`FrontSampleClient`
 - 默认作用域：`openid`、`profile`、`email`、`offline_access`
 - 默认 API 资源：`SampleAPI`
 
 如果你在本地数据库中已经保留了较早版本的初始化数据，建议登录管理后台检查 `FrontClient` 是否已关联 `SampleAPI` 对应的资源与作用域配置；如无，则补齐后再测试示例登录与 API 调用。
+
+如需查看管理后台统一认证的详细链路、兼容策略与验证步骤，请参考 [`docs/管理后台统一认证使用说明.md`](docs/管理后台统一认证使用说明.md)。
+
+如果首次启动后管理后台点击登录出现 `invalid_client`，或者 `https://localhost:7070` 长时间超时，请优先检查 `MigrationService` 是否已完成数据库初始化。当前本地编排下，若 `ApiService` 早于数据库创建完成而启动，`InitHostService` 可能会提前失败，导致默认管理员、`AdminWebClient`、`FrontSampleClient` 等种子尚未写入。此时重新启动一次 `ApiService` 资源即可恢复。
 
 ### 第四步：访问示例前端
 

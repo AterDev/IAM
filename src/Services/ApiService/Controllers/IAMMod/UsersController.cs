@@ -1,6 +1,5 @@
 using IAMMod.Managers;
 using IAMMod.Models.UserDtos;
-
 namespace ApiService.Controllers.IAMMod;
 
 /// <summary>

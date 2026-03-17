@@ -25,15 +25,15 @@ public class SessionManager(
     public async Task<PageList<LoginSessionItemDto>> GetPageAsync(LoginSessionFilterDto filter)
     {
         Queryable = Queryable
-            .WhereNotNull(filter.UserId != null, q => q.UserId == filter.UserId)
-            .WhereNotNull(filter.SessionId != null, q => q.SessionId == filter.SessionId)
+            .WhereNotNull(filter.UserId, q => q.UserId == filter.UserId)
+            .WhereNotNull(filter.SessionId, q => q.SessionId == filter.SessionId)
             .WhereNotNull(
-                filter.IpAddress != null,
+                filter.IpAddress,
                 q => q.IpAddress != null && q.IpAddress.Contains(filter.IpAddress!)
             )
-            .WhereNotNull(filter.IsActive != null, q => q.IsActive == filter.IsActive)
-            .WhereNotNull(filter.StartDate != null, q => q.LoginTime >= filter.StartDate)
-            .WhereNotNull(filter.EndDate != null, q => q.LoginTime <= filter.EndDate);
+            .WhereNotNull(filter.IsActive, q => q.IsActive == filter.IsActive)
+            .WhereNotNull(filter.StartDate, q => q.LoginTime >= filter.StartDate)
+            .WhereNotNull(filter.EndDate, q => q.LoginTime <= filter.EndDate);
 
         return await PageListAsync<LoginSessionFilterDto, LoginSessionItemDto>(filter);
     }
@@ -45,7 +45,7 @@ public class SessionManager(
     /// <returns>True if has permission</returns>
     public override async Task<bool> HasPermissionAsync(Guid id)
     {
-        return await Task.FromResult(false);
+        return await Task.FromResult(_userContext.IsAdmin);
     }
 
     /// <summary>
@@ -118,6 +118,39 @@ public class SessionManager(
         }
 
         session.LastActivityTime = DateTimeOffset.UtcNow;
+        session.UpdatedTime = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
+        return true;
+    }
+
+    /// <summary>
+    /// Validate a session and refresh its last activity time.
+    /// </summary>
+    public async Task<bool> ValidateSessionAsync(Guid userId, string sessionId)
+    {
+        var session = await _dbSet.FirstOrDefaultAsync(q =>
+            q.UserId == userId && q.SessionId == sessionId
+        );
+
+        if (session == null)
+        {
+            return false;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        if (!session.IsActive || (session.ExpirationTime.HasValue && session.ExpirationTime <= now))
+        {
+            if (session.IsActive)
+            {
+                session.IsActive = false;
+                session.UpdatedTime = DateTime.UtcNow;
+                await _dbContext.SaveChangesAsync();
+            }
+
+            return false;
+        }
+
+        session.LastActivityTime = now;
         session.UpdatedTime = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
         return true;

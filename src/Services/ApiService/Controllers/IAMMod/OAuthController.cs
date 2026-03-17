@@ -38,6 +38,7 @@ public class OAuthController(
     ConsentManager consentManager,
     DiscoveryManager discoveryManager,
     SigningKeyManager signingKeyManager,
+    SessionManager sessionManager,
     Localizer localizer,
     ILogger<OAuthController> logger
     ) : RestControllerBase(localizer)
@@ -48,6 +49,7 @@ public class OAuthController(
     private readonly ConsentManager _consentManager = consentManager;
     private readonly DiscoveryManager _discoveryManager = discoveryManager;
     private readonly SigningKeyManager _signingKeyManager = signingKeyManager;
+    private readonly SessionManager _sessionManager = sessionManager;
     private readonly ILogger<OAuthController> _logger = logger;
 
     /// <summary>
@@ -118,6 +120,8 @@ public class OAuthController(
             var userId = authenticateResult.Principal.FindFirst(OAuthConst.ClaimTypes.Subject)?.Value
                 ?? authenticateResult.Principal.FindFirst(SysClaimTypes.NameIdentifier)?.Value
                 ?? HttpContext.Session.GetString("UserId");
+            var sessionId = authenticateResult.Principal.FindFirst("sid")?.Value
+                ?? HttpContext.Session.GetString("SessionId");
 
             if (string.IsNullOrEmpty(userId))
             {
@@ -150,7 +154,8 @@ public class OAuthController(
                     request.Scope,
                     request.CodeChallenge,
                     request.CodeChallengeMethod,
-                    request.Nonce
+                    request.Nonce,
+                    sessionId
                 );
 
                 var response = new AuthorizeResponseDto
@@ -296,6 +301,25 @@ public class OAuthController(
     {
         try
         {
+            var sid = User.FindFirst("sid")?.Value ?? HttpContext.Session.GetString("SessionId");
+            var userIdClaim = User.FindFirst(SysClaimTypes.NameIdentifier)?.Value
+                ?? User.FindFirst(OAuthConst.ClaimTypes.Subject)?.Value;
+
+            if (!string.IsNullOrWhiteSpace(sid) && Guid.TryParse(userIdClaim, out var userId))
+            {
+                var session = await _sessionManager.GetBySessionIdAsync(sid);
+                if (session != null)
+                {
+                    await _sessionManager.RevokeSessionAsync(
+                        session.Id,
+                        userId.ToString(),
+                        HttpContext.Connection.RemoteIpAddress?.ToString(),
+                        HttpContext.Request.Headers.UserAgent.ToString()
+                    );
+                }
+            }
+
+            HttpContext.Session.Clear();
             // Sign out the user
             await HttpContext.SignOutAsync();
 

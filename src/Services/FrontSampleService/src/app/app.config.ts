@@ -25,7 +25,7 @@ export const appConfig: ApplicationConfig = {
           authWellknownEndpointUrl: `${environment.iamApiUrl}/.well-known/openid-configuration`,
           redirectUrl: window.location.origin,
           postLogoutRedirectUri: window.location.origin,
-          clientId: 'FrontClient',
+          clientId: 'FrontSampleClient',
           scope: 'openid profile email offline_access SampleAPI',
           responseType: 'code',
           silentRenew: true,

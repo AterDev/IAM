@@ -87,15 +87,13 @@ src/
 
 **要优先使用MCP工具`Perigon`，生成或创建模块/Entity/DTO/Manager/Controller等内容。**
 
-## 构建验证（每次修改后必须执行）
-
+## 构建验证
 通过`dotnet build`，构建对应的服务项目，如`ApiService`或`AdminService`，验证编译无错误。
 
 ### 构建-修复循环
 修改代码 → 构建 → 发现错误 → 修复 → 重新构建，直到无错误
 
 MCP server config lives in [.mcp.json](../../../.mcp.json) or [.vscode/mcp.json](../../../.vscode/mcp.json); use configured endpoints when invoking tools.
-
 
 ## 约定与规范
 

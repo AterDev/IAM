@@ -52,9 +52,7 @@ export class LayoutComponent {
   }
 
   logout(): void {
-    this.auth.logout();
-    this.router.navigateByUrl('/index');
-    location.reload();
+    this.auth.logoutFromServer();
   }
 
 }

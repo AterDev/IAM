@@ -1,6 +1,8 @@
 using IAMMod.Managers;
 using IAMMod.Models.AdminAuthDtos;
+using IAMMod.Models.LoginSessionDtos;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.IdentityModel.Tokens;
 using Perigon.AspNetCore.Services;
 using System.Security.Claims;
@@ -18,12 +20,16 @@ public class AdminAuthController(
     RoleManager roleManager,
     SigningKeyManager signingKeyManager,
     JwtService jwtService,
+    SessionManager sessionManager,
+    TokenManager tokenManager,
     ILogger<AdminAuthController> logger
 ) : RestControllerBase(localizer)
 {
     private readonly UserManager _userManager = userManager;
     private readonly RoleManager _roleManager = roleManager;
     private readonly JwtService _jwtService = jwtService;
+    private readonly SessionManager _sessionManager = sessionManager;
+    private readonly TokenManager _tokenManager = tokenManager;
     private readonly ILogger<AdminAuthController> _logger = logger;
 
     /// <summary>
@@ -66,10 +72,28 @@ public class AdminAuthController(
         var roles = await _roleManager.GetRoleNamesByIdsAsync(roleIds);
 
         var expiresIn = 3600 * 24 * 7; // 7 day
+        var sessionId = Guid.CreateVersion7().ToString();
+        var sessionExpiresAt = DateTimeOffset.UtcNow.AddSeconds(expiresIn);
+
+        await _sessionManager.AddAsync(
+            new LoginSessionAddDto
+            {
+                UserId = user.Id,
+                SessionId = sessionId,
+                IpAddress = ipAddress,
+                UserAgent = userAgent,
+                DeviceInfo = userAgent,
+                ExpirationTime = sessionExpiresAt,
+            },
+            ipAddress,
+            userAgent
+        );
+
         _jwtService.Claims =
         [
             new Claim(ClaimTypes.Name, user.UserName),
             new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
+            new Claim("sid", sessionId),
         ];
 
         var signingKey = await signingKeyManager.GetActiveSigningKeyAsync();
@@ -95,6 +119,7 @@ public class AdminAuthController(
             AccessToken = accessToken,
             TokenType = "Bearer",
             ExpiresIn = expiresIn,
+            SessionId = sessionId,
             User = new AdminUserInfo
             {
                 Id = user.Id,
@@ -140,5 +165,51 @@ public class AdminAuthController(
         };
 
         return Ok(userInfo);
+    }
+
+    /// <summary>
+    /// Logout current admin user and revoke server-side session artifacts.
+    /// </summary>
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<ActionResult> Logout()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrWhiteSpace(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var sid = User.FindFirst("sid")?.Value;
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
+
+        if (!string.IsNullOrWhiteSpace(sid))
+        {
+            var session = await _sessionManager.GetBySessionIdAsync(sid);
+            if (session != null)
+            {
+                await _sessionManager.RevokeSessionAsync(
+                    session.Id,
+                    userId.ToString(),
+                    ipAddress,
+                    userAgent
+                );
+            }
+        }
+        else
+        {
+            await _sessionManager.RevokeAllUserSessionsAsync(
+                userId,
+                null,
+                userId.ToString(),
+                ipAddress,
+                userAgent
+            );
+        }
+
+        await HttpContext.SignOutAsync();
+
+        return Ok(new { message = "Logged out successfully" });
     }
 }

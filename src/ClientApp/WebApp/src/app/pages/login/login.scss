@@ -119,6 +119,20 @@ mat-card-title {
   gap: 1.5rem;
 }
 
+.login-copy {
+  max-width: 28rem;
+}
+
+.muted {
+  color: rgba(227, 234, 252, 0.72);
+  line-height: 1.6;
+}
+
+.error-message {
+  margin-bottom: 1rem;
+  color: #ff8a80;
+}
+
 mat-form-field {
   width: 100%;
 
@@ -144,6 +158,11 @@ mat-error {
 .login-btn-row {
   display: flex;
   justify-content: flex-end;
+}
+
+.login-btn-stack {
+  align-items: stretch;
+  gap: 0.75rem;
 }
 
 button[mat-flat-button] {

@@ -109,6 +109,27 @@ public class InitHostService(
                 await dbContext.SaveChangesAsync(cancellationToken);
             }
 
+            var currentAdminPermissions = await dbContext.RoleClaims
+                .Where(rc => rc.RoleId == adminRole.Id && rc.ClaimType == PermissionsConst.ClaimType)
+                .Select(rc => rc.ClaimValue!)
+                .ToListAsync(cancellationToken);
+
+            var missingAdminPermissions = PermissionsConst.All
+                .Except(currentAdminPermissions, StringComparer.Ordinal)
+                .Select(permission => new RoleClaim
+                {
+                    RoleId = adminRole.Id,
+                    ClaimType = PermissionsConst.ClaimType,
+                    ClaimValue = permission,
+                })
+                .ToList();
+
+            if (missingAdminPermissions.Count > 0)
+            {
+                dbContext.RoleClaims.AddRange(missingAdminPermissions);
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
+
             // Create admin user
             var salt = HashCrypto.BuildSalt();
             var adminUser = new User
@@ -199,57 +220,157 @@ public class InitHostService(
         var emailScope = await dbContext.ApiScopes.FirstAsync(s => s.Name == "email", cancellationToken);
         var offlineAccessScope = await dbContext.ApiScopes.FirstAsync(s => s.Name == "offline_access", cancellationToken);
 
-        // Create FrontClient for frontend applications
-        var frontClientId = "FrontClient";
-        var frontClientExists = await dbContext.Clients.AnyAsync(
-            c => c.ClientId == frontClientId,
+        // Create AdminWebClient for IAM management portal
+        var adminWebClientId = "AdminWebClient";
+        var adminWebClientRedirectUris = new[]
+        {
+            "http://localhost:4200",
+            "https://localhost:4200",
+            "http://localhost:4200/auth/callback",
+            "https://localhost:4200/auth/callback"
+        };
+        var adminWebClientPostLogoutRedirectUris = new[]
+        {
+            "http://localhost:4200",
+            "https://localhost:4200"
+        };
+        var adminWebClientExists = await dbContext.Clients.AnyAsync(
+            c => c.ClientId == adminWebClientId,
             cancellationToken
         );
 
-        if (!frontClientExists)
+        if (!adminWebClientExists)
         {
-            var frontClient = new Client
+            var adminWebClient = new Client
             {
-                ClientId = frontClientId,
-                DisplayName = "前端客户端",
-                Description = "默认的前端单页应用客户端，支持OIDC授权码流程+PKCE",
+                ClientId = adminWebClientId,
+                DisplayName = "管理后台客户端",
+                Description = "IAM 管理后台专用单页应用客户端，支持OIDC授权码流程+PKCE",
                 Type = ClientType.Public,
                 ApplicationType = ApplicationType.Spa,
                 RequirePkce = true,
                 ConsentType = ConsentType.Implicit,
-                RedirectUris =
-                [
-                    "http://localhost:4200",
-                    "https://localhost:4200",
-                    "http://localhost:4201",
-                    "https://localhost:4201"
-                ],
-                PostLogoutRedirectUris =
-                [
-                    "http://localhost:4200",
-                    "https://localhost:4200",
-                    "http://localhost:4201",
-                    "https://localhost:4201"
-                ],
+                RedirectUris = [.. adminWebClientRedirectUris],
+                PostLogoutRedirectUris = [.. adminWebClientPostLogoutRedirectUris],
             };
 
-            dbContext.Clients.Add(frontClient);
+            dbContext.Clients.Add(adminWebClient);
             await dbContext.SaveChangesAsync(cancellationToken);
 
-            // Assign scopes to FrontClient
-            var frontClientScopes = new[]
+            var adminWebClientScopes = new[]
             {
-                new ClientScope { ClientId = frontClient.Id, ScopeId = openidScope.Id },
-                new ClientScope { ClientId = frontClient.Id, ScopeId = profileScope.Id },
-                new ClientScope { ClientId = frontClient.Id, ScopeId = emailScope.Id },
-                new ClientScope { ClientId = frontClient.Id, ScopeId = offlineAccessScope.Id }
+                new ClientScope { ClientId = adminWebClient.Id, ScopeId = openidScope.Id },
+                new ClientScope { ClientId = adminWebClient.Id, ScopeId = profileScope.Id },
+                new ClientScope { ClientId = adminWebClient.Id, ScopeId = emailScope.Id },
+                new ClientScope { ClientId = adminWebClient.Id, ScopeId = offlineAccessScope.Id }
             };
-            var frontClientResources = new[]
+            dbContext.ClientScopes.AddRange(adminWebClientScopes);
+        }
+        else
+        {
+            var adminWebClient = await dbContext.Clients.FirstAsync(c => c.ClientId == adminWebClientId, cancellationToken);
+            var updated = false;
+
+            foreach (var redirectUri in adminWebClientRedirectUris)
             {
-                new ClientResource { ClientId = frontClient.Id, ApiResourceId = defaultResource.Id }
+                if (!adminWebClient.RedirectUris.Contains(redirectUri, StringComparer.OrdinalIgnoreCase))
+                {
+                    adminWebClient.RedirectUris.Add(redirectUri);
+                    updated = true;
+                }
+            }
+
+            foreach (var redirectUri in adminWebClientPostLogoutRedirectUris)
+            {
+                if (!adminWebClient.PostLogoutRedirectUris.Contains(redirectUri, StringComparer.OrdinalIgnoreCase))
+                {
+                    adminWebClient.PostLogoutRedirectUris.Add(redirectUri);
+                    updated = true;
+                }
+            }
+
+            if (updated)
+            {
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        // Create FrontSampleClient for sample frontend application
+        var frontSampleClientId = "FrontSampleClient";
+        var frontSampleClientRedirectUris = new[]
+        {
+            "http://localhost:4201",
+            "https://localhost:4201"
+        };
+        var frontSampleClientPostLogoutRedirectUris = new[]
+        {
+            "http://localhost:4201",
+            "https://localhost:4201"
+        };
+        var frontSampleClientExists = await dbContext.Clients.AnyAsync(
+            c => c.ClientId == frontSampleClientId,
+            cancellationToken
+        );
+
+        if (!frontSampleClientExists)
+        {
+            var frontSampleClient = new Client
+            {
+                ClientId = frontSampleClientId,
+                DisplayName = "示例前端客户端",
+                Description = "示例前端单页应用客户端，支持OIDC授权码流程+PKCE",
+                Type = ClientType.Public,
+                ApplicationType = ApplicationType.Spa,
+                RequirePkce = true,
+                ConsentType = ConsentType.Implicit,
+                RedirectUris = [.. frontSampleClientRedirectUris],
+                PostLogoutRedirectUris = [.. frontSampleClientPostLogoutRedirectUris],
             };
-            dbContext.ClientResources.AddRange(frontClientResources);
-            dbContext.ClientScopes.AddRange(frontClientScopes);
+
+            dbContext.Clients.Add(frontSampleClient);
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            var frontSampleClientScopes = new[]
+            {
+                new ClientScope { ClientId = frontSampleClient.Id, ScopeId = openidScope.Id },
+                new ClientScope { ClientId = frontSampleClient.Id, ScopeId = profileScope.Id },
+                new ClientScope { ClientId = frontSampleClient.Id, ScopeId = emailScope.Id },
+                new ClientScope { ClientId = frontSampleClient.Id, ScopeId = offlineAccessScope.Id }
+            };
+            var frontSampleClientResources = new[]
+            {
+                new ClientResource { ClientId = frontSampleClient.Id, ApiResourceId = defaultResource.Id }
+            };
+            dbContext.ClientResources.AddRange(frontSampleClientResources);
+            dbContext.ClientScopes.AddRange(frontSampleClientScopes);
+        }
+        else
+        {
+            var frontSampleClient = await dbContext.Clients.FirstAsync(c => c.ClientId == frontSampleClientId, cancellationToken);
+            var updated = false;
+
+            foreach (var redirectUri in frontSampleClientRedirectUris)
+            {
+                if (!frontSampleClient.RedirectUris.Contains(redirectUri, StringComparer.OrdinalIgnoreCase))
+                {
+                    frontSampleClient.RedirectUris.Add(redirectUri);
+                    updated = true;
+                }
+            }
+
+            foreach (var redirectUri in frontSampleClientPostLogoutRedirectUris)
+            {
+                if (!frontSampleClient.PostLogoutRedirectUris.Contains(redirectUri, StringComparer.OrdinalIgnoreCase))
+                {
+                    frontSampleClient.PostLogoutRedirectUris.Add(redirectUri);
+                    updated = true;
+                }
+            }
+
+            if (updated)
+            {
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
         }
 
         // Create ApiClient for backend API services

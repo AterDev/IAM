@@ -8,7 +8,8 @@ import { MatStepperModule } from '@angular/material/stepper';
 import { Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
-import { ApiClient } from 'src/app/services/api/api-client';
+import { firstValueFrom } from 'rxjs';
+import { AccountService } from 'src/app/services/account.service';
 
 @Component({
   selector: 'app-forgot-password',
@@ -27,7 +28,7 @@ import { ApiClient } from 'src/app/services/api/api-client';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ForgotPassword implements OnInit {
-  private apiClient = inject(ApiClient);
+  private accountService = inject(AccountService);
   private router = inject(Router);
   private translate = inject(TranslateService);
 
@@ -79,13 +80,15 @@ export class ForgotPassword implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set('');
 
-    // TODO: Implement forgot password API
-    // For now, simulate success
-    setTimeout(() => {
+    try {
+      await firstValueFrom(this.accountService.requestPasswordReset({ email: this.email.value }));
       this.isLoading.set(false);
       this.successMessage.set(this.translate.instant('forgotPassword.codeSent'));
       this.currentStep.set(1);
-    }, 1000);
+    } catch (error: any) {
+      this.isLoading.set(false);
+      this.errorMessage.set(error?.detail || this.translate.instant('login.error'));
+    }
   }
 
   async resetPassword(): Promise<void> {
@@ -102,15 +105,23 @@ export class ForgotPassword implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set('');
 
-    // TODO: Implement reset password API
-    // For now, simulate success
-    setTimeout(() => {
+    try {
+      await firstValueFrom(
+        this.accountService.resetPassword({
+          email: this.email.value,
+          code: this.code.value,
+          newPassword,
+        })
+      );
       this.isLoading.set(false);
       this.successMessage.set(this.translate.instant('forgotPassword.resetSuccess'));
       setTimeout(() => {
         this.router.navigate(['/login']);
       }, 2000);
-    }, 1000);
+    } catch (error: any) {
+      this.isLoading.set(false);
+      this.errorMessage.set(error?.detail || this.translate.instant('login.error'));
+    }
   }
 
   goToLogin(): void {

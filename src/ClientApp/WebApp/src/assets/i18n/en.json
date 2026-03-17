@@ -5,7 +5,11 @@
     "username": "Username",
     "password": "Password",
     "login": "Login",
-    "logout": "Logout"
+    "continue": "Continue with IAM login",
+    "logout": "Logout",
+    "unifiedDescription": "The admin portal now uses the IAM server's own OAuth/OIDC sign-in flow.",
+    "unifiedHint": "You will be redirected to the identity server sign-in page and automatically returned to the admin portal after authentication and consent. Self-service register and password reset remain available here.",
+    "unifiedError": "Unable to start unified sign-in. Please try again."
   },
   "language": "Language",
   "validation": {

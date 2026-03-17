@@ -93,7 +93,6 @@ export class UserListComponent implements OnInit {
       },
       error: () => {
         this.isLoading.set(false);
-        this.snackBar.open('Failed to load users', 'Close', { duration: 3000 });
       }
     });
   }

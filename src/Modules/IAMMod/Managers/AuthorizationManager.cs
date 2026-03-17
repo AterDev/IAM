@@ -100,7 +100,8 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
         string? scope,
         string? codeChallenge,
         string? codeChallengeMethod,
-        string? nonce
+        string? nonce,
+        string? sessionId = null
     )
     {
         var code = OAuthService.GenerateAuthorizationCode();
@@ -122,6 +123,7 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
                     code_challenge = codeChallenge,
                     code_challenge_method = codeChallengeMethod,
                     nonce,
+                    sid = sessionId,
                 }
             ),
         };

@@ -21,6 +21,11 @@ public class AdminLoginResponseDto
     public int ExpiresIn { get; set; }
 
     /// <summary>
+    /// Unified session identifier
+    /// </summary>
+    public required string SessionId { get; set; }
+
+    /// <summary>
     /// User information
     /// </summary>
     public required AdminUserInfo User { get; set; }

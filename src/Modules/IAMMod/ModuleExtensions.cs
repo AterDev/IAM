@@ -1,3 +1,5 @@
+using IAMMod.Managers;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -7,8 +9,11 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using ServiceDefaults.Middleware;
+using Share.Constants;
 using System.ComponentModel;
+using SysClaimTypes = System.Security.Claims.ClaimTypes;
 using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Unicode;
 
@@ -70,6 +75,26 @@ public static class ModuleExtensions
                 options.Cookie.HttpOnly = true;
                 options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
                 options.Cookie.SameSite = SameSiteMode.Lax;
+                options.Events = new CookieAuthenticationEvents
+                {
+                    OnValidatePrincipal = async context =>
+                    {
+                        var sid = context.Principal?.FindFirst("sid")?.Value;
+                        var userIdClaim = context.Principal?.FindFirst(SysClaimTypes.NameIdentifier)?.Value;
+                        if (string.IsNullOrWhiteSpace(sid) || !Guid.TryParse(userIdClaim, out var userId))
+                        {
+                            return;
+                        }
+
+                        var sessionManager = context.HttpContext.RequestServices.GetRequiredService<SessionManager>();
+                        var valid = await sessionManager.ValidateSessionAsync(userId, sid);
+                        if (!valid)
+                        {
+                            context.RejectPrincipal();
+                            await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                        }
+                    }
+                };
             });
 
         builder.Services.AddAuthorizationBuilder()
@@ -113,6 +138,49 @@ public static class ModuleExtensions
                     ValidateLifetime = true,
                     RequireExpirationTime = true,
                     ValidateIssuerSigningKey = true,
+                };
+                options.Events = new JwtBearerEvents
+                {
+                    OnTokenValidated = async context =>
+                    {
+                        var sid = context.Principal?.FindFirst("sid")?.Value;
+                        var userIdClaim = context.Principal?.FindFirst(SysClaimTypes.NameIdentifier)?.Value
+                            ?? context.Principal?.FindFirst(OAuthConst.ClaimTypes.Subject)?.Value;
+
+                        if (string.IsNullOrWhiteSpace(sid) || !Guid.TryParse(userIdClaim, out var userId))
+                        {
+                            return;
+                        }
+
+                        var sessionManager = context.HttpContext.RequestServices.GetRequiredService<SessionManager>();
+                        var valid = await sessionManager.ValidateSessionAsync(userId, sid);
+                        if (!valid)
+                        {
+                            context.Fail("session_revoked");
+                        }
+                    },
+                    OnChallenge = async context =>
+                    {
+                        if (!string.Equals(context.AuthenticateFailure?.Message, "session_revoked", StringComparison.Ordinal))
+                        {
+                            return;
+                        }
+
+                        context.HandleResponse();
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        context.Response.ContentType = "application/json";
+                        await context.Response.WriteAsync(
+                            JsonSerializer.Serialize(
+                                new
+                                {
+                                    title = "Unauthorized",
+                                    detail = "session_revoked",
+                                    status = StatusCodes.Status401Unauthorized,
+                                    traceId = context.HttpContext.TraceIdentifier,
+                                }
+                            )
+                        );
+                    }
                 };
             })
         );

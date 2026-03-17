@@ -16,6 +16,7 @@ public class RoleManager(
     : ManagerBase<DefaultDbContext, Role>(dbContextFactory, userContext, logger)
 {
     private readonly AuditLogManager _auditLogManager = auditLogManager;
+
     /// <summary>
     /// Get paged roles
     /// </summary>
@@ -38,10 +39,7 @@ public class RoleManager(
     /// <returns>True if has permission</returns>
     public override async Task<bool> HasPermissionAsync(Guid id)
     {
-        // Role management is accessible by admins for now
-        // TODO: Implement proper permission checking logic
-        // Security safeguard: deny by default until proper permission checks are implemented
-        return await Task.FromResult(false);
+        return await Task.FromResult(_userContext.IsAdmin);
     }
 
     /// <summary>

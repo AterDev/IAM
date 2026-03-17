@@ -15,6 +15,7 @@ global using Perigon.AspNetCore.Options;
 global using Perigon.AspNetCore.Utils;
 global using ServiceDefaults;
 global using Share;
+global using Share.Constants;
 global using Share.Implement;
 global using System.ComponentModel.DataAnnotations;
 global using static Share.Constants.OAuthConst;

@@ -6,6 +6,10 @@ import { AuthGuard } from './share/auth.guard';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
+  {
+    path: 'auth/callback',
+    loadComponent: () => import('./pages/auth-callback/callback').then(m => m.AuthCallbackComponent)
+  },
   { 
     path: 'register', 
     loadComponent: () => import('./pages/register/register').then(m => m.Register)

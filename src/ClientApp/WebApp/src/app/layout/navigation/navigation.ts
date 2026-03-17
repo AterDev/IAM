@@ -5,6 +5,7 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatListModule } from '@angular/material/list';
 import { BreadcrumbComponent } from '../../share/components/breadcrumb/breadcrumb';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-navigation',
@@ -19,6 +20,7 @@ export class NavigationComponent {
   menus = signal<Menu[]>([]);
   constructor(
     private http: HttpClient,
+    private authService: AuthService,
   ) {
   }
   ngOnInit(): void {
@@ -33,20 +35,28 @@ export class NavigationComponent {
     this.http.get<Menu[]>('/assets/menus.json?_t=' + Date.now(), { responseType: 'json' })
       .subscribe({
         next: (res) => {
-          this.menus.set(res.sort((a, b) => a.sort - b.sort));
+          const sortedMenus = res.sort((a, b) => a.sort - b.sort);
+          const userMenuCodes = this.authService.getAccessibleMenuCodes();
+          const filteredMenus = userMenuCodes.length > 0
+            ? this.mergeMenu(userMenuCodes, sortedMenus)
+            : [];
 
-          // const userMenus = JSON.parse(localStorage.getItem('menus') ?? 'null') ?? [];
-          // const userMenuCodes = userMenus.map((item: any) => item.accessCode);
-          // this.menus = this.mergeMenu(userMenuCodes, this.menus);
+          this.menus.set(filteredMenus);
         }
       });
   }
   mergeMenu(userMenuCodes: string[], menus: Menu[]): Menu[] {
     // 只保留有权限的菜单
     return menus.filter((item) => {
-      if (userMenuCodes.includes(item.accessCode)) {
+      const hasDirectAccess = userMenuCodes.includes(item.accessCode);
+
+      if (item.children) {
+        item.children = this.mergeMenu(userMenuCodes, item.children);
+      }
+
+      if (hasDirectAccess || (item.children?.length ?? 0) > 0) {
         if (item.children) {
-          item.children = this.mergeMenu(userMenuCodes, item.children);
+          item.children = [...item.children];
         }
         return true;
       }

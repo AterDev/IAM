@@ -1,6 +1,5 @@
 using IAMMod.Managers;
 using IAMMod.Models.ScopeDtos;
-
 namespace ApiService.Controllers.IAMMod;
 
 /// <summary>

@@ -1,7 +1,6 @@
 using IAMMod.Managers;
 using IAMMod.Models.AuthorizationDtos;
 using IAMMod.Models.ClientDtos;
-
 namespace ApiService.Controllers.IAMMod;
 
 /// <summary>
