@@ -1,0 +1,80 @@
+@page
+@model ApiService.Pages.Account.MfaModel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    ViewData["Title"] = "多因素验证";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - IAM</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f766e 0%, #1d4ed8 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .mfa-container {
+            width: 100%;
+            max-width: 460px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(15, 23, 42, .25);
+            padding: 32px;
+        }
+        h1 { margin: 0 0 12px; font-size: 28px; }
+        p { color: #475569; line-height: 1.6; }
+        .form-group { margin-top: 20px; }
+        label { display:block; margin-bottom: 8px; font-weight: 600; }
+        input {
+            width: 100%; padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 16px;
+        }
+        button {
+            width: 100%; margin-top: 24px; padding: 12px 16px; border: 0; border-radius: 10px;
+            background: #2563eb; color: white; font-size: 16px; font-weight: 600; cursor: pointer;
+        }
+        .hint { margin-top: 16px; font-size: 14px; color: #64748b; }
+        .validation-summary-errors, .text-danger { color: #b91c1c; }
+        .text-danger { font-size: 14px; margin-top: 8px; display: block; }
+        .user-badge {
+            display: inline-flex; align-items: center; gap: 8px; background: #eff6ff; color: #1d4ed8;
+            border-radius: 999px; padding: 6px 12px; font-size: 14px; margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="mfa-container">
+        <div class="user-badge">当前账号：@Model.UserName</div>
+        <h1>多因素验证</h1>
+        <p>请输入身份验证器中的 6 位验证码，或输入一枚恢复码以完成登录。</p>
+
+        <div asp-validation-summary="All" class="validation-summary-errors"></div>
+
+        <form method="post">
+            <input type="hidden" asp-for="ReturnUrl" />
+            <input type="hidden" asp-for="RememberMe" />
+            @Html.AntiForgeryToken()
+
+            <div class="form-group">
+                <label asp-for="Code"></label>
+                <input asp-for="Code" type="text" autocomplete="one-time-code" placeholder="例如 123456 或 ABCDE-F1234" autofocus />
+                <span asp-validation-for="Code" class="text-danger"></span>
+            </div>
+
+            <button type="submit">验证并继续</button>
+        </form>
+
+        <p class="hint">如果无法访问身份验证器，请使用此前保存的恢复码之一。恢复码只能使用一次。</p>
+    </div>
+</body>
+</html>

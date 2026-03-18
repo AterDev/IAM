@@ -6,10 +6,97 @@
     "password": "Password",
     "login": "Login",
     "continue": "Continue with IAM login",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithMicrosoft": "Continue with Microsoft",
     "logout": "Logout",
     "unifiedDescription": "The admin portal now uses the IAM server's own OAuth/OIDC sign-in flow.",
     "unifiedHint": "You will be redirected to the identity server sign-in page and automatically returned to the admin portal after authentication and consent. Self-service register and password reset remain available here.",
-    "unifiedError": "Unable to start unified sign-in. Please try again."
+    "unifiedError": "Unable to start unified sign-in. Please try again.",
+    "externalHint": "You can also continue with a configured external identity provider."
+  },
+  "externalAuth": {
+    "title": "External sign-in",
+    "redirecting": "External authentication succeeded. Redirecting you back to the unified sign-in flow...",
+    "failed": "External sign-in failed. Please try again or continue with the IAM sign-in flow.",
+    "emailConflict": "A local account with the same email already exists, but no external identity binding is configured yet.",
+    "providerNotConfigured": "This external identity provider is not configured in the current environment.",
+    "locked": "The linked local account is currently locked.",
+    "invalidIdentity": "The external identity provider did not return enough information to complete sign-in.",
+    "backToLogin": "Back to login"
+  },
+  "deviceCode": {
+    "title": "Device Authorization",
+    "description": "Enter the user code shown on your device",
+    "userCode": "User Code",
+    "invalidFormat": "The user code must match the XXXX-XXXX format",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "success": "Authorization successful!",
+    "denied": "Device authorization was denied",
+    "expired": "This user code has expired. Please restart the flow on your device.",
+    "invalidCode": "Invalid user code",
+    "loadError": "Failed to load device authorization details. Please try again later.",
+    "decisionError": "Failed to submit the device authorization decision. Please try again.",
+    "helpText": "If you don't see a user code on your device, go back and restart the authorization flow",
+    "requestedPermissions": "Requested permissions",
+    "accountInfo": "You will approve device access as {{username}}",
+    "approve": "Allow device access",
+    "deny": "Deny"
+  },
+  "authorize": {
+    "title": "Authorization Request",
+    "consentMessage": "This application is requesting access to your account",
+    "requestedPermissions": "Requested permissions",
+    "required": "Required",
+    "allow": "Allow",
+    "deny": "Deny",
+    "accountInfo": "You are authorizing this application as {{username}}",
+    "privacyNotice": "After authorizing, this application can access the information you selected. You can revoke access later in settings.",
+    "clientDescription": "Requests access to your account information",
+    "error": "An error occurred during authorization",
+    "rememberConsent": "Remember my consent choice",
+    "existingConsent": "You have already granted consent to this application. Continue or update your choice below."
+  },
+  "mfa": {
+    "title": "Multi-factor authentication",
+    "subtitle": "Add an extra verification step to protect your admin account.",
+    "status": "Current status",
+    "enabledStatus": "Enabled",
+    "disabledStatus": "Disabled",
+    "setupTitle": "Set up an authenticator",
+    "setupHint": "Start setup to generate a new TOTP secret, add it to your authenticator app, then enter a fresh 6-digit code to enable MFA.",
+    "startSetup": "Start setup",
+    "setupReady": "A new MFA secret has been generated. Finish verification to enable it.",
+    "secretLabel": "Manual entry secret",
+    "otpauthUriLabel": "otpauth URI",
+    "verifyCode": "6-digit verification code",
+    "enable": "Enable MFA",
+    "enabled": "MFA is enabled. Store your recovery codes safely.",
+    "disable": "Disable MFA",
+    "disabled": "MFA has been disabled.",
+    "manageTitle": "Manage recovery codes and disable MFA",
+    "manageHint": "Enter your current verification code to regenerate recovery codes or disable MFA. Recovery codes can replace a TOTP code, but each one can only be used once.",
+    "currentCode": "Current TOTP or recovery code",
+    "regenerateRecoveryCodes": "Regenerate recovery codes",
+    "recoveryCodesTitle": "Recovery codes",
+    "recoveryCodesHint": "Save these recovery codes now. For security reasons they are shown only once.",
+    "recoveryCodesRemaining": "Remaining recovery codes",
+    "recoveryCodesRegenerated": "Recovery codes regenerated.",
+    "secretCopied": "MFA secret copied",
+    "uriCopied": "otpauth URI copied",
+    "loadFailed": "Failed to load MFA status. Please try again.",
+    "setupFailed": "Failed to generate an MFA secret. Please try again.",
+    "enableFailed": "Failed to enable MFA. Verify the code and try again.",
+    "disableFailed": "Failed to disable MFA. Check the current TOTP or recovery code.",
+    "regenerateFailed": "Failed to regenerate recovery codes. Check the current verification code."
+  },
+  "scopes": {
+    "openid": "Access your basic identity",
+    "profile": "Access your profile information",
+    "email": "Access your email address",
+    "phone": "Access your phone number",
+    "address": "Access your address information",
+    "offline_access": "Access your data while you are offline"
   },
   "language": "Language",
   "validation": {
@@ -29,8 +116,11 @@
     "organization": "Organization",
     "oauth": "OAuth Configuration",
     "application": "Application",
+    "developerPortal": "Developer Portal",
+    "passwordGrantAudit": "Password Grant Audit",
     "resource": "Resource",
     "scope": "Scope",
+    "mfa": "Multi-factor authentication",
     "sessions": "Sessions",
     "auditLogs": "Audit Logs"
   },
@@ -157,6 +247,14 @@
     "basicInfo": "Basic Information",
     "settings": "Settings",
     "security": "Security",
+    "passwordGrantPolicy": "Password grant policy",
+    "allowPasswordGrant": "Allow password grant",
+    "passwordGrantEnabled": "Still enabled, migration recommended",
+    "passwordGrantDisabled": "Disabled and aligned with convergence policy",
+    "passwordGrantRestrictionReason": "Restriction reason",
+    "passwordGrantRestrictionReasonHint": "Optionally document the migration window, impacted integrations, or the recommended replacement flow. The backend will fill a default note if left blank.",
+    "passwordGrantRiskHint": "The password grant is being converged. Prefer authorization code + PKCE, device code, or another safer flow for new and migrating integrations.",
+    "passwordGrantMigrationHint": "This client is currently not allowed to use the password grant. After evaluating downstream impact, migrate it to authorization code + PKCE, device code, or another safer authorization flow.",
     "searchPlaceholder": "Search client ID or display name",
     "typeFilter": "Type Filter",
     "applicationTypeFilter": "Application Type Filter",
@@ -223,6 +321,57 @@
     "updateSuccess": "Application updated successfully",
     "availableScopes": "Available Scopes",
     "selectedScopes": "Selected Scopes"
+  },
+  "developerPortal": {
+    "title": "Developer Portal",
+    "subtitle": "A safe frontend slice for client self-service, built only on top of capabilities that already exist in the current client management experience.",
+    "overview": "Overview",
+    "clients": "Client self-service",
+    "currentCapabilitiesTitle": "Available with current backend support",
+    "currentCapabilitiesSubtitle": "These entry points already map to existing client management endpoints and screens.",
+    "selfServiceWorkspace": "Open self-service workspace",
+    "viewPortalClients": "Open client self-service",
+    "openClientManagement": "Open current application management",
+    "upcomingTitle": "Reserved for the next Stage2 wave",
+    "upcomingSubtitle": "These cards intentionally stay descriptive until dedicated APIs and permissions are available.",
+    "noSpeculationDescription": "This developer portal groundwork intentionally avoids speculative API contracts. It only surfaces current client-management capabilities and marks likely next slices as coming soon.",
+    "supportedNowTitle": "Supported now",
+    "supportedNowSubtitle": "Use the existing application pages as the backend-backed workspace for this slice.",
+    "manageClientSettings": "Manage applications with current pages",
+    "currentFlowTitle": "Current self-service flow",
+    "currentFlowSubtitle": "A lightweight path we can support today without new endpoints.",
+    "boundariesTitle": "Not implemented yet",
+    "boundariesSubtitle": "These areas should wait for dedicated backend support before wiring the UI.",
+    "currentCapabilities": {
+      "manageApplicationsTitle": "Browse and inspect applications",
+      "manageApplicationsDescription": "The existing client list and detail pages already let developers review IDs, types, scopes, resources and authorization records.",
+      "configureUrisTitle": "Maintain redirect/logout URIs and scopes",
+      "configureUrisDescription": "Current edit flows already support configuration updates for the client metadata that exists today.",
+      "rotateSecretTitle": "Rotate secrets when needed",
+      "rotateSecretDescription": "Secret rotation is already implemented in the current client detail page for supported clients."
+    },
+    "upcoming": {
+      "dynamicRegistration": "Dynamic client registration",
+      "approvalWorkflow": "Registration review and approval workflow",
+      "collaboration": "Collaborator access and ownership management",
+      "usageInsights": "Usage insights, health and analytics"
+    },
+    "clientsSupported": {
+      "listAndView": "List current applications and open detail pages",
+      "editConfiguration": "Edit existing client configuration through current dialogs",
+      "rotateSecrets": "Rotate a client secret for supported confidential clients",
+      "reviewAuthorizations": "Review existing authorization records for a client"
+    },
+    "currentFlow": {
+      "createOrOpen": "Create or open an application from the current Application management page",
+      "configure": "Configure redirect URIs, post-logout URIs, scopes and other supported metadata",
+      "rotate": "Rotate the secret from the detail page if the client type requires a secret"
+    },
+    "boundaries": {
+      "noDedicatedRegistration": "No dedicated developer registration submission endpoint is wired yet",
+      "noCollaborators": "No delegated collaborator or ownership workflow is available yet",
+      "noAnalytics": "No developer-portal analytics or usage metrics endpoint is exposed yet"
+    }
   },
   "resource": {
     "title": "Resource Management",
@@ -346,5 +495,35 @@
     "exportNotImplemented": "Export feature not yet implemented",
     "startAutoRefresh": "Auto Refresh",
     "stopAutoRefresh": "Stop Refresh"
+  },
+  "passwordGrantAudit": {
+    "title": "Password Grant audit report",
+    "subtitle": "Track policy rejections and failed password-grant attempts using the existing audit trail.",
+    "boundaryTitle": "Current report boundary",
+    "boundaryDescription": "This page is driven by real audit events that already exist today. It highlights rejected and failed password-grant activity; successful usage trend reporting will require a dedicated success audit event in a later backend slice.",
+    "clientId": "Client ID",
+    "openClientDetail": "Open client detail",
+    "clientLookupMissing": "This audit event does not include a navigable client ID.",
+    "clientLookupNotFound": "Could not find a client detail record for {{clientId}}.",
+    "summaryColumn": "Summary",
+    "noData": "No password grant audit events were found for the selected filters.",
+    "defaultRejectedSummary": "Rejected by the client-level convergence policy.",
+    "defaultFailedSummary": "Password grant attempt failed.",
+    "failedCountSummary": "Failed count: {{count}}",
+    "lockoutSummary": "Lockout until: {{time}}",
+    "summary": {
+      "total": "Matching events",
+      "rejected": "Rejected by policy",
+      "failed": "Failed credentials"
+    },
+    "filter": {
+      "event": "Event type",
+      "subjectId": "Subject / principal ID"
+    },
+    "events": {
+      "all": "All password grant events",
+      "rejected": "Password grant rejected",
+      "failed": "Password grant failed"
+    }
   }
 }

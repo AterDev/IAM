@@ -68,4 +68,23 @@ export class Login implements OnInit, AfterViewInit {
   goToForgotPassword(): void {
     this.router.navigate(['/forgot-password']);
   }
+
+  startExternalLogin(provider: 'google' | 'microsoft'): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    try {
+      const callbackUrl = new URL(`${window.location.origin}/external-auth/callback`);
+      callbackUrl.searchParams.set('returnUrl', this.returnUrl);
+
+      const signInUrl = new URL(`/api/ExternalAuth/signin-${provider}`, window.location.origin);
+      signInUrl.searchParams.set('returnUrl', callbackUrl.toString());
+
+      window.location.assign(signInUrl.toString());
+    } catch (error) {
+      this.isLoading = false;
+      this.errorMessage = this.translate.instant('externalAuth.failed');
+      console.error('External login error:', error);
+    }
+  }
 }

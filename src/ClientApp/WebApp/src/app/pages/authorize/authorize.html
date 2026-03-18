@@ -6,7 +6,7 @@
     
     <mat-card-content>
       @if (errorMessage()) {
-        <div class="error-message">{{ errorMessage() }}</div>
+        <div class="error-message">{{ errorMessage() | translate }}</div>
       }
 
       <div class="client-info">
@@ -21,13 +21,19 @@
         <p>{{ 'authorize.consentMessage' | translate }}</p>
       </div>
 
+      @if (interaction()?.hasValidConsent) {
+        <div class="success-message">
+          {{ 'authorize.existingConsent' | translate }}
+        </div>
+      }
+
       <div class="scopes-section">
         <h4>{{ 'authorize.requestedPermissions' | translate }}</h4>
         <mat-list>
           @for (scope of scopes(); track scope.name) {
             <mat-list-item>
               <mat-icon matListItemIcon>check_circle</mat-icon>
-              <div matListItemTitle>{{ scope.description }}</div>
+              <div matListItemTitle>{{ scope.description || scope.displayName }}</div>
               @if (scope.required) {
                 <span matListItemMeta class="required-badge">{{ 'authorize.required' | translate }}</span>
               }
@@ -43,10 +49,13 @@
         </p>
       </div>
 
+      <mat-checkbox [checked]="rememberConsent()" (change)="toggleRememberConsent($event.checked)">
+        {{ 'authorize.rememberConsent' | translate }}
+      </mat-checkbox>
+
       <div class="button-group">
         <button 
           mat-raised-button 
-           
           (click)="allowAccess()" 
           [disabled]="isLoading()">
           {{ 'authorize.allow' | translate }}

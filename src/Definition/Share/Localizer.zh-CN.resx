@@ -263,6 +263,9 @@
   <data name="OAuthMissingUsernameOrPassword" xml:space="preserve">
     <value>缺少用户名或密码</value>
   </data>
+  <data name="OAuthPasswordGrantDisabled" xml:space="preserve">
+    <value>当前客户端不允许使用密码模式</value>
+  </data>
   <data name="OAuthMissingDeviceCode" xml:space="preserve">
     <value>缺少设备码</value>
   </data>
@@ -271,6 +274,9 @@
   </data>
   <data name="OAuthAuthorizationPending" xml:space="preserve">
     <value>用户尚未完成设备授权</value>
+  </data>
+  <data name="OAuthSlowDown" xml:space="preserve">
+    <value>轮询过于频繁，请稍后再试</value>
   </data>
   <data name="OAuthAccessDenied" xml:space="preserve">
     <value>用户拒绝了授权</value>

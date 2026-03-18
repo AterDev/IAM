@@ -3,9 +3,13 @@ using IAMMod.Models.OAuthDtos;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Net.Http.Headers;
 using Share.Constants;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 using SysClaimTypes = System.Security.Claims.ClaimTypes;
 
 namespace ApiService.Controllers.IAMMod;
@@ -36,6 +40,8 @@ public class OAuthController(
     TokenManager tokenManager,
     DeviceFlowManager deviceFlowManager,
     ConsentManager consentManager,
+    ClientManager clientManager,
+    ScopeManager scopeManager,
     DiscoveryManager discoveryManager,
     SigningKeyManager signingKeyManager,
     SessionManager sessionManager,
@@ -47,6 +53,8 @@ public class OAuthController(
     private readonly TokenManager _tokenManager = tokenManager;
     private readonly DeviceFlowManager _deviceFlowManager = deviceFlowManager;
     private readonly ConsentManager _consentManager = consentManager;
+    private readonly ClientManager _clientManager = clientManager;
+    private readonly ScopeManager _scopeManager = scopeManager;
     private readonly DiscoveryManager _discoveryManager = discoveryManager;
     private readonly SigningKeyManager _signingKeyManager = signingKeyManager;
     private readonly SessionManager _sessionManager = sessionManager;
@@ -193,6 +201,7 @@ public class OAuthController(
     /// <returns>Token response with access token, refresh token, etc.</returns>
     [HttpPost("token")]
     [Consumes("application/x-www-form-urlencoded")]
+    [EnableRateLimiting(WebConst.TokenEndpoint)]
     public async Task<ActionResult<TokenResponseDto>> Token([FromForm] TokenRequestDto request)
     {
         try
@@ -223,6 +232,7 @@ public class OAuthController(
     /// <returns>Device authorization response</returns>
     [HttpPost("device")]
     [Consumes("application/x-www-form-urlencoded")]
+    [EnableRateLimiting(WebConst.DeviceEndpoint)]
     public async Task<ActionResult<DeviceAuthorizationResponseDto>> DeviceAuthorization([FromForm] DeviceAuthorizationRequestDto request)
     {
         try
@@ -243,6 +253,169 @@ public class OAuthController(
         }
     }
 
+    [HttpGet("interaction/authorize")]
+    public async Task<ActionResult<AuthorizeInteractionContextDto>> GetAuthorizeInteraction([FromQuery] AuthorizeRequestDto request)
+    {
+        var authenticateResult = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        if (!authenticateResult.Succeeded || authenticateResult.Principal == null)
+        {
+            return Unauthorized();
+        }
+
+        var userId = authenticateResult.Principal.FindFirst(OAuthConst.ClaimTypes.Subject)?.Value
+            ?? authenticateResult.Principal.FindFirst(SysClaimTypes.NameIdentifier)?.Value
+            ?? HttpContext.Session.GetString("UserId");
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
+        var (isValid, error, client) = await _authorizationManager.ValidateAuthorizationRequestAsync(request);
+        if (!isValid || client == null)
+        {
+            return BadRequest(new { error });
+        }
+
+        var userName = authenticateResult.Principal.FindFirst(SysClaimTypes.Name)?.Value
+            ?? HttpContext.Session.GetString("UserName");
+        var requestedScopes = await BuildScopeDtosAsync(request.Scope);
+        var hasValidConsent = await _consentManager.HasValidConsentAsync(userId, client.Id, request.Scope ?? string.Empty);
+
+        return Ok(new AuthorizeInteractionContextDto
+        {
+            ClientId = client.ClientId,
+            ClientName = client.DisplayName,
+            ClientDescription = client.Description,
+            Scope = request.Scope,
+            RequestedScopes = requestedScopes,
+            RedirectUri = request.RedirectUri,
+            ResponseType = request.ResponseType,
+            State = request.State,
+            Nonce = request.Nonce,
+            CodeChallenge = request.CodeChallenge,
+            CodeChallengeMethod = request.CodeChallengeMethod,
+            ResponseMode = request.ResponseMode,
+            UserName = userName,
+            HasValidConsent = hasValidConsent,
+        });
+    }
+
+    [HttpPost("interaction/authorize/decision")]
+    public async Task<ActionResult<AuthorizeInteractionDecisionResponseDto>> SubmitAuthorizeDecision([FromBody] AuthorizeInteractionDecisionDto request)
+    {
+        var authenticateResult = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        if (!authenticateResult.Succeeded || authenticateResult.Principal == null)
+        {
+            return Unauthorized();
+        }
+
+        var userId = authenticateResult.Principal.FindFirst(OAuthConst.ClaimTypes.Subject)?.Value
+            ?? authenticateResult.Principal.FindFirst(SysClaimTypes.NameIdentifier)?.Value
+            ?? HttpContext.Session.GetString("UserId");
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
+        var validationRequest = new AuthorizeRequestDto
+        {
+            ClientId = request.ClientId,
+            RedirectUri = request.RedirectUri,
+            ResponseType = request.ResponseType,
+            Scope = request.Scope,
+            State = request.State,
+            Nonce = request.Nonce,
+            CodeChallenge = request.CodeChallenge,
+            CodeChallengeMethod = request.CodeChallengeMethod,
+            ResponseMode = request.ResponseMode,
+        };
+
+        var (isValid, error, client) = await _authorizationManager.ValidateAuthorizationRequestAsync(validationRequest);
+        if (!isValid || client == null)
+        {
+            return BadRequest(new { error });
+        }
+
+        if (!request.Approve)
+        {
+            var deniedRedirect = BuildRedirectUri(request.RedirectUri, new AuthorizeResponseDto
+            {
+                Error = ErrorCodes.AccessDenied,
+                ErrorDescription = "User denied authorization",
+                State = request.State,
+            }, request.ResponseMode);
+
+            return Ok(new AuthorizeInteractionDecisionResponseDto
+            {
+                Status = "denied",
+                RedirectUrl = deniedRedirect,
+                Message = "User denied authorization",
+            });
+        }
+
+        await _consentManager.GrantConsentAsync(userId, client.Id, request.Scope ?? string.Empty, request.RememberConsent);
+
+        var authorizeUrl = QueryHelpers.AddQueryString("/connect/authorize", new Dictionary<string, string?>
+        {
+            ["client_id"] = request.ClientId,
+            ["redirect_uri"] = request.RedirectUri,
+            ["response_type"] = request.ResponseType,
+            ["scope"] = request.Scope,
+            ["state"] = request.State,
+            ["nonce"] = request.Nonce,
+            ["code_challenge"] = request.CodeChallenge,
+            ["code_challenge_method"] = request.CodeChallengeMethod,
+            ["response_mode"] = request.ResponseMode,
+            ["consent_granted"] = bool.TrueString.ToLowerInvariant(),
+        });
+
+        return Ok(new AuthorizeInteractionDecisionResponseDto
+        {
+            Status = "approved",
+            RedirectUrl = authorizeUrl,
+        });
+    }
+
+    [HttpGet("interaction/device")]
+    [AllowAnonymous]
+    [EnableRateLimiting(WebConst.DeviceEndpoint)]
+    public async Task<ActionResult<DeviceAuthorizationInteractionDto>> GetDeviceInteraction([FromQuery] string userCode)
+    {
+        if (string.IsNullOrWhiteSpace(userCode))
+        {
+            return BadRequest(new { error = ErrorCodes.InvalidRequest });
+        }
+
+        return Ok(await _deviceFlowManager.GetDeviceAuthorizationInteractionAsync(userCode));
+    }
+
+    [HttpPost("interaction/device/decision")]
+    [EnableRateLimiting(WebConst.DeviceEndpoint)]
+    public async Task<ActionResult<DeviceAuthorizationInteractionDto>> SubmitDeviceDecision([FromBody] DeviceAuthorizationDecisionDto request)
+    {
+        var userId = User.FindFirst(SysClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst(OAuthConst.ClaimTypes.Subject)?.Value
+            ?? HttpContext.Session.GetString("UserId");
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
+        var handled = request.Approve
+            ? await _deviceFlowManager.ApproveDeviceAuthorizationAsync(request.UserCode, userId)
+            : await _deviceFlowManager.DenyDeviceAuthorizationAsync(request.UserCode);
+
+        if (!handled)
+        {
+            return BadRequest(new { error = ErrorCodes.InvalidRequest });
+        }
+
+        return Ok(await _deviceFlowManager.GetDeviceAuthorizationInteractionAsync(request.UserCode));
+    }
+
     /// <summary>
     /// Token introspection endpoint (RFC 7662)
     /// </summary>
@@ -250,11 +423,19 @@ public class OAuthController(
     /// <returns>Introspection response</returns>
     [HttpPost("introspect")]
     [Consumes("application/x-www-form-urlencoded")]
+    [EnableRateLimiting(WebConst.TokenEndpoint)]
     public async Task<ActionResult<IntrospectResponseDto>> Introspect([FromForm] IntrospectRequestDto request)
     {
         try
         {
-            var response = await _tokenManager.IntrospectTokenAsync(request.Token, request.TokenTypeHint);
+            var (clientId, clientSecret) = ResolveClientCredentials(request.ClientId, request.ClientSecret);
+            var client = await _tokenManager.ValidateSensitiveEndpointClientAsync(clientId, clientSecret);
+            if (client == null)
+            {
+                return Unauthorized(new { error = ErrorCodes.InvalidClient, error_description = "Client authentication failed." });
+            }
+
+            var response = await _tokenManager.IntrospectTokenAsync(request.Token, request.TokenTypeHint, client.Id);
             return Ok(response);
         }
         catch (Exception ex)
@@ -275,11 +456,19 @@ public class OAuthController(
     /// <returns>Success response or error</returns>
     [HttpPost("revoke")]
     [Consumes("application/x-www-form-urlencoded")]
+    [EnableRateLimiting(WebConst.TokenEndpoint)]
     public async Task<ActionResult> Revoke([FromForm] RevokeRequestDto request)
     {
         try
         {
-            await _tokenManager.RevokeTokenAsync(request.Token, request.TokenTypeHint);
+            var (clientId, clientSecret) = ResolveClientCredentials(request.ClientId, request.ClientSecret);
+            var client = await _tokenManager.ValidateSensitiveEndpointClientAsync(clientId, clientSecret);
+            if (client == null)
+            {
+                return Unauthorized(new { error = ErrorCodes.InvalidClient, error_description = "Client authentication failed." });
+            }
+
+            await _tokenManager.RevokeTokenAsync(request.Token, request.TokenTypeHint, client.Id);
             return Ok();
         }
         catch (Exception ex)
@@ -479,5 +668,80 @@ public class OAuthController(
         }
 
         return scopes;
+    }
+
+    private (string? clientId, string? clientSecret) ResolveClientCredentials(string? clientId, string? clientSecret)
+    {
+        if (!string.IsNullOrWhiteSpace(clientId))
+        {
+            return (clientId, clientSecret);
+        }
+
+        if (!Request.Headers.TryGetValue(HeaderNames.Authorization, out var authorizationHeader))
+        {
+            return (null, null);
+        }
+
+        var value = authorizationHeader.ToString();
+        if (!value.StartsWith("Basic ", StringComparison.OrdinalIgnoreCase))
+        {
+            return (null, null);
+        }
+
+        try
+        {
+            var raw = Encoding.UTF8.GetString(Convert.FromBase64String(value[6..].Trim()));
+            var separatorIndex = raw.IndexOf(':');
+            if (separatorIndex < 0)
+            {
+                return (null, null);
+            }
+
+            return (raw[..separatorIndex], raw[(separatorIndex + 1)..]);
+        }
+        catch (FormatException)
+        {
+            return (null, null);
+        }
+    }
+
+    private async Task<List<OAuthInteractionScopeDto>> BuildScopeDtosAsync(string? scope)
+    {
+        var scopeNames = (scope ?? string.Empty)
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        var results = new List<OAuthInteractionScopeDto>();
+        foreach (var scopeName in scopeNames)
+        {
+            var scopeInfo = await _scopeManager.FindAsync<ApiScope>(s => s.Name == scopeName);
+            results.Add(new OAuthInteractionScopeDto
+            {
+                Name = scopeName,
+                DisplayName = scopeInfo?.DisplayName ?? scopeName,
+                Description = scopeInfo?.Description ?? GetDefaultScopeDescription(scopeName),
+                Required = scopeInfo?.Required ?? IsDefaultRequiredScope(scopeName),
+            });
+        }
+
+        return results;
+    }
+
+    private static string GetDefaultScopeDescription(string scopeName)
+    {
+        return scopeName switch
+        {
+            Scopes.OpenId => "Your basic identity",
+            Scopes.Profile => "Your basic profile details",
+            Scopes.Email => "Your email address",
+            Scopes.Phone => "Your phone number",
+            Scopes.Address => "Your address details",
+            "offline_access" => "Access to your data while you are offline",
+            _ => $"Access permission for {scopeName}",
+        };
+    }
+
+    private static bool IsDefaultRequiredScope(string scopeName)
+    {
+        return scopeName == Scopes.OpenId;
     }
 }

@@ -25,12 +25,14 @@ public class DiscoveryController(
     DiscoveryManager discoveryManager,
     SigningKeyManager signingKeyManager,
     IConfiguration configuration,
+    IHostEnvironment hostEnvironment,
     ILogger<DiscoveryController> logger
 ) : RestControllerBase(localizer)
 {
     private readonly DiscoveryManager _discoveryManager = discoveryManager;
     private readonly SigningKeyManager _signingKeyManager = signingKeyManager;
     private readonly IConfiguration _configuration = configuration;
+    private readonly IHostEnvironment _hostEnvironment = hostEnvironment;
     private readonly ILogger<DiscoveryController> _logger = logger;
 
     /// <summary>
@@ -68,18 +70,7 @@ public class DiscoveryController(
     {
         try
         {
-            // Use configured issuer URL to prevent Host header injection
-            var issuer = _configuration["Authentication:Issuer"];
-
-            // Fallback to request URL if not configured (development only)
-            if (string.IsNullOrEmpty(issuer))
-            {
-                issuer = $"{Request.Scheme}://{Request.Host}";
-                _logger.LogWarning(
-                    "Issuer URL not configured, using request URL: {Issuer}. This should only happen in development.",
-                    issuer
-                );
-            }
+            var issuer = ResolveIssuer();
 
             var config = _discoveryManager.GetConfiguration(issuer);
             return Ok(config);
@@ -146,5 +137,27 @@ public class DiscoveryController(
             _logger.LogError(ex, "Failed to generate JWKS");
             return Problem("Failed to generate JWKS", statusCode: 500);
         }
+    }
+
+    private string ResolveIssuer()
+    {
+        var configuredIssuer = _configuration["Authentication:Issuer"]
+            ?? _configuration["Authentication:Jwt:ValidIssuer"];
+
+        if (Uri.TryCreate(configuredIssuer, UriKind.Absolute, out var issuerUri))
+        {
+            return issuerUri.ToString().TrimEnd('/');
+        }
+
+        var requestIssuer = $"{Request.Scheme}://{Request.Host}";
+        if (_hostEnvironment.IsProduction())
+        {
+            _logger.LogWarning(
+                "Issuer configuration is missing or invalid in production. Falling back to request issuer {Issuer}.",
+                requestIssuer
+            );
+        }
+
+        return requestIssuer;
     }
 }

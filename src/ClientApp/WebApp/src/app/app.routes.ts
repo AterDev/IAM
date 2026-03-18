@@ -10,6 +10,10 @@ export const routes: Routes = [
     path: 'auth/callback',
     loadComponent: () => import('./pages/auth-callback/callback').then(m => m.AuthCallbackComponent)
   },
+  {
+    path: 'external-auth/callback',
+    loadComponent: () => import('./pages/external-auth-callback/external-auth-callback').then(m => m.ExternalAuthCallbackComponent)
+  },
   { 
     path: 'register', 
     loadComponent: () => import('./pages/register/register').then(m => m.Register)
@@ -61,6 +65,20 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/client/detail/detail').then(m => m.ClientDetailComponent)
       },
       {
+        path: 'developer-portal',
+        loadComponent: () => import('./pages/developer-portal/shell/shell').then(m => m.DeveloperPortalShellComponent),
+        children: [
+          {
+            path: '',
+            loadComponent: () => import('./pages/developer-portal/overview/overview').then(m => m.DeveloperPortalOverviewComponent)
+          },
+          {
+            path: 'clients',
+            loadComponent: () => import('./pages/developer-portal/clients/clients').then(m => m.DeveloperPortalClientsComponent)
+          }
+        ]
+      },
+      {
         path: 'scope',
         loadComponent: () => import('./pages/scope/list/list').then(m => m.ScopeListComponent)
       },
@@ -83,6 +101,14 @@ export const routes: Routes = [
       {
         path: 'security/audit-logs',
         loadComponent: () => import('./pages/security/audit-log-list/list').then(m => m.AuditLogListComponent)
+      },
+      {
+        path: 'security/password-grant-audit',
+        loadComponent: () => import('./pages/security/password-grant-audit/password-grant-audit').then(m => m.PasswordGrantAuditComponent)
+      },
+      {
+        path: 'security/mfa',
+        loadComponent: () => import('./pages/security/mfa/mfa').then(m => m.MfaSettingsComponent)
       }
     ],
   },

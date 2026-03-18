@@ -279,6 +279,9 @@ namespace EntityFramework.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("AllowPasswordGrant")
+                        .HasColumnType("boolean");
+
                     b.Property<int?>("ApplicationType")
                         .HasColumnType("integer");
 
@@ -297,6 +300,9 @@ namespace EntityFramework.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<Guid?>("DeveloperUserId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -304,6 +310,10 @@ namespace EntityFramework.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("PasswordGrantRestrictionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.PrimitiveCollection<List<string>>("PostLogoutRedirectUris")
                         .IsRequired()
@@ -313,8 +323,24 @@ namespace EntityFramework.Migrations
                         .IsRequired()
                         .HasColumnType("text[]");
 
+                    b.Property<int>("RegistrationStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("RequestedTime")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<bool>("RequirePkce")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("ReviewedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTimeOffset?>("ReviewedTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("SecretExpiresAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("SecretHash")
                         .HasMaxLength(200)
@@ -337,6 +363,10 @@ namespace EntityFramework.Migrations
 
                     b.HasIndex("ClientId")
                         .IsUnique();
+
+                    b.HasIndex("DeveloperUserId");
+
+                    b.HasIndex("RegistrationStatus");
 
                     b.HasIndex("TenantId");
 
@@ -409,6 +439,57 @@ namespace EntityFramework.Migrations
                         .IsUnique();
 
                     b.ToTable("ClientScopes");
+                });
+
+            modelBuilder.Entity("Entity.IAMMod.ClientSecret", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ClientId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LastFour")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SecretHash")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("SecretSalt")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClientId");
+
+                    b.HasIndex("ClientId", "RevokedAt");
+
+                    b.ToTable("ClientSecrets");
                 });
 
             modelBuilder.Entity("Entity.IAMMod.LoginSession", b =>
@@ -1102,6 +1183,17 @@ namespace EntityFramework.Migrations
                     b.Navigation("Scope");
                 });
 
+            modelBuilder.Entity("Entity.IAMMod.ClientSecret", b =>
+                {
+                    b.HasOne("Entity.IAMMod.Client", "Client")
+                        .WithMany("ClientSecrets")
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Client");
+                });
+
             modelBuilder.Entity("Entity.IAMMod.LoginSession", b =>
                 {
                     b.HasOne("Entity.IAMMod.User", "User")
@@ -1250,6 +1342,8 @@ namespace EntityFramework.Migrations
                     b.Navigation("ClientResources");
 
                     b.Navigation("ClientScopes");
+
+                    b.Navigation("ClientSecrets");
                 });
 
             modelBuilder.Entity("Entity.IAMMod.Organization", b =>

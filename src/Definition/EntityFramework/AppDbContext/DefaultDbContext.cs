@@ -25,6 +25,7 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
 
     // Access entities
     public DbSet<Client> Clients { get; set; }
+    public DbSet<ClientSecret> ClientSecrets { get; set; }
     public DbSet<ApiScope> ApiScopes { get; set; }
     public DbSet<ClientScope> ClientScopes { get; set; }
     public DbSet<ScopeClaim> ScopeClaims { get; set; }
@@ -170,6 +171,18 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
         {
             entity.HasIndex(e => e.ClientId).IsUnique();
             entity.HasIndex(e => e.TenantId);
+            entity.HasIndex(e => e.RegistrationStatus);
+            entity.HasIndex(e => e.DeveloperUserId);
+        });
+
+        builder.Entity<ClientSecret>(entity =>
+        {
+            entity.HasIndex(e => e.ClientId);
+            entity.HasIndex(e => new { e.ClientId, e.RevokedAt });
+            entity.HasOne(e => e.Client)
+                .WithMany(c => c.ClientSecrets)
+                .HasForeignKey(e => e.ClientId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // ApiScope configuration

@@ -1,0 +1,39 @@
+using Entity.IAMMod;
+
+namespace IAMMod.Models.ClientDtos;
+
+/// <summary>
+/// Self-service client registration request.
+/// </summary>
+public class ClientRegistrationRequestDto
+{
+    [MaxLength(256)]
+    public required string ClientId { get; set; }
+
+    [MaxLength(256)]
+    public required string DisplayName { get; set; }
+
+    [MaxLength(500)]
+    public string? Description { get; set; }
+
+    public ClientType? Type { get; set; }
+
+    public bool RequirePkce { get; set; } = true;
+
+    public ConsentType? ConsentType { get; set; }
+
+    public ApplicationType? ApplicationType { get; set; }
+
+    public bool AllowPasswordGrant { get; set; } = false;
+
+    [MaxLength(500)]
+    public string? PasswordGrantRestrictionReason { get; set; }
+
+    public List<string> RedirectUris { get; set; } = [];
+
+    public List<string> PostLogoutRedirectUris { get; set; } = [];
+
+    public List<Guid> ScopeIds { get; set; } = [];
+
+    public List<Guid> ResourceIds { get; set; } = [];
+}

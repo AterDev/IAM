@@ -21,6 +21,11 @@ public class ClientUpdateDto
 
     public ApplicationType? ApplicationType { get; set; }
 
+    public bool? AllowPasswordGrant { get; set; }
+
+    [MaxLength(500)]
+    public string? PasswordGrantRestrictionReason { get; set; }
+
     public List<string>? RedirectUris { get; set; }
     public List<string>? PostLogoutRedirectUris { get; set; }
     public List<Guid>? ScopeIds { get; set; }

@@ -52,6 +52,48 @@ public class Client : EntityBase
     /// </summary>
     public ApplicationType? ApplicationType { get; set; }
 
+    /// <summary>
+    /// Lifecycle status for self-service and approval scenarios.
+    /// </summary>
+    public ClientRegistrationStatus RegistrationStatus { get; set; } = ClientRegistrationStatus.Approved;
+
+    /// <summary>
+    /// Owner user id for self-service registrations.
+    /// </summary>
+    public Guid? DeveloperUserId { get; set; }
+
+    /// <summary>
+    /// Time when the registration was requested.
+    /// </summary>
+    public DateTimeOffset? RequestedTime { get; set; }
+
+    /// <summary>
+    /// Time when the client was reviewed.
+    /// </summary>
+    public DateTimeOffset? ReviewedTime { get; set; }
+
+    /// <summary>
+    /// Reviewer identifier.
+    /// </summary>
+    [MaxLength(100)]
+    public string? ReviewedBy { get; set; }
+
+    /// <summary>
+    /// Expiration time for the current active secret.
+    /// </summary>
+    public DateTimeOffset? SecretExpiresAt { get; set; }
+
+    /// <summary>
+    /// Whether the password grant is still allowed for this client.
+    /// </summary>
+    public bool AllowPasswordGrant { get; set; } = true;
+
+    /// <summary>
+    /// Optional reason or migration hint when password grant is disabled.
+    /// </summary>
+    [MaxLength(500)]
+    public string? PasswordGrantRestrictionReason { get; set; }
+
 
     /// <summary>
     /// Redirect URIs
@@ -77,4 +119,9 @@ public class Client : EntityBase
     /// Authorizations
     /// </summary>
     public List<Authorization> Authorizations { get; set; } = [];
+
+    /// <summary>
+    /// Historical secrets issued for this client.
+    /// </summary>
+    public List<ClientSecret> ClientSecrets { get; set; } = [];
 }

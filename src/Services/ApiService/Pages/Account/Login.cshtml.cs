@@ -10,11 +10,18 @@ using SysClaimTypes = System.Security.Claims.ClaimTypes;
 
 namespace ApiService.Pages.Account;
 
-public class LoginModel(UserManager userManager, SessionManager sessionManager, ILogger<LoginModel> logger) : PageModel
+public class LoginModel(UserManager userManager, SessionManager sessionManager, MfaManager mfaManager, ILogger<LoginModel> logger) : PageModel
 {
     private readonly UserManager _userManager = userManager;
     private readonly SessionManager _sessionManager = sessionManager;
+    private readonly MfaManager _mfaManager = mfaManager;
     private readonly ILogger<LoginModel> _logger = logger;
+
+    private const string PendingMfaUserIdKey = "PendingMfaUserId";
+    private const string PendingMfaUserNameKey = "PendingMfaUserName";
+    private const string PendingMfaRememberMeKey = "PendingMfaRememberMe";
+    private const string PendingMfaReturnUrlKey = "PendingMfaReturnUrl";
+    private const string PendingMfaExpiresAtKey = "PendingMfaExpiresAt";
 
     [BindProperty]
     [Required(ErrorMessage = "请输入用户名或邮箱")]
@@ -81,6 +88,17 @@ public class LoginModel(UserManager userManager, SessionManager sessionManager, 
                 _logger.LogWarning("Authentication failed for user: {Username}", Username);
                 ModelState.AddModelError(string.Empty, "用户名或密码错误");
                 return Page();
+            }
+
+            if (user.IsTwoFactorEnabled)
+            {
+                HttpContext.Session.SetString(PendingMfaUserIdKey, user.Id.ToString());
+                HttpContext.Session.SetString(PendingMfaUserNameKey, user.UserName);
+                HttpContext.Session.SetString(PendingMfaRememberMeKey, RememberMe.ToString());
+                HttpContext.Session.SetString(PendingMfaReturnUrlKey, ReturnUrl ?? string.Empty);
+                HttpContext.Session.SetString(PendingMfaExpiresAtKey, DateTimeOffset.UtcNow.AddMinutes(5).ToString("O"));
+
+                return RedirectToPage("/Account/Mfa", new { returnUrl = ReturnUrl, rememberMe = RememberMe });
             }
 
             // Check if user is locked out

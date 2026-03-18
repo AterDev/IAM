@@ -18,4 +18,16 @@ public class RevokeRequestDto
     /// </summary>
     [ModelBinder(Name = "token_type_hint")]
     public string? TokenTypeHint { get; set; }
+
+    /// <summary>
+    /// OAuth client id for authenticating the caller.
+    /// </summary>
+    [ModelBinder(Name = "client_id")]
+    public string? ClientId { get; set; }
+
+    /// <summary>
+    /// OAuth client secret for authenticating the caller.
+    /// </summary>
+    [ModelBinder(Name = "client_secret")]
+    public string? ClientSecret { get; set; }
 }

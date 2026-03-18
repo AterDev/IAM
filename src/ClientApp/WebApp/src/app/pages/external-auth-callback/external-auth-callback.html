@@ -1,0 +1,26 @@
+<div class="external-auth-container">
+  <mat-card class="external-auth-card">
+    <mat-card-header>
+      <mat-card-title>{{ 'externalAuth.title' | translate }}</mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      @if (isProcessing()) {
+        <div class="state-block processing">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>{{ messageKey() | translate }}</p>
+        </div>
+      } @else {
+        <div class="state-block result">
+          <p>{{ messageKey() | translate }}</p>
+
+          <div class="button-row">
+            <button mat-flat-button type="button" (click)="backToLogin()">
+              {{ 'externalAuth.backToLogin' | translate }}
+            </button>
+          </div>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

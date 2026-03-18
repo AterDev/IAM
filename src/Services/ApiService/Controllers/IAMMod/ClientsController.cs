@@ -1,6 +1,8 @@
 using IAMMod.Managers;
 using IAMMod.Models.AuthorizationDtos;
 using IAMMod.Models.ClientDtos;
+using Microsoft.AspNetCore.Authorization;
+using Share.Constants;
 namespace ApiService.Controllers.IAMMod;
 
 /// <summary>
@@ -61,10 +63,53 @@ public class ClientsController(
     /// <param name="dto">Client data</param>
     /// <returns>Created client detail with secret</returns>
     [HttpPost]
+    [Authorize(Policy = WebConst.AdminUser)]
     public async Task<string?> CreateClient([FromBody] ClientAddDto dto)
     {
         var secret = await _manager.AddAsync(dto);
         return secret;
+    }
+
+    /// <summary>
+    /// Register a new client for developer self-service review.
+    /// </summary>
+    [HttpPost("register")]
+    [Authorize]
+    public async Task<ActionResult<ClientRegistrationResultDto>> RegisterClient([FromBody] ClientRegistrationRequestDto dto)
+    {
+        var result = await _manager.RegisterAsync(dto);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Get clients visible to the current developer portal user.
+    /// </summary>
+    [HttpGet("my-clients")]
+    [Authorize]
+    public async Task<ActionResult<List<ClientDetailDto>>> GetMyClients()
+    {
+        return Ok(await _manager.GetMyClientsAsync());
+    }
+
+    /// <summary>
+    /// Get pending client registration requests.
+    /// </summary>
+    [HttpGet("pending-registrations")]
+    [Authorize(Policy = WebConst.AdminUser)]
+    public async Task<ActionResult<List<ClientDetailDto>>> GetPendingRegistrations()
+    {
+        return Ok(await _manager.GetPendingRegistrationsAsync());
+    }
+
+    /// <summary>
+    /// Approve a pending client registration.
+    /// </summary>
+    [HttpPost("{id}/approve")]
+    [Authorize(Policy = WebConst.AdminUser)]
+    public async Task<ActionResult<ClientRegistrationResultDto>> ApproveClient(Guid id, [FromBody] ClientApprovalDto? dto)
+    {
+        var result = await _manager.ApproveAsync(id, dto?.SecretExpirationDays ?? 180);
+        return Ok(result);
     }
 
     /// <summary>
@@ -74,6 +119,7 @@ public class ClientsController(
     /// <param name="dto">Update data</param>
     /// <returns>Updated client detail</returns>
     [HttpPut("{id}")]
+    [Authorize(Policy = WebConst.AdminUser)]
     public async Task<ActionResult<ClientDetailDto>> UpdateClient(
         Guid id,
         [FromBody] ClientUpdateDto dto
@@ -91,6 +137,7 @@ public class ClientsController(
     /// <param name="id">Client id</param>
     /// <returns>No content if successful</returns>
     [HttpDelete("{id}")]
+    [Authorize(Policy = WebConst.AdminUser)]
     public async Task<ActionResult> DeleteClient(Guid id)
     {
         var success = await _manager.DeleteAsync(id);
@@ -119,6 +166,7 @@ public class ClientsController(
     /// - When rotating credentials for compliance
     /// </remarks>
     [HttpPost("{id}/secret:rotate")]
+    [Authorize]
     public async Task<ActionResult<ClientSecretDto>> RotateSecret(Guid id)
     {
         var newSecret = await _manager.RotateSecretAsync(id);
@@ -131,12 +179,23 @@ public class ClientsController(
     }
 
     /// <summary>
+    /// Get client secret history metadata.
+    /// </summary>
+    [HttpGet("{id}/secrets")]
+    [Authorize]
+    public async Task<ActionResult<List<ClientSecretHistoryDto>>> GetSecrets(Guid id)
+    {
+        return Ok(await _manager.GetSecretsAsync(id));
+    }
+
+    /// <summary>
     /// Assign scopes to client
     /// </summary>
     /// <param name="id">Client id</param>
     /// <param name="dto">Scope assignment data</param>
     /// <returns>No content if successful</returns>
     [HttpPost("{id}/scopes")]
+    [Authorize(Policy = WebConst.AdminUser)]
     public async Task<ActionResult> AssignScopes(Guid id, [FromBody] ClientScopeAssignDto dto)
     {
         var success = await _manager.AssignScopesAsync(id, dto.ScopeIds);
@@ -151,6 +210,7 @@ public class ClientsController(
     /// <param name="id">Client id</param>
     /// <returns>List of authorizations</returns>
     [HttpGet("{id}/authorizations")]
+    [Authorize]
     public async Task<ActionResult<List<AuthorizationItemDto>>> GetAuthorizations(Guid id)
     {
         var result = await _manager.GetAuthorizationsAsync(id);

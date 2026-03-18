@@ -6,12 +6,25 @@
     "password": "密码",
     "login": "登录",
     "continue": "前往统一登录",
+    "continueWithGoogle": "使用 Google 登录",
+    "continueWithMicrosoft": "使用 Microsoft 登录",
     "logout": "登出",
     "failed": "登录失败，请检查用户名和密码",
     "error": "登录过程中发生错误，请稍后重试",
     "unifiedDescription": "管理后台现已统一使用 IAM 自身的 OAuth/OIDC 登录流程。",
     "unifiedHint": "点击后会跳转到认证中心登录页，完成认证与授权后自动回到管理后台。注册、找回密码等自助入口仍可直接在此访问。",
-    "unifiedError": "跳转统一登录时发生错误，请稍后重试"
+    "unifiedError": "跳转统一登录时发生错误，请稍后重试",
+    "externalHint": "也可以通过已配置的外部身份提供商继续登录"
+  },
+  "externalAuth": {
+    "title": "外部身份登录",
+    "redirecting": "外部身份验证已完成，正在接回统一登录流程...",
+    "failed": "外部身份登录失败，请稍后重试或改用统一登录。",
+    "emailConflict": "检测到相同邮箱的本地账号，但尚未建立外部身份绑定，请联系管理员处理。",
+    "providerNotConfigured": "当前环境尚未配置该外部身份提供商。",
+    "locked": "该本地账号已被锁定，请稍后再试。",
+    "invalidIdentity": "外部身份返回的信息不完整，无法完成登录。",
+    "backToLogin": "返回登录页"
   },
   "register": {
     "title": "注册账号",
@@ -49,8 +62,16 @@
     "submit": "提交",
     "cancel": "取消",
     "success": "授权成功！",
+    "denied": "设备授权已被拒绝",
+    "expired": "该用户码已过期，请在设备上重新发起授权",
     "invalidCode": "无效的用户码",
-    "helpText": "如果您在设备上未看到用户码，请返回设备重新开始授权流程"
+    "loadError": "加载设备授权信息失败，请稍后重试",
+    "decisionError": "提交设备授权结果失败，请稍后重试",
+    "helpText": "如果您在设备上未看到用户码，请返回设备重新开始授权流程",
+    "requestedPermissions": "请求的权限",
+    "accountInfo": "您将以 {{username}} 的身份批准此设备访问",
+    "approve": "允许设备访问",
+    "deny": "拒绝"
   },
   "authorize": {
     "title": "授权确认",
@@ -62,7 +83,42 @@
     "accountInfo": "您将以 {{username}} 的身份授权此应用",
     "privacyNotice": "授权后，该应用将能够访问您选择的信息。您可以随时在设置中撤销授权。",
     "clientDescription": "请求访问您的账号信息",
-    "error": "授权过程中发生错误"
+    "error": "授权过程中发生错误",
+    "rememberConsent": "记住我的授权选择",
+    "existingConsent": "您此前已授权过该应用，本次可直接继续或调整授权选择"
+  },
+  "mfa": {
+    "title": "多因素认证",
+    "subtitle": "为您的管理后台账号增加额外一道验证保护。",
+    "status": "当前状态",
+    "enabledStatus": "已启用",
+    "disabledStatus": "未启用",
+    "setupTitle": "绑定身份验证器",
+    "setupHint": "点击开始后，将生成新的 TOTP 密钥。请在身份验证器中添加该账号，然后输入 6 位验证码完成启用。",
+    "startSetup": "开始设置",
+    "setupReady": "新的 MFA 密钥已生成，请尽快完成验证。",
+    "secretLabel": "手动输入密钥",
+    "otpauthUriLabel": "otpauth 链接",
+    "verifyCode": "6 位验证码",
+    "enable": "启用 MFA",
+    "enabled": "多因素认证已启用，请妥善保存恢复码。",
+    "disable": "关闭 MFA",
+    "disabled": "多因素认证已关闭。",
+    "manageTitle": "管理恢复码与停用",
+    "manageHint": "输入当前验证码后，可重新生成恢复码或直接关闭 MFA。恢复码可以替代验证码完成登录，但每枚只能使用一次。",
+    "currentCode": "当前验证码或恢复码",
+    "regenerateRecoveryCodes": "重新生成恢复码",
+    "recoveryCodesTitle": "恢复码",
+    "recoveryCodesHint": "请立即保存这些恢复码。出于安全原因，它们只会在此显示一次。",
+    "recoveryCodesRemaining": "剩余恢复码数量",
+    "recoveryCodesRegenerated": "恢复码已重新生成。",
+    "secretCopied": "MFA 密钥已复制",
+    "uriCopied": "otpauth 链接已复制",
+    "loadFailed": "加载 MFA 状态失败，请稍后重试。",
+    "setupFailed": "生成 MFA 密钥失败，请稍后重试。",
+    "enableFailed": "启用 MFA 失败，请检查验证码后重试。",
+    "disableFailed": "关闭 MFA 失败，请确认验证码或恢复码正确。",
+    "regenerateFailed": "重新生成恢复码失败，请检查当前验证码。"
   },
   "scopes": {
     "openid": "访问您的基本身份信息",
@@ -94,8 +150,11 @@
     "organization": "组织管理",
     "oauth": "OAuth配置",
     "application": "应用管理",
+    "developerPortal": "开发者门户",
+    "passwordGrantAudit": "Password Grant 审计",
     "resource": "资源管理",
     "scope": "作用域管理",
+    "mfa": "多因素认证",
     "sessions": "会话管理",
     "auditLogs": "审计日志"
   },
@@ -222,6 +281,14 @@
     "basicInfo": "基本信息",
     "settings": "设置",
     "security": "安全",
+    "passwordGrantPolicy": "Password Grant 策略",
+    "allowPasswordGrant": "允许 Password Grant（密码模式）",
+    "passwordGrantEnabled": "仍允许使用，建议尽快迁移",
+    "passwordGrantDisabled": "已禁用，符合收敛策略",
+    "passwordGrantRestrictionReason": "限制原因",
+    "passwordGrantRestrictionReasonHint": "可填写迁移窗口、影响范围或替代方案说明；留空时后端会补默认说明。",
+    "passwordGrantRiskHint": "密码模式已逐步收敛，建议优先迁移到授权码 + PKCE、设备码等更安全的授权方式。",
+    "passwordGrantMigrationHint": "该客户端当前不允许密码模式。请在完成接入方评估后，改用授权码 + PKCE、设备码或其他更安全的授权流程。",
     "searchPlaceholder": "搜索客户端ID或显示名称",
     "typeFilter": "类型筛选",
     "applicationTypeFilter": "应用类型筛选",
@@ -288,6 +355,57 @@
     "updateSuccess": "应用更新成功",
     "availableScopes": "可用作用域",
     "selectedScopes": "已选择作用域"
+  },
+  "developerPortal": {
+    "title": "开发者门户",
+    "subtitle": "这是围绕客户端自助服务的低风险前端预备切片，仅建立在当前已经存在的客户端管理能力之上。",
+    "overview": "概览",
+    "clients": "客户端自助服务",
+    "currentCapabilitiesTitle": "当前后端已支持的能力",
+    "currentCapabilitiesSubtitle": "这些入口都直接映射到现有客户端管理页面与接口。",
+    "selfServiceWorkspace": "打开自助工作台",
+    "viewPortalClients": "进入客户端自助页",
+    "openClientManagement": "打开现有应用管理",
+    "upcomingTitle": "为后续 Stage2 能力预留",
+    "upcomingSubtitle": "在专用接口和权限模型落地前，这里只提供说明，不提前接线。",
+    "noSpeculationDescription": "此开发者门户基础结构刻意不引入猜测性的 API 契约，只暴露当前真实存在的客户端管理能力，并将后续能力标记为即将提供。",
+    "supportedNowTitle": "当前已支持",
+    "supportedNowSubtitle": "这一切片当前以后端真实可用的应用管理页面作为工作台。",
+    "manageClientSettings": "使用现有页面管理应用",
+    "currentFlowTitle": "当前可支持的自助流程",
+    "currentFlowSubtitle": "无需新增接口即可成立的轻量路径。",
+    "boundariesTitle": "暂未实现",
+    "boundariesSubtitle": "这些区域应等专门后端支持落地后再接入 UI。",
+    "currentCapabilities": {
+      "manageApplicationsTitle": "查看与检查应用",
+      "manageApplicationsDescription": "现有客户端列表与详情页已经支持查看客户端 ID、类型、作用域、资源与授权记录。",
+      "configureUrisTitle": "维护重定向/登出回调与作用域",
+      "configureUrisDescription": "当前编辑流程已经支持更新现阶段真实存在的客户端元数据。",
+      "rotateSecretTitle": "在需要时轮换密钥",
+      "rotateSecretDescription": "对于支持的客户端类型，当前详情页已经实现密钥轮换能力。"
+    },
+    "upcoming": {
+      "dynamicRegistration": "动态客户端注册",
+      "approvalWorkflow": "注册审核与批准流",
+      "collaboration": "协作者访问与所有权管理",
+      "usageInsights": "使用洞察、健康状态与分析"
+    },
+    "clientsSupported": {
+      "listAndView": "查看当前应用列表并打开详情页",
+      "editConfiguration": "通过现有弹窗编辑客户端配置",
+      "rotateSecrets": "为受支持的机密客户端轮换密钥",
+      "reviewAuthorizations": "查看某个客户端现有的授权记录"
+    },
+    "currentFlow": {
+      "createOrOpen": "先从现有的应用管理页创建或打开一个应用",
+      "configure": "配置重定向 URI、登出后回调、作用域以及当前已支持的元数据",
+      "rotate": "如果该客户端类型需要密钥，则在详情页执行密钥轮换"
+    },
+    "boundaries": {
+      "noDedicatedRegistration": "当前尚未接入专门的开发者注册提交通道接口",
+      "noCollaborators": "当前尚未提供协作者或所有权委派流程",
+      "noAnalytics": "当前尚未暴露开发者门户专用的分析或使用量指标接口"
+    }
   },
   "resource": {
     "title": "资源管理",
@@ -411,5 +529,35 @@
     "exportNotImplemented": "导出功能尚未实现",
     "startAutoRefresh": "自动刷新",
     "stopAutoRefresh": "停止刷新"
+  },
+  "passwordGrantAudit": {
+    "title": "Password Grant 审计报表",
+    "subtitle": "基于现有审计日志追踪密码模式的策略拒绝与失败尝试。",
+    "boundaryTitle": "当前报表边界",
+    "boundaryDescription": "本页只展示当前后端已经真实记录的审计事件：客户端策略拒绝与密码校验失败。若要补充成功调用趋势，需要后续后端增加专门的成功审计事件。",
+    "clientId": "客户端 ID",
+    "openClientDetail": "打开客户端详情",
+    "clientLookupMissing": "该审计事件未包含可用的客户端 ID，无法跳转。",
+    "clientLookupNotFound": "未找到客户端 {{clientId}} 的详情信息。",
+    "summaryColumn": "摘要",
+    "noData": "当前筛选条件下暂无 Password Grant 审计事件。",
+    "defaultRejectedSummary": "该请求已被客户端级收敛策略拒绝。",
+    "defaultFailedSummary": "密码模式请求失败。",
+    "failedCountSummary": "失败次数：{{count}}",
+    "lockoutSummary": "锁定至：{{time}}",
+    "summary": {
+      "total": "匹配事件数",
+      "rejected": "策略拒绝",
+      "failed": "凭据失败"
+    },
+    "filter": {
+      "event": "事件类型",
+      "subjectId": "主体 / 身份 ID"
+    },
+    "events": {
+      "all": "全部 Password Grant 事件",
+      "rejected": "Password Grant 被拒绝",
+      "failed": "Password Grant 失败"
+    }
   }
 }

@@ -79,6 +79,7 @@ src/
 
 ## 开发流程
 
+0. 先查询Perigon Mcp工具提供的功能，以便后续开发中调用。
 1. 定义层，即实体的定义，DbContext的处理，以及共享服务的编写(封装以便简化和复用)
 2. 模块层，即Manager和DTO的生成和编写; 并检查是否添加新的服务注入等。
 3. 服务层，即Controller的生成和编写
@@ -88,12 +89,13 @@ src/
 **要优先使用MCP工具`Perigon`，生成或创建模块/Entity/DTO/Manager/Controller等内容。**
 
 ## 构建验证
+
 通过`dotnet build`，构建对应的服务项目，如`ApiService`或`AdminService`，验证编译无错误。
 
 ### 构建-修复循环
 修改代码 → 构建 → 发现错误 → 修复 → 重新构建，直到无错误
 
-MCP server config lives in [.mcp.json](../../../.mcp.json) or [.vscode/mcp.json](../../../.vscode/mcp.json); use configured endpoints when invoking tools.
+MCP server config lives in [.vscode/mcp.json](../../../.vscode/mcp.json); use configured endpoints when invoking tools.
 
 ## 约定与规范
 

@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -11,11 +13,13 @@ using Microsoft.IdentityModel.Tokens;
 using ServiceDefaults.Middleware;
 using Share.Constants;
 using System.ComponentModel;
+using System.Net;
 using SysClaimTypes = System.Security.Claims.ClaimTypes;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Unicode;
+using System.Threading.RateLimiting;
 
 namespace IAMMod;
 
@@ -36,13 +40,73 @@ public static class ModuleExtensions
 
     private static IHostApplicationBuilder AddModServices(this IHostApplicationBuilder builder)
     {
-
         builder.Services.AddSwagger();
+        builder.Services.Configure<RiskControlOption>(builder.Configuration.GetSection(RiskControlOption.ConfigPath));
+        builder.Services.AddScoped<RiskControlService>();
         builder.Services.AddCors(options =>
         {
+            var origins = builder.Configuration.GetSection("Cors").GetValue<string[]>("AllowedOrigins") ?? [];
+            var allowWildcardSubdomains = builder.Configuration.GetSection("Cors").GetValue<bool>("AllowedSubdomains");
+
             options.AddPolicy(AppConst.Default, policy =>
             {
-                policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+                if (builder.Environment.IsDevelopment() || origins.Length == 0)
+                {
+                    policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+                    return;
+                }
+
+                policy.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod();
+                if (allowWildcardSubdomains)
+                {
+                    policy.SetIsOriginAllowedToAllowWildcardSubdomains();
+                }
+            });
+        });
+
+        builder.Services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.AddPolicy(WebConst.TokenEndpoint, context =>
+            {
+                var remoteIpAddress = context.Connection.RemoteIpAddress;
+                if (remoteIpAddress == null || IPAddress.IsLoopback(remoteIpAddress))
+                {
+                    return RateLimitPartition.GetNoLimiter("loopback-token");
+                }
+
+                var partitionKey = remoteIpAddress.ToString();
+
+                return RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey,
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 20,
+                        Window = TimeSpan.FromSeconds(30),
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0,
+                    });
+            });
+
+            options.AddPolicy(WebConst.DeviceEndpoint, context =>
+            {
+                var remoteIpAddress = context.Connection.RemoteIpAddress;
+                if (remoteIpAddress == null || IPAddress.IsLoopback(remoteIpAddress))
+                {
+                    return RateLimitPartition.GetNoLimiter("loopback-device");
+                }
+
+                var partitionKey = remoteIpAddress.ToString();
+
+                return RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey,
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 10,
+                        Window = TimeSpan.FromSeconds(30),
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0,
+                    });
             });
         });
 
@@ -53,6 +117,9 @@ public static class ModuleExtensions
             options.Cookie.HttpOnly = true;
             options.Cookie.IsEssential = true;
             options.Cookie.SameSite = SameSiteMode.Lax;
+            options.Cookie.SecurePolicy = builder.Environment.IsProduction()
+                ? CookieSecurePolicy.Always
+                : CookieSecurePolicy.SameAsRequest;
         });
 
 
@@ -73,7 +140,9 @@ public static class ModuleExtensions
                 options.ExpireTimeSpan = TimeSpan.FromDays(1);
                 options.SlidingExpiration = true;
                 options.Cookie.HttpOnly = true;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                options.Cookie.SecurePolicy = builder.Environment.IsProduction()
+                    ? CookieSecurePolicy.Always
+                    : CookieSecurePolicy.SameAsRequest;
                 options.Cookie.SameSite = SameSiteMode.Lax;
                 options.Events = new CookieAuthenticationEvents
                 {
@@ -103,6 +172,7 @@ public static class ModuleExtensions
                 policy.RequireRole(WebConst.AdminUser, WebConst.SuperAdmin);
             });
         builder.Services.AddLocalizer();
+        builder.Services.AddThirdAuthentication(builder.Configuration);
         builder.Services.AddControllers()
             .AddJsonOptions(options =>
             {
@@ -191,7 +261,15 @@ public static class ModuleExtensions
     {
         app.UseSession();
         app.UseRouting();
+
+        if (app.Environment.IsProduction())
+        {
+            app.UseHsts();
+            app.UseHttpsRedirection();
+        }
+
         app.UseCors(AppConst.Default);
+        app.UseRateLimiter();
         app.UseStaticFiles();
         app.UseRequestLocalization();
         app.UseMiddleware<GlobalExceptionMiddleware>();
@@ -204,5 +282,4 @@ public static class ModuleExtensions
         app.MapFallbackToFile("index.html");
         return app;
     }
-
 }

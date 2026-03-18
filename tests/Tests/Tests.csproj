@@ -19,10 +19,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Definition\Entity\Entity.csproj" />
+    <ProjectReference Include="..\..\src\Definition\EntityFramework\EntityFramework.csproj" />
     <ProjectReference Include="..\..\src\Definition\Share\Share.csproj" />
     <ProjectReference Include="..\..\src\Perigon\Perigon.AspNetCore\Perigon.AspNetCore.csproj" />
-    <ProjectReference Include="..\..\src\Modules\AccessMod\AccessMod.csproj" />
-    <ProjectReference Include="..\..\src\Modules\IdentityMod\IdentityMod.csproj" />
+    <ProjectReference Include="..\..\src\Modules\IAMMod\IAMMod.csproj" />
   </ItemGroup>
 
 </Project>

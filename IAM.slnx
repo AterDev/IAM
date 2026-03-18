@@ -36,5 +36,7 @@
     <Project Path="src/Services/ApiSampleService/ApiSampleService.csproj" />
     <Project Path="src/Services/MigrationService/MigrationService.csproj" />
   </Folder>
-  <Folder Name="/tests/" />
+  <Folder Name="/tests/">
+    <Project Path="tests/Tests/Tests.csproj" />
+  </Folder>
 </Solution>

@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using Entity.IAMMod;
 using EntityFramework.AppDbContext;
+using Share.Constants;
 
 namespace IAMMod.Managers;
 
@@ -105,10 +106,12 @@ public class DeviceFlowManager(DefaultDbContext dbContext, ILogger<DeviceFlowMan
         string userCode
     )
     {
+        var normalizedUserCode = NormalizeUserCode(userCode);
+
         var token = await _dbContext.Tokens
             .Include(t => t.Authorization)
                 .ThenInclude(a => a!.Client)
-            .FirstOrDefaultAsync(t => t.ReferenceId == userCode && t.Type == TokenTypes.UserCode);
+            .FirstOrDefaultAsync(t => t.ReferenceId == normalizedUserCode && t.Type == TokenTypes.UserCode);
 
         if (token == null || token.Authorization == null)
         {
@@ -125,13 +128,63 @@ public class DeviceFlowManager(DefaultDbContext dbContext, ILogger<DeviceFlowMan
     }
 
     /// <summary>
+    /// Get detailed device authorization interaction context by user code.
+    /// </summary>
+    public async Task<DeviceAuthorizationInteractionDto> GetDeviceAuthorizationInteractionAsync(string userCode)
+    {
+        var normalizedUserCode = NormalizeUserCode(userCode);
+
+        var token = await _dbContext.Tokens
+            .Include(t => t.Authorization)
+                .ThenInclude(a => a!.Client)
+            .FirstOrDefaultAsync(t => t.ReferenceId == normalizedUserCode && t.Type == TokenTypes.UserCode);
+
+        if (token == null || token.Authorization == null)
+        {
+            return CreateInteractionResult(normalizedUserCode, "invalid", "Invalid or unknown user code.");
+        }
+
+        if (token.ExpirationDate < DateTimeOffset.UtcNow)
+        {
+            return CreateInteractionResult(normalizedUserCode, "expired", "This user code has expired.", expiresAt: token.ExpirationDate);
+        }
+
+        var authorization = token.Authorization;
+        var client = authorization.Client;
+        var requestedScopes = await BuildScopeDtosAsync(authorization.Scopes);
+        var status = ResolveInteractionStatus(token, authorization);
+
+        return new DeviceAuthorizationInteractionDto
+        {
+            UserCode = normalizedUserCode,
+            Status = status,
+            Message = status switch
+            {
+                "approved" => "Device authorization approved.",
+                "denied" => "Device authorization was denied.",
+                _ => null,
+            },
+            ClientId = client?.ClientId,
+            ClientName = client?.DisplayName ?? client?.ClientId,
+            ClientDescription = client?.Description,
+            Scope = authorization.Scopes,
+            RequestedScopes = requestedScopes,
+            ExpiresAt = token.ExpirationDate,
+            CanApprove = status == "pending",
+            CanDeny = status == "pending",
+        };
+    }
+
+    /// <summary>
     /// Approve device authorization
     /// </summary>
     public async Task<bool> ApproveDeviceAuthorizationAsync(string userCode, string userId)
     {
+        var normalizedUserCode = NormalizeUserCode(userCode);
+
         var token = await _dbContext.Tokens
             .Include(t => t.Authorization)
-            .FirstOrDefaultAsync(t => t.ReferenceId == userCode && t.Type == TokenTypes.UserCode);
+            .FirstOrDefaultAsync(t => t.ReferenceId == normalizedUserCode && t.Type == TokenTypes.UserCode);
 
         if (token == null || token.Authorization == null)
         {
@@ -140,6 +193,11 @@ public class DeviceFlowManager(DefaultDbContext dbContext, ILogger<DeviceFlowMan
 
         // Check expiration
         if (token.ExpirationDate < DateTimeOffset.UtcNow)
+        {
+            return false;
+        }
+
+        if (token.Status != TokenStatuses.Pending || token.Authorization.Status != AuthorizationStatuses.Pending)
         {
             return false;
         }
@@ -171,11 +229,23 @@ public class DeviceFlowManager(DefaultDbContext dbContext, ILogger<DeviceFlowMan
     /// </summary>
     public async Task<bool> DenyDeviceAuthorizationAsync(string userCode)
     {
+        var normalizedUserCode = NormalizeUserCode(userCode);
+
         var token = await _dbContext.Tokens
             .Include(t => t.Authorization)
-            .FirstOrDefaultAsync(t => t.ReferenceId == userCode && t.Type == TokenTypes.UserCode);
+            .FirstOrDefaultAsync(t => t.ReferenceId == normalizedUserCode && t.Type == TokenTypes.UserCode);
 
         if (token == null || token.Authorization == null)
+        {
+            return false;
+        }
+
+        if (token.ExpirationDate < DateTimeOffset.UtcNow)
+        {
+            return false;
+        }
+
+        if (token.Status != TokenStatuses.Pending || token.Authorization.Status != AuthorizationStatuses.Pending)
         {
             return false;
         }
@@ -231,5 +301,98 @@ public class DeviceFlowManager(DefaultDbContext dbContext, ILogger<DeviceFlowMan
 
         // Format as XXXX-XXXX
         return $"{new string(result, 0, 4)}-{new string(result, 4, 4)}";
+    }
+
+    private static string NormalizeUserCode(string userCode)
+    {
+        return userCode.Trim().ToUpperInvariant();
+    }
+
+    private async Task<List<OAuthInteractionScopeDto>> BuildScopeDtosAsync(string? scope)
+    {
+        var scopeNames = (scope ?? string.Empty)
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        if (scopeNames.Length == 0)
+        {
+            return [];
+        }
+
+        var scopeMap = await _dbContext.ApiScopes
+            .Where(s => scopeNames.Contains(s.Name))
+            .ToDictionaryAsync(s => s.Name, StringComparer.OrdinalIgnoreCase);
+
+        return scopeNames.Select(scopeName =>
+        {
+            if (scopeMap.TryGetValue(scopeName, out var scopeInfo))
+            {
+                return new OAuthInteractionScopeDto
+                {
+                    Name = scopeName,
+                    DisplayName = scopeInfo.DisplayName ?? scopeName,
+                    Description = scopeInfo.Description ?? GetDefaultScopeDescription(scopeName),
+                    Required = scopeInfo.Required,
+                };
+            }
+
+            return new OAuthInteractionScopeDto
+            {
+                Name = scopeName,
+                DisplayName = scopeName,
+                Description = GetDefaultScopeDescription(scopeName),
+                Required = IsDefaultRequiredScope(scopeName),
+            };
+        }).ToList();
+    }
+
+    private static DeviceAuthorizationInteractionDto CreateInteractionResult(
+        string userCode,
+        string status,
+        string? message,
+        DateTimeOffset? expiresAt = null)
+    {
+        return new DeviceAuthorizationInteractionDto
+        {
+            UserCode = userCode,
+            Status = status,
+            Message = message,
+            ExpiresAt = expiresAt,
+            CanApprove = false,
+            CanDeny = false,
+        };
+    }
+
+    private static string ResolveInteractionStatus(Token token, Authorization authorization)
+    {
+        if (authorization.Status == AuthorizationStatuses.Denied || token.Status == TokenStatuses.Denied)
+        {
+            return "denied";
+        }
+
+        if (authorization.Status == AuthorizationStatuses.Authorized || token.Status == TokenStatuses.Valid)
+        {
+            return "approved";
+        }
+
+        return "pending";
+    }
+
+    private static string GetDefaultScopeDescription(string scopeName)
+    {
+        return scopeName switch
+        {
+            Scopes.OpenId => "Your basic identity",
+            Scopes.Profile => "Your basic profile details",
+            Scopes.Email => "Your email address",
+            Scopes.Phone => "Your phone number",
+            Scopes.Address => "Your address details",
+            "offline_access" => "Access to your data while you are offline",
+            _ => $"Access permission for {scopeName}",
+        };
+    }
+
+    private static bool IsDefaultRequiredScope(string scopeName)
+    {
+        return scopeName == Scopes.OpenId;
     }
 }

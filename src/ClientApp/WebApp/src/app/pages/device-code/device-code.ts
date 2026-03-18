@@ -1,15 +1,19 @@
-import { Component, inject, OnInit, ChangeDetectionStrategy, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, inject, OnInit, ChangeDetectionStrategy, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { CommonModule } from '@angular/common';
-import { ApiClient } from 'src/app/services/api/api-client';
 import { AuthService } from 'src/app/services/auth.service';
+import { DeviceAuthorizationInteraction, OauthInteractionService } from 'src/app/services/oauth-interaction.service';
 
 @Component({
   selector: 'app-device-code',
@@ -20,6 +24,8 @@ import { AuthService } from 'src/app/services/auth.service';
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    MatIconModule,
+    MatListModule,
     MatProgressSpinnerModule,
     TranslateModule
   ],
@@ -28,24 +34,42 @@ import { AuthService } from 'src/app/services/auth.service';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DeviceCode implements OnInit {
-  private apiClient = inject(ApiClient);
-  private authService = inject(AuthService);
+  readonly authService = inject(AuthService);
+
+  private destroyRef = inject(DestroyRef);
+  private interactionService = inject(OauthInteractionService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private translate = inject(TranslateService);
 
-  deviceCodeForm!: FormGroup;
+  deviceCodeForm = new FormGroup({
+    userCode: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.pattern(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/)]
+    })
+  });
 
   isLoading = signal(false);
   errorMessage = signal('');
   successMessage = signal('');
+  interaction = signal<DeviceAuthorizationInteraction | null>(null);
 
   ngOnInit(): void {
-    this.deviceCodeForm = new FormGroup({
-      userCode: new FormControl('', [
-        Validators.required,
-        Validators.pattern(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/)
-      ])
-    });
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        const userCode = this.normalizeUserCode(params.get('user_code') ?? '');
+
+        if (!userCode) {
+          return;
+        }
+
+        this.userCode.setValue(userCode, { emitEvent: false });
+
+        if (this.authService.isAuthenticated()) {
+          this.lookupInteraction(userCode);
+        }
+      });
   }
 
   get userCode() {
@@ -66,39 +90,120 @@ export class DeviceCode implements OnInit {
 
   async submitCode(): Promise<void> {
     if (this.deviceCodeForm.invalid) {
+      this.userCode.markAsTouched();
+      return;
+    }
+
+    const userCode = this.normalizeUserCode(this.userCode.value);
+    this.userCode.setValue(userCode, { emitEvent: false });
+    this.lookupInteraction(userCode, true);
+  }
+
+  cancel(): void {
+    this.router.navigate(['/']);
+  }
+
+  approve(): void {
+    this.submitDecision(true);
+  }
+
+  deny(): void {
+    this.submitDecision(false);
+  }
+
+  private lookupInteraction(userCode: string, allowLoginRedirect = false): void {
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
+
+    this.interactionService.getDeviceInteraction(userCode)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: interaction => {
+          this.isLoading.set(false);
+          this.applyInteraction(interaction);
+
+          if (interaction.status === 'pending' && allowLoginRedirect && !this.authService.isAuthenticated()) {
+            this.router.navigate(['/login'], {
+              queryParams: {
+                returnUrl: this.router.createUrlTree(['/device-code'], {
+                  queryParams: { user_code: interaction.userCode }
+                }).toString()
+              }
+            });
+          }
+        },
+        error: (error: HttpErrorResponse) => {
+          this.isLoading.set(false);
+          this.interaction.set(null);
+          this.errorMessage.set(
+            error.status === 400
+              ? this.translate.instant('deviceCode.invalidCode')
+              : this.translate.instant('deviceCode.loadError')
+          );
+        }
+      });
+  }
+
+  private submitDecision(approve: boolean): void {
+    const current = this.interaction();
+    if (!current || current.status !== 'pending') {
       return;
     }
 
     this.isLoading.set(true);
     this.errorMessage.set('');
+    this.successMessage.set('');
 
-    const userCode = this.userCode.value;
-
-    // TODO: Implement device authorization API
-    // For now, simulate the flow
-    try {
-      // In a real implementation, this would call the device authorization endpoint
-      setTimeout(() => {
-        if (this.authService.isAuthenticated()) {
-          this.successMessage.set(this.translate.instant('deviceCode.success'));
-          setTimeout(() => {
-            this.router.navigate(['/']);
-          }, 2000);
-        } else {
-          // Redirect to login with device code
-          this.router.navigate(['/login'], {
-            queryParams: { device_code: userCode }
-          });
+    this.interactionService.submitDeviceDecision({
+      userCode: current.userCode,
+      approve
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: interaction => {
+          this.isLoading.set(false);
+          this.applyInteraction(interaction);
+        },
+        error: () => {
+          this.isLoading.set(false);
+          this.errorMessage.set(this.translate.instant('deviceCode.decisionError'));
         }
-        this.isLoading.set(false);
-      }, 1000);
-    } catch (error) {
-      this.errorMessage.set(this.translate.instant('deviceCode.invalidCode'));
-      this.isLoading.set(false);
+      });
+  }
+
+  private applyInteraction(interaction: DeviceAuthorizationInteraction): void {
+    this.interaction.set(interaction);
+    this.userCode.setValue(interaction.userCode, { emitEvent: false });
+
+    switch (interaction.status) {
+      case 'approved':
+        this.successMessage.set(this.translate.instant('deviceCode.success'));
+        this.errorMessage.set('');
+        break;
+      case 'denied':
+        this.successMessage.set('');
+        this.errorMessage.set(this.translate.instant('deviceCode.denied'));
+        break;
+      case 'expired':
+        this.successMessage.set('');
+        this.errorMessage.set(this.translate.instant('deviceCode.expired'));
+        break;
+      case 'invalid':
+        this.successMessage.set('');
+        this.errorMessage.set(this.translate.instant('deviceCode.invalidCode'));
+        break;
+      default:
+        this.successMessage.set('');
+        this.errorMessage.set('');
+        break;
     }
   }
 
-  cancel(): void {
-    this.router.navigate(['/']);
+  private normalizeUserCode(value: string): string {
+    const alphanumeric = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+    return alphanumeric.length > 4
+      ? `${alphanumeric.slice(0, 4)}-${alphanumeric.slice(4)}`
+      : alphanumeric;
   }
 }

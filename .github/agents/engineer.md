@@ -38,15 +38,17 @@ handoffs:
 
 **2 制定计划**
 
-- 根据对任务的理解，制定一个清晰、可执行的计划，列出实现步骤和所需技能。
+- 根据对任务的理解，制定一个清晰简洁、可执行的计划，列出实现步骤，以及验证方法。并针对功能模块以及前后端进行任务拆分，以及依赖关系分析，以便后续可以并行开发。
 - 对重点技术方向和难点，先通过搜索或MCP查阅官方文档或GitHub上的最佳实践，确保计划的可行性和效率。
-- 保存计划到 session memory，使用#tool:vscode/memory的`create`命令，存储在`/memories/session/task.md`路径，内容格式遵循<plan_style_guide>。
+- 保存计划到 session memory，使用#tool:vscode/memory的`create`命令，存储在`/memories/session/task-{name}.md`路径，内容格式遵循<plan_style_guide>。
 
 <plan_style_guide>
 ```markdown
 ## Tasks: {Title}
 
 {TL;DR — what, how, why. Reference key decisions. (30-500 words, depending on complexity)}
+
+**Steps: {completed}/{total}**
 
 **Steps**
 1. [ ] {Action with [file](path) links and `symbol` refs}
@@ -63,9 +65,9 @@ handoffs:
 
 **2 代码实现**
 
-根据制定的计划编写代码，根据<skills> 选择合适的技能。要充分考虑代码的复用性，可维护性。
-
-在代码编写及重构时，对模式相同的代码修改，可尝试编写脚本来批量处理。
+1. 根据制定的计划编写代码，根据<skills> 选择合适的技能。要充分考虑代码的复用性，可维护性。
+2. 根据步骤和依赖关系，尝试并行实现任务，如利用`subAgent`或`Copilot CLI`执行前端开发工作，最后进行整合和验证。
+3. 更新任务进度到 session memory，使用#tool:vscode/memory的`update`命令，存储在`/memories/session/task-{name}.md`路径，内容格式遵循<plan_style_guide>。
 
 <skills>
 
@@ -76,6 +78,8 @@ handoffs:
 - **文档编写**: 使用 `.github/skills/documentation/SKILL.md`
 - **测试任务**（ApiTest/TUnit/集成测试/测试失败排查）→ 使用 `test` Skill
 </skills>
+
+> 在代码编写及重构时，对模式相同的代码修改，可尝试编写脚本来批量处理。
 
 **3 结果输出**
 

@@ -42,6 +42,31 @@
       </div>
     </div>
 
+    <div class="border-top pt-1">
+      <h3 class="h5 fw-500">{{ 'client.security' | translate }}</h3>
+      <div class="d-flex flex-column gap-2">
+        <mat-checkbox [formControl]="allowPasswordGrantControl">
+          {{ 'client.allowPasswordGrant' | translate }}
+        </mat-checkbox>
+        <p class="small text-muted mb-0">{{ 'client.passwordGrantRiskHint' | translate }}</p>
+
+        @if (!allowPasswordGrantControl.value) {
+        <mat-form-field appearance="outline" class="w-100">
+          <mat-label>{{ 'client.passwordGrantRestrictionReason' | translate }}</mat-label>
+          <textarea matInput [formControl]="passwordGrantRestrictionReasonControl" rows="3"></textarea>
+          <mat-hint>{{ 'client.passwordGrantRestrictionReasonHint' | translate }}</mat-hint>
+          @if (passwordGrantRestrictionReasonControl.invalid && passwordGrantRestrictionReasonControl.touched) {
+          <mat-error>{{ getErrorMessage(passwordGrantRestrictionReasonControl) }}</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="border rounded p-3 bg-light small text-muted">
+          {{ 'client.passwordGrantMigrationHint' | translate }}
+        </div>
+        }
+      </div>
+    </div>
+
     <!-- 重定向URI部分 -->
     <div class="border-top pt-1">
       <h3 class="h5 fw-500 mb-2">{{ 'client.redirectUris' | translate }}</h3>

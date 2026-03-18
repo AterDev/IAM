@@ -18,6 +18,10 @@
         {{i18n.hello| translate}},
         {{username}}
       </span>
+      <button mat-menu-item [routerLink]="['/security/mfa']">
+        <span>{{i18n.mfa.title| translate}}</span>
+        <mat-icon>verified_user</mat-icon>
+      </button>
       <button mat-menu-item (click)="logout()">
         <span>{{i18n.login.logout| translate}}</span>
         <mat-icon>exit_to_app</mat-icon>

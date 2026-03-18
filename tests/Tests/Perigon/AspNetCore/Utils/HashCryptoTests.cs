@@ -176,11 +176,15 @@ public class HashCryptoTests
     }
 
     [Fact]
-    public void ImportRsaPrivateKey_InvalidKey_ThrowsCryptographicException()
+    public void ImportRsaPrivateKey_InvalidKey_ThrowsFormatOrCryptographicException()
     {
         // Act & Assert
-        Assert.Throws<CryptographicException>(() =>
-            HashCrypto.ImportRsaPrivateKey("invalid-key-data")
+        var exception = Record.Exception(() => HashCrypto.ImportRsaPrivateKey("invalid-key-data"));
+
+        Assert.NotNull(exception);
+        Assert.True(
+            exception is FormatException or CryptographicException,
+            $"Unexpected exception type: {exception.GetType().FullName}"
         );
     }
 

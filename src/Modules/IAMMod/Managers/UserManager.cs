@@ -1,6 +1,7 @@
 using IAMMod.Models.UserDtos;
 using Microsoft.AspNetCore.Http;
 using Share.Exceptions;
+using System.Text.RegularExpressions;
 using System.Text.Json;
 
 namespace IAMMod.Managers;
@@ -12,12 +13,15 @@ public class UserManager(
     TenantDbFactory dbContextFactory,
     IUserContext userContext,
     ILogger<UserManager> logger,
-    AuditLogManager auditLogManager
+    AuditLogManager auditLogManager,
+    RiskControlService riskControlService
 ) : ManagerBase<DefaultDbContext, User>(dbContextFactory, userContext, logger)
 {
     private readonly AuditLogManager _auditLogManager = auditLogManager;
+    private readonly RiskControlService _riskControlService = riskControlService;
     private const string SelfServiceProvider = "SelfService";
     private const string PasswordResetTokenName = "PasswordReset";
+    private const string ExternalLoginEventCategory = "ExternalAuthentication";
 
     /// <summary>
     /// Get paged users
@@ -146,6 +150,163 @@ public class UserManager(
         }
 
         return createdUser;
+    }
+
+    /// <summary>
+    /// Resolve an external login to a local account, creating one when necessary.
+    /// </summary>
+    public async Task<ExternalLoginResolutionResultDto> ResolveExternalLoginAsync(
+        string provider,
+        string providerKey,
+        string? email,
+        string? displayName,
+        string? ipAddress = null,
+        string? userAgent = null
+    )
+    {
+        var normalizedProvider = provider.Trim();
+        var normalizedProviderKey = providerKey.Trim();
+        var normalizedEmail = string.IsNullOrWhiteSpace(email) ? null : email.Trim().ToUpperInvariant();
+
+        if (string.IsNullOrWhiteSpace(normalizedProvider) || string.IsNullOrWhiteSpace(normalizedProviderKey))
+        {
+            return new ExternalLoginResolutionResultDto
+            {
+                Status = "invalid_external_identity",
+                Provider = provider,
+                Message = "Missing provider identity.",
+            };
+        }
+
+        var existingLogin = await _dbContext.UserLogins
+            .Include(q => q.User)
+            .FirstOrDefaultAsync(q =>
+                q.LoginProvider == normalizedProvider && q.ProviderKey == normalizedProviderKey);
+
+        if (existingLogin?.User != null)
+        {
+            if (IsUserLocked(existingLogin.User))
+            {
+                await WriteExternalAuditAsync(
+                    "ExternalLoginRejected",
+                    existingLogin.User.Id.ToString(),
+                    new { provider = normalizedProvider, reason = "AccountLocked" },
+                    ipAddress,
+                    userAgent);
+
+                return new ExternalLoginResolutionResultDto
+                {
+                    Status = "locked",
+                    Provider = normalizedProvider,
+                    UserId = existingLogin.UserId,
+                    UserName = existingLogin.User.UserName,
+                    Email = existingLogin.User.Email,
+                    Message = "The local account is locked.",
+                };
+            }
+
+            if (!string.IsNullOrWhiteSpace(email) && !string.Equals(existingLogin.User.Email, email, StringComparison.OrdinalIgnoreCase))
+            {
+                existingLogin.User.Email = email.Trim();
+                existingLogin.User.NormalizedEmail = normalizedEmail;
+                existingLogin.User.EmailConfirmed = true;
+                existingLogin.User.UpdatedTime = DateTime.UtcNow;
+                await _dbContext.SaveChangesAsync();
+            }
+
+            await WriteExternalAuditAsync(
+                "ExternalLoginSucceeded",
+                existingLogin.UserId.ToString(),
+                new { provider = normalizedProvider, created = false },
+                ipAddress,
+                userAgent);
+
+            return new ExternalLoginResolutionResultDto
+            {
+                Status = "success",
+                Provider = normalizedProvider,
+                UserId = existingLogin.UserId,
+                UserName = existingLogin.User.UserName,
+                Email = existingLogin.User.Email,
+                IsNewUser = false,
+            };
+        }
+
+        if (!string.IsNullOrWhiteSpace(normalizedEmail))
+        {
+            var existingUser = await _dbSet.FirstOrDefaultAsync(q => q.NormalizedEmail == normalizedEmail);
+            if (existingUser != null)
+            {
+                await WriteExternalAuditAsync(
+                    "ExternalLoginConflict",
+                    existingUser.Id.ToString(),
+                    new { provider = normalizedProvider, email = existingUser.Email },
+                    ipAddress,
+                    userAgent);
+
+                return new ExternalLoginResolutionResultDto
+                {
+                    Status = "email_conflict",
+                    Provider = normalizedProvider,
+                    UserId = existingUser.Id,
+                    UserName = existingUser.UserName,
+                    Email = existingUser.Email,
+                    Message = "An account with the same email already exists.",
+                };
+            }
+        }
+
+        var userName = await GenerateUniqueExternalUserNameAsync(displayName, email, normalizedProvider, normalizedProviderKey);
+        var user = new User
+        {
+            UserName = userName,
+            NormalizedUserName = userName.ToUpperInvariant(),
+            Email = string.IsNullOrWhiteSpace(email) ? null : email.Trim(),
+            NormalizedEmail = normalizedEmail,
+            EmailConfirmed = !string.IsNullOrWhiteSpace(email),
+            PhoneNumberConfirmed = false,
+            LockoutEnabled = true,
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString(),
+        };
+
+        var generatedPassword = OAuthService.GenerateTokenReference();
+        var salt = HashCrypto.BuildSalt();
+        user.PasswordSalt = salt;
+        user.PasswordHash = HashCrypto.GeneratePwd(generatedPassword, salt);
+
+        var userLogin = new UserLogin
+        {
+            LoginProvider = normalizedProvider,
+            ProviderKey = normalizedProviderKey,
+            ProviderDisplayName = normalizedProvider,
+            User = user,
+        };
+
+        await ExecuteInTransactionAsync(async () =>
+        {
+            await _dbContext.Users.AddAsync(user);
+            await _dbContext.UserLogins.AddAsync(userLogin);
+            await _dbContext.SaveChangesAsync();
+            return true;
+        });
+
+        await WriteExternalAuditAsync(
+            "ExternalLoginSucceeded",
+            user.Id.ToString(),
+            new { provider = normalizedProvider, created = true },
+            ipAddress,
+            userAgent);
+
+        return new ExternalLoginResolutionResultDto
+        {
+            Status = "success",
+            Provider = normalizedProvider,
+            UserId = user.Id,
+            UserName = user.UserName,
+            Email = user.Email,
+            IsNewUser = true,
+        };
     }
 
     /// <summary>
@@ -497,12 +658,17 @@ public class UserManager(
 
         if (user == null)
         {
+            var failureWindow = _riskControlService.RegisterLoginFailure(normalizedUserName, null, ipAddress);
             // Write audit log for failed login - user not found
             await _auditLogManager.AddAuditLogAsync(
                 category: "Authentication",
                 eventName: "LoginFailed",
                 subjectId: userName,
-                payload: JsonSerializer.Serialize(new { reason = "UserNotFound" }),
+                payload: JsonSerializer.Serialize(new
+                {
+                    reason = "UserNotFound",
+                    ipFailureCount = failureWindow.IpFailureCount,
+                }),
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );
@@ -535,13 +701,16 @@ public class UserManager(
             || !HashCrypto.Validate(password, user.PasswordSalt, user.PasswordHash)
         )
         {
+            var loginRisk = await _riskControlService.EvaluateLoginRiskAsync(user.Id, ipAddress, userAgent);
+            var failureWindow = _riskControlService.RegisterLoginFailure(normalizedUserName, user.Id, ipAddress);
+
             // Increment access failed count
             user.AccessFailedCount++;
 
-            // Lock account after too many failed attempts (e.g., 5)
-            if (user.LockoutEnabled && user.AccessFailedCount >= 5)
+            // Lock account after too many failed attempts
+            if (user.LockoutEnabled && user.AccessFailedCount >= _riskControlService.LoginFailureThreshold)
             {
-                user.LockoutEnd = DateTimeOffset.UtcNow.AddMinutes(30);
+                user.LockoutEnd = DateTimeOffset.UtcNow.Add(_riskControlService.AccountLockoutDuration);
             }
 
             user.UpdatedTime = DateTime.UtcNow;
@@ -552,7 +721,17 @@ public class UserManager(
                 eventName: "LoginFailed",
                 subjectId: user.Id.ToString(),
                 payload: JsonSerializer.Serialize(
-                    new { reason = "InvalidPassword", failedCount = user.AccessFailedCount }
+                    new
+                    {
+                        reason = "InvalidPassword",
+                        failedCount = user.AccessFailedCount,
+                        ipFailureCount = failureWindow.IpFailureCount,
+                        loginRisk.HasKnownIp,
+                        loginRisk.HasKnownUserAgent,
+                        loginRisk.RequiresStepUp,
+                        loginRisk.LastKnownIpAddress,
+                        loginRisk.LastKnownUserAgent,
+                    }
                 ),
                 ipAddress: ipAddress,
                 userAgent: userAgent
@@ -561,6 +740,8 @@ public class UserManager(
         }
 
         // Reset access failed count on successful login
+    var successRisk = await _riskControlService.EvaluateLoginRiskAsync(user.Id, ipAddress, userAgent);
+    _riskControlService.ResetLoginFailures(normalizedUserName, user.Id, ipAddress);
         user.AccessFailedCount = 0;
         user.UpdatedTime = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
@@ -570,10 +751,37 @@ public class UserManager(
             category: "Authentication",
             eventName: "LoginSuccess",
             subjectId: user.Id.ToString(),
-            payload: JsonSerializer.Serialize(new { userName = user.UserName }),
+            payload: JsonSerializer.Serialize(new
+            {
+                userName = user.UserName,
+                successRisk.HasKnownIp,
+                successRisk.HasKnownUserAgent,
+                successRisk.RequiresStepUp,
+                successRisk.LastKnownIpAddress,
+                successRisk.LastKnownUserAgent,
+            }),
             ipAddress: ipAddress,
             userAgent: userAgent
         );
+
+        if (successRisk.RequiresStepUp)
+        {
+            await _auditLogManager.AddAuditLogAsync(
+                category: "Authentication",
+                eventName: "LoginStepUpRecommended",
+                subjectId: user.Id.ToString(),
+                payload: JsonSerializer.Serialize(new
+                {
+                    userName = user.UserName,
+                    successRisk.HasKnownIp,
+                    successRisk.HasKnownUserAgent,
+                    successRisk.LastKnownIpAddress,
+                    successRisk.LastKnownUserAgent,
+                }),
+                ipAddress: ipAddress,
+                userAgent: userAgent
+            );
+        }
 
         return await GetDetailAsync(user.Id);
     }
@@ -585,4 +793,80 @@ public class UserManager(
         DateTimeOffset? ConsumedAt,
         string? SecurityStamp
     );
+
+    private static bool IsUserLocked(User user)
+    {
+        return user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow;
+    }
+
+    private async Task<string> GenerateUniqueExternalUserNameAsync(
+        string? displayName,
+        string? email,
+        string provider,
+        string providerKey)
+    {
+        var baseName = BuildExternalUserNameBase(displayName, email, provider, providerKey);
+        var candidate = baseName;
+        var suffix = 1;
+
+        while (await _dbSet.AnyAsync(q => q.NormalizedUserName == candidate.ToUpperInvariant()))
+        {
+            candidate = $"{baseName}{suffix++}";
+        }
+
+        return candidate;
+    }
+
+    private static string BuildExternalUserNameBase(
+        string? displayName,
+        string? email,
+        string provider,
+        string providerKey)
+    {
+        var raw = !string.IsNullOrWhiteSpace(email)
+            ? email.Split('@', StringSplitOptions.RemoveEmptyEntries)[0]
+            : displayName;
+
+        var normalized = Regex.Replace(raw ?? string.Empty, "[^A-Za-z0-9._-]", string.Empty);
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            var providerPrefix = Regex.Replace(provider, "[^A-Za-z0-9]", string.Empty);
+            var keySuffix = Regex.Replace(providerKey, "[^A-Za-z0-9]", string.Empty);
+            keySuffix = keySuffix.Length > 8 ? keySuffix[..8] : keySuffix;
+            normalized = $"{providerPrefix}{keySuffix}";
+        }
+
+        if (normalized.Length > 32)
+        {
+            normalized = normalized[..32];
+        }
+
+        return normalized;
+    }
+
+    private Task AddAuditLogAsync(
+        string eventName,
+        string subjectId,
+        object payload,
+        string? ipAddress,
+        string? userAgent)
+    {
+        return _auditLogManager.AddAuditLogAsync(
+            category: ExternalLoginEventCategory,
+            eventName: eventName,
+            subjectId: subjectId,
+            payload: JsonSerializer.Serialize(payload),
+            ipAddress: ipAddress,
+            userAgent: userAgent);
+    }
+
+    private Task WriteExternalAuditAsync(
+        string eventName,
+        string subjectId,
+        object payload,
+        string? ipAddress,
+        string? userAgent)
+    {
+        return AddAuditLogAsync(eventName, subjectId, payload, ipAddress, userAgent);
+    }
 }

@@ -12,6 +12,8 @@ public static class WebConst
 
     public const string Default = "Default";
     public const string Limited = "Limited";
+    public const string TokenEndpoint = "TokenEndpoint";
+    public const string DeviceEndpoint = "DeviceEndpoint";
 
     /// <summary>
     /// 超级管理员

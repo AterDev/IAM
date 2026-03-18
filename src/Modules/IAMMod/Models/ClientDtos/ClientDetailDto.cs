@@ -17,6 +17,14 @@ public class ClientDetailDto
     public bool RequirePkce { get; set; }
     public ConsentType? ConsentType { get; set; }
     public ApplicationType? ApplicationType { get; set; }
+    public ClientRegistrationStatus RegistrationStatus { get; set; }
+    public Guid? DeveloperUserId { get; set; }
+    public DateTimeOffset? RequestedTime { get; set; }
+    public DateTimeOffset? ReviewedTime { get; set; }
+    public string? ReviewedBy { get; set; }
+    public DateTimeOffset? SecretExpiresAt { get; set; }
+    public bool AllowPasswordGrant { get; set; }
+    public string? PasswordGrantRestrictionReason { get; set; }
     public List<string> RedirectUris { get; set; } = [];
     public List<string> PostLogoutRedirectUris { get; set; } = [];
     public List<ScopeItemDto> Scopes { get; set; } = [];
@@ -24,6 +32,7 @@ public class ClientDetailDto
     /// API resources this client can access
     /// </summary>
     public List<ClientResourceDto> Resources { get; set; } = [];
+    public List<ClientSecretHistoryDto> Secrets { get; set; } = [];
     public DateTimeOffset CreatedTime { get; set; }
     public DateTimeOffset UpdatedTime { get; set; }
 }

@@ -1,4 +1,5 @@
 using IAMMod.Services;
+using Microsoft.AspNetCore.Http;
 using Share;
 using Share.Constants;
 using Share.Exceptions;
@@ -15,11 +16,21 @@ public class TokenManager(
     DefaultDbContext dbContext,
     ILogger<TokenManager> logger,
     OAuthService oauthService,
-    AuditLogManager auditLogManager
+    AuditLogManager auditLogManager,
+    RiskControlService riskControlService
 ) : ManagerBase<DefaultDbContext>(dbContext, logger)
 {
     private readonly OAuthService _oauthService = oauthService;
     private readonly AuditLogManager _auditLogManager = auditLogManager;
+    private readonly RiskControlService _riskControlService = riskControlService;
+
+    /// <summary>
+    /// Validate a client for sensitive token management endpoints.
+    /// </summary>
+    public async Task<Client?> ValidateSensitiveEndpointClientAsync(string? clientId, string? clientSecret)
+    {
+        return await ValidateClientAsync(clientId, clientSecret);
+    }
 
     /// <summary>
     /// Process token request with provided signing key
@@ -364,6 +375,22 @@ public class TokenManager(
             missingDescription: "Missing client credentials"
         );
 
+        if (!client.AllowPasswordGrant)
+        {
+            await WriteAuditAsync(
+                category: "Authentication",
+                eventName: "PasswordGrantRejected",
+                subjectId: client.Id.ToString(),
+                payload: JsonSerializer.Serialize(new
+                {
+                    client.ClientId,
+                    client.PasswordGrantRestrictionReason,
+                })
+            );
+
+            throw new BusinessException(Localizer.OAuthPasswordGrantDisabled, StatusCodes.Status400BadRequest);
+        }
+
         // Find user
         var user = await _dbContext.Users
             .Include(u => u.UserRoles)
@@ -373,14 +400,49 @@ public class TokenManager(
 
         if (user == null || string.IsNullOrEmpty(user.PasswordHash))
         {
+            _riskControlService.RegisterLoginFailure(request.Username.ToUpperInvariant(), user?.Id, null);
             throw new BusinessException(Localizer.InvalidUserOrPassword);
+        }
+
+        if (user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow)
+        {
+            throw new BusinessException(Localizer.LockAccountForManyTimes, StatusCodes.Status403Forbidden);
         }
 
         // Verify password
         var passwordValid = HashCrypto.Validate(request.Password, user.PasswordSalt, user.PasswordHash);
         if (!passwordValid)
         {
+            _riskControlService.RegisterLoginFailure(request.Username.ToUpperInvariant(), user.Id, null);
+            user.AccessFailedCount++;
+            if (user.LockoutEnabled && user.AccessFailedCount >= _riskControlService.LoginFailureThreshold)
+            {
+                user.LockoutEnd = DateTimeOffset.UtcNow.Add(_riskControlService.AccountLockoutDuration);
+            }
+
+            user.UpdatedTime = DateTime.UtcNow;
+            await _dbContext.SaveChangesAsync();
+
+            await WriteAuditAsync(
+                category: "Authentication",
+                eventName: "PasswordGrantFailed",
+                subjectId: user.Id.ToString(),
+                payload: JsonSerializer.Serialize(new
+                {
+                    reason = "InvalidPassword",
+                    failedCount = user.AccessFailedCount,
+                    lockoutEnd = user.LockoutEnd,
+                })
+            );
             throw new BusinessException(Localizer.InvalidUserOrPassword);
+        }
+
+        _riskControlService.ResetLoginFailures(request.Username.ToUpperInvariant(), user.Id, null);
+        if (user.AccessFailedCount != 0)
+        {
+            user.AccessFailedCount = 0;
+            user.UpdatedTime = DateTime.UtcNow;
+            await _dbContext.SaveChangesAsync();
         }
 
         // Generate tokens
@@ -398,6 +460,24 @@ public class TokenManager(
         if (string.IsNullOrEmpty(request.DeviceCode))
         {
             throw new BusinessException(Localizer.OAuthMissingDeviceCode);
+        }
+
+        var devicePollingAssessment = _riskControlService.RegisterDeviceCodePoll(request.ClientId, request.DeviceCode);
+        if (devicePollingAssessment.IsBlocked)
+        {
+            await WriteAuditAsync(
+                category: "DeviceFlow",
+                eventName: "DeviceCodePollingThrottled",
+                payload: JsonSerializer.Serialize(new
+                {
+                    request.ClientId,
+                    request.DeviceCode,
+                    devicePollingAssessment.AttemptCount,
+                    devicePollingAssessment.BlockedUntil,
+                })
+            );
+
+            throw new BusinessException(Localizer.OAuthSlowDown, StatusCodes.Status429TooManyRequests);
         }
 
         // Find device code
@@ -577,7 +657,7 @@ public class TokenManager(
 
         if (rotatedRefreshToken != null)
         {
-            await _auditLogManager.AddAuditLogAsync(
+            await WriteAuditAsync(
                 category: "Authentication",
                 eventName: "RefreshTokenRotated",
                 subjectId: user.Id.ToString(),
@@ -676,19 +756,45 @@ public class TokenManager(
     /// <summary>
     /// Revoke token
     /// </summary>
-    public async Task<bool> RevokeTokenAsync(string token, string? tokenTypeHint)
+    public async Task<bool> RevokeTokenAsync(string token, string? tokenTypeHint, Guid requestingClientId)
     {
-        var tokenEntity = await _dbContext.Tokens.FirstOrDefaultAsync(t =>
-            t.ReferenceId == token || t.Payload == token
-        );
+        var tokenEntity = await _dbContext.Tokens
+            .Include(t => t.Authorization)
+            .ThenInclude(a => a!.Client)
+            .FirstOrDefaultAsync(t => t.ReferenceId == token || t.Payload == token);
 
         if (tokenEntity == null)
         {
             return true; // Token doesn't exist, consider it revoked
         }
 
+        if (!CanClientManageToken(tokenEntity, requestingClientId))
+        {
+            await WriteAuditAsync(
+                category: "Authentication",
+                eventName: "TokenRevocationDenied",
+                subjectId: requestingClientId.ToString(),
+                payload: JsonSerializer.Serialize(new { tokenTypeHint, tokenType = tokenEntity.Type })
+            );
+            return true;
+        }
+
         tokenEntity.Status = TokenStatuses.Revoked;
         await _dbContext.SaveChangesAsync();
+
+        await WriteAuditAsync(
+            category: "Authentication",
+            eventName: "TokenRevoked",
+            subjectId: tokenEntity.SubjectId ?? requestingClientId.ToString(),
+            payload: JsonSerializer.Serialize(
+                new
+                {
+                    tokenTypeHint,
+                    tokenType = tokenEntity.Type,
+                    requestingClientId,
+                }
+            )
+        );
 
         return true;
     }
@@ -727,7 +833,7 @@ public class TokenManager(
         }
 
         await _dbContext.SaveChangesAsync();
-        await _auditLogManager.AddAuditLogAsync(
+        await WriteAuditAsync(
             category: "Authentication",
             eventName: "AuthorizationChainRevoked",
             subjectId: userId.ToString(),
@@ -744,7 +850,8 @@ public class TokenManager(
     /// </summary>
     public async Task<IntrospectResponseDto> IntrospectTokenAsync(
         string token,
-        string? tokenTypeHint
+        string? tokenTypeHint,
+        Guid requestingClientId
     )
     {
         var tokenEntity = await _dbContext
@@ -754,6 +861,23 @@ public class TokenManager(
 
         if (tokenEntity == null || tokenEntity.Status != TokenStatuses.Valid)
         {
+            await WriteAuditAsync(
+                category: "Authentication",
+                eventName: "TokenIntrospectionMiss",
+                subjectId: requestingClientId.ToString(),
+                payload: JsonSerializer.Serialize(new { tokenTypeHint })
+            );
+            return new IntrospectResponseDto { Active = false };
+        }
+
+        if (!CanClientManageToken(tokenEntity, requestingClientId))
+        {
+            await WriteAuditAsync(
+                category: "Authentication",
+                eventName: "TokenIntrospectionDenied",
+                subjectId: requestingClientId.ToString(),
+                payload: JsonSerializer.Serialize(new { tokenTypeHint, tokenType = tokenEntity.Type })
+            );
             return new IntrospectResponseDto { Active = false };
         }
 
@@ -777,6 +901,20 @@ public class TokenManager(
         {
             response.Exp = tokenEntity.ExpirationDate.Value.ToUnixTimeSeconds();
         }
+
+        await WriteAuditAsync(
+            category: "Authentication",
+            eventName: "TokenIntrospected",
+            subjectId: tokenEntity.SubjectId ?? requestingClientId.ToString(),
+            payload: JsonSerializer.Serialize(
+                new
+                {
+                    tokenTypeHint,
+                    tokenType = tokenEntity.Type,
+                    requestingClientId,
+                }
+            )
+        );
 
         return response;
     }
@@ -820,7 +958,7 @@ public class TokenManager(
 
         await _dbContext.SaveChangesAsync();
 
-        await _auditLogManager.AddAuditLogAsync(
+        await WriteAuditAsync(
             category: "Authentication",
             eventName: "RefreshTokenReuseDetected",
             subjectId: reusedToken.SubjectId,
@@ -864,5 +1002,40 @@ public class TokenManager(
         return properties.GetValueOrDefault("root_token")
             ?? rotatedRefreshToken.ReferenceId
             ?? string.Empty;
+    }
+
+    private Task WriteAuditAsync(
+        string category,
+        string eventName,
+        string? subjectId = null,
+        string? payload = null,
+        string? ipAddress = null,
+        string? userAgent = null
+    )
+    {
+        if (_auditLogManager == null)
+        {
+            return Task.CompletedTask;
+        }
+
+        return _auditLogManager.AddAuditLogAsync(
+            category,
+            eventName,
+            subjectId,
+            payload,
+            ipAddress,
+            userAgent
+        );
+    }
+
+    private static bool CanClientManageToken(Token tokenEntity, Guid requestingClientId)
+    {
+        if (tokenEntity.Authorization?.ClientId == requestingClientId)
+        {
+            return true;
+        }
+
+        return Guid.TryParse(tokenEntity.SubjectId, out var subjectId)
+            && subjectId == requestingClientId;
     }
 }

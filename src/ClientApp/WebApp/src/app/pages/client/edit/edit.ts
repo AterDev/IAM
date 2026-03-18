@@ -15,6 +15,7 @@ import { ClientDetailDto } from 'src/app/services/api/models/iammod/client-detai
 import { ClientUpdateDto } from 'src/app/services/api/models/iammod/client-update-dto.model';
 import { ResourceItemDto } from 'src/app/services/api/models/iammod/resource-item-dto.model';
 import { ScopeItemDto } from 'src/app/services/api/models/iammod/scope-item-dto.model';
+import { ClientDetailViewModel, ClientUpdatePayload } from '../client-password-grant-policy.model';
 
 @Component({
   selector: 'app-edit',
@@ -34,7 +35,7 @@ export class ClientEditComponent implements OnInit {
   clientForm!: FormGroup;
   isSubmitting = false;
   isLoading = signal(true);
-  client?: ClientDetailDto;
+  client?: ClientDetailViewModel;
   availableResources = signal<ResourceItemDto[]>([]);
   availableScopes = signal<ScopeItemDto[]>([]);
   separatorKeysCodes = [ENTER, COMMA];
@@ -59,10 +60,14 @@ export class ClientEditComponent implements OnInit {
       description: [''],
       consentType: [''],
       requirePkce: [true],
+      allowPasswordGrant: [false],
+      passwordGrantRestrictionReason: ['', [Validators.maxLength(500)]],
       newRedirectUri: [''],
       newPostLogoutRedirectUri: [''],
       newScope: ['']
     });
+
+    this.allowPasswordGrantControl.valueChanges.subscribe(() => this.syncPasswordGrantRestrictionReasonState());
 
     this.loadClient();
   }
@@ -70,7 +75,7 @@ export class ClientEditComponent implements OnInit {
   loadClient(): void {
     this.api.clients.getDetail(this.data.clientId).subscribe({
       next: (client) => {
-        this.client = client;
+        this.client = client as ClientDetailViewModel;
         this.redirectUris.set(client.redirectUris || []);
 
         this.postLogoutRedirectUris.set(client.postLogoutRedirectUris || []);
@@ -92,8 +97,12 @@ export class ClientEditComponent implements OnInit {
           displayName: client.displayName,
           description: client.description || '',
           consentType: client.consentType || '',
-          requirePkce: client.requirePkce
+          requirePkce: client.requirePkce,
+          allowPasswordGrant: this.client.allowPasswordGrant ?? false,
+          passwordGrantRestrictionReason: this.client.passwordGrantRestrictionReason || ''
         });
+
+        this.syncPasswordGrantRestrictionReasonState();
 
         this.loadAvailableScopes();
         this.loadAvailableResources();
@@ -196,18 +205,22 @@ export class ClientEditComponent implements OnInit {
 
     this.isSubmitting = true;
     const formValue = this.clientForm.value;
-    const dto: ClientUpdateDto = {
+    const dto: ClientUpdatePayload = {
       displayName: formValue.displayName,
       description: formValue.description || null,
       consentType: formValue.consentType || null,
       requirePkce: formValue.requirePkce,
+      allowPasswordGrant: formValue.allowPasswordGrant,
+      passwordGrantRestrictionReason: formValue.allowPasswordGrant
+        ? null
+        : (formValue.passwordGrantRestrictionReason?.trim() || null),
       redirectUris: this.redirectUris(),
       postLogoutRedirectUris: this.postLogoutRedirectUris(),
       scopeIds: this.scopeIds(),
       resourceIds: this.resourceIds()
     };
 
-    this.api.clients.updateClient(this.data.clientId, dto).subscribe({
+    this.api.clients.updateClient(this.data.clientId, dto as ClientUpdateDto).subscribe({
       next: () => {
         this.snackBar.open(
           this.translate.instant('client.updateSuccess'),
@@ -228,6 +241,16 @@ export class ClientEditComponent implements OnInit {
     this.dialogRef.close(false);
   }
 
+  syncPasswordGrantRestrictionReasonState(): void {
+    if (this.allowPasswordGrantControl.value) {
+      this.passwordGrantRestrictionReasonControl.setValue('');
+      this.passwordGrantRestrictionReasonControl.disable({ emitEvent: false });
+      return;
+    }
+
+    this.passwordGrantRestrictionReasonControl.enable({ emitEvent: false });
+  }
+
   getErrorMessage(control: FormControl | null): string {
     if (!control) {
       return '';
@@ -235,10 +258,22 @@ export class ClientEditComponent implements OnInit {
     if (control.hasError('required')) {
       return this.translate.instant('error.required');
     }
+    if (control.hasError('maxlength')) {
+      const maxLength = control.errors?.['maxlength'].requiredLength;
+      return this.translate.instant('error.maxLength', { length: maxLength });
+    }
     return '';
   }
 
   get displayNameControl() {
     return this.clientForm.get('displayName') as FormControl;
+  }
+
+  get allowPasswordGrantControl() {
+    return this.clientForm.get('allowPasswordGrant') as FormControl;
+  }
+
+  get passwordGrantRestrictionReasonControl() {
+    return this.clientForm.get('passwordGrantRestrictionReason') as FormControl;
   }
 }

@@ -9,12 +9,25 @@ export const I18N_KEYS = {
     "password": "login.password",
     "login": "login.login",
     "continue": "login.continue",
+    "continueWithGoogle": "login.continueWithGoogle",
+    "continueWithMicrosoft": "login.continueWithMicrosoft",
     "logout": "login.logout",
     "failed": "login.failed",
     "error": "login.error",
     "unifiedDescription": "login.unifiedDescription",
     "unifiedHint": "login.unifiedHint",
-    "unifiedError": "login.unifiedError"
+    "unifiedError": "login.unifiedError",
+    "externalHint": "login.externalHint"
+  },
+  "externalAuth": {
+    "title": "externalAuth.title",
+    "redirecting": "externalAuth.redirecting",
+    "failed": "externalAuth.failed",
+    "emailConflict": "externalAuth.emailConflict",
+    "providerNotConfigured": "externalAuth.providerNotConfigured",
+    "locked": "externalAuth.locked",
+    "invalidIdentity": "externalAuth.invalidIdentity",
+    "backToLogin": "externalAuth.backToLogin"
   },
   "register": {
     "title": "register.title",
@@ -52,8 +65,16 @@ export const I18N_KEYS = {
     "submit": "deviceCode.submit",
     "cancel": "deviceCode.cancel",
     "success": "deviceCode.success",
+    "denied": "deviceCode.denied",
+    "expired": "deviceCode.expired",
     "invalidCode": "deviceCode.invalidCode",
-    "helpText": "deviceCode.helpText"
+    "loadError": "deviceCode.loadError",
+    "decisionError": "deviceCode.decisionError",
+    "helpText": "deviceCode.helpText",
+    "requestedPermissions": "deviceCode.requestedPermissions",
+    "accountInfo": "deviceCode.accountInfo",
+    "approve": "deviceCode.approve",
+    "deny": "deviceCode.deny"
   },
   "authorize": {
     "title": "authorize.title",
@@ -65,7 +86,42 @@ export const I18N_KEYS = {
     "accountInfo": "authorize.accountInfo",
     "privacyNotice": "authorize.privacyNotice",
     "clientDescription": "authorize.clientDescription",
-    "error": "authorize.error"
+    "error": "authorize.error",
+    "rememberConsent": "authorize.rememberConsent",
+    "existingConsent": "authorize.existingConsent"
+  },
+  "mfa": {
+    "title": "mfa.title",
+    "subtitle": "mfa.subtitle",
+    "status": "mfa.status",
+    "enabledStatus": "mfa.enabledStatus",
+    "disabledStatus": "mfa.disabledStatus",
+    "setupTitle": "mfa.setupTitle",
+    "setupHint": "mfa.setupHint",
+    "startSetup": "mfa.startSetup",
+    "setupReady": "mfa.setupReady",
+    "secretLabel": "mfa.secretLabel",
+    "otpauthUriLabel": "mfa.otpauthUriLabel",
+    "verifyCode": "mfa.verifyCode",
+    "enable": "mfa.enable",
+    "enabled": "mfa.enabled",
+    "disable": "mfa.disable",
+    "disabled": "mfa.disabled",
+    "manageTitle": "mfa.manageTitle",
+    "manageHint": "mfa.manageHint",
+    "currentCode": "mfa.currentCode",
+    "regenerateRecoveryCodes": "mfa.regenerateRecoveryCodes",
+    "recoveryCodesTitle": "mfa.recoveryCodesTitle",
+    "recoveryCodesHint": "mfa.recoveryCodesHint",
+    "recoveryCodesRemaining": "mfa.recoveryCodesRemaining",
+    "recoveryCodesRegenerated": "mfa.recoveryCodesRegenerated",
+    "secretCopied": "mfa.secretCopied",
+    "uriCopied": "mfa.uriCopied",
+    "loadFailed": "mfa.loadFailed",
+    "setupFailed": "mfa.setupFailed",
+    "enableFailed": "mfa.enableFailed",
+    "disableFailed": "mfa.disableFailed",
+    "regenerateFailed": "mfa.regenerateFailed"
   },
   "scopes": {
     "openid": "scopes.openid",
@@ -97,8 +153,11 @@ export const I18N_KEYS = {
     "organization": "menu.organization",
     "oauth": "menu.oauth",
     "application": "menu.application",
+    "developerPortal": "menu.developerPortal",
+    "passwordGrantAudit": "menu.passwordGrantAudit",
     "resource": "menu.resource",
     "scope": "menu.scope",
+    "mfa": "menu.mfa",
     "sessions": "menu.sessions",
     "auditLogs": "menu.auditLogs"
   },
@@ -225,6 +284,14 @@ export const I18N_KEYS = {
     "basicInfo": "client.basicInfo",
     "settings": "client.settings",
     "security": "client.security",
+    "passwordGrantPolicy": "client.passwordGrantPolicy",
+    "allowPasswordGrant": "client.allowPasswordGrant",
+    "passwordGrantEnabled": "client.passwordGrantEnabled",
+    "passwordGrantDisabled": "client.passwordGrantDisabled",
+    "passwordGrantRestrictionReason": "client.passwordGrantRestrictionReason",
+    "passwordGrantRestrictionReasonHint": "client.passwordGrantRestrictionReasonHint",
+    "passwordGrantRiskHint": "client.passwordGrantRiskHint",
+    "passwordGrantMigrationHint": "client.passwordGrantMigrationHint",
     "searchPlaceholder": "client.searchPlaceholder",
     "typeFilter": "client.typeFilter",
     "applicationTypeFilter": "client.applicationTypeFilter",
@@ -291,6 +358,57 @@ export const I18N_KEYS = {
     "updateSuccess": "client.updateSuccess",
     "availableScopes": "client.availableScopes",
     "selectedScopes": "client.selectedScopes"
+  },
+  "developerPortal": {
+    "title": "developerPortal.title",
+    "subtitle": "developerPortal.subtitle",
+    "overview": "developerPortal.overview",
+    "clients": "developerPortal.clients",
+    "currentCapabilitiesTitle": "developerPortal.currentCapabilitiesTitle",
+    "currentCapabilitiesSubtitle": "developerPortal.currentCapabilitiesSubtitle",
+    "selfServiceWorkspace": "developerPortal.selfServiceWorkspace",
+    "viewPortalClients": "developerPortal.viewPortalClients",
+    "openClientManagement": "developerPortal.openClientManagement",
+    "upcomingTitle": "developerPortal.upcomingTitle",
+    "upcomingSubtitle": "developerPortal.upcomingSubtitle",
+    "noSpeculationDescription": "developerPortal.noSpeculationDescription",
+    "supportedNowTitle": "developerPortal.supportedNowTitle",
+    "supportedNowSubtitle": "developerPortal.supportedNowSubtitle",
+    "manageClientSettings": "developerPortal.manageClientSettings",
+    "currentFlowTitle": "developerPortal.currentFlowTitle",
+    "currentFlowSubtitle": "developerPortal.currentFlowSubtitle",
+    "boundariesTitle": "developerPortal.boundariesTitle",
+    "boundariesSubtitle": "developerPortal.boundariesSubtitle",
+    "currentCapabilities": {
+      "manageApplicationsTitle": "developerPortal.currentCapabilities.manageApplicationsTitle",
+      "manageApplicationsDescription": "developerPortal.currentCapabilities.manageApplicationsDescription",
+      "configureUrisTitle": "developerPortal.currentCapabilities.configureUrisTitle",
+      "configureUrisDescription": "developerPortal.currentCapabilities.configureUrisDescription",
+      "rotateSecretTitle": "developerPortal.currentCapabilities.rotateSecretTitle",
+      "rotateSecretDescription": "developerPortal.currentCapabilities.rotateSecretDescription"
+    },
+    "upcoming": {
+      "dynamicRegistration": "developerPortal.upcoming.dynamicRegistration",
+      "approvalWorkflow": "developerPortal.upcoming.approvalWorkflow",
+      "collaboration": "developerPortal.upcoming.collaboration",
+      "usageInsights": "developerPortal.upcoming.usageInsights"
+    },
+    "clientsSupported": {
+      "listAndView": "developerPortal.clientsSupported.listAndView",
+      "editConfiguration": "developerPortal.clientsSupported.editConfiguration",
+      "rotateSecrets": "developerPortal.clientsSupported.rotateSecrets",
+      "reviewAuthorizations": "developerPortal.clientsSupported.reviewAuthorizations"
+    },
+    "currentFlow": {
+      "createOrOpen": "developerPortal.currentFlow.createOrOpen",
+      "configure": "developerPortal.currentFlow.configure",
+      "rotate": "developerPortal.currentFlow.rotate"
+    },
+    "boundaries": {
+      "noDedicatedRegistration": "developerPortal.boundaries.noDedicatedRegistration",
+      "noCollaborators": "developerPortal.boundaries.noCollaborators",
+      "noAnalytics": "developerPortal.boundaries.noAnalytics"
+    }
   },
   "resource": {
     "title": "resource.title",
@@ -414,5 +532,35 @@ export const I18N_KEYS = {
     "exportNotImplemented": "auditLog.exportNotImplemented",
     "startAutoRefresh": "auditLog.startAutoRefresh",
     "stopAutoRefresh": "auditLog.stopAutoRefresh"
+  },
+  "passwordGrantAudit": {
+    "title": "passwordGrantAudit.title",
+    "subtitle": "passwordGrantAudit.subtitle",
+    "boundaryTitle": "passwordGrantAudit.boundaryTitle",
+    "boundaryDescription": "passwordGrantAudit.boundaryDescription",
+    "clientId": "passwordGrantAudit.clientId",
+    "openClientDetail": "passwordGrantAudit.openClientDetail",
+    "clientLookupMissing": "passwordGrantAudit.clientLookupMissing",
+    "clientLookupNotFound": "passwordGrantAudit.clientLookupNotFound",
+    "summaryColumn": "passwordGrantAudit.summaryColumn",
+    "noData": "passwordGrantAudit.noData",
+    "defaultRejectedSummary": "passwordGrantAudit.defaultRejectedSummary",
+    "defaultFailedSummary": "passwordGrantAudit.defaultFailedSummary",
+    "failedCountSummary": "passwordGrantAudit.failedCountSummary",
+    "lockoutSummary": "passwordGrantAudit.lockoutSummary",
+    "summary": {
+      "total": "passwordGrantAudit.summary.total",
+      "rejected": "passwordGrantAudit.summary.rejected",
+      "failed": "passwordGrantAudit.summary.failed"
+    },
+    "filter": {
+      "event": "passwordGrantAudit.filter.event",
+      "subjectId": "passwordGrantAudit.filter.subjectId"
+    },
+    "events": {
+      "all": "passwordGrantAudit.events.all",
+      "rejected": "passwordGrantAudit.events.rejected",
+      "failed": "passwordGrantAudit.events.failed"
+    }
   }
 };

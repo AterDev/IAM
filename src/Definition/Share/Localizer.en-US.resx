@@ -263,6 +263,9 @@
   <data name="OAuthMissingUsernameOrPassword" xml:space="preserve">
     <value>Missing username or password</value>
   </data>
+  <data name="OAuthPasswordGrantDisabled" xml:space="preserve">
+    <value>Password grant is not allowed for this client</value>
+  </data>
   <data name="OAuthMissingDeviceCode" xml:space="preserve">
     <value>Missing device code</value>
   </data>
@@ -271,6 +274,9 @@
   </data>
   <data name="OAuthAuthorizationPending" xml:space="preserve">
     <value>User has not yet authorized the device</value>
+  </data>
+  <data name="OAuthSlowDown" xml:space="preserve">
+    <value>Slow down the polling frequency and try again later</value>
   </data>
   <data name="OAuthAccessDenied" xml:space="preserve">
     <value>User denied the authorization</value>

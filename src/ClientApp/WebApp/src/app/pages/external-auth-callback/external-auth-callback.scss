@@ -1,0 +1,25 @@
+.external-auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.external-auth-card {
+  width: min(480px, 100%);
+}
+
+.state-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 0 8px;
+  text-align: center;
+}
+
+.button-row {
+  display: flex;
+  justify-content: center;
+}

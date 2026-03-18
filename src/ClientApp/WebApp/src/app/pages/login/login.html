@@ -20,6 +20,13 @@
           <button mat-flat-button type="button" (click)="startLogin()" [disabled]="isLoading">
             {{ 'login.continue' | translate }}
           </button>
+          <p class="muted">{{ 'login.externalHint' | translate }}</p>
+          <button mat-stroked-button type="button" (click)="startExternalLogin('google')" [disabled]="isLoading">
+            {{ 'login.continueWithGoogle' | translate }}
+          </button>
+          <button mat-stroked-button type="button" (click)="startExternalLogin('microsoft')" [disabled]="isLoading">
+            {{ 'login.continueWithMicrosoft' | translate }}
+          </button>
           <button mat-stroked-button type="button" (click)="goToRegister()">
             {{ 'register.title' | translate }}
           </button>

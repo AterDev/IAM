@@ -57,3 +57,29 @@ public enum ConsentType
     /// </summary>
     Systematic,
 }
+
+/// <summary>
+/// Lifecycle status for client self-service registration.
+/// </summary>
+public enum ClientRegistrationStatus
+{
+    /// <summary>
+    /// Client is pending administrator approval.
+    /// </summary>
+    Pending,
+
+    /// <summary>
+    /// Client is approved and can be used.
+    /// </summary>
+    Approved,
+
+    /// <summary>
+    /// Client was rejected during review.
+    /// </summary>
+    Rejected,
+
+    /// <summary>
+    /// Client was disabled after approval.
+    /// </summary>
+    Disabled,
+}
