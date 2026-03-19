@@ -6,7 +6,6 @@ import {
   DefaultLocalStorageService,
   LogLevel,
   provideAuth,
-  withAppInitializerAuthCheck,
 } from 'angular-auth-oidc-client';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { routes } from './app.routes';
@@ -18,31 +17,26 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor])),
     importProvidersFrom(MatSnackBarModule),
-    provideAuth(
-      {
-        config: {
-          authority: environment.iamApiUrl,
-          authWellknownEndpointUrl: `${environment.iamApiUrl}/.well-known/openid-configuration`,
-          redirectUrl: window.location.origin,
-          postLogoutRedirectUri: window.location.origin,
-          clientId: 'FrontSampleClient',
-          scope: 'openid profile email offline_access SampleAPI',
-          responseType: 'code',
-          silentRenew: true,
-          useRefreshToken: true,
-          logLevel: LogLevel.Debug,
-          secureRoutes: [environment.backendApiUrl, `${environment.backendApiUrl}/api`],
-          customParamsAuthRequest: {},
-          renewUserInfoAfterTokenRenew: false,
-          unauthorizedRoute: '/unauthorized',
-          disableIdTokenValidation: true,
-          disableIatOffsetValidation: true,
-          ignoreNonceAfterRefresh: true,
-          allowUnsafeReuseRefreshToken: true,
-        },
+    provideAuth({
+      config: {
+        authority: environment.iamApiUrl,
+        authWellknownEndpointUrl: `${environment.iamApiUrl}/.well-known/openid-configuration`,
+        redirectUrl: `${window.location.origin}/auth/callback`,
+        postLoginRoute: '/home',
+        postLogoutRedirectUri: window.location.origin,
+        clientId: 'FrontSampleClient',
+        scope: 'openid profile email offline_access SampleAPI',
+        responseType: 'code',
+        silentRenew: true,
+        useRefreshToken: true,
+        logLevel: LogLevel.Debug,
+        secureRoutes: [environment.backendApiUrl, `${environment.backendApiUrl}/api`],
+        customParamsAuthRequest: {},
+        renewUserInfoAfterTokenRenew: false,
+        unauthorizedRoute: '/unauthorized',
+        ignoreNonceAfterRefresh: true,
       },
-      withAppInitializerAuthCheck(),
-    ),
+    }),
     { provide: AbstractSecurityStorage, useClass: DefaultLocalStorageService },
   ],
 };

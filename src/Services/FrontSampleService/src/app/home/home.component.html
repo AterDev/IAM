@@ -2,16 +2,15 @@
   <mat-card appearance="outlined">
     <mat-card-title>欢迎使用 IAM 示例应用</mat-card-title>
     <mat-card-content>
-      <ng-container *ngIf="(isAuthenticated$ | async)?.isAuthenticated; else guestBlock">
+      @if ((isAuthenticated$ | async)?.isAuthenticated) {
         <mat-chip-set class="mb-2">
           <mat-chip color="primary" selected>✅ 您已成功登录</mat-chip>
         </mat-chip-set>
         <p>现在可以访问受保护资源，并验证 IAM 授权链路是否正常。</p>
-      </ng-container>
-      <ng-template #guestBlock>
+      } @else {
         <p>这是一个演示 Angular + OIDC 对接 IAM 授权中心的示例应用。</p>
         <p>点击右上角“登录”即可开始完整授权流程。</p>
-      </ng-template>
+      }
     </mat-card-content>
   </mat-card>
 

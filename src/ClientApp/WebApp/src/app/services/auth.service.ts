@@ -61,7 +61,7 @@ export class AuthService {
     const currentUrl = new URL(window.location.origin);
 
     if (currentUrl.hostname === 'localhost' && (currentUrl.port === '4200' || currentUrl.port === '4201')) {
-      return `https://${currentUrl.hostname}:7070`;
+      return `https://${currentUrl.hostname}:9900`;
     }
 
     return currentUrl.origin;

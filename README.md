@@ -91,11 +91,13 @@ dotnet run
 
 ### 默认访问地址
 
+> 为避免本地受限/冲突端口，后端服务默认开发端口已调整。
+
 | 服务     | 地址                     | 说明            |
 | -------- | ------------------------ | --------------- |
-| IAM API  | `https://localhost:7070` | 认证与授权服务  |
+| IAM API  | `https://localhost:9900` | 认证与授权服务  |
 | 管理后台 | `http://localhost:4200`  | Angular 管理端  |
-| 示例 API | `https://localhost:7000` | 受保护 API      |
+| 示例 API | `https://localhost:9001` | 受保护 API      |
 | 示例前端 | `http://localhost:4201`  | OIDC 客户端样例 |
 
 ## 初始化数据
@@ -106,7 +108,7 @@ dotnet run
   - 用户名：`admin`
   - 密码：`Perigon.2026`
 - 一个默认签名密钥（RSA）
-- 默认作用域：`openid`、`profile`、`email`、`offline_access`
+- 默认作用域：`openid`、`profile`、`email`、`offline_access`、`SampleAPI`
 - 一个管理后台客户端：`AdminWebClient`
 - 一个示例前端客户端：`FrontSampleClient`
 - 一个默认 API 客户端：`ApiService`
@@ -128,8 +130,9 @@ IAM 自身管理接口继续通过现有管理员策略（`WebConst.AdminUser`�
   - 对应登出回调地址（4200）
 - `FrontSampleClient`
   - 示例前端回调地址：`http://localhost:4201`、`https://localhost:4201`
+  - 示例前端 OIDC callback：`http://localhost:4201/auth/callback`、`https://localhost:4201/auth/callback`
   - 对应登出回调地址（4201）
-- 默认作用域：`openid profile email offline_access`
+- 默认作用域：`openid profile email offline_access SampleAPI`
 
 如果你使用的是较早版本数据库，`InitHostService` 会在启动时自动补齐缺失的客户端与回调地址。
 
@@ -158,14 +161,14 @@ IAM 自身管理接口继续通过现有管理员策略（`WebConst.AdminUser`�
 
 - 默认管理后台客户端：`AdminWebClient`
 - 默认示例前端客户端：`FrontSampleClient`
-- 默认作用域：`openid`、`profile`、`email`、`offline_access`
+- 默认作用域：`openid`、`profile`、`email`、`offline_access`、`SampleAPI`
 - 默认 API 资源：`SampleAPI`
 
-如果你在本地数据库中已经保留了较早版本的初始化数据，建议登录管理后台检查 `FrontClient` 是否已关联 `SampleAPI` 对应的资源与作用域配置；如无，则补齐后再测试示例登录与 API 调用。
+如果你在本地数据库中已经保留了较早版本的初始化数据，建议登录管理后台检查 `FrontSampleClient` 是否已关联 `SampleAPI` 对应的资源与作用域配置，并确认已包含 `/auth/callback` 回调地址；如无，则补齐后再测试示例登录与 API 调用。
 
 如需查看管理后台统一认证的详细链路、兼容策略与验证步骤，请参考 [`docs/管理后台统一认证使用说明.md`](docs/管理后台统一认证使用说明.md)。
 
-如果首次启动后管理后台点击登录出现 `invalid_client`，或者 `https://localhost:7070` 长时间超时，请优先检查 `MigrationService` 是否已完成数据库初始化。当前本地编排下，若 `ApiService` 早于数据库创建完成而启动，`InitHostService` 可能会提前失败，导致默认管理员、`AdminWebClient`、`FrontSampleClient` 等种子尚未写入。此时重新启动一次 `ApiService` 资源即可恢复。
+如果首次启动后管理后台点击登录出现 `invalid_client`，或者 `https://localhost:9900` 长时间超时，请优先检查 `MigrationService` 是否已完成数据库初始化。当前本地编排下，若 `ApiService` 早于数据库创建完成而启动，`InitHostService` 可能会提前失败，导致默认管理员、`AdminWebClient`、`FrontSampleClient` 等种子尚未写入。此时重新启动一次 `ApiService` 资源即可恢复。
 
 ### 第四步：访问示例前端
 

@@ -9,7 +9,7 @@ namespace IAMMod.Models.OAuthDtos;
 public class AuthorizeRequestDto
 {
     /// <summary>
-    /// Response type (code, token, id_token)
+    /// Response type. Currently only authorization code flow is supported.
     /// </summary>
     [ModelBinder(Name = "response_type")]
     [JsonPropertyName("response_type")]
@@ -58,7 +58,7 @@ public class AuthorizeRequestDto
     public string? CodeChallengeMethod { get; set; }
 
     /// <summary>
-    /// Response mode (query, fragment, form_post)
+    /// Response mode. Currently only query mode is supported.
     /// </summary>
     [ModelBinder(Name = "response_mode")]
     [JsonPropertyName("response_mode")]

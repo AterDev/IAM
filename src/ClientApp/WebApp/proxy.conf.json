@@ -1,21 +1,21 @@
 {
   "/api/": {
-    "target": "https://localhost:7070",
+    "target": "https://localhost:9900",
       "changeOrigin": true,
         "secure": false
   },
   "/.well-known/": {
-    "target": "https://localhost:7070",
+    "target": "https://localhost:9900",
       "changeOrigin": true,
         "secure": false
   },
   "/connect/": {
-    "target": "https://localhost:7070",
+    "target": "https://localhost:9900",
       "changeOrigin": true,
         "secure": false
   },
   "/Account/": {
-    "target": "https://localhost:7070",
+    "target": "https://localhost:9900",
       "changeOrigin": true,
         "secure": false
   },

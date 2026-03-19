@@ -52,7 +52,7 @@
 | 客户端-作用域分配 | 已支持 | 已有实体与管理页面支撑 |
 | 客户端-资源分配 | 已支持 | 已有实体与管理页面支撑 |
 | 公共客户端 / 机密客户端 | 已支持 | `ClientType` 与客户端校验逻辑已区分 |
-| 默认种子客户端 | 已支持 | 初始化会创建 `FrontClient` 与 `ApiService` |
+| 默认种子客户端 | 已支持 | 初始化会创建 `AdminWebClient`、`FrontSampleClient` 与 `ApiService` |
 
 ### 4. 会话与安全审计
 

@@ -12,6 +12,10 @@ export const routes: Routes = [
     loadComponent: () => import('./home/home.component').then((m) => m.HomeComponent),
   },
   {
+    path: 'auth/callback',
+    loadComponent: () => import('./callback/callback.component').then((m) => m.CallbackComponent),
+  },
+  {
     path: 'protected',
     loadComponent: () => import('./protected/protected.component').then((m) => m.ProtectedComponent),
     canActivate: [AutoLoginPartialRoutesGuard],

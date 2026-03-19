@@ -66,13 +66,13 @@ public class DiscoveryController(
     /// </remarks>
     [HttpGet("/.well-known/openid-configuration")]
     [EnableCors(AppConst.Default)]
-    public ActionResult<OidcConfigurationDto> GetConfiguration()
+    public async Task<ActionResult<OidcConfigurationDto>> GetConfiguration()
     {
         try
         {
             var issuer = ResolveIssuer();
 
-            var config = _discoveryManager.GetConfiguration(issuer);
+            var config = await _discoveryManager.GetConfigurationAsync(issuer);
             return Ok(config);
         }
         catch (Exception ex)

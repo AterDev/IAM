@@ -1,7 +1,9 @@
 using EntityFramework.AppDbContext;
 using IAMMod.Managers;
 using IAMMod.Models.OAuthDtos;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Share.Constants;
 using System.Security.Claims;
@@ -31,7 +33,7 @@ public class OAuthInteractionController(
     /// Get interaction context for the SPA authorize page.
     /// </summary>
     [HttpGet("authorize")]
-    [Authorize]
+    [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
     public async Task<ActionResult<AuthorizeInteractionContextDto>> GetAuthorizeInteraction([FromQuery] AuthorizeRequestDto request)
     {
         try
@@ -80,7 +82,7 @@ public class OAuthInteractionController(
     /// Submit an allow or deny decision for the SPA authorize page.
     /// </summary>
     [HttpPost("authorize/decision")]
-    [Authorize]
+    [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
     public async Task<ActionResult<AuthorizeInteractionDecisionResponseDto>> SubmitAuthorizeDecision([FromBody] AuthorizeInteractionDecisionDto request)
     {
         try
@@ -183,6 +185,7 @@ public class OAuthInteractionController(
     /// </summary>
     [HttpGet("device")]
     [AllowAnonymous]
+    [EnableRateLimiting(WebConst.DeviceEndpoint)]
     public async Task<ActionResult<DeviceAuthorizationInteractionDto>> GetDeviceInteraction([FromQuery] string userCode)
     {
         try
@@ -206,7 +209,8 @@ public class OAuthInteractionController(
     /// Submit an allow or deny decision for a device-code interaction.
     /// </summary>
     [HttpPost("device/decision")]
-    [Authorize]
+    [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
+    [EnableRateLimiting(WebConst.DeviceEndpoint)]
     public async Task<ActionResult<DeviceAuthorizationInteractionDto>> SubmitDeviceDecision([FromBody] DeviceAuthorizationDecisionDto request)
     {
         try

@@ -2,7 +2,7 @@
   <mat-card appearance="outlined">
     <mat-card-title>受保护资源</mat-card-title>
     <mat-card-content>
-      <div *ngIf="userData; else loadingUser">
+      @if (userData) {
         <mat-list>
           <mat-list-item>姓名: {{ userData['name'] || userData['preferred_username'] || 'N/A' }}</mat-list-item>
           <mat-list-item>邮箱: {{ userData['email'] || 'N/A' }}</mat-list-item>
@@ -14,10 +14,9 @@
           </mat-expansion-panel-header>
           <pre class="mb-0">{{ userData | json }}</pre>
         </mat-expansion-panel>
-      </div>
-      <ng-template #loadingUser>
+      } @else {
         <p>正在加载用户信息...</p>
-      </ng-template>
+      }
     </mat-card-content>
   </mat-card>
 
@@ -35,15 +34,19 @@
         <button mat-raised-button color="accent" (click)="callWeatherApi()" [disabled]="loading">
           {{ loading ? '加载中...' : '获取天气预报' }}
         </button>
-        <mat-progress-spinner *ngIf="loading" mode="indeterminate" diameter="28"></mat-progress-spinner>
+        @if (loading) {
+          <mat-progress-spinner mode="indeterminate" diameter="28"></mat-progress-spinner>
+        }
       </div>
 
-      <mat-card *ngIf="apiResponse" class="mt-2" appearance="outlined">
-        <mat-card-title>API 响应</mat-card-title>
-        <mat-card-content>
-          <pre class="mb-0">{{ apiResponse | json }}</pre>
-        </mat-card-content>
-      </mat-card>
+      @if (apiResponse) {
+        <mat-card class="mt-2" appearance="outlined">
+          <mat-card-title>API 响应</mat-card-title>
+          <mat-card-content>
+            <pre class="mb-0">{{ apiResponse | json }}</pre>
+          </mat-card-content>
+        </mat-card>
+      }
     </mat-card-content>
   </mat-card>
 </div>

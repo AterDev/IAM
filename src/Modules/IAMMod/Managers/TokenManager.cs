@@ -111,6 +111,7 @@ public class TokenManager(
         var codeChallenge = properties?.GetValueOrDefault("code_challenge");
         var codeChallengeMethod = properties?.GetValueOrDefault("code_challenge_method");
         var sessionId = properties?.GetValueOrDefault("sid");
+        var nonce = properties?.GetValueOrDefault("nonce");
 
         if (!string.IsNullOrEmpty(codeChallenge))
         {
@@ -152,7 +153,8 @@ public class TokenManager(
             signingKey,
             authorization.Id,
             null,
-            sessionId
+            sessionId,
+            nonce
         );
     }
 
@@ -543,7 +545,8 @@ public class TokenManager(
         SigningKey signingKey,
         Guid? authorizationId = null,
         Token? rotatedRefreshToken = null,
-        string? sessionId = null
+        string? sessionId = null,
+        string? nonce = null
     )
     {
         var roles = user.UserRoles
@@ -674,7 +677,7 @@ public class TokenManager(
 
         // Generate ID token if openid scope is present
         string? idToken = null;
-        if (scope?.Contains(Scopes.OpenId) == true)
+        if (HasScope(scope, Scopes.OpenId))
         {
             var idClaims = new List<Claim>
             {
@@ -686,7 +689,7 @@ public class TokenManager(
 
             idClaims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
-            idClaims.AddRange(BuildAudienceClaims(client));
+            idClaims.Add(new Claim(OAuthConst.ClaimTypes.Audience, client.ClientId));
 
             if (!string.IsNullOrEmpty(user.Email))
             {
@@ -699,7 +702,17 @@ public class TokenManager(
                 idClaims.Add(new Claim("sid", sessionId));
             }
 
-            idToken = _oauthService.GenerateToken(idClaims, signingKey, 3600);
+            if (!string.IsNullOrWhiteSpace(nonce))
+            {
+                idClaims.Add(new Claim("nonce", nonce));
+            }
+
+            idToken = _oauthService.GenerateToken(
+                idClaims,
+                signingKey,
+                3600,
+                includeDefaultAudience: false
+            );
         }
 
         return new TokenResponseDto
@@ -989,6 +1002,18 @@ public class TokenManager(
             .ToDictionary(static pair => pair.Key, static pair => pair.Value);
 
         return JsonSerializer.Serialize(sanitized);
+    }
+
+    private static bool HasScope(string? scopes, string requiredScope)
+    {
+        if (string.IsNullOrWhiteSpace(scopes) || string.IsNullOrWhiteSpace(requiredScope))
+        {
+            return false;
+        }
+
+        return scopes
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Contains(requiredScope, StringComparer.Ordinal);
     }
 
     private static string GetRootRefreshTokenReference(Token? rotatedRefreshToken)

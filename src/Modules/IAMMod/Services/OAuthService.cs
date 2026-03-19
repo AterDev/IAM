@@ -25,7 +25,8 @@ public class OAuthService(ILogger<OAuthService> logger, IOptions<JwtOption> opti
         IEnumerable<Claim> claims,
         SigningKey signingKey,
         int expiresInSeconds = 3600,
-        string? issuer = null
+        string? issuer = null,
+        bool includeDefaultAudience = true
     )
     {
         issuer ??= Issuer;
@@ -36,6 +37,7 @@ public class OAuthService(ILogger<OAuthService> logger, IOptions<JwtOption> opti
         RSA rsa = HashCrypto.ImportRsaPrivateKey(signingKey.PrivateKey);
         try
         {
+            var issuedAt = DateTimeOffset.UtcNow;
             var rsaKey = new RsaSecurityKey(rsa) { KeyId = signingKey.KeyId };
             var signingCredentials = new SigningCredentials(rsaKey, SecurityAlgorithms.RsaSha256)
             {
@@ -45,11 +47,27 @@ public class OAuthService(ILogger<OAuthService> logger, IOptions<JwtOption> opti
                 }
             };
 
-            claims = claims.Append(new Claim(OAuthConst.ClaimTypes.Audience, Audience));
+            if (includeDefaultAudience && !string.IsNullOrWhiteSpace(Audience))
+            {
+                claims = claims.Append(new Claim(OAuthConst.ClaimTypes.Audience, Audience));
+            }
+
+            if (!claims.Any(claim => claim.Type == JwtRegisteredClaimNames.Iat))
+            {
+                claims = claims.Append(
+                    new Claim(
+                        JwtRegisteredClaimNames.Iat,
+                        issuedAt.ToUnixTimeSeconds().ToString(),
+                        ClaimValueTypes.Integer64
+                    )
+                );
+            }
+
             var jwt = new JwtSecurityToken(
                 issuer: issuer,
                 claims: claims,
-                expires: DateTime.UtcNow.AddSeconds(expiresInSeconds),
+                notBefore: issuedAt.UtcDateTime,
+                expires: issuedAt.UtcDateTime.AddSeconds(expiresInSeconds),
                 signingCredentials: signingCredentials
             );
 

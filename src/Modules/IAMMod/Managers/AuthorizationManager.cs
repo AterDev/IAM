@@ -36,18 +36,16 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
         }
 
         // Validate response type
-        var supportedResponseTypes = new[]
-        {
-            ResponseTypes.Code,
-            ResponseTypes.Token,
-            ResponseTypes.IdToken,
-        };
-        if (
-            string.IsNullOrEmpty(request.ResponseType)
-            || !supportedResponseTypes.Contains(request.ResponseType.Split(' ')[0])
-        )
+        if (!string.Equals(request.ResponseType, ResponseTypes.Code, StringComparison.Ordinal))
         {
             return (false, ErrorCodes.UnsupportedResponseType, client);
+        }
+
+        // Validate response mode. Only query is currently implemented for the authorization code flow.
+        if (!string.IsNullOrEmpty(request.ResponseMode)
+            && !string.Equals(request.ResponseMode, ResponseModes.Query, StringComparison.Ordinal))
+        {
+            return (false, ErrorCodes.InvalidRequest, client);
         }
 
         // Validate PKCE if required
@@ -76,11 +74,7 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
 
             foreach (var scope in requestedScopes)
             {
-                if (
-                    !clientScopeNames.Contains(scope)
-                    && scope != Scopes.OpenId
-                    && scope != Scopes.Profile
-                )
+                if (!clientScopeNames.Contains(scope))
                 {
                     return (false, ErrorCodes.InvalidScope, client);
                 }

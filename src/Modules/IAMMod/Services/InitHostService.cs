@@ -1,5 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Perigon.AspNetCore.Services;
+using Share.Constants;
 
 namespace IAMMod.Services;
 
@@ -50,6 +52,10 @@ public class InitHostService(
 
             await SeedInitialDataAsync(dbContext, stoppingToken);
             await SeedOAuthDataAsync(dbContext, stoppingToken);
+
+            var cacheService = scope.ServiceProvider.GetRequiredService<CacheService>();
+            await cacheService.RemoveAsync(OAuthConst.SigningActiveKeyCacheKey);
+            await cacheService.RemoveAsync(OAuthConst.SigningKeyCacheKey);
 
             // Preload signing keys into cache for JWT validation
             var signingKeyResolver = scope.ServiceProvider.GetRequiredService<SigningKeyResolver>();
@@ -174,7 +180,8 @@ public class InitHostService(
             ("openid", "OpenID", "OpenID Connect身份认证", true),
             ("profile", "Profile", "用户基本信息", false),
             ("email", "Email", "用户邮箱地址", false),
-            ("offline_access", "Offline Access", "离线访问权限(刷新令牌)", false)
+            ("offline_access", "Offline Access", "离线访问权限(刷新令牌)", false),
+            ("SampleAPI", "SampleAPI", "示例API访问权限", false)
         };
 
         foreach (var (name, displayName, description, required) in defaultScopes)
@@ -200,7 +207,10 @@ public class InitHostService(
         }
 
         // add default API resource
-        var defaultResource = await dbContext.ApiResources.FirstOrDefaultAsync();
+        var defaultResource = await dbContext.ApiResources.FirstOrDefaultAsync(
+            r => r.Name == "SampleAPI",
+            cancellationToken
+        );
         if (defaultResource == null)
         {
             defaultResource = new ApiResource
@@ -219,6 +229,7 @@ public class InitHostService(
         var profileScope = await dbContext.ApiScopes.FirstAsync(s => s.Name == "profile", cancellationToken);
         var emailScope = await dbContext.ApiScopes.FirstAsync(s => s.Name == "email", cancellationToken);
         var offlineAccessScope = await dbContext.ApiScopes.FirstAsync(s => s.Name == "offline_access", cancellationToken);
+        var sampleApiScope = await dbContext.ApiScopes.FirstAsync(s => s.Name == "SampleAPI", cancellationToken);
 
         // Create AdminWebClient for IAM management portal
         var adminWebClientId = "AdminWebClient";
@@ -293,6 +304,30 @@ public class InitHostService(
             {
                 await dbContext.SaveChangesAsync(cancellationToken);
             }
+
+            var existingAdminWebScopeIds = await dbContext.ClientScopes
+                .Where(cs => cs.ClientId == adminWebClient.Id)
+                .Select(cs => cs.ScopeId)
+                .ToListAsync(cancellationToken);
+
+            var requiredAdminWebScopeIds = new[]
+            {
+                openidScope.Id,
+                profileScope.Id,
+                emailScope.Id,
+                offlineAccessScope.Id,
+            };
+
+            var missingAdminWebScopes = requiredAdminWebScopeIds
+                .Except(existingAdminWebScopeIds)
+                .Select(scopeId => new ClientScope { ClientId = adminWebClient.Id, ScopeId = scopeId })
+                .ToList();
+
+            if (missingAdminWebScopes.Count > 0)
+            {
+                dbContext.ClientScopes.AddRange(missingAdminWebScopes);
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
         }
 
         // Create FrontSampleClient for sample frontend application
@@ -300,7 +335,9 @@ public class InitHostService(
         var frontSampleClientRedirectUris = new[]
         {
             "http://localhost:4201",
-            "https://localhost:4201"
+            "https://localhost:4201",
+            "http://localhost:4201/auth/callback",
+            "https://localhost:4201/auth/callback"
         };
         var frontSampleClientPostLogoutRedirectUris = new[]
         {
@@ -335,7 +372,8 @@ public class InitHostService(
                 new ClientScope { ClientId = frontSampleClient.Id, ScopeId = openidScope.Id },
                 new ClientScope { ClientId = frontSampleClient.Id, ScopeId = profileScope.Id },
                 new ClientScope { ClientId = frontSampleClient.Id, ScopeId = emailScope.Id },
-                new ClientScope { ClientId = frontSampleClient.Id, ScopeId = offlineAccessScope.Id }
+                new ClientScope { ClientId = frontSampleClient.Id, ScopeId = offlineAccessScope.Id },
+                new ClientScope { ClientId = frontSampleClient.Id, ScopeId = sampleApiScope.Id }
             };
             var frontSampleClientResources = new[]
             {
@@ -365,6 +403,50 @@ public class InitHostService(
                     frontSampleClient.PostLogoutRedirectUris.Add(redirectUri);
                     updated = true;
                 }
+            }
+
+            if (updated)
+            {
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
+
+            var existingFrontSampleScopeIds = await dbContext.ClientScopes
+                .Where(cs => cs.ClientId == frontSampleClient.Id)
+                .Select(cs => cs.ScopeId)
+                .ToListAsync(cancellationToken);
+
+            var requiredFrontSampleScopeIds = new[]
+            {
+                openidScope.Id,
+                profileScope.Id,
+                emailScope.Id,
+                offlineAccessScope.Id,
+                sampleApiScope.Id,
+            };
+
+            var missingFrontSampleScopes = requiredFrontSampleScopeIds
+                .Except(existingFrontSampleScopeIds)
+                .Select(scopeId => new ClientScope { ClientId = frontSampleClient.Id, ScopeId = scopeId })
+                .ToList();
+
+            if (missingFrontSampleScopes.Count > 0)
+            {
+                dbContext.ClientScopes.AddRange(missingFrontSampleScopes);
+                updated = true;
+            }
+
+            var hasDefaultResource = await dbContext.ClientResources.AnyAsync(
+                cr => cr.ClientId == frontSampleClient.Id && cr.ApiResourceId == defaultResource.Id,
+                cancellationToken);
+
+            if (!hasDefaultResource)
+            {
+                dbContext.ClientResources.Add(new ClientResource
+                {
+                    ClientId = frontSampleClient.Id,
+                    ApiResourceId = defaultResource.Id,
+                });
+                updated = true;
             }
 
             if (updated)
@@ -403,10 +485,54 @@ public class InitHostService(
             // Assign scopes to ApiClient
             var apiClientScopes = new[]
             {
-                new ClientScope { ClientId = apiClient.Id, ScopeId = openidScope.Id }
+                new ClientScope { ClientId = apiClient.Id, ScopeId = openidScope.Id },
+                new ClientScope { ClientId = apiClient.Id, ScopeId = sampleApiScope.Id }
+            };
+
+            var apiClientResources = new[]
+            {
+                new ClientResource { ClientId = apiClient.Id, ApiResourceId = defaultResource.Id }
             };
 
             dbContext.ClientScopes.AddRange(apiClientScopes);
+            dbContext.ClientResources.AddRange(apiClientResources);
+        }
+        else
+        {
+            var apiClient = await dbContext.Clients.FirstAsync(c => c.ClientId == apiClientId, cancellationToken);
+            var existingApiClientScopeIds = await dbContext.ClientScopes
+                .Where(cs => cs.ClientId == apiClient.Id)
+                .Select(cs => cs.ScopeId)
+                .ToListAsync(cancellationToken);
+
+            var requiredApiClientScopeIds = new[]
+            {
+                openidScope.Id,
+                sampleApiScope.Id,
+            };
+
+            var missingApiClientScopes = requiredApiClientScopeIds
+                .Except(existingApiClientScopeIds)
+                .Select(scopeId => new ClientScope { ClientId = apiClient.Id, ScopeId = scopeId })
+                .ToList();
+
+            if (missingApiClientScopes.Count > 0)
+            {
+                dbContext.ClientScopes.AddRange(missingApiClientScopes);
+            }
+
+            var hasDefaultResource = await dbContext.ClientResources.AnyAsync(
+                cr => cr.ClientId == apiClient.Id && cr.ApiResourceId == defaultResource.Id,
+                cancellationToken);
+
+            if (!hasDefaultResource)
+            {
+                dbContext.ClientResources.Add(new ClientResource
+                {
+                    ClientId = apiClient.Id,
+                    ApiResourceId = defaultResource.Id,
+                });
+            }
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);

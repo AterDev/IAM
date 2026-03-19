@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
@@ -27,28 +28,35 @@ export class ProtectedComponent implements OnInit {
   private readonly oidcSecurityService = inject(OidcSecurityService);
   private readonly http = inject(HttpClient);
   private readonly snackbar = inject(SnackbarService);
+  private readonly destroyRef = inject(DestroyRef);
 
   userData: Record<string, unknown> | null = null;
   apiResponse: unknown;
   loading = false;
 
   ngOnInit() {
-    this.oidcSecurityService.userData$.subscribe((userData) => {
-      this.userData = (userData?.userData ?? userData) as Record<string, unknown> | null;
-    });
+    this.oidcSecurityService.userData$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((userData) => {
+        this.userData = (userData?.userData ?? userData) as Record<string, unknown> | null;
+      });
 
-    this.oidcSecurityService.getAccessToken().subscribe((token) => {
-      if (token) {
-        this.http.get(`${environment.iamApiUrl}/connect/userinfo`).subscribe({
-          next: (userInfo) => {
-            this.userData = userInfo as Record<string, unknown>;
-          },
-          error: (error) => {
-            console.error('获取用户信息失败', error);
-          },
-        });
-      }
-    });
+    this.oidcSecurityService.getAccessToken()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((token) => {
+        if (token) {
+          this.http.get(`${environment.iamApiUrl}/connect/userinfo`)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              next: (userInfo) => {
+                this.userData = userInfo as Record<string, unknown>;
+              },
+              error: (error) => {
+                console.error('获取用户信息失败', error);
+              },
+            });
+        }
+      });
   }
 
   callPublicApi() {
@@ -67,16 +75,18 @@ export class ProtectedComponent implements OnInit {
     this.loading = true;
     this.apiResponse = null;
 
-    this.http.get(url).subscribe({
-      next: (response) => {
-        this.apiResponse = response;
-        this.loading = false;
-        this.snackbar.showSuccess(successMessage);
-      },
-      error: (err) => {
-        this.handleError(err, errorMessage);
-      },
-    });
+    this.http.get(url)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          this.apiResponse = response;
+          this.loading = false;
+          this.snackbar.showSuccess(successMessage);
+        },
+        error: (err) => {
+          this.handleError(err, errorMessage);
+        },
+      });
   }
 
   private handleError(err: { status?: number; error?: { message?: string }; message?: string }, message: string) {

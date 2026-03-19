@@ -1,4 +1,5 @@
 using IAMMod.Managers;
+using IAMMod.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -43,6 +44,7 @@ public static class ModuleExtensions
         builder.Services.AddSwagger();
         builder.Services.Configure<RiskControlOption>(builder.Configuration.GetSection(RiskControlOption.ConfigPath));
         builder.Services.AddScoped<RiskControlService>();
+        builder.Services.AddScoped<MfaTotpService>();
         builder.Services.AddCors(options =>
         {
             var origins = builder.Configuration.GetSection("Cors").GetValue<string[]>("AllowedOrigins") ?? [];

@@ -21,9 +21,14 @@ public class DiscoveryManager(
     /// </summary>
     /// <param name="issuer">The issuer URL (must be validated by caller)</param>
     /// <returns>OIDC configuration document</returns>
-    public OidcConfigurationDto GetConfiguration(string issuer)
+    public async Task<OidcConfigurationDto> GetConfigurationAsync(string issuer)
     {
         var baseUrl = issuer.TrimEnd('/');
+        var scopes = await _dbContext.ApiScopes
+            .Where(s => !s.IsDeleted)
+            .OrderBy(s => s.Name)
+            .Select(s => s.Name)
+            .ToListAsync();
 
         return new OidcConfigurationDto
         {
@@ -36,16 +41,7 @@ public class DiscoveryManager(
             IntrospectionEndpoint = $"{baseUrl}/connect/introspect",
             DeviceAuthorizationEndpoint = $"{baseUrl}/connect/device",
             EndSessionEndpoint = $"{baseUrl}/connect/logout",
-            ResponseTypesSupported =
-            [
-                "code",
-                "token",
-                "id_token",
-                "code id_token",
-                "code token",
-                "id_token token",
-                "code id_token token",
-            ],
+            ResponseTypesSupported = ["code"],
             GrantTypesSupported =
             [
                 "authorization_code",
@@ -56,7 +52,7 @@ public class DiscoveryManager(
             ],
             SubjectTypesSupported = ["public"],
             IdTokenSigningAlgValuesSupported = ["RS256"],
-            ScopesSupported = ["openid", "profile", "email", "phone", "address", "offline_access"],
+            ScopesSupported = scopes,
             TokenEndpointAuthMethodsSupported = ["client_secret_basic", "client_secret_post"],
             ClaimsSupported =
             [
