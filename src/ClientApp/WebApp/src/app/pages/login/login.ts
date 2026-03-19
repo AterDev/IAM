@@ -56,7 +56,7 @@ export class Login implements OnInit, AfterViewInit {
     try {
       this.authService.startLogin(this.returnUrl);
     } catch (error) {
-      this.errorMessage = this.translate.instant('login.unifiedError');
+      this.errorMessage = this.translate.instant(this.i18nKeys.login.unifiedError);
       console.error('Login error:', error);
     }
   }

@@ -5,13 +5,13 @@
     "username": "Username",
     "password": "Password",
     "login": "Login",
-    "continue": "Enter unified sign-in",
+    "continue": "Sign in",
     "continueWithGoogle": "Continue with Google",
     "continueWithMicrosoft": "Continue with Microsoft",
     "logout": "Logout",
-    "unifiedDescription": "The admin portal is unified on the IAM server's own OAuth/OIDC sign-in flow.",
-    "unifiedHint": "You will be redirected to the identity center for authentication and automatically returned to the admin portal after consent. If needed, you can continue with password recovery below.",
-    "unifiedError": "Unable to start unified sign-in. Please try again.",
+    "unifiedDescription": "Sign in to the admin portal",
+    "unifiedHint": "Use the button below to continue.",
+    "unifiedError": "Unable to open the sign-in page. Please try again.",
     "externalHint": "You can also continue with a configured external identity provider."
   },
   "externalAuth": {

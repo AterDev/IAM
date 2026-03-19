@@ -4,41 +4,29 @@
   <div class="login-orb login-orb--secondary"></div>
 
   <div class="login-shell">
-    <section class="login-hero" aria-hidden="true">
-      <div class="brand-mark">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
-      <p class="login-kicker">{{ i18nKeys.login.login | translate }}</p>
-      <h1 class="login-headline">{{ 'login.unifiedDescription' | translate }}</h1>
-      <p class="login-lead">{{ 'login.unifiedHint' | translate }}</p>
-      <div class="signal-grid">
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
-    </section>
-
     <mat-card class="login-card">
       <mat-card-content>
-        <p class="login-card__eyebrow">{{ i18nKeys.login.login | translate }}</p>
-        <h2 class="login-card__title">{{ 'login.continue' | translate }}</h2>
+        <div class="login-brand">
+          <div class="brand-mark" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <p class="login-kicker">{{ i18nKeys.login.login | translate }}</p>
+          <h1 class="login-headline">{{ i18nKeys.login.unifiedDescription | translate }}</h1>
+        </div>
 
         @if (errorMessage) {
           <div class="error-message" role="alert">{{ errorMessage }}</div>
         }
 
-        <p class="login-card__description">{{ 'login.unifiedHint' | translate }}</p>
-
         <div class="login-actions">
           <button mat-flat-button type="button" (click)="startLogin()" [disabled]="isLoading">
-            {{ 'login.continue' | translate }}
+            {{ i18nKeys.login.continue | translate }}
           </button>
 
           <button mat-button type="button" (click)="goToForgotPassword()">
-            {{ 'forgotPassword.title' | translate }}
+            {{ i18nKeys.forgotPassword.title | translate }}
           </button>
         </div>
       </mat-card-content>
