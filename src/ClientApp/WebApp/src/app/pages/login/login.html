@@ -1,40 +1,47 @@
 <div class="login-container">
-  <canvas id="starfield"
-    style="position:absolute;inset:0;width:100vw;height:100vh;z-index:0;pointer-events:none;"></canvas>
-  <mat-card>
-    <mat-card-header>
-      <mat-card-title>
-        {{i18nKeys.login.login | translate}}
-      </mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      @if (errorMessage) {
-        <div class="error-message">{{ errorMessage }}</div>
-      }
+  <canvas id="starfield" class="login-canvas"></canvas>
+  <div class="login-orb login-orb--primary"></div>
+  <div class="login-orb login-orb--secondary"></div>
 
-      <div class="login-form login-copy">
-        <p>{{ 'login.unifiedDescription' | translate }}</p>
-        <p class="muted">{{ 'login.unifiedHint' | translate }}</p>
+  <div class="login-shell">
+    <section class="login-hero" aria-hidden="true">
+      <div class="brand-mark">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <p class="login-kicker">{{ i18nKeys.login.login | translate }}</p>
+      <h1 class="login-headline">{{ 'login.unifiedDescription' | translate }}</h1>
+      <p class="login-lead">{{ 'login.unifiedHint' | translate }}</p>
+      <div class="signal-grid">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </section>
 
-        <div class="login-btn-row login-btn-stack">
+    <mat-card class="login-card">
+      <mat-card-content>
+        <p class="login-card__eyebrow">{{ i18nKeys.login.login | translate }}</p>
+        <h2 class="login-card__title">{{ 'login.continue' | translate }}</h2>
+
+        @if (errorMessage) {
+          <div class="error-message" role="alert">{{ errorMessage }}</div>
+        }
+
+        <p class="login-card__description">{{ 'login.unifiedHint' | translate }}</p>
+
+        <div class="login-actions">
           <button mat-flat-button type="button" (click)="startLogin()" [disabled]="isLoading">
             {{ 'login.continue' | translate }}
           </button>
-          <p class="muted">{{ 'login.externalHint' | translate }}</p>
-          <button mat-stroked-button type="button" (click)="startExternalLogin('google')" [disabled]="isLoading">
-            {{ 'login.continueWithGoogle' | translate }}
-          </button>
-          <button mat-stroked-button type="button" (click)="startExternalLogin('microsoft')" [disabled]="isLoading">
-            {{ 'login.continueWithMicrosoft' | translate }}
-          </button>
-          <button mat-stroked-button type="button" (click)="goToRegister()">
-            {{ 'register.title' | translate }}
-          </button>
+
           <button mat-button type="button" (click)="goToForgotPassword()">
             {{ 'forgotPassword.title' | translate }}
           </button>
         </div>
-      </div>
-    </mat-card-content>
-  </mat-card>
+      </mat-card-content>
+    </mat-card>
+  </div>
 </div>
