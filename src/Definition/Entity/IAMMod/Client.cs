@@ -124,4 +124,14 @@ public class Client : EntityBase
     /// Historical secrets issued for this client.
     /// </summary>
     public List<ClientSecret> ClientSecrets { get; set; } = [];
+
+    /// <summary>
+    /// Permissions assigned to the client.
+    /// </summary>
+    public List<ClientPermission> ClientPermissions { get; set; } = [];
+
+    /// <summary>
+    /// Permissions owned by the client.
+    /// </summary>
+    public List<Permission> OwnedPermissions { get; set; } = [];
 }

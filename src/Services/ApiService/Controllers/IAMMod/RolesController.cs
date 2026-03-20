@@ -1,4 +1,5 @@
 using IAMMod.Managers;
+using IAMMod.Models.PermissionDtos;
 using IAMMod.Models.RoleDtos;
 namespace ApiService.Controllers.IAMMod;
 
@@ -22,22 +23,24 @@ namespace ApiService.Controllers.IAMMod;
 public class RolesController(
     Localizer localizer,
     RoleManager manager,
+    PermissionManager permissionManager,
     IUserContext user,
     ILogger<RolesController> logger
 ) : RestControllerBase<RoleManager>(localizer, manager, user, logger)
 {
+    private readonly PermissionManager _permissionManager = permissionManager;
+
     /// <summary>
     /// Get paged roles
     /// </summary>
     /// <param name="filter">Filter criteria</param>
     /// <returns>Paged list of roles</returns>
     [HttpGet]
-    public async Task<ActionResult<PageList<RoleItemDto>>> GetRoles(
+    public Task<PageList<RoleItemDto>> GetRoles(
         [FromQuery] RoleFilterDto filter
     )
     {
-        var result = await _manager.GetPageAsync(filter);
-        return Ok(result);
+        return _manager.GetPageAsync(filter);
     }
 
     /// <summary>
@@ -45,10 +48,9 @@ public class RolesController(
     /// </summary>
     /// <returns>List of all roles</returns>
     [HttpGet("all")]
-    public async Task<ActionResult<List<RoleItemDto>>> GetAllRoles()
+    public Task<List<RoleItemDto>> GetAllRoles()
     {
-        var result = await _manager.GetAllAsync();
-        return Ok(result);
+        return _manager.GetAllAsync();
     }
 
     /// <summary>
@@ -166,21 +168,29 @@ public class RolesController(
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
         var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
 
-        var success = await _manager.GrantPermissionsAsync(id, dto, ipAddress, userAgent);
+        var success = await _permissionManager.GrantRolePermissionsAsync(id, dto, ipAddress, userAgent);
         return !success
             ? Problem("Failed to grant permissions to role", statusCode: StatusCodes.Status400BadRequest)
             : NoContent();
     }
 
     /// <summary>
-    /// Get role permissions
+    /// Get role permission codes.
     /// </summary>
     /// <param name="id">Role id</param>
-    /// <returns>List of permissions</returns>
+    /// <returns>List of permission codes</returns>
     [HttpGet("{id}/permissions")]
-    public async Task<ActionResult<List<PermissionClaim>>> GetPermissions(Guid id)
+    public Task<List<string>> GetPermissions(Guid id)
     {
-        var result = await _manager.GetPermissionsAsync(id);
-        return Ok(result);
+        return _permissionManager.GetRolePermissionCodesAsync(id);
+    }
+
+    /// <summary>
+    /// Get role permission tree with selected nodes.
+    /// </summary>
+    [HttpGet("{id}/permission-tree")]
+    public Task<List<PermissionTreeNodeDto>> GetPermissionTree(Guid id, [FromQuery] PermissionFilterDto filter)
+    {
+        return _permissionManager.GetRolePermissionTreeAsync(id, filter);
     }
 }

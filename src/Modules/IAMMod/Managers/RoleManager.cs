@@ -1,7 +1,6 @@
 using IAMMod.Models.RoleDtos;
 using Microsoft.AspNetCore.Http;
 using Share.Exceptions;
-using System.Text.Json;
 
 namespace IAMMod.Managers;
 
@@ -11,12 +10,9 @@ namespace IAMMod.Managers;
 public class RoleManager(
     TenantDbFactory dbContextFactory,
     IUserContext userContext,
-    ILogger<RoleManager> logger,
-    AuditLogManager auditLogManager)
+    ILogger<RoleManager> logger)
     : ManagerBase<DefaultDbContext, Role>(dbContextFactory, userContext, logger)
 {
-    private readonly AuditLogManager _auditLogManager = auditLogManager;
-
     /// <summary>
     /// Get paged roles
     /// </summary>
@@ -147,104 +143,6 @@ public class RoleManager(
 
         await DeleteOrUpdateAsync([id], softDelete);
         return true;
-    }
-
-    /// <summary>
-    /// Grant permissions to role
-    /// </summary>
-    /// <param name="roleId">Role id</param>
-    /// <param name="dto">Grant permission DTO</param>
-    /// <param name="ipAddress">IP address for audit log</param>
-    /// <param name="userAgent">User agent for audit log</param>
-    /// <returns>True if successful</returns>
-    public async Task<bool> GrantPermissionsAsync(
-        Guid roleId,
-        RoleGrantPermissionDto dto,
-        string? ipAddress = null,
-        string? userAgent = null)
-    {
-        var role = await FindAsync(roleId);
-        if (role == null)
-        {
-            throw new BusinessException("RoleNotFound", StatusCodes.Status404NotFound);
-        }
-
-        return await ExecuteInTransactionAsync(async () =>
-        {
-            // Load current claims
-            await LoadManyAsync(role, r => r.RoleClaims);
-
-            // Track changes for audit
-            var oldPermissions = role.RoleClaims
-                .Select(rc => $"{rc.ClaimType}:{rc.ClaimValue}")
-                .ToList();
-
-            // Remove all existing permission claims
-            var existingClaims = role.RoleClaims.ToList();
-            foreach (var claim in existingClaims)
-            {
-                _dbContext.Set<RoleClaim>().Remove(claim);
-            }
-
-            // Add new claims
-            foreach (var permission in dto.Permissions)
-            {
-                role.RoleClaims.Add(new RoleClaim
-                {
-                    RoleId = roleId,
-                    ClaimType = permission.ClaimType,
-                    ClaimValue = permission.ClaimValue
-                });
-            }
-
-            var result = await _dbContext.SaveChangesAsync() > 0;
-
-            if (result)
-            {
-                // Write audit log for permission changes
-                var newPermissions = dto.Permissions
-                    .Select(p => $"{p.ClaimType}:{p.ClaimValue}")
-                    .ToList();
-
-                await _auditLogManager.AddAuditLogAsync(
-                    category: "Authorization",
-                    eventName: "RolePermissionsChanged",
-                    subjectId: roleId.ToString(),
-                    payload: JsonSerializer.Serialize(new
-                    {
-                        roleName = role.Name,
-                        oldCount = oldPermissions.Count,
-                        newCount = newPermissions.Count
-                    }),
-                    ipAddress: ipAddress,
-                    userAgent: userAgent
-                );
-            }
-
-            return result;
-        });
-    }
-
-    /// <summary>
-    /// Get role permissions
-    /// </summary>
-    /// <param name="roleId">Role id</param>
-    /// <returns>List of permission claims</returns>
-    public async Task<List<PermissionClaim>> GetPermissionsAsync(Guid roleId)
-    {
-        var role = await FindAsync(roleId);
-        if (role == null)
-        {
-            return [];
-        }
-
-        await LoadManyAsync(role, r => r.RoleClaims);
-
-        return role.RoleClaims.Select(rc => new PermissionClaim
-        {
-            ClaimType = rc.ClaimType,
-            ClaimValue = rc.ClaimValue ?? string.Empty
-        }).ToList();
     }
 
     /// <summary>

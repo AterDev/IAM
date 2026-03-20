@@ -34,6 +34,7 @@ public static class ModuleExtensions
     public static IHostApplicationBuilder AddIAMMod(this IHostApplicationBuilder builder)
     {
         builder.Services.AddScoped<OAuthService>();
+        builder.Services.AddScoped<PermissionManager>();
         builder.Services.AddHostedService<InitHostService>();
         builder.AddModServices();
         return builder;
@@ -217,7 +218,7 @@ public static class ModuleExtensions
                     {
                         var sid = context.Principal?.FindFirst("sid")?.Value;
                         var userIdClaim = context.Principal?.FindFirst(SysClaimTypes.NameIdentifier)?.Value
-                            ?? context.Principal?.FindFirst(OAuthConst.ClaimTypes.Subject)?.Value;
+                            ?? context.Principal?.FindFirst(OAuthConst.JwtClaimNames.Subject)?.Value;
 
                         if (string.IsNullOrWhiteSpace(sid) || !Guid.TryParse(userIdClaim, out var userId))
                         {

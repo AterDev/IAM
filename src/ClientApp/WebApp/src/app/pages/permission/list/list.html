@@ -1,0 +1,143 @@
+<div class="permission-page">
+  <div class="toolbar">
+    <div class="toolbar-title">
+      <h2>{{ 'permission.title' | translate }}</h2>
+      <p>{{ 'permission.subtitle' | translate }}</p>
+    </div>
+
+    <div class="toolbar-actions">
+      <button matButton="filled" (click)="addRoot()">
+        <mat-icon>add</mat-icon>
+        {{ 'permission.addRoot' | translate }}
+      </button>
+      <button mat-button (click)="deleteSelected()" [disabled]="selectedIds().size === 0">
+        <mat-icon>delete_sweep</mat-icon>
+        {{ 'permission.deleteSelected' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <mat-card class="filter-card">
+    <mat-card-content class="filter-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>{{ 'common.search' | translate }}</mat-label>
+        <input matInput [(ngModel)]="keyword" (keyup.enter)="loadTree()" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ 'permission.client' | translate }}</mat-label>
+        <mat-select [(ngModel)]="clientId" (selectionChange)="loadTree()">
+          <mat-option [value]="null">{{ 'common.all' | translate }}</mat-option>
+          @for (client of clients(); track client.id) {
+            <mat-option [value]="client.id">{{ client.clientId }} · {{ client.displayName }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ 'permission.type' | translate }}</mat-label>
+        <mat-select [(ngModel)]="type" (selectionChange)="loadTree()">
+          @for (item of typeOptions; track item.labelKey) {
+            <mat-option [value]="item.value">{{ item.labelKey | translate }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <div class="filter-actions">
+        <button mat-button (click)="clearFilters()">{{ 'common.reset' | translate }}</button>
+        <button mat-raised-button (click)="loadTree()">{{ 'common.search' | translate }}</button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <div class="content-layout">
+    <mat-card class="tree-panel">
+      <mat-card-content>
+        @if (isLoading()) {
+          <app-loading [diameter]="36"></app-loading>
+        } @else {
+          <mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
+            <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle>
+              <li class="tree-node" [class.active]="selectedNode()?.id === node.id" (click)="selectNode(node)">
+                <button mat-icon-button disabled></button>
+                <mat-checkbox [checked]="isBatchSelected(node)" (click)="$event.stopPropagation()"
+                  (change)="toggleBatchSelect(node, $event.checked)">
+                </mat-checkbox>
+                <mat-icon>{{ node.icon || 'key' }}</mat-icon>
+                <div class="node-text">
+                  <strong>{{ getNodeLabel(node) }}</strong>
+                  <span>{{ node.code }}</span>
+                </div>
+                <mat-chip>{{ getPermissionTypeLabelKey(node.type) | translate }}</mat-chip>
+              </li>
+            </mat-tree-node>
+
+            <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
+              <li>
+                <div class="tree-node" [class.active]="selectedNode()?.id === node.id" (click)="selectNode(node)">
+                  <button mat-icon-button matTreeNodeToggle>
+                    <mat-icon>{{ treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right' }}</mat-icon>
+                  </button>
+                  <mat-checkbox [checked]="isBatchSelected(node)" (click)="$event.stopPropagation()"
+                    (change)="toggleBatchSelect(node, $event.checked)">
+                  </mat-checkbox>
+                  <mat-icon>{{ node.icon || 'folder' }}</mat-icon>
+                  <div class="node-text">
+                    <strong>{{ getNodeLabel(node) }}</strong>
+                    <span>{{ node.code }}</span>
+                  </div>
+                  <mat-chip>{{ getPermissionTypeLabelKey(node.type) | translate }}</mat-chip>
+                </div>
+                <ul [class.tree-invisible]="!treeControl.isExpanded(node)">
+                  <ng-container matTreeNodeOutlet></ng-container>
+                </ul>
+              </li>
+            </mat-nested-tree-node>
+          </mat-tree>
+
+          @if (dataSource.data.length === 0) {
+            <div class="empty-state">
+              <mat-icon>inventory_2</mat-icon>
+              <p>{{ 'common.noData' | translate }}</p>
+            </div>
+          }
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="detail-panel">
+      <mat-card-content>
+        @if (selectedNode()) {
+          <div class="detail-header">
+            <div>
+              <h3>{{ getNodeLabel(selectedNode()!) }}</h3>
+              <p>{{ selectedNode()!.code }}</p>
+            </div>
+            <div class="detail-actions">
+              <button mat-icon-button (click)="addChild(selectedNode()!, $event)"><mat-icon>add</mat-icon></button>
+              <button mat-icon-button (click)="editNode(selectedNode()!, $event)"><mat-icon>edit</mat-icon></button>
+              <button mat-icon-button (click)="deleteNode(selectedNode()!, $event)"><mat-icon>delete</mat-icon></button>
+            </div>
+          </div>
+
+          <div class="detail-grid">
+            <div><label>{{ 'permission.type' | translate }}</label><span>{{ getPermissionTypeLabelKey(selectedNode()!.type) | translate }}</span></div>
+            <div><label>{{ 'permission.client' | translate }}</label><span>{{ selectedNode()!.ownedClientCode || '-' }}</span></div>
+            <div><label>{{ 'permission.path' | translate }}</label><span>{{ selectedNode()!.path || '-' }}</span></div>
+            <div><label>{{ 'permission.icon' | translate }}</label><span>{{ selectedNode()!.icon || '-' }}</span></div>
+            <div><label>{{ 'permission.namespace' | translate }}</label><span>{{ selectedNode()!.namespace || '-' }}</span></div>
+            <div><label>{{ 'permission.resource' | translate }}</label><span>{{ selectedNode()!.resource || '-' }}</span></div>
+            <div><label>{{ 'permission.action' | translate }}</label><span>{{ selectedNode()!.action || '-' }}</span></div>
+          </div>
+
+          <p class="description">{{ selectedNode()!.description || ('permission.noDescription' | translate) }}</p>
+        } @else {
+          <div class="empty-state compact">
+            <mat-icon>touch_app</mat-icon>
+            <p>{{ 'permission.selectHint' | translate }}</p>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

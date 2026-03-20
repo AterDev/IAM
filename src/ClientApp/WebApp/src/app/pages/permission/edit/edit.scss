@@ -1,0 +1,27 @@
+.permission-form {
+  min-width: min(860px, 80vw);
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+}
+
+.two-columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.full-width {
+  width: 100%;
+  margin-top: 16px;
+}
+
+@media (max-width: 768px) {
+  .permission-form {
+    min-width: auto;
+  }
+
+  .two-columns {
+    grid-template-columns: 1fr;
+  }
+}

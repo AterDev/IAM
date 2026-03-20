@@ -135,7 +135,7 @@ public class LoginModel(UserManager userManager, SessionManager sessionManager, 
             {
                 new Claim(SysClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(SysClaimTypes.Name, user.UserName),
-                new Claim(OAuthConst.ClaimTypes.Subject, user.Id.ToString()),
+                new Claim(OAuthConst.JwtClaimNames.Subject, user.Id.ToString()),
                 new Claim("sid", sessionId)
             };
 

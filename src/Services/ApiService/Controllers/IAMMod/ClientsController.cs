@@ -1,6 +1,7 @@
 using IAMMod.Managers;
 using IAMMod.Models.AuthorizationDtos;
 using IAMMod.Models.ClientDtos;
+using IAMMod.Models.PermissionDtos;
 using Microsoft.AspNetCore.Authorization;
 using Share.Constants;
 namespace ApiService.Controllers.IAMMod;
@@ -27,22 +28,24 @@ namespace ApiService.Controllers.IAMMod;
 public class ClientsController(
     Localizer localizer,
     ClientManager manager,
+    PermissionManager permissionManager,
     IUserContext user,
     ILogger<ClientsController> logger
 ) : RestControllerBase<ClientManager>(localizer, manager, user, logger)
 {
+    private readonly PermissionManager _permissionManager = permissionManager;
+
     /// <summary>
     /// Get paged clients
     /// </summary>
     /// <param name="filter">Filter criteria</param>
     /// <returns>Paged list of clients</returns>
     [HttpGet]
-    public async Task<ActionResult<PageList<ClientItemDto>>> GetClients(
+    public Task<PageList<ClientItemDto>> GetClients(
         [FromQuery] ClientFilterDto filter
     )
     {
-        var result = await _manager.GetPageAsync(filter);
-        return Ok(result);
+        return _manager.GetPageAsync(filter);
     }
 
     /// <summary>
@@ -86,9 +89,9 @@ public class ClientsController(
     /// </summary>
     [HttpGet("my-clients")]
     [Authorize]
-    public async Task<ActionResult<List<ClientDetailDto>>> GetMyClients()
+    public Task<List<ClientDetailDto>> GetMyClients()
     {
-        return Ok(await _manager.GetMyClientsAsync());
+        return _manager.GetMyClientsAsync();
     }
 
     /// <summary>
@@ -96,9 +99,9 @@ public class ClientsController(
     /// </summary>
     [HttpGet("pending-registrations")]
     [Authorize(Policy = WebConst.AdminUser)]
-    public async Task<ActionResult<List<ClientDetailDto>>> GetPendingRegistrations()
+    public Task<List<ClientDetailDto>> GetPendingRegistrations()
     {
-        return Ok(await _manager.GetPendingRegistrationsAsync());
+        return _manager.GetPendingRegistrationsAsync();
     }
 
     /// <summary>
@@ -183,9 +186,9 @@ public class ClientsController(
     /// </summary>
     [HttpGet("{id}/secrets")]
     [Authorize]
-    public async Task<ActionResult<List<ClientSecretHistoryDto>>> GetSecrets(Guid id)
+    public Task<List<ClientSecretHistoryDto>> GetSecrets(Guid id)
     {
-        return Ok(await _manager.GetSecretsAsync(id));
+        return _manager.GetSecretsAsync(id);
     }
 
     /// <summary>
@@ -211,9 +214,52 @@ public class ClientsController(
     /// <returns>List of authorizations</returns>
     [HttpGet("{id}/authorizations")]
     [Authorize]
-    public async Task<ActionResult<List<AuthorizationItemDto>>> GetAuthorizations(Guid id)
+    public Task<List<AuthorizationItemDto>> GetAuthorizations(Guid id)
     {
-        var result = await _manager.GetAuthorizationsAsync(id);
-        return Ok(result);
+        return _manager.GetAuthorizationsAsync(id);
+    }
+
+    /// <summary>
+    /// Replace client permission relations.
+    /// </summary>
+    [HttpPost("{id}/permissions")]
+    [Authorize(Policy = WebConst.AdminUser)]
+    public async Task<ActionResult> AssignPermissions(Guid id, [FromBody] List<string> permissionCodes)
+    {
+        var success = await _permissionManager.AssignClientPermissionsAsync(id, permissionCodes);
+        return success ? NoContent() : Problem("Failed to assign client permissions", statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    /// <summary>
+    /// Get client permission codes.
+    /// </summary>
+    [HttpGet("{id}/permissions")]
+    [Authorize(Policy = WebConst.AdminUser)]
+    public Task<List<string>> GetPermissions(Guid id)
+    {
+        return _permissionManager.GetClientPermissionCodesAsync(id);
+    }
+
+    /// <summary>
+    /// Get client permission tree.
+    /// </summary>
+    [HttpGet("{id}/permission-tree")]
+    [Authorize(Policy = WebConst.AdminUser)]
+    public Task<List<PermissionTreeNodeDto>> GetPermissionTree(Guid id, [FromQuery] PermissionFilterDto filter)
+    {
+        return _permissionManager.GetClientPermissionTreeAsync(id, filter);
+    }
+
+    /// <summary>
+    /// Full replacement synchronization for client menu/button permissions.
+    /// </summary>
+    [HttpPost("{id}/menu-permissions:sync")]
+    [Authorize(Policy = WebConst.AdminUser)]
+    public async Task<ActionResult> SyncMenuPermissions(Guid id, [FromBody] ClientPermissionSyncDto dto)
+    {
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
+        var success = await _permissionManager.SyncClientMenuPermissionsAsync(id, dto, ipAddress, userAgent);
+        return success ? NoContent() : Problem("Failed to synchronize client menu permissions", statusCode: StatusCodes.Status400BadRequest);
     }
 }

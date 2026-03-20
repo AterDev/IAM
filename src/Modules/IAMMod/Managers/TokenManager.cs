@@ -1,7 +1,6 @@
 using IAMMod.Services;
 using Microsoft.AspNetCore.Http;
 using Share;
-using Share.Constants;
 using Share.Exceptions;
 using System.Security.Claims;
 using System.Text.Json;
@@ -280,7 +279,7 @@ public class TokenManager(
             .Distinct(StringComparer.Ordinal)
             .ToArray();
 
-        return audiences.Select(aud => new Claim(OAuthConst.ClaimTypes.Audience, aud!));
+        return audiences.Select(aud => new Claim(OAuthConst.JwtClaimNames.Audience, aud!));
     }
 
     private async Task<User?> GetUserWithRolesAsync(string? subjectId)
@@ -293,7 +292,6 @@ public class TokenManager(
         return await _dbContext.Users
             .Include(u => u.UserRoles)
             .ThenInclude(ur => ur.Role)
-            .ThenInclude(role => role!.RoleClaims)
             .FirstOrDefaultAsync(u => u.Id == userId);
     }
 
@@ -322,9 +320,9 @@ public class TokenManager(
         // Generate access token
         var claims = new List<Claim>
         {
-            new(OAuthConst.ClaimTypes.Subject, client.Id.ToString()),
-            new(OAuthConst.ClaimTypes.ClientId, client.ClientId),
-            new(OAuthConst.ClaimTypes.Scope, request.Scope ?? ""),
+            new(OAuthConst.JwtClaimNames.Subject, client.Id.ToString()),
+            new(OAuthConst.OAuthRequestParameters.ClientId, client.ClientId),
+            new(OAuthConst.OAuthRequestParameters.Scope, request.Scope ?? ""),
         };
 
         claims.AddRange(BuildAudienceClaims(client));
@@ -397,7 +395,6 @@ public class TokenManager(
         var user = await _dbContext.Users
             .Include(u => u.UserRoles)
             .ThenInclude(ur => ur.Role)
-            .ThenInclude(role => role!.RoleClaims)
             .FirstOrDefaultAsync(u => u.NormalizedUserName == request.Username.ToUpper());
 
         if (user == null || string.IsNullOrEmpty(user.PasswordHash))
@@ -556,38 +553,29 @@ public class TokenManager(
             .Cast<string>()
             .ToArray();
 
-        var permissions = user.UserRoles
-            .Where(ur => ur.Role != null)
-            .SelectMany(ur => ur.Role!.RoleClaims)
-            .Where(rc => rc.ClaimType == PermissionsConst.ClaimType && !string.IsNullOrWhiteSpace(rc.ClaimValue))
-            .Select(rc => rc.ClaimValue!)
-            .Distinct(StringComparer.Ordinal)
-            .ToArray();
-
         // Build claims
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Name, user.UserName),
-            new(OAuthConst.ClaimTypes.Subject, user.Id.ToString()),
-            new(OAuthConst.ClaimTypes.Name, user.UserName),
-            new(OAuthConst.ClaimTypes.ClientId, client.ClientId),
+            new(OAuthConst.JwtClaimNames.Subject, user.Id.ToString()),
+            new(OAuthConst.JwtClaimNames.Name, user.UserName),
+            new(OAuthConst.OAuthRequestParameters.ClientId, client.ClientId),
         };
 
         claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
-        claims.AddRange(permissions.Select(permission => new Claim(PermissionsConst.ClaimType, permission)));
 
         claims.AddRange(BuildAudienceClaims(client));
 
         if (!string.IsNullOrEmpty(user.Email))
         {
             claims.Add(new Claim(ClaimTypes.Email, user.Email));
-            claims.Add(new Claim(OAuthConst.ClaimTypes.Email, user.Email));
+            claims.Add(new Claim(OAuthConst.JwtClaimNames.Email, user.Email));
         }
 
         if (!string.IsNullOrEmpty(scope))
         {
-            claims.Add(new Claim(OAuthConst.ClaimTypes.Scope, scope));
+            claims.Add(new Claim(OAuthConst.OAuthRequestParameters.Scope, scope));
         }
 
         if (!string.IsNullOrWhiteSpace(sessionId))
@@ -683,18 +671,18 @@ public class TokenManager(
             {
                 new(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new(ClaimTypes.Name, user.UserName),
-                new(OAuthConst.ClaimTypes.Subject, user.Id.ToString()),
-                new(OAuthConst.ClaimTypes.Name, user.UserName),
+                new(OAuthConst.JwtClaimNames.Subject, user.Id.ToString()),
+                new(OAuthConst.JwtClaimNames.Name, user.UserName),
             };
 
             idClaims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
-            idClaims.Add(new Claim(OAuthConst.ClaimTypes.Audience, client.ClientId));
+            idClaims.Add(new Claim(OAuthConst.JwtClaimNames.Audience, client.ClientId));
 
             if (!string.IsNullOrEmpty(user.Email))
             {
                 idClaims.Add(new Claim(ClaimTypes.Email, user.Email));
-                idClaims.Add(new Claim(OAuthConst.ClaimTypes.Email, user.Email));
+                idClaims.Add(new Claim(OAuthConst.JwtClaimNames.Email, user.Email));
             }
 
             if (!string.IsNullOrWhiteSpace(sessionId))

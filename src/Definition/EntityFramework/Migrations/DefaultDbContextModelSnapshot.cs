@@ -18,7 +18,7 @@ namespace EntityFramework.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.1")
+                .HasAnnotation("ProductVersion", "10.0.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -373,6 +373,40 @@ namespace EntityFramework.Migrations
                     b.ToTable("Clients");
                 });
 
+            modelBuilder.Entity("Entity.IAMMod.ClientPermission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ClientId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("PermissionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PermissionId");
+
+                    b.HasIndex("ClientId", "PermissionId")
+                        .IsUnique();
+
+                    b.ToTable("ClientPermissions");
+                });
+
             modelBuilder.Entity("Entity.IAMMod.ClientResource", b =>
                 {
                     b.Property<Guid>("Id")
@@ -637,6 +671,90 @@ namespace EntityFramework.Migrations
                     b.ToTable("OrganizationUsers");
                 });
 
+            modelBuilder.Entity("Entity.IAMMod.Permission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("CreatedTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("DisplayName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Icon")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Namespace")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("OwnedClientId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Path")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Resource")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Sort")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("UpdatedTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("OwnedClientId");
+
+                    b.HasIndex("ParentId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("Type");
+
+                    b.ToTable("Permissions");
+                });
+
             modelBuilder.Entity("Entity.IAMMod.Role", b =>
                 {
                     b.Property<Guid>("Id")
@@ -684,26 +802,20 @@ namespace EntityFramework.Migrations
                     b.ToTable("Roles");
                 });
 
-            modelBuilder.Entity("Entity.IAMMod.RoleClaim", b =>
+            modelBuilder.Entity("Entity.IAMMod.RolePermission", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<string>("ClaimType")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<string>("ClaimValue")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
 
                     b.Property<DateTimeOffset>("CreatedTime")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
+
+                    b.Property<Guid>("PermissionId")
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("RoleId")
                         .HasColumnType("uuid");
@@ -716,9 +828,12 @@ namespace EntityFramework.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RoleId");
+                    b.HasIndex("PermissionId");
 
-                    b.ToTable("RoleClaims");
+                    b.HasIndex("RoleId", "PermissionId")
+                        .IsUnique();
+
+                    b.ToTable("RolePermissions");
                 });
 
             modelBuilder.Entity("Entity.IAMMod.ScopeClaim", b =>
@@ -1145,6 +1260,25 @@ namespace EntityFramework.Migrations
                     b.Navigation("Client");
                 });
 
+            modelBuilder.Entity("Entity.IAMMod.ClientPermission", b =>
+                {
+                    b.HasOne("Entity.IAMMod.Client", "Client")
+                        .WithMany("ClientPermissions")
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Entity.IAMMod.Permission", "Permission")
+                        .WithMany("ClientPermissions")
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Client");
+
+                    b.Navigation("Permission");
+                });
+
             modelBuilder.Entity("Entity.IAMMod.ClientResource", b =>
                 {
                     b.HasOne("Entity.IAMMod.ApiResource", "ApiResource")
@@ -1234,13 +1368,38 @@ namespace EntityFramework.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Entity.IAMMod.RoleClaim", b =>
+            modelBuilder.Entity("Entity.IAMMod.Permission", b =>
                 {
+                    b.HasOne("Entity.IAMMod.Client", "OwnedClient")
+                        .WithMany("OwnedPermissions")
+                        .HasForeignKey("OwnedClientId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Entity.IAMMod.Permission", "Parent")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("OwnedClient");
+
+                    b.Navigation("Parent");
+                });
+
+            modelBuilder.Entity("Entity.IAMMod.RolePermission", b =>
+                {
+                    b.HasOne("Entity.IAMMod.Permission", "Permission")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Entity.IAMMod.Role", "Role")
-                        .WithMany("RoleClaims")
+                        .WithMany("RolePermissions")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Permission");
 
                     b.Navigation("Role");
                 });
@@ -1339,11 +1498,15 @@ namespace EntityFramework.Migrations
                 {
                     b.Navigation("Authorizations");
 
+                    b.Navigation("ClientPermissions");
+
                     b.Navigation("ClientResources");
 
                     b.Navigation("ClientScopes");
 
                     b.Navigation("ClientSecrets");
+
+                    b.Navigation("OwnedPermissions");
                 });
 
             modelBuilder.Entity("Entity.IAMMod.Organization", b =>
@@ -1353,9 +1516,18 @@ namespace EntityFramework.Migrations
                     b.Navigation("OrganizationUsers");
                 });
 
+            modelBuilder.Entity("Entity.IAMMod.Permission", b =>
+                {
+                    b.Navigation("Children");
+
+                    b.Navigation("ClientPermissions");
+
+                    b.Navigation("RolePermissions");
+                });
+
             modelBuilder.Entity("Entity.IAMMod.Role", b =>
                 {
-                    b.Navigation("RoleClaims");
+                    b.Navigation("RolePermissions");
 
                     b.Navigation("UserRoles");
                 });

@@ -1,3 +1,5 @@
+using System.IdentityModel.Tokens.Jwt;
+
 namespace Share.Constants;
 
 /// <summary>
@@ -131,15 +133,22 @@ public static class OAuthConst
     }
 
     /// <summary>
-    /// Standard claim types
+    /// Standard JWT / OIDC claim names.
     /// </summary>
-    public static class ClaimTypes
+    public static class JwtClaimNames
     {
-        public const string Subject = "sub";
-        public const string Name = "name";
-        public const string Email = "email";
+        public const string Subject = JwtRegisteredClaimNames.Sub;
+        public const string Name = JwtRegisteredClaimNames.Name;
+        public const string Email = JwtRegisteredClaimNames.Email;
+        public const string Audience = JwtRegisteredClaimNames.Aud;
+    }
+
+    /// <summary>
+    /// OAuth / OIDC authorization request parameters.
+    /// </summary>
+    public static class OAuthRequestParameters
+    {
         public const string ClientId = "client_id";
         public const string Scope = "scope";
-        public const string Audience = "aud";
     }
 }

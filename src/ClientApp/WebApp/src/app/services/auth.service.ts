@@ -13,17 +13,6 @@ const OIDC_SCOPE = 'openid profile email offline_access';
 const SUPER_ADMIN_ROLE = 'SuperAdmin';
 const ADMIN_USER_ROLE = 'AdminUser';
 
-const MENU_PERMISSION_MAP: Record<string, string[]> = {
-  user: ['users.read', 'users.manage'],
-  role: ['roles.read', 'roles.assign'],
-  organization: ['organizations.read', 'organizations.manage-members'],
-  client: ['clients.read', 'clients.manage-secrets'],
-  resource: ['resources.read'],
-  scope: ['scopes.read'],
-  'security-sessions': ['sessions.read', 'sessions.manage'],
-  'security-audit-logs': ['audit.read', 'audit.export'],
-};
-
 @Injectable({
   providedIn: 'root'
 })
@@ -205,24 +194,8 @@ export class AuthService {
     return this.extractJwtClaims(token, 'role');
   }
 
-  getPermissions(token = this.getAccessToken() ?? ''): string[] {
-    return this.extractJwtClaims(token, 'permissions');
-  }
-
-  hasAnyPermission(...permissions: string[]): boolean {
-    const granted = new Set(this.getPermissions());
-    return permissions.some(permission => granted.has(permission));
-  }
-
-  getAccessibleMenuCodes(): string[] {
-    const roles = this.getRoles();
-    if (this.hasAdminRole(roles)) {
-      return Object.keys(MENU_PERMISSION_MAP);
-    }
-
-    return Object.entries(MENU_PERMISSION_MAP)
-      .filter(([, permissions]) => this.hasAnyPermission(...permissions))
-      .map(([accessCode]) => accessCode);
+  getOidcClientId(): string {
+    return OIDC_CLIENT_ID;
   }
 
   private hasAdminRole(roles: string[]): boolean {

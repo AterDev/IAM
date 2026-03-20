@@ -113,7 +113,7 @@ public class MfaModel(
             {
                 new(SysClaimTypes.NameIdentifier, user.Id.ToString()),
                 new(SysClaimTypes.Name, user.UserName),
-                new(OAuthConst.ClaimTypes.Subject, user.Id.ToString()),
+                    new(OAuthConst.JwtClaimNames.Subject, user.Id.ToString()),
                 new("sid", sessionId),
             };
 

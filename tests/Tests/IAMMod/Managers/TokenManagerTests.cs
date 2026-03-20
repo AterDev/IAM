@@ -1,3 +1,7 @@
+using System.Text;
+using System.Text.Json;
+using System.IdentityModel.Tokens.Jwt;
+
 namespace Tests.IAMMod.Managers;
 
 public class TokenManagerTests
@@ -142,6 +146,65 @@ public class TokenManagerTests
         Assert.Equal(OAuthConst.TokenStatuses.Valid, token.Status);
     }
 
+    [Fact]
+    public async Task ProcessTokenRequestAsync_WhenRoleHasPermissionAssignments_DoesNotEmitPermissionsClaim()
+    {
+        await using var dbContext = TestDbContextFactory.Create(nameof(ProcessTokenRequestAsync_WhenRoleHasPermissionAssignments_DoesNotEmitPermissionsClaim));
+        var client = SeedClient(dbContext, "password-legacy-claims-client");
+        var permission = new Permission
+        {
+            Code = "users.read",
+            Name = "Users.Read",
+            Type = PermissionType.Business,
+        };
+        var role = new Role
+        {
+            Name = "AdminUser",
+            NormalizedName = "ADMINUSER",
+            ConcurrencyStamp = Guid.NewGuid().ToString("N"),
+            RolePermissions =
+            [
+                new RolePermission
+                {
+                    Permission = permission,
+                }
+            ],
+        };
+        var user = new User
+        {
+            UserName = "bob",
+            NormalizedUserName = "BOB",
+            PasswordSalt = "salt",
+            PasswordHash = HashCrypto.GeneratePwd("P@ssw0rd!", "salt"),
+            LockoutEnabled = true,
+            UserRoles =
+            [
+                new UserRole { Role = role }
+            ],
+        };
+
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        var manager = CreateTokenManager(dbContext);
+        var signingKey = CreateSigningKey();
+        var response = await manager.ProcessTokenRequestAsync(
+            new TokenRequestDto
+            {
+                GrantType = OAuthConst.GrantTypes.Password,
+                ClientId = client.ClientId,
+                Username = "bob",
+                Password = "P@ssw0rd!",
+                Scope = "openid profile",
+            },
+            signingKey);
+
+        var jwt = new JwtSecurityTokenHandler().ReadJwtToken(response.AccessToken!);
+
+        Assert.DoesNotContain(jwt.Claims, claim => claim.Type == "permissions");
+        Assert.Contains(jwt.Claims, claim => claim.Type == ClaimTypes.Role && claim.Value == "AdminUser");
+    }
+
     private static TokenManager CreateTokenManager(DefaultDbContext dbContext)
     {
         var jwtOptions = Options.Create(new JwtOption
@@ -210,4 +273,5 @@ public class TokenManagerTests
             IsActive = true,
         };
     }
+
 }

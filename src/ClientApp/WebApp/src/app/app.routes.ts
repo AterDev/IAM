@@ -65,18 +65,8 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/client/detail/detail').then(m => m.ClientDetailComponent)
       },
       {
-        path: 'developer-portal',
-        loadComponent: () => import('./pages/developer-portal/shell/shell').then(m => m.DeveloperPortalShellComponent),
-        children: [
-          {
-            path: '',
-            loadComponent: () => import('./pages/developer-portal/overview/overview').then(m => m.DeveloperPortalOverviewComponent)
-          },
-          {
-            path: 'clients',
-            loadComponent: () => import('./pages/developer-portal/clients/clients').then(m => m.DeveloperPortalClientsComponent)
-          }
-        ]
+        path: 'permission',
+        loadComponent: () => import('./pages/permission/list/list').then(m => m.PermissionListComponent)
       },
       {
         path: 'scope',
@@ -100,11 +90,13 @@ export const routes: Routes = [
       },
       {
         path: 'security/audit-logs',
-        loadComponent: () => import('./pages/security/audit-log-list/list').then(m => m.AuditLogListComponent)
+        loadComponent: () => import('./pages/security/audit-log-list/list').then(m => m.AuditLogListComponent),
+        data: { auditTab: 'logs' }
       },
       {
         path: 'security/password-grant-audit',
-        loadComponent: () => import('./pages/security/password-grant-audit/password-grant-audit').then(m => m.PasswordGrantAuditComponent)
+        loadComponent: () => import('./pages/security/audit-log-list/list').then(m => m.AuditLogListComponent),
+        data: { auditTab: 'password-grant' }
       },
       {
         path: 'security/mfa',

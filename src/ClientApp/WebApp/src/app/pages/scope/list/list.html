@@ -1,6 +1,6 @@
 <div class="scope-list-container">
-  <div class="d-flex justify-content-between align-items-center">
-    <div class="d-flex align-items-center gap-1">
+  <div class="page-toolbar">
+    <div class="page-toolbar__filters">
       <mat-form-field class="search-field" subscriptSizing="dynamic">
         <mat-label>{{ 'common.search' | translate }}</mat-label>
         <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()"
@@ -19,16 +19,18 @@
         </mat-select>
       </mat-form-field>
 
-      <button matButton="outlined" (click)="clearFilters()">
-        <mat-icon>clear</mat-icon>
-        {{ 'common.clearFilters' | translate }}
+      <button mat-icon-button (click)="clearFilters()" type="button" class="filter-clear-button"
+        [matTooltip]="'common.clearFilters' | translate" [attr.aria-label]="'common.clearFilters' | translate">
+        <mat-icon>filter_alt_off</mat-icon>
       </button>
     </div>
 
-    <button matButton="filled" (click)="openAddDialog()">
-      <mat-icon>add</mat-icon>
-      {{ 'common.add' | translate }}
-    </button>
+    <div class="page-toolbar__actions">
+      <button matButton="filled" (click)="openAddDialog()" type="button">
+        <mat-icon>add</mat-icon>
+        {{ 'common.add' | translate }}
+      </button>
+    </div>
   </div>
 
   <div class="table-container">

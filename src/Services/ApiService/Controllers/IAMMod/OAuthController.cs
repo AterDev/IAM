@@ -124,7 +124,7 @@ public class OAuthController(
             }
 
             // Get user ID from cookie claims
-            var userId = authenticateResult.Principal.FindFirst(OAuthConst.ClaimTypes.Subject)?.Value
+            var userId = authenticateResult.Principal.FindFirst(OAuthConst.JwtClaimNames.Subject)?.Value
                 ?? authenticateResult.Principal.FindFirst(SysClaimTypes.NameIdentifier)?.Value
                 ?? HttpContext.Session.GetString("UserId");
             var sessionId = authenticateResult.Principal.FindFirst("sid")?.Value
@@ -328,7 +328,7 @@ public class OAuthController(
         {
             var sid = User.FindFirst("sid")?.Value ?? HttpContext.Session.GetString("SessionId");
             var userIdClaim = User.FindFirst(SysClaimTypes.NameIdentifier)?.Value
-                ?? User.FindFirst(OAuthConst.ClaimTypes.Subject)?.Value;
+                ?? User.FindFirst(OAuthConst.JwtClaimNames.Subject)?.Value;
 
             if (!string.IsNullOrWhiteSpace(sid) && Guid.TryParse(userIdClaim, out var userId))
             {

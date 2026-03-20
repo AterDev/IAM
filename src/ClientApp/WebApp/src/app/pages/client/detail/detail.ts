@@ -18,6 +18,7 @@ import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 import { AuthorizationItemDto } from 'src/app/services/api/models/iammod/authorization-item-dto.model';
 import { EnumTextPipe } from 'src/app/pipe/api/enum-text.pipe';
 import { ClientDetailViewModel } from '../client-password-grant-policy.model';
+import { ClientPermissionsComponent } from '../permissions/permissions';
 
 @Component({
   selector: 'app-detail',
@@ -30,7 +31,8 @@ import { ClientDetailViewModel } from '../client-password-grant-policy.model';
     MatTableModule,
     MatTabsModule,
     AppLoadingComponent,
-    EnumTextPipe
+    EnumTextPipe,
+    ClientPermissionsComponent,
   ],
   templateUrl: './detail.html',
   styleUrls: ['./detail.scss']

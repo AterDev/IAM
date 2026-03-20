@@ -16,7 +16,7 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
     public DbSet<Role> Roles { get; set; }
     public DbSet<UserRole> UserRoles { get; set; }
     public DbSet<UserClaim> UserClaims { get; set; }
-    public DbSet<RoleClaim> RoleClaims { get; set; }
+    public DbSet<RolePermission> RolePermissions { get; set; }
     public DbSet<UserLogin> UserLogins { get; set; }
     public DbSet<UserToken> UserTokens { get; set; }
     public DbSet<Organization> Organizations { get; set; }
@@ -25,6 +25,8 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
 
     // Access entities
     public DbSet<Client> Clients { get; set; }
+    public DbSet<Permission> Permissions { get; set; }
+    public DbSet<ClientPermission> ClientPermissions { get; set; }
     public DbSet<ClientSecret> ClientSecrets { get; set; }
     public DbSet<ApiScope> ApiScopes { get; set; }
     public DbSet<ClientScope> ClientScopes { get; set; }
@@ -96,13 +98,17 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
-        // RoleClaim configuration
-        builder.Entity<RoleClaim>(entity =>
+        // RolePermission configuration
+        builder.Entity<RolePermission>(entity =>
         {
-            entity.HasIndex(e => e.RoleId);
+            entity.HasIndex(e => new { e.RoleId, e.PermissionId }).IsUnique();
             entity.HasOne(e => e.Role)
-                .WithMany(r => r.RoleClaims)
+                .WithMany(r => r.RolePermissions)
                 .HasForeignKey(e => e.RoleId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Permission)
+                .WithMany(p => p.RolePermissions)
+                .HasForeignKey(e => e.PermissionId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -173,6 +179,36 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
             entity.HasIndex(e => e.TenantId);
             entity.HasIndex(e => e.RegistrationStatus);
             entity.HasIndex(e => e.DeveloperUserId);
+        });
+
+        builder.Entity<Permission>(entity =>
+        {
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.HasIndex(e => e.Type);
+            entity.HasIndex(e => e.ParentId);
+            entity.HasIndex(e => e.OwnedClientId);
+            entity.HasIndex(e => e.TenantId);
+            entity.HasOne(e => e.Parent)
+                .WithMany(e => e.Children)
+                .HasForeignKey(e => e.ParentId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.OwnedClient)
+                .WithMany(c => c.OwnedPermissions)
+                .HasForeignKey(e => e.OwnedClientId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<ClientPermission>(entity =>
+        {
+            entity.HasIndex(e => new { e.ClientId, e.PermissionId }).IsUnique();
+            entity.HasOne(e => e.Client)
+                .WithMany(c => c.ClientPermissions)
+                .HasForeignKey(e => e.ClientId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Permission)
+                .WithMany(p => p.ClientPermissions)
+                .HasForeignKey(e => e.PermissionId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         builder.Entity<ClientSecret>(entity =>

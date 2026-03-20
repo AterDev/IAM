@@ -58,27 +58,11 @@
                 "menuType": 0
             },
             {
-                "name": "menu.developerPortal",
-                "path": "/developer-portal",
-                "accessCode": "client",
-                "icon": "hub",
-                "sort": 1,
-                "menuType": 0
-            },
-            {
-                "name": "menu.passwordGrantAudit",
-                "path": "/security/password-grant-audit",
-                "accessCode": "security-audit-logs",
-                "icon": "monitoring",
-                "sort": 2,
-                "menuType": 0
-            },
-            {
                 "name": "menu.resource",
                 "path": "/resource",
                 "accessCode": "resource",
                 "icon": "api",
-                "sort": 3,
+                "sort": 1,
                 "menuType": 0
             },
             {
@@ -86,7 +70,7 @@
                 "path": "/scope",
                 "accessCode": "scope",
                 "icon": "vpn_key",
-                "sort": 4,
+                "sort": 2,
                 "menuType": 0
             },
             {
@@ -94,7 +78,7 @@
                 "path": "/security/sessions",
                 "accessCode": "security-sessions",
                 "icon": "devices",
-                "sort": 5,
+                "sort": 3,
                 "menuType": 0
             }
         ]

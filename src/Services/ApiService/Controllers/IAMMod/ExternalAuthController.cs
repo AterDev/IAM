@@ -171,7 +171,7 @@ public class ExternalAuthController(
         {
             new(SysClaimTypes.NameIdentifier, userId.ToString()),
             new(SysClaimTypes.Name, userName),
-            new(OAuthConst.ClaimTypes.Subject, userId.ToString()),
+                new(OAuthConst.JwtClaimNames.Subject, userId.ToString()),
             new("sid", sessionId),
         };
 

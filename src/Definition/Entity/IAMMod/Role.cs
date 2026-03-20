@@ -35,7 +35,7 @@ public class Role : EntityBase
     public List<UserRole> UserRoles { get; set; } = [];
 
     /// <summary>
-    /// Role claims
+    /// Role-permission relations.
     /// </summary>
-    public List<RoleClaim> RoleClaims { get; set; } = [];
+    public List<RolePermission> RolePermissions { get; set; } = [];
 }

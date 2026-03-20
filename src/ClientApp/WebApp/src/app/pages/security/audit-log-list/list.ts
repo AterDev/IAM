@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModules, BaseMatModules, CommonFormModules } from 'src/app/share/shared-modules';
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
@@ -7,15 +7,17 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatTabsModule } from '@angular/material/tabs';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { AuditLogItemDto } from 'src/app/services/api/models/common-mod/audit-log-item-dto.model';
 import { AuditLogFilterDto } from 'src/app/services/api/models/common-mod/audit-log-filter-dto.model';
 import { PageList } from 'src/app/services/api/models/perigon/page-list.model';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormControl, FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslateService } from '@ngx-translate/core';
 import { AuditLogDetailDialogComponent } from '../audit-log-detail-dialog/detail-dialog';
+import { PasswordGrantAuditComponent } from '../password-grant-audit/password-grant-audit';
 
 @Component({
   selector: 'app-list',
@@ -30,12 +32,16 @@ import { AuditLogDetailDialogComponent } from '../audit-log-detail-dialog/detail
     MatMenuModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    MatTabsModule,
+    PasswordGrantAuditComponent,
   ],
   templateUrl: './list.html',
   styleUrls: ['./list.scss']
 })
 export class AuditLogListComponent implements OnInit {
+  readonly currentTab = signal<'logs' | 'password-grant'>('logs');
+  readonly selectedTabIndex = signal(0);
   displayedColumns: string[] = ['category', 'event', 'subjectId', 'ipAddress', 'createdTime', 'actions'];
 
   dataSource = signal<AuditLogItemDto[]>([]);
@@ -54,6 +60,7 @@ export class AuditLogListComponent implements OnInit {
 
   constructor(
     private api: ApiClient,
+    private route: ActivatedRoute,
     private router: Router,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
@@ -75,6 +82,12 @@ export class AuditLogListComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.route.data.subscribe(data => {
+      const activeTab = data['auditTab'] === 'password-grant' ? 'password-grant' : 'logs';
+      this.currentTab.set(activeTab);
+      this.selectedTabIndex.set(activeTab === 'password-grant' ? 1 : 0);
+    });
+
     this.loadData();
   }
 
@@ -144,6 +157,15 @@ export class AuditLogListComponent implements OnInit {
     this.pageSize = event.pageSize;
     this.pageIndex = event.pageIndex;
     this.loadData();
+  }
+
+  onTabIndexChange(index: number): void {
+    const nextTab = index === 1 ? 'password-grant' : 'logs';
+    if (this.currentTab() === nextTab) {
+      return;
+    }
+
+    this.router.navigate([nextTab === 'password-grant' ? '/security/password-grant-audit' : '/security/audit-logs']);
   }
 
   viewDetail(log: AuditLogItemDto): void {

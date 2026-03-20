@@ -22,6 +22,7 @@ public class AdminAuthController(
     JwtService jwtService,
     SessionManager sessionManager,
     TokenManager tokenManager,
+    IUserContext user,
     ILogger<AdminAuthController> logger
 ) : RestControllerBase(localizer)
 {
@@ -30,6 +31,7 @@ public class AdminAuthController(
     private readonly JwtService _jwtService = jwtService;
     private readonly SessionManager _sessionManager = sessionManager;
     private readonly TokenManager _tokenManager = tokenManager;
+    private readonly IUserContext _user = user;
     private readonly ILogger<AdminAuthController> _logger = logger;
 
     /// <summary>
@@ -138,13 +140,12 @@ public class AdminAuthController(
     [Authorize]
     public async Task<ActionResult<AdminUserInfo>> GetCurrentUser()
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        if (_user.UserId == Guid.Empty)
         {
             return Unauthorized();
         }
 
-        var user = await _userManager.FindAsync(userId);
+        var user = await _userManager.FindAsync(_user.UserId);
         if (user == null)
         {
             return NotFound(new { message = "User not found" });
@@ -174,8 +175,7 @@ public class AdminAuthController(
     [Authorize]
     public async Task<ActionResult> Logout()
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrWhiteSpace(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        if (_user.UserId == Guid.Empty)
         {
             return Unauthorized();
         }
@@ -191,7 +191,7 @@ public class AdminAuthController(
             {
                 await _sessionManager.RevokeSessionAsync(
                     session.Id,
-                    userId.ToString(),
+                    _user.UserId.ToString(),
                     ipAddress,
                     userAgent
                 );
@@ -200,9 +200,9 @@ public class AdminAuthController(
         else
         {
             await _sessionManager.RevokeAllUserSessionsAsync(
-                userId,
+                _user.UserId,
                 null,
-                userId.ToString(),
+                _user.UserId.ToString(),
                 ipAddress,
                 userAgent
             );

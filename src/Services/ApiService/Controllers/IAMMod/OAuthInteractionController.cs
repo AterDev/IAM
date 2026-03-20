@@ -313,14 +313,14 @@ public class OAuthInteractionController(
 
     private static string? GetCurrentUserId(ClaimsPrincipal principal)
     {
-        return principal.FindFirst(OAuthConst.ClaimTypes.Subject)?.Value
+        return principal.FindFirst(OAuthConst.JwtClaimNames.Subject)?.Value
             ?? principal.FindFirst(SysClaimTypes.NameIdentifier)?.Value;
     }
 
     private static string? GetCurrentUserName(ClaimsPrincipal principal)
     {
         return principal.FindFirst(SysClaimTypes.Name)?.Value
-            ?? principal.FindFirst(OAuthConst.ClaimTypes.Name)?.Value
+            ?? principal.FindFirst(OAuthConst.JwtClaimNames.Name)?.Value
             ?? principal.FindFirst("preferred_username")?.Value;
     }
 

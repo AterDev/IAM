@@ -58,10 +58,9 @@ public class ConsentModel(
     {
         // Get user from cookie principal first, then fall back to session.
         var userId = User.FindFirst(SysClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst(OAuthConst.ClaimTypes.Subject)?.Value
+            ?? User.FindFirst(OAuthConst.JwtClaimNames.Subject)?.Value
             ?? HttpContext.Session.GetString("UserId");
         UserName = User.FindFirst(SysClaimTypes.Name)?.Value
-            ?? User.FindFirst(ClaimTypes.Name)?.Value
             ?? HttpContext.Session.GetString("UserName")
             ?? "Unknown User";
 
@@ -159,7 +158,7 @@ public class ConsentModel(
     public async Task<IActionResult> OnPostAsync(string action)
     {
         var userId = User.FindFirst(SysClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst(OAuthConst.ClaimTypes.Subject)?.Value
+            ?? User.FindFirst(OAuthConst.JwtClaimNames.Subject)?.Value
             ?? HttpContext.Session.GetString("UserId");
 
         if (string.IsNullOrEmpty(userId))

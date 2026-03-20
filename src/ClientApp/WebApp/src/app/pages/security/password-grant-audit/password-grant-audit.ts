@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, computed, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, input, signal } from '@angular/core';
 import { CommonModules, BaseMatModules, CommonFormModules } from 'src/app/share/shared-modules';
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
@@ -13,6 +13,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { forkJoin, map, of, switchMap } from 'rxjs';
 import { Router } from '@angular/router';
 import { ApiClient } from 'src/app/services/api/api-client';
+import { AuditLogFilterDto } from 'src/app/services/api/models/common-mod/audit-log-filter-dto.model';
 import { AuditLogDetailDto } from 'src/app/services/api/models/common-mod/audit-log-detail-dto.model';
 import { AuditLogItemDto } from 'src/app/services/api/models/common-mod/audit-log-item-dto.model';
 import { AuditLogDetailDialogComponent } from '../audit-log-detail-dialog/detail-dialog';
@@ -37,6 +38,7 @@ import { PasswordGrantEventFilter, PasswordGrantAuditRow, PasswordGrantAuditSumm
   styleUrls: ['./password-grant-audit.scss']
 })
 export class PasswordGrantAuditComponent implements OnInit, OnDestroy {
+  readonly embedded = input(false);
   readonly displayedColumns: string[] = ['event', 'clientId', 'summary', 'subjectId', 'ipAddress', 'createdTime', 'actions'];
   readonly eventOptions = [
     { value: 'all', label: 'passwordGrantAudit.events.all' },
@@ -48,7 +50,6 @@ export class PasswordGrantAuditComponent implements OnInit, OnDestroy {
   readonly summary = signal<PasswordGrantAuditSummary>({ total: 0, rejected: 0, failed: 0 });
   readonly total = signal(0);
   readonly isLoading = signal(false);
-  readonly selectedEvent = computed(() => this.eventControl.value as PasswordGrantEventFilter);
 
   pageSize = 10;
   pageIndex = 0;
@@ -237,8 +238,8 @@ export class PasswordGrantAuditComponent implements OnInit, OnDestroy {
   }
 
   private getEventCount(eventName: 'PasswordGrantRejected' | 'PasswordGrantFailed', filterState: ReturnType<PasswordGrantAuditComponent['getFilterState']>) {
-    return this.api.auditTrail
-      .getAuditLogs('Authentication', eventName, filterState.subjectId, filterState.startDate, filterState.endDate, 1, 1, null)
+    return this.api.security
+      .getAuditLogs(this.createAuditLogFilter(filterState, eventName, 1, 1))
       .pipe(map(result => result.count));
   }
 
@@ -265,21 +266,39 @@ export class PasswordGrantAuditComponent implements OnInit, OnDestroy {
     filterState: ReturnType<PasswordGrantAuditComponent['getFilterState']>,
     requestedRows: number,
   ) {
-    return this.api.auditTrail
-      .getAuditLogs('Authentication', eventName, filterState.subjectId, filterState.startDate, filterState.endDate, 1, requestedRows, null)
+    return this.api.security
+      .getAuditLogs(this.createAuditLogFilter(filterState, eventName, 1, requestedRows))
       .pipe(
         switchMap(result => {
           if (!result.data.length) {
             return of([] as PasswordGrantAuditRow[]);
           }
 
-          const detailRequests = result.data.map(log => this.api.auditTrail.getDetail(log.id).pipe(
+          const detailRequests = result.data.map(log => this.api.security.getAuditLogDetail(log.id).pipe(
             map(detail => this.mapToRow(log, detail))
           ));
 
           return forkJoin(detailRequests);
         })
       );
+  }
+
+  private createAuditLogFilter(
+    filterState: ReturnType<PasswordGrantAuditComponent['getFilterState']>,
+    eventName: 'PasswordGrantRejected' | 'PasswordGrantFailed',
+    pageIndex: number,
+    pageSize: number,
+  ): AuditLogFilterDto {
+    return {
+      category: 'Authentication',
+      event: eventName,
+      subjectId: filterState.subjectId,
+      startDate: filterState.startDate,
+      endDate: filterState.endDate,
+      pageIndex,
+      pageSize,
+      orderBy: null,
+    };
   }
 
   private mapToRow(log: AuditLogItemDto, detail: AuditLogDetailDto): PasswordGrantAuditRow {

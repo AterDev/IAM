@@ -50,8 +50,9 @@ public class InitHostService(
                 logger.LogInformation("Initial signing key generated: {KeyId}", signingKey.KeyId);
             }
 
-            await SeedInitialDataAsync(dbContext, stoppingToken);
             await SeedOAuthDataAsync(dbContext, stoppingToken);
+            await SeedInitialDataAsync(dbContext, stoppingToken);
+            await SeedPermissionDataAsync(dbContext, stoppingToken);
 
             var cacheService = scope.ServiceProvider.GetRequiredService<CacheService>();
             await cacheService.RemoveAsync(OAuthConst.SigningActiveKeyCacheKey);
@@ -81,64 +82,28 @@ public class InitHostService(
         CancellationToken cancellationToken
     )
     {
-        // Check if admin user already exists
+        var superAdminRole = await EnsureRoleAsync(
+            dbContext,
+            WebConst.SuperAdmin,
+            "System Administrator Role",
+            cancellationToken);
+
+        await EnsureRoleAsync(
+            dbContext,
+            WebConst.AdminUser,
+            "System Administrator User Role",
+            cancellationToken);
+
         var adminUserName = "admin";
         var normalizedAdminUserName = adminUserName.ToUpperInvariant();
-
-        var adminExists = await dbContext.Users.AnyAsync(
+        var adminUser = await dbContext.Users.FirstOrDefaultAsync(
             u => u.NormalizedUserName == normalizedAdminUserName,
-            cancellationToken
-        );
+            cancellationToken);
 
-        if (!adminExists)
+        if (adminUser == null)
         {
-            // Create default admin role if not exists
-            var adminRoleName = WebConst.SuperAdmin;
-            var normalizedAdminRoleName = adminRoleName.ToUpperInvariant();
-
-            var adminRole = await dbContext.Roles.FirstOrDefaultAsync(
-                r => r.NormalizedName == normalizedAdminRoleName,
-                cancellationToken
-            );
-
-            if (adminRole == null)
-            {
-                adminRole = new Role
-                {
-                    Name = adminRoleName,
-                    NormalizedName = normalizedAdminRoleName,
-                    Description = "System Administrator Role",
-                    ConcurrencyStamp = Guid.NewGuid().ToString(),
-                };
-
-                dbContext.Roles.Add(adminRole);
-                await dbContext.SaveChangesAsync(cancellationToken);
-            }
-
-            var currentAdminPermissions = await dbContext.RoleClaims
-                .Where(rc => rc.RoleId == adminRole.Id && rc.ClaimType == PermissionsConst.ClaimType)
-                .Select(rc => rc.ClaimValue!)
-                .ToListAsync(cancellationToken);
-
-            var missingAdminPermissions = PermissionsConst.All
-                .Except(currentAdminPermissions, StringComparer.Ordinal)
-                .Select(permission => new RoleClaim
-                {
-                    RoleId = adminRole.Id,
-                    ClaimType = PermissionsConst.ClaimType,
-                    ClaimValue = permission,
-                })
-                .ToList();
-
-            if (missingAdminPermissions.Count > 0)
-            {
-                dbContext.RoleClaims.AddRange(missingAdminPermissions);
-                await dbContext.SaveChangesAsync(cancellationToken);
-            }
-
-            // Create admin user
             var salt = HashCrypto.BuildSalt();
-            var adminUser = new User
+            adminUser = new User
             {
                 UserName = adminUserName,
                 NormalizedUserName = normalizedAdminUserName,
@@ -157,11 +122,15 @@ public class InitHostService(
 
             dbContext.Users.Add(adminUser);
             await dbContext.SaveChangesAsync(cancellationToken);
+        }
 
-            // Assign admin role to admin user
-            var userRole = new UserRole { UserId = adminUser.Id, RoleId = adminRole.Id };
+        var hasSuperAdminRole = await dbContext.UserRoles.AnyAsync(
+            item => item.UserId == adminUser.Id && item.RoleId == superAdminRole.Id,
+            cancellationToken);
 
-            dbContext.UserRoles.Add(userRole);
+        if (!hasSuperAdminRole)
+        {
+            dbContext.UserRoles.Add(new UserRole { UserId = adminUser.Id, RoleId = superAdminRole.Id });
             await dbContext.SaveChangesAsync(cancellationToken);
         }
     }
@@ -536,5 +505,165 @@ public class InitHostService(
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Seed the unified permission model and assign default admin permissions.
+    /// </summary>
+    private async Task SeedPermissionDataAsync(DefaultDbContext dbContext, CancellationToken cancellationToken)
+    {
+        var adminClient = await dbContext.Clients
+            .FirstAsync(item => item.ClientId == PermissionSeedCatalog.AdminWebClientCode, cancellationToken);
+
+        var seededPermissions = new Dictionary<string, Permission>(StringComparer.Ordinal);
+
+        foreach (var rootSeed in PermissionSeedCatalog.AdminWebMenuPermissions)
+        {
+            await UpsertPermissionSeedAsync(
+                dbContext,
+                seed: rootSeed,
+                ownerClientId: adminClient.Id,
+                attachToClientId: adminClient.Id,
+                parent: null,
+                lookup: seededPermissions,
+                cancellationToken: cancellationToken);
+        }
+
+        foreach (var businessSeed in PermissionSeedCatalog.DefaultBusinessPermissions)
+        {
+            await UpsertPermissionSeedAsync(
+                dbContext,
+                seed: businessSeed,
+                ownerClientId: null,
+                attachToClientId: adminClient.Id,
+                parent: null,
+                lookup: seededPermissions,
+                cancellationToken: cancellationToken);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        var adminRoleIds = await dbContext.Roles
+            .Where(item => item.Name == WebConst.SuperAdmin || item.Name == WebConst.AdminUser)
+            .Select(item => item.Id)
+            .ToListAsync(cancellationToken);
+
+        var allPermissionIds = await dbContext.Permissions
+            .Select(item => item.Id)
+            .ToListAsync(cancellationToken);
+
+        foreach (var roleId in adminRoleIds)
+        {
+            await dbContext.RolePermissions
+                .Where(item => item.RoleId == roleId)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            if (allPermissionIds.Count > 0)
+            {
+                dbContext.RolePermissions.AddRange(allPermissionIds.Select(permissionId => new RolePermission
+                {
+                    RoleId = roleId,
+                    PermissionId = permissionId,
+                }));
+            }
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private static async Task<Role> EnsureRoleAsync(
+        DefaultDbContext dbContext,
+        string roleName,
+        string description,
+        CancellationToken cancellationToken)
+    {
+        var normalizedRoleName = roleName.ToUpperInvariant();
+        var role = await dbContext.Roles.FirstOrDefaultAsync(
+            item => item.NormalizedName == normalizedRoleName,
+            cancellationToken);
+
+        if (role != null)
+        {
+            return role;
+        }
+
+        role = new Role
+        {
+            Name = roleName,
+            NormalizedName = normalizedRoleName,
+            Description = description,
+            ConcurrencyStamp = Guid.NewGuid().ToString(),
+        };
+
+        dbContext.Roles.Add(role);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return role;
+    }
+
+    private static async Task<Permission> UpsertPermissionSeedAsync(
+        DefaultDbContext dbContext,
+        PermissionSeedDefinition seed,
+        Guid? ownerClientId,
+        Guid? attachToClientId,
+        Permission? parent,
+        Dictionary<string, Permission> lookup,
+        CancellationToken cancellationToken)
+    {
+        if (!lookup.TryGetValue(seed.Code, out var permission))
+        {
+            permission = await dbContext.Permissions
+                .Include(item => item.ClientPermissions)
+                .FirstOrDefaultAsync(item => item.Code == seed.Code, cancellationToken)
+                ?? new Permission { Code = seed.Code, Name = seed.Name };
+
+            lookup[seed.Code] = permission;
+            if (permission.Id == Guid.Empty)
+            {
+                permission.Id = Guid.CreateVersion7();
+            }
+
+            if (dbContext.Entry(permission).State == EntityState.Detached)
+            {
+                dbContext.Permissions.Add(permission);
+            }
+        }
+
+        permission.Name = seed.Name;
+        permission.DisplayName = seed.DisplayName;
+        permission.Type = seed.Type;
+        permission.Namespace = seed.Namespace;
+        permission.Resource = seed.Resource;
+        permission.Action = seed.Action;
+        permission.Path = seed.Path;
+        permission.Icon = seed.Icon;
+        permission.Sort = seed.Sort;
+        permission.Parent = parent;
+        permission.ParentId = parent?.Id;
+        permission.OwnedClientId = ownerClientId;
+        permission.UpdatedTime = DateTimeOffset.UtcNow;
+        permission.IsDeleted = false;
+
+        if (attachToClientId.HasValue && !permission.ClientPermissions.Any(item => item.ClientId == attachToClientId.Value))
+        {
+            permission.ClientPermissions.Add(new ClientPermission
+            {
+                ClientId = attachToClientId.Value,
+                Permission = permission,
+            });
+        }
+
+        foreach (var child in seed.Children)
+        {
+            await UpsertPermissionSeedAsync(
+                dbContext,
+                child,
+                ownerClientId,
+                attachToClientId,
+                permission,
+                lookup,
+                cancellationToken);
+        }
+
+        return permission;
     }
 }

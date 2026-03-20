@@ -202,7 +202,7 @@ public class AccountController(
     private Guid? GetCurrentUserId()
     {
         var userId = User.FindFirstValue(SysClaimTypes.NameIdentifier)
-            ?? User.FindFirstValue(OAuthConst.ClaimTypes.Subject);
+            ?? User.FindFirstValue(OAuthConst.JwtClaimNames.Subject);
 
         return Guid.TryParse(userId, out var parsedUserId) ? parsedUserId : null;
     }

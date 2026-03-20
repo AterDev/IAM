@@ -51,8 +51,9 @@ src/
 
 在Controller层，做用户输入验证和权限验证，不做业务验证，返回 `Problem()` / `NotFound()` 等 HTTP 错误响应。
 
-### 返回值
-- **成功**：`ActionResult<T>` 或直接返回类型
+**接口返回规范**:
+
+- **成功**：直接返回类型化的DTO对象或集合，不要`return Ok(xxx);`，有多种状态返回时，使用`ActionResult<T>`.
 - **错误**：使用 `Problem()` 或 `NotFound()`，直接使用多语言常量作为错误消息，而不要new一个对象或使用字符串硬编码。
 - **参数绑定**：有歧义时使用显式特性 `[FromBody]` / `[FromQuery]` / `[FromRoute]`
 
@@ -107,13 +108,15 @@ MCP server config lives in [.vscode/mcp.json](../../../.vscode/mcp.json); use co
 
 业务实体的类型转换，可直接在实体中实现。
 
+`Perigon.AspNetCore`中提供了`Utils`以及`Helpers`等工具类，优先使用这些工具类来简化开发。
+
 ### 多租户
 
 架构支持多租户，也支持单租户，从AppHost的`appsettings.Development.json`配置中，可以知道当前是单租户还是多租户模式。如果是单租户模式，tenantId默认为Guid.Empty。
 
 ### 对象映射
 
-优先使用`Perigon.AspNetCore.Utils.Extensions` 中的扩展方法`Merge/MapTo`进行映射。
+优先使用`Perigon.AspNetCore.Utils.Extensions` 中的扩展方法`Merge/MapTo`进行类型转换或映射。
 
 ### Aspire集成 
 
