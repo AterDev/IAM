@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.WebUtilities;
 using IAMMod.Managers;
 using IAMMod.Models.LoginSessionDtos;
+using System.IdentityModel.Tokens.Jwt;
 using ClaimTypes = System.Security.Claims.ClaimTypes;
 using SysClaimTypes = System.Security.Claims.ClaimTypes;
 
@@ -171,8 +172,8 @@ public class ExternalAuthController(
         {
             new(SysClaimTypes.NameIdentifier, userId.ToString()),
             new(SysClaimTypes.Name, userName),
-                new(OAuthConst.JwtClaimNames.Subject, userId.ToString()),
-            new("sid", sessionId),
+            new(JwtRegisteredClaimNames.Sub, userId.ToString()),
+            new(JwtRegisteredClaimNames.Sid, sessionId),
         };
 
         if (!string.IsNullOrWhiteSpace(email))

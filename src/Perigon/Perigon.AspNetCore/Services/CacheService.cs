@@ -88,6 +88,25 @@ public class CacheService(
         return cachedValue;
     }
 
+    public async Task<T> GetOrCreateWithExpirationAsync<T>(
+        string key,
+        Func<CancellationToken, ValueTask<T>> factory,
+        int? expiration = null,
+        int? localExpiration = null,
+        HybridCacheEntryFlags? flags = null,
+        CancellationToken cancellation = default
+    )
+    {
+        var cacheOptions = GetCacheEntryOptions(expiration, localExpiration, flags);
+        var cachedValue = await cache.GetOrCreateAsync(
+            key,
+            factory,
+            cacheOptions,
+            cancellationToken: cancellation
+        );
+        return cachedValue;
+    }
+
     private HybridCacheEntryOptions GetCacheEntryOptions(
         int? expiration = null,
         int? localExpiration = null,

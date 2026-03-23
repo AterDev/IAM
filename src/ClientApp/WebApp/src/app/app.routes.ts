@@ -53,6 +53,10 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/role/list/list').then(m => m.RoleListComponent)
       },
       {
+        path: 'role/:id/permissions',
+        loadComponent: () => import('./pages/role/permissions/permissions').then(m => m.RolePermissionsComponent)
+      },
+      {
         path: 'role/:id',
         loadComponent: () => import('./pages/role/detail/detail').then(m => m.RoleDetailComponent)
       },

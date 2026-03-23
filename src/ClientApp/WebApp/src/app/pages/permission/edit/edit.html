@@ -4,20 +4,22 @@
 
 <mat-dialog-content>
   <form [formGroup]="form" class="permission-form">
-    <div class="grid two-columns">
+    @if (currentClientLabel) {
+      <div class="client-context">
+        <mat-icon>apps</mat-icon>
+        <span>{{ 'permission.client' | translate }}：{{ currentClientLabel }}</span>
+      </div>
+    }
+
+    <div class="form-fields">
       <mat-form-field appearance="outline">
         <mat-label>{{ 'permission.code' | translate }}</mat-label>
         <input matInput [formControl]="code" />
       </mat-form-field>
 
       <mat-form-field appearance="outline">
-        <mat-label>{{ 'permission.name' | translate }}</mat-label>
-        <input matInput [formControl]="name" />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
         <mat-label>{{ 'permission.displayName' | translate }}</mat-label>
-        <input matInput [formControl]="form.controls.displayName" />
+        <input matInput [formControl]="displayNameField" />
       </mat-form-field>
 
       <mat-form-field appearance="outline">
@@ -35,35 +37,10 @@
           <mat-option [value]="null">{{ 'common.none' | translate }}</mat-option>
           @for (item of data.parentOptions; track item.id) {
             @if (!data.permission || item.id !== data.permission.id) {
-              <mat-option [value]="item.id">{{ item.code }} · {{ item.displayName || item.name }}</mat-option>
+              <mat-option [value]="item.id">{{ item.displayName || item.name }}</mat-option>
             }
           }
         </mat-select>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>{{ 'permission.client' | translate }}</mat-label>
-        <mat-select [formControl]="ownedClientId">
-          <mat-option [value]="null">{{ 'common.none' | translate }}</mat-option>
-          @for (client of data.clients; track client.id) {
-            <mat-option [value]="client.id">{{ client.clientId }} · {{ client.displayName }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>{{ 'permission.namespace' | translate }}</mat-label>
-        <input matInput [formControl]="namespaceField" />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>{{ 'permission.resource' | translate }}</mat-label>
-        <input matInput [formControl]="resource" />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>{{ 'permission.action' | translate }}</mat-label>
-        <input matInput [formControl]="action" />
       </mat-form-field>
 
       <mat-form-field appearance="outline">
@@ -82,7 +59,7 @@
       </mat-form-field>
     </div>
 
-    <mat-form-field appearance="outline" class="full-width">
+    <mat-form-field appearance="outline" class="form-field-full">
       <mat-label>{{ 'permission.description' | translate }}</mat-label>
       <textarea matInput rows="4" [formControl]="form.controls.description"></textarea>
     </mat-form-field>

@@ -1,3 +1,4 @@
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,36 +12,36 @@ public class AuthorizeRequestDto
     /// <summary>
     /// Response type. Currently only authorization code flow is supported.
     /// </summary>
-    [ModelBinder(Name = "response_type")]
-    [JsonPropertyName("response_type")]
+    [ModelBinder(Name = OpenIdConnectParameterNames.ResponseType)]
+    [JsonPropertyName(OpenIdConnectParameterNames.ResponseType)]
     public required string ResponseType { get; set; }
 
     /// <summary>
     /// Client identifier
     /// </summary>
-    [ModelBinder(Name = "client_id")]
-    [JsonPropertyName("client_id")]
+    [ModelBinder(Name = OpenIdConnectParameterNames.ClientId)]
+    [JsonPropertyName(OpenIdConnectParameterNames.ClientId)]
     public required string ClientId { get; set; }
 
     /// <summary>
     /// Redirect URI
     /// </summary>
-    [ModelBinder(Name = "redirect_uri")]
-    [JsonPropertyName("redirect_uri")]
+    [ModelBinder(Name = OpenIdConnectParameterNames.RedirectUri)]
+    [JsonPropertyName(OpenIdConnectParameterNames.RedirectUri)]
     public required string RedirectUri { get; set; }
 
     /// <summary>
     /// Requested scopes (space-separated)
     /// </summary>
-    [ModelBinder(Name = "scope")]
-    [JsonPropertyName("scope")]
+    [ModelBinder(Name = OpenIdConnectParameterNames.Scope)]
+    [JsonPropertyName(OpenIdConnectParameterNames.Scope)]
     public string? Scope { get; set; }
 
     /// <summary>
     /// State parameter for CSRF protection
     /// </summary>
-    [ModelBinder(Name = "state")]
-    [JsonPropertyName("state")]
+    [ModelBinder(Name = OpenIdConnectParameterNames.State)]
+    [JsonPropertyName(OpenIdConnectParameterNames.State)]
     public string? State { get; set; }
 
     /// <summary>
@@ -67,14 +68,14 @@ public class AuthorizeRequestDto
     /// <summary>
     /// Nonce for OIDC
     /// </summary>
-    [ModelBinder(Name = "nonce")]
-    [JsonPropertyName("nonce")]
+    [ModelBinder(Name = OpenIdConnectParameterNames.Nonce)]
+    [JsonPropertyName(OpenIdConnectParameterNames.Nonce)]
     public string? Nonce { get; set; }
 
     /// <summary>
     /// Prompt parameter (none, login, consent, select_account)
     /// </summary>
-    [ModelBinder(Name = "prompt")]
-    [JsonPropertyName("prompt")]
+    [ModelBinder(Name = OpenIdConnectParameterNames.Prompt)]
+    [JsonPropertyName(OpenIdConnectParameterNames.Prompt)]
     public string? Prompt { get; set; }
 }

@@ -3,9 +3,11 @@ using IAMMod.Managers;
 using IAMMod.Models.OAuthDtos;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Share.Constants;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using SysClaimTypes = System.Security.Claims.ClaimTypes;
 
@@ -130,7 +132,7 @@ public class OAuthInteractionController(
                 });
             }
 
-            if (request.ResponseType != ResponseTypes.Code)
+            if (request.ResponseType != OpenIdConnectResponseType.Code)
             {
                 return Ok(new AuthorizeInteractionDecisionResponseDto
                 {
@@ -313,38 +315,38 @@ public class OAuthInteractionController(
 
     private static string? GetCurrentUserId(ClaimsPrincipal principal)
     {
-        return principal.FindFirst(OAuthConst.JwtClaimNames.Subject)?.Value
+        return principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
             ?? principal.FindFirst(SysClaimTypes.NameIdentifier)?.Value;
     }
 
     private static string? GetCurrentUserName(ClaimsPrincipal principal)
     {
         return principal.FindFirst(SysClaimTypes.Name)?.Value
-            ?? principal.FindFirst(OAuthConst.JwtClaimNames.Name)?.Value
-            ?? principal.FindFirst("preferred_username")?.Value;
+            ?? principal.FindFirst(JwtRegisteredClaimNames.Name)?.Value
+            ?? principal.FindFirst(JwtRegisteredClaimNames.PreferredUsername)?.Value;
     }
 
     private static string? GetSessionId(ClaimsPrincipal principal)
     {
-        return principal.FindFirst("sid")?.Value;
+        return principal.FindFirst(JwtRegisteredClaimNames.Sid)?.Value;
     }
 
     private static string GetDefaultScopeDescription(string scopeName)
     {
         return scopeName switch
         {
-            Scopes.OpenId => "Your basic identity",
+            OpenIdConnectScope.OpenId => "Your basic identity",
             Scopes.Profile => "Your basic profile details",
-            Scopes.Email => "Your email address",
-            Scopes.Phone => "Your phone number",
-            Scopes.Address => "Your address details",
-            "offline_access" => "Access to your data while you are offline",
+            OpenIdConnectScope.Email => "Your email address",
+            OpenIdConnectScope.Phone => "Your phone number",
+            OpenIdConnectScope.Address => "Your address details",
+            OpenIdConnectScope.OfflineAccess => "Access to your data while you are offline",
             _ => $"Access permission for {scopeName}",
         };
     }
 
     private static bool IsDefaultRequiredScope(string scopeName)
     {
-        return scopeName == Scopes.OpenId;
+        return scopeName == OpenIdConnectScope.OpenId;
     }
 }

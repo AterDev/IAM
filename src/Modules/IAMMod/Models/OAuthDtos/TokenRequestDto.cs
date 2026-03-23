@@ -1,3 +1,4 @@
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IAMMod.Models.OAuthDtos;
@@ -10,31 +11,31 @@ public class TokenRequestDto
     /// <summary>
     /// Grant type (authorization_code, refresh_token, client_credentials, password, device_code)
     /// </summary>
-    [ModelBinder(Name = "grant_type")]
+    [ModelBinder(Name = OpenIdConnectParameterNames.GrantType)]
     public required string GrantType { get; set; }
 
     /// <summary>
     /// Client identifier
     /// </summary>
-    [ModelBinder(Name = "client_id")]
+    [ModelBinder(Name = OpenIdConnectParameterNames.ClientId)]
     public string? ClientId { get; set; }
 
     /// <summary>
     /// Client secret
     /// </summary>
-    [ModelBinder(Name = "client_secret")]
+    [ModelBinder(Name = OpenIdConnectParameterNames.ClientSecret)]
     public string? ClientSecret { get; set; }
 
     /// <summary>
     /// Authorization code (for authorization_code grant)
     /// </summary>
-    [ModelBinder(Name = "code")]
+    [ModelBinder(Name = OpenIdConnectParameterNames.Code)]
     public string? Code { get; set; }
 
     /// <summary>
     /// Redirect URI (for authorization_code grant)
     /// </summary>
-    [ModelBinder(Name = "redirect_uri")]
+    [ModelBinder(Name = OpenIdConnectParameterNames.RedirectUri)]
     public string? RedirectUri { get; set; }
 
     /// <summary>
@@ -46,13 +47,13 @@ public class TokenRequestDto
     /// <summary>
     /// Refresh token (for refresh_token grant)
     /// </summary>
-    [ModelBinder(Name = "refresh_token")]
+    [ModelBinder(Name = OpenIdConnectParameterNames.RefreshToken)]
     public string? RefreshToken { get; set; }
 
     /// <summary>
     /// Requested scope
     /// </summary>
-    [ModelBinder(Name = "scope")]
+    [ModelBinder(Name = OpenIdConnectParameterNames.Scope)]
     public string? Scope { get; set; }
 
     /// <summary>
@@ -64,7 +65,7 @@ public class TokenRequestDto
     /// <summary>
     /// Password (for password grant)
     /// </summary>
-    [ModelBinder(Name = "password")]
+    [ModelBinder(Name = OpenIdConnectParameterNames.Password)]
     public string? Password { get; set; }
 
     /// <summary>

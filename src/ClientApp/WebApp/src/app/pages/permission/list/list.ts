@@ -1,13 +1,13 @@
 import { NestedTreeControl } from '@angular/cdk/tree';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslateService } from '@ngx-translate/core';
 import { CommonModules, BaseMatModules, CommonFormModules } from 'src/app/share/shared-modules';
 import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatListModule } from '@angular/material/list';
+import { MatTabsModule } from '@angular/material/tabs';
 import { FormsModule } from '@angular/forms';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { ClientItemDto } from 'src/app/services/api/models/iammod/client-item-dto.model';
@@ -25,8 +25,8 @@ import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
     ...CommonFormModules,
     MatTreeModule,
     MatCardModule,
-    MatChipsModule,
-    MatCheckboxModule,
+    MatListModule,
+    MatTabsModule,
     FormsModule,
     AppLoadingComponent,
   ],
@@ -37,24 +37,18 @@ export class PermissionListComponent implements OnInit {
   readonly treeControl = new NestedTreeControl<PermissionTreeNode>((node) => node.children);
   readonly dataSource = new MatTreeNestedDataSource<PermissionTreeNode>();
   readonly isLoading = signal(false);
-  readonly selectedNode = signal<PermissionTreeNode | null>(null);
-  readonly selectedIds = signal<Set<string>>(new Set());
   readonly clients = signal<ClientItemDto[]>([]);
-  readonly typeOptions = [
-    { labelKey: 'common.all', value: null },
+  readonly selectedClient = computed(() => this.clients().find((client) => client.id === this.clientId) ?? null);
+  readonly typeTabs = [
     { labelKey: 'permission.typeOptions.menu', value: PermissionType.Menu },
     { labelKey: 'permission.typeOptions.button', value: PermissionType.Button },
     { labelKey: 'permission.typeOptions.business', value: PermissionType.Business },
   ];
-  readonly permissionTypeLabelKeys: Record<PermissionType, string> = {
-    [PermissionType.Menu]: 'permission.typeOptions.menu',
-    [PermissionType.Button]: 'permission.typeOptions.button',
-    [PermissionType.Business]: 'permission.typeOptions.business',
-  };
 
   keyword = '';
   clientId: string | null = null;
-  type: PermissionType | null = null;
+  type = PermissionType.Menu;
+  activeTabIndex = 0;
 
   constructor(
     private readonly permissionAdminService: PermissionAdminService,
@@ -66,18 +60,35 @@ export class PermissionListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadClients();
-    this.loadTree();
   }
 
   hasChild = (_: number, node: PermissionTreeNode) => !!node.children && node.children.length > 0;
 
   loadClients(): void {
     this.api.clients.getClients(null, null, null, null, 1, 200, null).subscribe({
-      next: (result) => this.clients.set(result.data),
+      next: (result) => {
+        const clients = result.data;
+        this.clients.set(clients);
+
+        if (!this.clientId && clients.length > 0) {
+          this.clientId = clients[0].id;
+        }
+
+        this.loadTree();
+      },
+      error: () => {
+        this.snackBar.open(this.translate.instant('error.loadClientsFailed'), this.translate.instant('common.close'), { duration: 3000 });
+      },
     });
   }
 
   loadTree(): void {
+    if (!this.clientId) {
+      this.dataSource.data = [];
+      this.isLoading.set(false);
+      return;
+    }
+
     this.isLoading.set(true);
     this.permissionAdminService.getPermissionTree({
       clientId: this.clientId,
@@ -98,18 +109,29 @@ export class PermissionListComponent implements OnInit {
     });
   }
 
-  selectNode(node: PermissionTreeNode): void {
-    this.selectedNode.set(node);
+  selectClient(client: ClientItemDto): void {
+    if (this.clientId === client.id) {
+      return;
+    }
+
+    this.clientId = client.id;
+    this.loadTree();
   }
 
-  toggleBatchSelect(node: PermissionTreeNode, checked: boolean): void {
-    const selected = new Set(this.selectedIds());
-    this.collectNodeIds(node).forEach((id) => checked ? selected.add(id) : selected.delete(id));
-    this.selectedIds.set(selected);
+  onTabChange(index: number): void {
+    const nextType = this.typeTabs[index]?.value;
+    if (!nextType || this.type === nextType) {
+      this.activeTabIndex = index;
+      return;
+    }
+
+    this.activeTabIndex = index;
+    this.type = nextType;
+    this.loadTree();
   }
 
-  isBatchSelected(node: PermissionTreeNode): boolean {
-    return this.selectedIds().has(node.id);
+  trackByClientId(_: number, client: ClientItemDto): string {
+    return client.id;
   }
 
   addRoot(): void {
@@ -147,45 +169,9 @@ export class PermissionListComponent implements OnInit {
     });
   }
 
-  deleteSelected(): void {
-    const ids = Array.from(this.selectedIds());
-    if (ids.length === 0) {
-      return;
-    }
-
-    this.confirmDelete(ids, 'permission.deleteSelectedConfirm').subscribe((confirmed) => {
-      if (!confirmed) {
-        return;
-      }
-
-      let completed = 0;
-      let failed = 0;
-      ids.forEach((id) => {
-        this.permissionAdminService.deletePermission(id).subscribe({
-          next: () => {
-            completed++;
-            this.finishBatchDelete(ids.length, completed, failed);
-          },
-          error: () => {
-            failed++;
-            this.finishBatchDelete(ids.length, completed, failed);
-          },
-        });
-      });
-    });
-  }
-
   clearFilters(): void {
     this.keyword = '';
-    this.clientId = null;
-    this.type = null;
     this.loadTree();
-  }
-
-  protected readonly permissionType = PermissionType;
-
-  getPermissionTypeLabelKey(type: PermissionType): string {
-    return this.permissionTypeLabelKeys[type];
   }
 
   getNodeLabel(node: Pick<PermissionTreeNode, 'displayName' | 'name'>): string {
@@ -193,13 +179,17 @@ export class PermissionListComponent implements OnInit {
   }
 
   private openEditDialog(permission?: PermissionItem | null, defaultParentId?: string | null): void {
+    const currentClient = this.selectedClient();
     const dialogRef = this.dialog.open(PermissionEditComponent, {
-      width: '900px',
+      width: '720px',
       data: {
         permission,
         defaultParentId,
         clients: this.clients(),
         parentOptions: this.flattenPermissions(this.dataSource.data),
+        currentClientId: permission?.ownedClientId ?? this.clientId,
+        currentClientLabel: currentClient ? `${currentClient.displayName || currentClient.clientId} · ${currentClient.clientId}` : null,
+        lockClient: true,
       },
     });
 
@@ -213,11 +203,12 @@ export class PermissionListComponent implements OnInit {
   private flattenPermissions(nodes: PermissionTreeNode[], depth = 0): PermissionItem[] {
     return nodes.flatMap((node) => {
       const labelPrefix = '—'.repeat(depth);
+      const label = this.translateLabel(node.displayName || node.name);
       const item: PermissionItem = {
         id: node.id,
         code: node.code,
-        name: `${labelPrefix}${node.name}`,
-        displayName: node.displayName,
+        name: `${labelPrefix}${label}`,
+        displayName: `${labelPrefix}${label}`,
         description: node.description,
         type: node.type,
         parentId: node.parentId,
@@ -237,10 +228,6 @@ export class PermissionListComponent implements OnInit {
     });
   }
 
-  private collectNodeIds(node: PermissionTreeNode): string[] {
-    return [node.id, ...node.children.flatMap((child) => this.collectNodeIds(child))];
-  }
-
   private expandAll(nodes: PermissionTreeNode[]): void {
     nodes.forEach((node) => {
       this.treeControl.expand(node);
@@ -258,20 +245,6 @@ export class PermissionListComponent implements OnInit {
         message: this.translate.instant(messageKey, { count: ids.length }),
       },
     }).afterClosed();
-  }
-
-  private finishBatchDelete(total: number, success: number, failed: number): void {
-    if (success + failed !== total) {
-      return;
-    }
-
-    this.selectedIds.set(new Set());
-    this.loadTree();
-    this.snackBar.open(
-      this.translate.instant(failed === 0 ? 'permission.deleteSelectedSuccess' : 'permission.deleteSelectedPartial', { success, failed }),
-      this.translate.instant('common.close'),
-      { duration: 4000 },
-    );
   }
 
   private translateLabel(label: string): string {

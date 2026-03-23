@@ -1,8 +1,10 @@
 using IAMMod.Managers;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.IdentityModel.Tokens.Jwt;
 using SysClaimTypes = System.Security.Claims.ClaimTypes;
 
 namespace ApiService.Pages.Account;
@@ -12,13 +14,13 @@ public class LogoutModel(SessionManager sessionManager, ILogger<LogoutModel> log
     private readonly SessionManager _sessionManager = sessionManager;
     private readonly ILogger<LogoutModel> _logger = logger;
 
-    [BindProperty(SupportsGet = true, Name = "post_logout_redirect_uri")]
+    [BindProperty(SupportsGet = true, Name = OpenIdConnectParameterNames.PostLogoutRedirectUri)]
     public string? PostLogoutRedirectUri { get; set; }
 
-    [BindProperty(SupportsGet = true, Name = "state")]
+    [BindProperty(SupportsGet = true, Name = OpenIdConnectParameterNames.State)]
     public string? State { get; set; }
 
-    [BindProperty(SupportsGet = true, Name = "id_token_hint")]
+    [BindProperty(SupportsGet = true, Name = OpenIdConnectParameterNames.IdTokenHint)]
     public string? IdTokenHint { get; set; }
 
     public string? UserName { get; set; }
@@ -32,7 +34,7 @@ public class LogoutModel(SessionManager sessionManager, ILogger<LogoutModel> log
     {
         try
         {
-            var sid = User.FindFirst("sid")?.Value ?? HttpContext.Session.GetString("SessionId");
+            var sid = User.FindFirst(JwtRegisteredClaimNames.Sid)?.Value ?? HttpContext.Session.GetString("SessionId");
             var userIdClaim = User.FindFirst(SysClaimTypes.NameIdentifier)?.Value;
 
             if (!string.IsNullOrWhiteSpace(sid) && Guid.TryParse(userIdClaim, out var userId))

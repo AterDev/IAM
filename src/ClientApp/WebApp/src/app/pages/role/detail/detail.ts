@@ -8,7 +8,6 @@ import { ApiClient } from 'src/app/services/api/api-client';
 import { RoleDetailDto } from 'src/app/services/api/models/iammod/role-detail-dto.model';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { RoleEditComponent } from '../edit/edit';
-import { RolePermissionsComponent } from '../permissions/permissions';
 import { MatCardModule } from '@angular/material/card';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 
@@ -86,17 +85,7 @@ export class RoleDetailComponent implements OnInit {
       return;
     }
 
-    const dialogRef = this.dialog.open(RolePermissionsComponent, {
-      width: '700px',
-      maxHeight: '80vh',
-      data: currentRole
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.loadRole(currentRole.id);
-      }
-    });
+    this.router.navigate(['/role', currentRole.id, 'permissions']);
   }
 
   deleteRole(): void {

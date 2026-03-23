@@ -1,6 +1,8 @@
 using IAMMod.Managers;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Share.Constants;
+using System.IdentityModel.Tokens.Jwt;
 using SysClaimTypes = System.Security.Claims.ClaimTypes;
 
 namespace ApiService.Pages.Account;
@@ -22,16 +24,16 @@ public class ConsentModel(
     [BindProperty(SupportsGet = true, Name = "returnUrl")]
     public string? ReturnUrl { get; set; }
 
-    [BindProperty(Name = "client_id")]
+    [BindProperty(Name = OpenIdConnectParameterNames.ClientId)]
     public string ClientId { get; set; } = string.Empty;
 
-    [BindProperty(Name = "scope")]
+    [BindProperty(Name = OpenIdConnectParameterNames.Scope)]
     public string Scope { get; set; } = string.Empty;
 
-    [BindProperty(Name = "state")]
+    [BindProperty(Name = OpenIdConnectParameterNames.State)]
     public string? State { get; set; }
 
-    [BindProperty(Name = "nonce")]
+    [BindProperty(Name = OpenIdConnectParameterNames.Nonce)]
     public string? Nonce { get; set; }
 
     [BindProperty(Name = "code_challenge")]
@@ -40,10 +42,10 @@ public class ConsentModel(
     [BindProperty(Name = "code_challenge_method")]
     public string? CodeChallengeMethod { get; set; }
 
-    [BindProperty(Name = "redirect_uri")]
+    [BindProperty(Name = OpenIdConnectParameterNames.RedirectUri)]
     public string? RedirectUri { get; set; }
 
-    [BindProperty(Name = "response_type")]
+    [BindProperty(Name = OpenIdConnectParameterNames.ResponseType)]
     public string? ResponseType { get; set; }
 
     [BindProperty]
@@ -58,7 +60,7 @@ public class ConsentModel(
     {
         // Get user from cookie principal first, then fall back to session.
         var userId = User.FindFirst(SysClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst(OAuthConst.JwtClaimNames.Subject)?.Value
+            ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
             ?? HttpContext.Session.GetString("UserId");
         UserName = User.FindFirst(SysClaimTypes.Name)?.Value
             ?? HttpContext.Session.GetString("UserName")
@@ -79,22 +81,22 @@ public class ConsentModel(
                 Request.QueryString.Value
             );
 
-            ClientId = query.TryGetValue("client_id", out var clientId)
+            ClientId = query.TryGetValue(OpenIdConnectParameterNames.ClientId, out var clientId)
                 ? clientId.ToString()
                 : string.Empty;
-            Scope = query.TryGetValue("scope", out var scope) ? scope.ToString() : string.Empty;
-            State = query.TryGetValue("state", out var state) ? state.ToString() : null;
-            Nonce = query.TryGetValue("nonce", out var nonce) ? nonce.ToString() : null;
+            Scope = query.TryGetValue(OpenIdConnectParameterNames.Scope, out var scope) ? scope.ToString() : string.Empty;
+            State = query.TryGetValue(OpenIdConnectParameterNames.State, out var state) ? state.ToString() : null;
+            Nonce = query.TryGetValue(OpenIdConnectParameterNames.Nonce, out var nonce) ? nonce.ToString() : null;
             CodeChallenge = query.TryGetValue("code_challenge", out var challenge)
                 ? challenge.ToString()
                 : null;
             CodeChallengeMethod = query.TryGetValue("code_challenge_method", out var method)
                 ? method.ToString()
                 : null;
-            RedirectUri = query.TryGetValue("redirect_uri", out var redirectUri)
+            RedirectUri = query.TryGetValue(OpenIdConnectParameterNames.RedirectUri, out var redirectUri)
                 ? redirectUri.ToString()
                 : null;
-            ResponseType = query.TryGetValue("response_type", out var responseType)
+            ResponseType = query.TryGetValue(OpenIdConnectParameterNames.ResponseType, out var responseType)
                 ? responseType.ToString()
                 : null;
         }
@@ -158,7 +160,7 @@ public class ConsentModel(
     public async Task<IActionResult> OnPostAsync(string action)
     {
         var userId = User.FindFirst(SysClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst(OAuthConst.JwtClaimNames.Subject)?.Value
+            ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
             ?? HttpContext.Session.GetString("UserId");
 
         if (string.IsNullOrEmpty(userId))
@@ -208,16 +210,16 @@ public class ConsentModel(
 
             // Redirect back to the authorize endpoint to continue the flow
             var authorizeUrl =
-                $"/connect/authorize?client_id={ClientId}&scope={Scope}&response_type={ResponseType}&redirect_uri={RedirectUri}";
+                $"/connect/authorize?{OpenIdConnectParameterNames.ClientId}={ClientId}&{OpenIdConnectParameterNames.Scope}={Scope}&{OpenIdConnectParameterNames.ResponseType}={ResponseType}&{OpenIdConnectParameterNames.RedirectUri}={RedirectUri}";
 
             if (!string.IsNullOrEmpty(State))
             {
-                authorizeUrl += $"&state={State}";
+                authorizeUrl += $"&{OpenIdConnectParameterNames.State}={State}";
             }
 
             if (!string.IsNullOrEmpty(Nonce))
             {
-                authorizeUrl += $"&nonce={Nonce}";
+                authorizeUrl += $"&{OpenIdConnectParameterNames.Nonce}={Nonce}";
             }
 
             if (!string.IsNullOrEmpty(CodeChallenge))
@@ -246,19 +248,19 @@ public class ConsentModel(
     {
         return scopeName switch
         {
-            "openid" => "您的基本身份标识",
+            OpenIdConnectScope.OpenId => "您的基本身份标识",
             "profile" => "您的基本个人信息（姓名等）",
-            "email" => "您的电子邮箱地址",
-            "phone" => "您的电话号码",
-            "address" => "您的地址信息",
-            "offline_access" => "在您离线时访问您的数据",
+            OpenIdConnectScope.Email => "您的电子邮箱地址",
+            OpenIdConnectScope.Phone => "您的电话号码",
+            OpenIdConnectScope.Address => "您的地址信息",
+            OpenIdConnectScope.OfflineAccess => "在您离线时访问您的数据",
             _ => $"访问 {scopeName} 资源的权限",
         };
     }
 
     private static bool IsDefaultRequiredScope(string scopeName)
     {
-        return scopeName == "openid";
+        return scopeName == OpenIdConnectScope.OpenId;
     }
 }
 

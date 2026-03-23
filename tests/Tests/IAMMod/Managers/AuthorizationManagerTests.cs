@@ -1,3 +1,5 @@
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+
 namespace Tests.IAMMod.Managers;
 
 public class AuthorizationManagerTests
@@ -36,7 +38,7 @@ public class AuthorizationManagerTests
 
         var result = await manager.ValidateAuthorizationRequestAsync(new AuthorizeRequestDto
         {
-            ResponseType = OAuthConst.ResponseTypes.Code,
+            ResponseType = OpenIdConnectResponseType.Code,
             ClientId = client.ClientId,
             RedirectUri = client.RedirectUris[0],
             Scope = "api.write",

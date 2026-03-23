@@ -286,7 +286,6 @@ public class PermissionManager(
                 Sort = permission.Sort,
                 OwnedClientId = permission.OwnedClientId,
                 OwnedClientCode = permission.OwnedClient != null ? permission.OwnedClient.ClientId : null,
-                ManagedBy = permission.ManagedBy,
             })
             .ToListAsync();
 

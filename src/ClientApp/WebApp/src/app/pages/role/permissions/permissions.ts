@@ -1,17 +1,19 @@
 import { NestedTreeControl } from '@angular/cdk/tree';
-import { Component, Inject, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
-import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslateService } from '@ngx-translate/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatChipsModule } from '@angular/material/chips';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
+import { MatListModule } from '@angular/material/list';
+import { MatTabsModule } from '@angular/material/tabs';
 import { CommonModules, CommonFormModules, BaseMatModules } from 'src/app/share/shared-modules';
+import { ActivatedRoute, Router } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { ApiClient } from 'src/app/services/api/api-client';
-import { RoleItemDto } from 'src/app/services/api/models/iammod/role-item-dto.model';
 import { ClientItemDto } from 'src/app/services/api/models/iammod/client-item-dto.model';
+import { RoleDetailDto } from 'src/app/services/api/models/iammod/role-detail-dto.model';
 import { PermissionAdminService } from 'src/app/services/permission-admin.service';
 import { PermissionTreeNode, PermissionType } from 'src/app/services/permission-admin.models';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
@@ -22,11 +24,11 @@ import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
     ...CommonModules,
     ...CommonFormModules,
     ...BaseMatModules,
-    MatDialogModule,
     MatCheckboxModule,
-    MatChipsModule,
     MatTreeModule,
     MatCardModule,
+    MatListModule,
+    MatTabsModule,
     FormsModule,
     AppLoadingComponent,
   ],
@@ -36,61 +38,69 @@ import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 export class RolePermissionsComponent implements OnInit {
   readonly treeControl = new NestedTreeControl<PermissionTreeNode>((node) => node.children);
   readonly dataSource = new MatTreeNestedDataSource<PermissionTreeNode>();
-  readonly isLoading = signal(true);
+  readonly isLoading = signal(false);
   readonly isSaving = signal(false);
+  readonly role = signal<RoleDetailDto | null>(null);
   readonly clients = signal<ClientItemDto[]>([]);
+  readonly clientTree = signal<PermissionTreeNode[]>([]);
+  readonly currentClientCodes = signal<Set<string>>(new Set());
+  readonly baselineRoleCodes = signal<Set<string>>(new Set());
+  readonly selectedClient = computed(() => this.clients().find((client) => client.id === this.clientId) ?? null);
   readonly selectedCodes = signal<Set<string>>(new Set());
-  readonly typeOptions = [
-    { labelKey: 'common.all', value: null },
+  readonly typeTabs = [
     { labelKey: 'permission.typeOptions.menu', value: PermissionType.Menu },
     { labelKey: 'permission.typeOptions.button', value: PermissionType.Button },
     { labelKey: 'permission.typeOptions.business', value: PermissionType.Business },
   ];
-  readonly permissionTypeLabelKeys: Record<PermissionType, string> = {
-    [PermissionType.Menu]: 'permission.typeOptions.menu',
-    [PermissionType.Button]: 'permission.typeOptions.button',
-    [PermissionType.Business]: 'permission.typeOptions.business',
-  };
 
   clientId: string | null = null;
-  type: PermissionType | null = null;
+  type = PermissionType.Menu;
   keyword = '';
+  activeTabIndex = 0;
+  private roleId: string | null = null;
 
   constructor(
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
     private readonly permissionAdminService: PermissionAdminService,
     private readonly api: ApiClient,
-    private readonly dialogRef: MatDialogRef<RolePermissionsComponent>,
     private readonly snackBar: MatSnackBar,
     private readonly translate: TranslateService,
-    @Inject(MAT_DIALOG_DATA) readonly data: RoleItemDto,
   ) {}
 
   ngOnInit(): void {
-    this.loadClients();
-    this.loadTree();
+    this.roleId = this.route.snapshot.paramMap.get('id');
+    if (!this.roleId) {
+      this.router.navigate(['/role']);
+      return;
+    }
+
+    this.loadPage();
   }
 
   hasChild = (_: number, node: PermissionTreeNode) => !!node.children && node.children.length > 0;
 
-  loadClients(): void {
-    this.api.clients.getClients(null, null, null, null, 1, 200, null).subscribe({
-      next: (result) => this.clients.set(result.data),
-    });
-  }
-
   loadTree(): void {
+    if (!this.clientId || !this.roleId) {
+      this.clientTree.set([]);
+      this.currentClientCodes.set(new Set());
+      this.selectedCodes.set(new Set());
+      this.dataSource.data = [];
+      this.isLoading.set(false);
+      return;
+    }
+
     this.isLoading.set(true);
-    this.permissionAdminService.getRolePermissionTree(this.data.id, {
+    this.permissionAdminService.getRolePermissionTree(this.roleId, {
       clientId: this.clientId,
-      type: this.type,
-      keyword: this.keyword || null,
       pageIndex: 1,
       pageSize: 2000,
     }).subscribe({
       next: (tree) => {
-        this.dataSource.data = tree;
+        this.clientTree.set(tree);
+        this.currentClientCodes.set(new Set(this.collectCodes(tree)));
         this.selectedCodes.set(new Set(this.collectSelectedCodes(tree)));
-        this.expandAll(tree);
+        this.applyTreeView();
         this.isLoading.set(false);
       },
       error: () => {
@@ -120,16 +130,50 @@ export class RolePermissionsComponent implements OnInit {
     this.selectedCodes.set(selected);
   }
 
-  save(): void {
-    if (this.isSaving()) {
+  selectClient(client: ClientItemDto): void {
+    if (this.clientId === client.id) {
       return;
     }
 
+    this.clientId = client.id;
+    this.keyword = '';
+    this.activeTabIndex = 0;
+    this.type = PermissionType.Menu;
+    this.loadTree();
+  }
+
+  onTabChange(index: number): void {
+    const nextType = this.typeTabs[index]?.value;
+    if (!nextType || this.type === nextType) {
+      this.activeTabIndex = index;
+      return;
+    }
+
+    this.activeTabIndex = index;
+    this.type = nextType;
+    this.applyTreeView();
+  }
+
+  trackByClientId(_: number, client: ClientItemDto): string {
+    return client.id;
+  }
+
+  save(): void {
+    if (this.isSaving() || !this.roleId) {
+      return;
+    }
+
+    const mergedCodes = new Set(this.baselineRoleCodes());
+    this.currentClientCodes().forEach((code) => mergedCodes.delete(code));
+    this.selectedCodes().forEach((code) => mergedCodes.add(code));
+
     this.isSaving.set(true);
-    this.permissionAdminService.grantRolePermissions(this.data.id, Array.from(this.selectedCodes()).sort()).subscribe({
+    this.permissionAdminService.grantRolePermissions(this.roleId, Array.from(mergedCodes).sort()).subscribe({
       next: () => {
+        this.baselineRoleCodes.set(mergedCodes);
+        this.isSaving.set(false);
         this.snackBar.open(this.translate.instant('success.permissionsSaved'), this.translate.instant('common.close'), { duration: 3000 });
-        this.dialogRef.close(true);
+        this.loadTree();
       },
       error: () => {
         this.isSaving.set(false);
@@ -138,21 +182,18 @@ export class RolePermissionsComponent implements OnInit {
     });
   }
 
-  cancel(): void {
-    this.dialogRef.close();
+  goBack(): void {
+    if (!this.roleId) {
+      this.router.navigate(['/role']);
+      return;
+    }
+
+    this.router.navigate(['/role', this.roleId]);
   }
 
   clearFilters(): void {
-    this.clientId = null;
-    this.type = null;
     this.keyword = '';
-    this.loadTree();
-  }
-
-  protected readonly permissionType = PermissionType;
-
-  getPermissionTypeLabelKey(type: PermissionType): string {
-    return this.permissionTypeLabelKeys[type];
+    this.applyTreeView();
   }
 
   getNodeLabel(node: Pick<PermissionTreeNode, 'displayName' | 'name'>): string {
@@ -175,6 +216,63 @@ export class RolePermissionsComponent implements OnInit {
       this.treeControl.expand(node);
       this.expandAll(node.children);
     });
+  }
+
+  private loadPage(): void {
+    if (!this.roleId) {
+      return;
+    }
+
+    this.isLoading.set(true);
+    forkJoin({
+      role: this.api.roles.getDetail(this.roleId),
+      clients: this.api.clients.getClients(null, null, null, null, 1, 200, null),
+      roleCodes: this.permissionAdminService.getRolePermissionCodes(this.roleId),
+    }).subscribe({
+      next: ({ role, clients, roleCodes }) => {
+        this.role.set(role);
+        this.clients.set(clients.data);
+        this.baselineRoleCodes.set(new Set(roleCodes));
+
+        if (!this.clientId && clients.data.length > 0) {
+          this.clientId = clients.data[0].id;
+        }
+
+        this.loadTree();
+      },
+      error: () => {
+        this.isLoading.set(false);
+        this.snackBar.open(this.translate.instant('error.loadPermissionsFailed'), this.translate.instant('common.close'), { duration: 3000 });
+      },
+    });
+  }
+
+  applyTreeView(): void {
+    const filteredTree = this.filterTree(this.clientTree(), this.type, this.keyword.trim().toLocaleLowerCase());
+    this.dataSource.data = filteredTree;
+    this.treeControl.dataNodes = filteredTree;
+    this.expandAll(filteredTree);
+  }
+
+  private filterTree(nodes: PermissionTreeNode[], type: PermissionType, keyword: string): PermissionTreeNode[] {
+    return nodes.flatMap((node) => {
+      const children = this.filterTree(node.children, type, keyword);
+      const matchesType = node.type === type;
+      const matchesKeyword = !keyword || this.matchesKeyword(node, keyword);
+
+      if ((matchesType && matchesKeyword) || children.length > 0) {
+        return [{ ...node, children }];
+      }
+
+      return [];
+    });
+  }
+
+  private matchesKeyword(node: PermissionTreeNode, keyword: string): boolean {
+    const label = this.translateLabel(node.displayName || node.name).toLocaleLowerCase();
+    return label.includes(keyword)
+      || node.code.toLocaleLowerCase().includes(keyword)
+      || (node.description?.toLocaleLowerCase().includes(keyword) ?? false);
   }
 
   private translateLabel(label: string): string {

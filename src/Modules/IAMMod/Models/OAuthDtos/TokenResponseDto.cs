@@ -1,3 +1,4 @@
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using System.Text.Json.Serialization;
 
 namespace IAMMod.Models.OAuthDtos;
@@ -10,36 +11,36 @@ public class TokenResponseDto
     /// <summary>
     /// Access token
     /// </summary>
-    [JsonPropertyName("access_token")]
+    [JsonPropertyName(OpenIdConnectParameterNames.AccessToken)]
     public string AccessToken { get; set; } = string.Empty;
 
     /// <summary>
     /// Token type (usually "Bearer")
     /// </summary>
-    [JsonPropertyName("token_type")]
+    [JsonPropertyName(OpenIdConnectParameterNames.TokenType)]
     public string? TokenType { get; set; }
 
     /// <summary>
     /// Expires in seconds
     /// </summary>
-    [JsonPropertyName("expires_in")]
+    [JsonPropertyName(OpenIdConnectParameterNames.ExpiresIn)]
     public int? ExpiresIn { get; set; }
 
     /// <summary>
     /// Refresh token
     /// </summary>
-    [JsonPropertyName("refresh_token")]
+    [JsonPropertyName(OpenIdConnectParameterNames.RefreshToken)]
     public string? RefreshToken { get; set; }
 
     /// <summary>
     /// ID token (OIDC)
     /// </summary>
-    [JsonPropertyName("id_token")]
+    [JsonPropertyName(OpenIdConnectParameterNames.IdToken)]
     public string? IdToken { get; set; }
 
     /// <summary>
     /// Scope granted
     /// </summary>
-    [JsonPropertyName("scope")]
+    [JsonPropertyName(OpenIdConnectParameterNames.Scope)]
     public string? Scope { get; set; }
 }

@@ -2,9 +2,11 @@ using IAMMod.Managers;
 using IAMMod.Models.LoginSessionDtos;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Share.Constants;
 using System.ComponentModel.DataAnnotations;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using SysClaimTypes = System.Security.Claims.ClaimTypes;
 
@@ -46,7 +48,7 @@ public class LoginModel(UserManager userManager, SessionManager sessionManager, 
     public async Task OnGetAsync()
     {
         // Extract client information from return URL if it's an OAuth request
-        if (!string.IsNullOrEmpty(ReturnUrl) && ReturnUrl.Contains("client_id="))
+        if (!string.IsNullOrEmpty(ReturnUrl) && ReturnUrl.Contains($"{OpenIdConnectParameterNames.ClientId}=", StringComparison.Ordinal))
         {
             try
             {
@@ -56,7 +58,7 @@ public class LoginModel(UserManager userManager, SessionManager sessionManager, 
                     var queryString = ReturnUrl.Substring(queryStartIndex);
                     var queryParams = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(queryString);
 
-                    if (queryParams.TryGetValue("client_id", out var clientId))
+                    if (queryParams.TryGetValue(OpenIdConnectParameterNames.ClientId, out var clientId))
                     {
                         ClientName = clientId.ToString();
                     }
@@ -135,8 +137,8 @@ public class LoginModel(UserManager userManager, SessionManager sessionManager, 
             {
                 new Claim(SysClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(SysClaimTypes.Name, user.UserName),
-                new Claim(OAuthConst.JwtClaimNames.Subject, user.Id.ToString()),
-                new Claim("sid", sessionId)
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Sid, sessionId)
             };
 
             if (!string.IsNullOrEmpty(user.Email))

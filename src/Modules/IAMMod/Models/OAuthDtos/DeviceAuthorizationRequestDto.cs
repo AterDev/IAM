@@ -1,3 +1,4 @@
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IAMMod.Models.OAuthDtos;
@@ -10,12 +11,12 @@ public class DeviceAuthorizationRequestDto
     /// <summary>
     /// Client identifier
     /// </summary>
-    [ModelBinder(Name = "client_id")]
+    [ModelBinder(Name = OpenIdConnectParameterNames.ClientId)]
     public required string ClientId { get; set; }
 
     /// <summary>
     /// Requested scope
     /// </summary>
-    [ModelBinder(Name = "scope")]
+    [ModelBinder(Name = OpenIdConnectParameterNames.Scope)]
     public string? Scope { get; set; }
 }

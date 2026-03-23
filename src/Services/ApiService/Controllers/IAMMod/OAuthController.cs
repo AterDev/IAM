@@ -3,6 +3,7 @@ using IAMMod.Models.OAuthDtos;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Net.Http.Headers;
 using Share.Constants;
@@ -124,10 +125,10 @@ public class OAuthController(
             }
 
             // Get user ID from cookie claims
-            var userId = authenticateResult.Principal.FindFirst(OAuthConst.JwtClaimNames.Subject)?.Value
+            var userId = authenticateResult.Principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
                 ?? authenticateResult.Principal.FindFirst(SysClaimTypes.NameIdentifier)?.Value
                 ?? HttpContext.Session.GetString("UserId");
-            var sessionId = authenticateResult.Principal.FindFirst("sid")?.Value
+            var sessionId = authenticateResult.Principal.FindFirst(JwtRegisteredClaimNames.Sid)?.Value
                 ?? HttpContext.Session.GetString("SessionId");
 
             if (string.IsNullOrEmpty(userId))
@@ -151,7 +152,7 @@ public class OAuthController(
             }
 
             // Handle response type
-            if (request.ResponseType == ResponseTypes.Code)
+            if (request.ResponseType == OpenIdConnectResponseType.Code)
             {
                 // Authorization code flow
                 var code = await _authorizationManager.CreateAuthorizationCodeAsync(
@@ -326,9 +327,9 @@ public class OAuthController(
     {
         try
         {
-            var sid = User.FindFirst("sid")?.Value ?? HttpContext.Session.GetString("SessionId");
+            var sid = User.FindFirst(JwtRegisteredClaimNames.Sid)?.Value ?? HttpContext.Session.GetString("SessionId");
             var userIdClaim = User.FindFirst(SysClaimTypes.NameIdentifier)?.Value
-                ?? User.FindFirst(OAuthConst.JwtClaimNames.Subject)?.Value;
+                ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
 
             if (!string.IsNullOrWhiteSpace(sid) && Guid.TryParse(userIdClaim, out var userId))
             {
@@ -566,18 +567,18 @@ public class OAuthController(
     {
         return scopeName switch
         {
-            Scopes.OpenId => "Your basic identity",
+            OpenIdConnectScope.OpenId => "Your basic identity",
             Scopes.Profile => "Your basic profile details",
-            Scopes.Email => "Your email address",
-            Scopes.Phone => "Your phone number",
-            Scopes.Address => "Your address details",
-            "offline_access" => "Access to your data while you are offline",
+            OpenIdConnectScope.Email => "Your email address",
+            OpenIdConnectScope.Phone => "Your phone number",
+            OpenIdConnectScope.Address => "Your address details",
+            OpenIdConnectScope.OfflineAccess => "Access to your data while you are offline",
             _ => $"Access permission for {scopeName}",
         };
     }
 
     private static bool IsDefaultRequiredScope(string scopeName)
     {
-        return scopeName == Scopes.OpenId;
+        return scopeName == OpenIdConnectScope.OpenId;
     }
 }

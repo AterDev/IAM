@@ -9,6 +9,7 @@ using Share.Constants;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using SysClaimTypes = System.Security.Claims.ClaimTypes;
@@ -113,8 +114,8 @@ public class MfaModel(
             {
                 new(SysClaimTypes.NameIdentifier, user.Id.ToString()),
                 new(SysClaimTypes.Name, user.UserName),
-                    new(OAuthConst.JwtClaimNames.Subject, user.Id.ToString()),
-                new("sid", sessionId),
+                new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new(JwtRegisteredClaimNames.Sid, sessionId),
             };
 
             if (!string.IsNullOrWhiteSpace(user.Email))

@@ -49,7 +49,7 @@ public class OAuthService(ILogger<OAuthService> logger, IOptions<JwtOption> opti
 
             if (includeDefaultAudience && !string.IsNullOrWhiteSpace(Audience))
             {
-                claims = claims.Append(new Claim(OAuthConst.JwtClaimNames.Audience, Audience));
+                claims = claims.Append(new Claim(JwtRegisteredClaimNames.Aud, Audience));
             }
 
             if (!claims.Any(claim => claim.Type == JwtRegisteredClaimNames.Iat))

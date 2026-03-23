@@ -13,6 +13,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using ServiceDefaults.Middleware;
 using Share.Constants;
+using System.IdentityModel.Tokens.Jwt;
 using System.ComponentModel;
 using System.Net;
 using SysClaimTypes = System.Security.Claims.ClaimTypes;
@@ -45,6 +46,7 @@ public static class ModuleExtensions
         builder.Services.AddSwagger();
         builder.Services.Configure<RiskControlOption>(builder.Configuration.GetSection(RiskControlOption.ConfigPath));
         builder.Services.AddScoped<RiskControlService>();
+        builder.Services.AddScoped<SessionValidationService>();
         builder.Services.AddScoped<MfaTotpService>();
         builder.Services.AddCors(options =>
         {
@@ -151,15 +153,19 @@ public static class ModuleExtensions
                 {
                     OnValidatePrincipal = async context =>
                     {
-                        var sid = context.Principal?.FindFirst("sid")?.Value;
-                        var userIdClaim = context.Principal?.FindFirst(SysClaimTypes.NameIdentifier)?.Value;
-                        if (string.IsNullOrWhiteSpace(sid) || !Guid.TryParse(userIdClaim, out var userId))
+                        var sid = context.Principal?.FindFirst(JwtRegisteredClaimNames.Sid)?.Value;
+                        if (!TryGetUserId(context.Principal, out var userId))
                         {
                             return;
                         }
 
-                        var sessionManager = context.HttpContext.RequestServices.GetRequiredService<SessionManager>();
-                        var valid = await sessionManager.ValidateSessionAsync(userId, sid);
+                        if (string.IsNullOrWhiteSpace(sid))
+                        {
+                            return;
+                        }
+
+                        var sessionValidationService = context.HttpContext.RequestServices.GetRequiredService<SessionValidationService>();
+                        var valid = await sessionValidationService.ValidateAsync(userId, sid);
                         if (!valid)
                         {
                             context.RejectPrincipal();
@@ -216,17 +222,20 @@ public static class ModuleExtensions
                 {
                     OnTokenValidated = async context =>
                     {
-                        var sid = context.Principal?.FindFirst("sid")?.Value;
-                        var userIdClaim = context.Principal?.FindFirst(SysClaimTypes.NameIdentifier)?.Value
-                            ?? context.Principal?.FindFirst(OAuthConst.JwtClaimNames.Subject)?.Value;
+                        var sid = context.Principal?.FindFirst(JwtRegisteredClaimNames.Sid)?.Value;
 
-                        if (string.IsNullOrWhiteSpace(sid) || !Guid.TryParse(userIdClaim, out var userId))
+                        if (!TryGetUserId(context.Principal, out var userId))
                         {
                             return;
                         }
 
-                        var sessionManager = context.HttpContext.RequestServices.GetRequiredService<SessionManager>();
-                        var valid = await sessionManager.ValidateSessionAsync(userId, sid);
+                        if (string.IsNullOrWhiteSpace(sid))
+                        {
+                            return;
+                        }
+
+                        var sessionValidationService = context.HttpContext.RequestServices.GetRequiredService<SessionValidationService>();
+                        var valid = await sessionValidationService.ValidateAsync(userId, sid);
                         if (!valid)
                         {
                             context.Fail("session_revoked");
@@ -284,5 +293,13 @@ public static class ModuleExtensions
         app.MapRazorPages();
         app.MapFallbackToFile("index.html");
         return app;
+    }
+
+    private static bool TryGetUserId(System.Security.Claims.ClaimsPrincipal? principal, out Guid userId)
+    {
+        var userIdClaim = principal?.FindFirst(SysClaimTypes.NameIdentifier)?.Value
+            ?? principal?.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+
+        return Guid.TryParse(userIdClaim, out userId) && userId != Guid.Empty;
     }
 }

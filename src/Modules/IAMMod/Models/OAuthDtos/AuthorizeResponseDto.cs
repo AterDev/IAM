@@ -1,3 +1,4 @@
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using System.Text.Json.Serialization;
 
 namespace IAMMod.Models.OAuthDtos;
@@ -10,54 +11,54 @@ public class AuthorizeResponseDto
     /// <summary>
     /// Authorization code
     /// </summary>
-    [JsonPropertyName("code")]
+    [JsonPropertyName(OpenIdConnectParameterNames.Code)]
     public string? Code { get; set; }
 
     /// <summary>
     /// Access token (for implicit flow)
     /// </summary>
-    [JsonPropertyName("access_token")]
+    [JsonPropertyName(OpenIdConnectParameterNames.AccessToken)]
     public string? AccessToken { get; set; }
 
     /// <summary>
     /// Token type
     /// </summary>
-    [JsonPropertyName("token_type")]
+    [JsonPropertyName(OpenIdConnectParameterNames.TokenType)]
     public string? TokenType { get; set; }
 
     /// <summary>
     /// Expires in seconds
     /// </summary>
-    [JsonPropertyName("expires_in")]
+    [JsonPropertyName(OpenIdConnectParameterNames.ExpiresIn)]
     public int? ExpiresIn { get; set; }
 
     /// <summary>
     /// ID token (for OIDC)
     /// </summary>
-    [JsonPropertyName("id_token")]
+    [JsonPropertyName(OpenIdConnectParameterNames.IdToken)]
     public string? IdToken { get; set; }
 
     /// <summary>
     /// State parameter
     /// </summary>
-    [JsonPropertyName("state")]
+    [JsonPropertyName(OpenIdConnectParameterNames.State)]
     public string? State { get; set; }
 
     /// <summary>
     /// Scope granted
     /// </summary>
-    [JsonPropertyName("scope")]
+    [JsonPropertyName(OpenIdConnectParameterNames.Scope)]
     public string? Scope { get; set; }
 
     /// <summary>
     /// Error code
     /// </summary>
-    [JsonPropertyName("error")]
+    [JsonPropertyName(OpenIdConnectParameterNames.Error)]
     public string? Error { get; set; }
 
     /// <summary>
     /// Error description
     /// </summary>
-    [JsonPropertyName("error_description")]
+    [JsonPropertyName(OpenIdConnectParameterNames.ErrorDescription)]
     public string? ErrorDescription { get; set; }
 }

@@ -1,3 +1,4 @@
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IAMMod.Models.OAuthDtos;
@@ -22,12 +23,12 @@ public class IntrospectRequestDto
     /// <summary>
     /// OAuth client id for authenticating the caller.
     /// </summary>
-    [ModelBinder(Name = "client_id")]
+    [ModelBinder(Name = OpenIdConnectParameterNames.ClientId)]
     public string? ClientId { get; set; }
 
     /// <summary>
     /// OAuth client secret for authenticating the caller.
     /// </summary>
-    [ModelBinder(Name = "client_secret")]
+    [ModelBinder(Name = OpenIdConnectParameterNames.ClientSecret)]
     public string? ClientSecret { get; set; }
 }

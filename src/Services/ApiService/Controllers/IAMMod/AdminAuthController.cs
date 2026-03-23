@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.IdentityModel.Tokens;
 using Perigon.AspNetCore.Services;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using ClaimTypes = System.Security.Claims.ClaimTypes;
 
@@ -73,7 +74,7 @@ public class AdminAuthController(
         var roleIds = user.UserRoles.Select(ur => ur.RoleId).ToList();
         var roles = await _roleManager.GetRoleNamesByIdsAsync(roleIds);
 
-        var expiresIn = 3600 * 24 * 7; // 7 day
+        var expiresIn = _jwtService.ExpiredSecond;
         var sessionId = Guid.CreateVersion7().ToString();
         var sessionExpiresAt = DateTimeOffset.UtcNow.AddSeconds(expiresIn);
 
@@ -95,7 +96,7 @@ public class AdminAuthController(
         [
             new Claim(ClaimTypes.Name, user.UserName),
             new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
-            new Claim("sid", sessionId),
+            new Claim(JwtRegisteredClaimNames.Sid, sessionId),
         ];
 
         var signingKey = await signingKeyManager.GetActiveSigningKeyAsync();
@@ -180,7 +181,7 @@ public class AdminAuthController(
             return Unauthorized();
         }
 
-        var sid = User.FindFirst("sid")?.Value;
+        var sid = User.FindFirst(JwtRegisteredClaimNames.Sid)?.Value;
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
         var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
 

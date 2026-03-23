@@ -1,27 +1,48 @@
 .permission-form {
-  min-width: min(860px, 80vw);
+  width: min(560px, 100%);
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
-.grid {
-  display: grid;
-  gap: 16px;
+mat-dialog-content {
+  max-height: min(72vh, 760px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
-.two-columns {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.full-width {
+.form-fields .mat-mdc-form-field,
+.form-field-full {
   width: 100%;
-  margin-top: 16px;
+  min-width: 0;
+}
+
+.client-context {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.form-field-full {
+  width: 100%;
+  margin-top: 12px;
 }
 
 @media (max-width: 768px) {
   .permission-form {
-    min-width: auto;
-  }
-
-  .two-columns {
-    grid-template-columns: 1fr;
+    width: 100%;
   }
 }

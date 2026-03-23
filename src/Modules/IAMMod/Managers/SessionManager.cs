@@ -12,10 +12,12 @@ public class SessionManager(
     TenantDbFactory dbContextFactory,
     IUserContext userContext,
     ILogger<SessionManager> logger,
-    AuditLogManager auditLogManager
+    AuditLogManager auditLogManager,
+    SessionValidationService sessionValidationService
 ) : ManagerBase<DefaultDbContext, LoginSession>(dbContextFactory, userContext, logger)
 {
     private readonly AuditLogManager _auditLogManager = auditLogManager;
+    private readonly SessionValidationService _sessionValidationService = sessionValidationService;
 
     /// <summary>
     /// Get paged login sessions
@@ -88,6 +90,7 @@ public class SessionManager(
         loginSession.IsActive = true;
 
         await InsertAsync(loginSession);
+        await _sessionValidationService.SetStateAsync(loginSession);
 
         // Write audit log for session creation
         await _auditLogManager.AddAuditLogAsync(
@@ -102,58 +105,6 @@ public class SessionManager(
         );
 
         return await GetDetailAsync(loginSession.Id);
-    }
-
-    /// <summary>
-    /// Update last activity time for a session
-    /// </summary>
-    /// <param name="sessionId">Session ID</param>
-    /// <returns>True if successful</returns>
-    public async Task<bool> UpdateLastActivityAsync(string sessionId)
-    {
-        var session = await _dbSet.Where(q => q.SessionId == sessionId).FirstOrDefaultAsync();
-        if (session == null || !session.IsActive)
-        {
-            return false;
-        }
-
-        session.LastActivityTime = DateTimeOffset.UtcNow;
-        session.UpdatedTime = DateTime.UtcNow;
-        await _dbContext.SaveChangesAsync();
-        return true;
-    }
-
-    /// <summary>
-    /// Validate a session and refresh its last activity time.
-    /// </summary>
-    public async Task<bool> ValidateSessionAsync(Guid userId, string sessionId)
-    {
-        var session = await _dbSet.FirstOrDefaultAsync(q =>
-            q.UserId == userId && q.SessionId == sessionId
-        );
-
-        if (session == null)
-        {
-            return false;
-        }
-
-        var now = DateTimeOffset.UtcNow;
-        if (!session.IsActive || (session.ExpirationTime.HasValue && session.ExpirationTime <= now))
-        {
-            if (session.IsActive)
-            {
-                session.IsActive = false;
-                session.UpdatedTime = DateTime.UtcNow;
-                await _dbContext.SaveChangesAsync();
-            }
-
-            return false;
-        }
-
-        session.LastActivityTime = now;
-        session.UpdatedTime = DateTime.UtcNow;
-        await _dbContext.SaveChangesAsync();
-        return true;
     }
 
     /// <summary>
@@ -180,6 +131,7 @@ public class SessionManager(
         session.IsActive = false;
         session.UpdatedTime = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
+        await _sessionValidationService.SetStateAsync(session);
 
         // Write audit log for session revocation
         await _auditLogManager.AddAuditLogAsync(
@@ -220,9 +172,27 @@ public class SessionManager(
             query = query.Where(q => q.SessionId != exceptSessionId);
         }
 
+        var affectedSessions = await query
+            .AsNoTracking()
+            .Select(q => new SessionValidationCacheEntry
+            {
+                UserId = q.UserId,
+                SessionId = q.SessionId,
+                IsActive = false,
+                LastActivityTime = q.LastActivityTime,
+                LastPersistedActivityTime = q.LastActivityTime,
+                ExpirationTime = q.ExpirationTime,
+            })
+            .ToListAsync();
+
         var count = await query.ExecuteUpdateAsync(setters => setters
             .SetProperty(s => s.IsActive, false)
             .SetProperty(s => s.UpdatedTime, DateTime.UtcNow));
+
+        foreach (var affectedSession in affectedSessions)
+        {
+            await _sessionValidationService.SetStateAsync(affectedSession);
+        }
 
         if (count > 0)
         {
@@ -240,24 +210,4 @@ public class SessionManager(
         return count;
     }
 
-    /// <summary>
-    /// Clean up expired sessions
-    /// </summary>
-    /// <returns>Number of sessions cleaned up</returns>
-    public async Task<int> CleanupExpiredSessionsAsync()
-    {
-        var now = DateTimeOffset.UtcNow;
-        var count = await _dbSet
-            .Where(q => q.IsActive && q.ExpirationTime != null && q.ExpirationTime < now)
-            .ExecuteUpdateAsync(setters => setters
-                .SetProperty(s => s.IsActive, false)
-                .SetProperty(s => s.UpdatedTime, DateTime.UtcNow));
-
-        if (count > 0)
-        {
-            _logger.LogInformation("Cleaned up {Count} expired sessions", count);
-        }
-
-        return count;
-    }
 }

@@ -17,7 +17,6 @@ import { TranslateService } from '@ngx-translate/core';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { RoleEditComponent } from '../edit/edit';
 import { RoleAddComponent } from '../add/add';
-import { RolePermissionsComponent } from '../permissions/permissions';
 
 @Component({
   selector: 'app-list',
@@ -170,17 +169,7 @@ export class RoleListComponent implements OnInit {
   }
 
   openPermissionsDialog(role: RoleItemDto): void {
-    const dialogRef = this.dialog.open(RolePermissionsComponent, {
-      width: '700px',
-      maxHeight: '80vh',
-      data: role
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.loadData();
-      }
-    });
+    this.router.navigate(['/role', role.id, 'permissions']);
   }
 
   viewDetail(id: string): void {

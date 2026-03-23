@@ -2,6 +2,7 @@ using IAMMod.Managers;
 using IAMMod.Models.AccountDtos;
 using IAMMod.Models.UserDtos;
 using Microsoft.AspNetCore.Authorization;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Share.Exceptions;
 using SysClaimTypes = System.Security.Claims.ClaimTypes;
@@ -202,7 +203,7 @@ public class AccountController(
     private Guid? GetCurrentUserId()
     {
         var userId = User.FindFirstValue(SysClaimTypes.NameIdentifier)
-            ?? User.FindFirstValue(OAuthConst.JwtClaimNames.Subject);
+            ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
 
         return Guid.TryParse(userId, out var parsedUserId) ? parsedUserId : null;
     }

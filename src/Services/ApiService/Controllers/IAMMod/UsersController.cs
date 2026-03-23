@@ -176,9 +176,12 @@ public class UsersController(
         }
 
         var success = await _manager.ChangePasswordAsync(id, newPassword);
-        return !success
-            ? Problem("Failed to change password", statusCode: StatusCodes.Status400BadRequest)
-            : NoContent();
+        if (!success)
+        {
+            return Problem("Failed to change password", statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        return NoContent();
     }
 
     /// <summary>

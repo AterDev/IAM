@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using Entity.IAMMod;
 using EntityFramework.AppDbContext;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Share.Constants;
 
 namespace IAMMod.Managers;
@@ -44,7 +45,10 @@ public class DeviceFlowManager(DefaultDbContext dbContext, ILogger<DeviceFlowMan
             Scopes = request.Scope,
             CreationDate = DateTimeOffset.UtcNow,
             ExpirationDate = DateTimeOffset.UtcNow.AddSeconds(DeviceCodeExpirationSeconds),
-            Properties = System.Text.Json.JsonSerializer.Serialize(new { user_code = userCode })
+            Properties = System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, string>
+            {
+                [TokenTypes.UserCode] = userCode,
+            })
         };
 
         await _dbContext.Authorizations.AddAsync(authorization);
@@ -56,10 +60,10 @@ public class DeviceFlowManager(DefaultDbContext dbContext, ILogger<DeviceFlowMan
             ReferenceId = deviceCode,
             Type = TokenTypes.DeviceCode,
             Status = TokenStatuses.Pending,
-            Payload = System.Text.Json.JsonSerializer.Serialize(new
+            Payload = System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, string>
             {
-                user_code = userCode,
-                client_id = client.ClientId
+                [TokenTypes.UserCode] = userCode,
+                [OpenIdConnectParameterNames.ClientId] = client.ClientId,
             }),
             CreationDate = DateTimeOffset.UtcNow,
             ExpirationDate = DateTimeOffset.UtcNow.AddSeconds(DeviceCodeExpirationSeconds)
@@ -72,10 +76,10 @@ public class DeviceFlowManager(DefaultDbContext dbContext, ILogger<DeviceFlowMan
             ReferenceId = userCode,
             Type = TokenTypes.UserCode,
             Status = TokenStatuses.Pending,
-            Payload = System.Text.Json.JsonSerializer.Serialize(new
+            Payload = System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, string>
             {
-                device_code = deviceCode,
-                client_id = client.ClientId
+                [TokenTypes.DeviceCode] = deviceCode,
+                [OpenIdConnectParameterNames.ClientId] = client.ClientId,
             }),
             CreationDate = DateTimeOffset.UtcNow,
             ExpirationDate = DateTimeOffset.UtcNow.AddSeconds(DeviceCodeExpirationSeconds)
@@ -381,18 +385,18 @@ public class DeviceFlowManager(DefaultDbContext dbContext, ILogger<DeviceFlowMan
     {
         return scopeName switch
         {
-            Scopes.OpenId => "Your basic identity",
+            OpenIdConnectScope.OpenId => "Your basic identity",
             Scopes.Profile => "Your basic profile details",
-            Scopes.Email => "Your email address",
-            Scopes.Phone => "Your phone number",
-            Scopes.Address => "Your address details",
-            "offline_access" => "Access to your data while you are offline",
+            OpenIdConnectScope.Email => "Your email address",
+            OpenIdConnectScope.Phone => "Your phone number",
+            OpenIdConnectScope.Address => "Your address details",
+            OpenIdConnectScope.OfflineAccess => "Access to your data while you are offline",
             _ => $"Access permission for {scopeName}",
         };
     }
 
     private static bool IsDefaultRequiredScope(string scopeName)
     {
-        return scopeName == Scopes.OpenId;
+        return scopeName == OpenIdConnectScope.OpenId;
     }
 }

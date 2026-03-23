@@ -1,5 +1,6 @@
 using IAMMod.Models.UserDtos;
 using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 using Share.Exceptions;
 using System.Text.RegularExpressions;
 using System.Text.Json;
@@ -14,11 +15,15 @@ public class UserManager(
     IUserContext userContext,
     ILogger<UserManager> logger,
     AuditLogManager auditLogManager,
-    RiskControlService riskControlService
+    RiskControlService riskControlService,
+    SessionValidationService sessionValidationService,
+    IHttpContextAccessor httpContextAccessor
 ) : ManagerBase<DefaultDbContext, User>(dbContextFactory, userContext, logger)
 {
     private readonly AuditLogManager _auditLogManager = auditLogManager;
     private readonly RiskControlService _riskControlService = riskControlService;
+    private readonly SessionValidationService _sessionValidationService = sessionValidationService;
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
     private const string SelfServiceProvider = "SelfService";
     private const string PasswordResetTokenName = "PasswordReset";
     private const string ExternalLoginEventCategory = "ExternalAuthentication";
@@ -425,6 +430,7 @@ public class UserManager(
         entity.UpdatedTime = DateTime.UtcNow;
 
         await _dbContext.SaveChangesAsync();
+        await InvalidateSessionsAfterPasswordChangeAsync(entity.Id);
         return true;
     }
 
@@ -868,5 +874,35 @@ public class UserManager(
         string? userAgent)
     {
         return AddAuditLogAsync(eventName, subjectId, payload, ipAddress, userAgent);
+    }
+
+    private async Task InvalidateSessionsAfterPasswordChangeAsync(Guid userId)
+    {
+        var currentSessionId = _httpContextAccessor.HttpContext?.User?.FindFirstValue("sid");
+        var revokeCurrentSessionOnly = _userContext.UserId == userId && !string.IsNullOrWhiteSpace(currentSessionId);
+        var now = DateTime.UtcNow;
+
+        var sessions = await _dbContext.LoginSessions
+            .Where(q => q.UserId == userId && q.IsActive)
+            .Where(q => !revokeCurrentSessionOnly || q.SessionId == currentSessionId)
+            .ToListAsync();
+
+        if (sessions.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var session in sessions)
+        {
+            session.IsActive = false;
+            session.UpdatedTime = now;
+        }
+
+        await _dbContext.SaveChangesAsync();
+
+        foreach (var session in sessions)
+        {
+            await _sessionValidationService.SetStateAsync(session);
+        }
     }
 }

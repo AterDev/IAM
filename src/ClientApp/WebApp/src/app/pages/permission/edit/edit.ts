@@ -13,6 +13,9 @@ export interface PermissionEditDialogData {
   parentOptions: PermissionItem[];
   clients: ClientItemDto[];
   defaultParentId?: string | null;
+  currentClientId?: string | null;
+  currentClientLabel?: string | null;
+  lockClient?: boolean;
 }
 
 @Component({
@@ -37,8 +40,8 @@ export class PermissionEditComponent implements OnInit {
   readonly isSaving = signal(false);
   readonly form = new FormGroup({
     code: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(200)] }),
-    name: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(200)] }),
-    displayName: new FormControl<string | null>(null),
+    name: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(200)] }),
+    displayName: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(200)] }),
     description: new FormControl<string | null>(null),
     type: new FormControl(PermissionType.Menu, { nonNullable: true, validators: [Validators.required] }),
     parentId: new FormControl<string | null>(null),
@@ -62,10 +65,11 @@ export class PermissionEditComponent implements OnInit {
   ngOnInit(): void {
     const permission = this.data.permission;
     if (permission) {
+      const displayLabel = permission.displayName || permission.name;
       this.form.patchValue({
         code: permission.code,
-        name: permission.name,
-        displayName: permission.displayName ?? null,
+        name: displayLabel,
+        displayName: displayLabel,
         description: permission.description ?? null,
         type: permission.type,
         parentId: permission.parentId ?? null,
@@ -75,10 +79,12 @@ export class PermissionEditComponent implements OnInit {
         path: permission.path ?? null,
         icon: permission.icon ?? null,
         sort: permission.sort,
-        ownedClientId: permission.ownedClientId ?? null,
+        ownedClientId: permission.ownedClientId ?? this.data.currentClientId ?? null,
       });
       return;
     }
+
+    this.form.patchValue({ ownedClientId: this.data.currentClientId ?? null });
 
     if (this.data.defaultParentId) {
       this.form.patchValue({ parentId: this.data.defaultParentId });
@@ -86,16 +92,13 @@ export class PermissionEditComponent implements OnInit {
   }
 
   get code() { return this.form.controls.code; }
-  get name() { return this.form.controls.name; }
+  get displayNameField() { return this.form.controls.displayName; }
   get type() { return this.form.controls.type; }
   get parentId() { return this.form.controls.parentId; }
-  get namespaceField() { return this.form.controls.namespace; }
-  get resource() { return this.form.controls.resource; }
-  get action() { return this.form.controls.action; }
   get path() { return this.form.controls.path; }
   get icon() { return this.form.controls.icon; }
   get sort() { return this.form.controls.sort; }
-  get ownedClientId() { return this.form.controls.ownedClientId; }
+  get currentClientLabel() { return this.data.currentClientLabel; }
 
   save(): void {
     if (this.form.invalid || this.isSaving()) {
@@ -103,20 +106,22 @@ export class PermissionEditComponent implements OnInit {
       return;
     }
 
+    const displayLabel = this.displayNameField.value.trim();
+
     const payload: PermissionUpsertDto = {
       code: this.code.value,
-      name: this.name.value,
-      displayName: this.form.controls.displayName.value,
+      name: displayLabel,
+      displayName: displayLabel,
       description: this.form.controls.description.value,
       type: this.type.value,
       parentId: this.parentId.value,
-      namespace: this.namespaceField.value,
-      resource: this.resource.value,
-      action: this.action.value,
+      namespace: this.form.controls.namespace.value,
+      resource: this.form.controls.resource.value,
+      action: this.form.controls.action.value,
       path: this.path.value,
       icon: this.icon.value,
       sort: this.sort.value,
-      ownedClientId: this.ownedClientId.value,
+      ownedClientId: this.data.currentClientId ?? this.form.controls.ownedClientId.value,
     };
 
     this.isSaving.set(true);

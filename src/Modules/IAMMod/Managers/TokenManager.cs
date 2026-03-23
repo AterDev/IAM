@@ -1,7 +1,9 @@
 using IAMMod.Services;
 using Microsoft.AspNetCore.Http;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Share;
 using Share.Exceptions;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.Json;
 using ClaimTypes = System.Security.Claims.ClaimTypes;
@@ -41,10 +43,10 @@ public class TokenManager(
     {
         return request.GrantType switch
         {
-            GrantTypes.AuthorizationCode => await ProcessAuthorizationCodeGrantAsync(request, signingKey),
-            GrantTypes.RefreshToken => await ProcessRefreshTokenGrantAsync(request, signingKey),
-            GrantTypes.ClientCredentials => await ProcessClientCredentialsGrantAsync(request, signingKey),
-            GrantTypes.Password => await ProcessPasswordGrantAsync(request, signingKey),
+            OpenIdConnectGrantTypes.AuthorizationCode => await ProcessAuthorizationCodeGrantAsync(request, signingKey),
+            OpenIdConnectGrantTypes.RefreshToken => await ProcessRefreshTokenGrantAsync(request, signingKey),
+            OpenIdConnectGrantTypes.ClientCredentials => await ProcessClientCredentialsGrantAsync(request, signingKey),
+            OpenIdConnectGrantTypes.Password => await ProcessPasswordGrantAsync(request, signingKey),
             GrantTypes.DeviceCode => await ProcessDeviceCodeGrantAsync(request, signingKey),
             _ => throw new BusinessException(Localizer.OAuthUnsupportedGrantType),
         };
@@ -101,7 +103,7 @@ public class TokenManager(
         var properties = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(
             token.Authorization.Properties ?? "{}"
         );
-        if (properties?.GetValueOrDefault("redirect_uri") != request.RedirectUri)
+        if (properties?.GetValueOrDefault(OpenIdConnectParameterNames.RedirectUri) != request.RedirectUri)
         {
             throw new BusinessException(Localizer.OAuthInvalidRedirectUri);
         }
@@ -109,8 +111,8 @@ public class TokenManager(
         // Validate PKCE if present
         var codeChallenge = properties?.GetValueOrDefault("code_challenge");
         var codeChallengeMethod = properties?.GetValueOrDefault("code_challenge_method");
-        var sessionId = properties?.GetValueOrDefault("sid");
-        var nonce = properties?.GetValueOrDefault("nonce");
+        var sessionId = properties?.GetValueOrDefault(OpenIdConnectParameterNames.Sid);
+        var nonce = properties?.GetValueOrDefault(OpenIdConnectParameterNames.Nonce);
 
         if (!string.IsNullOrEmpty(codeChallenge))
         {
@@ -279,7 +281,7 @@ public class TokenManager(
             .Distinct(StringComparer.Ordinal)
             .ToArray();
 
-        return audiences.Select(aud => new Claim(OAuthConst.JwtClaimNames.Audience, aud!));
+        return audiences.Select(aud => new Claim(JwtRegisteredClaimNames.Aud, aud!));
     }
 
     private async Task<User?> GetUserWithRolesAsync(string? subjectId)
@@ -320,9 +322,9 @@ public class TokenManager(
         // Generate access token
         var claims = new List<Claim>
         {
-            new(OAuthConst.JwtClaimNames.Subject, client.Id.ToString()),
-            new(OAuthConst.OAuthRequestParameters.ClientId, client.ClientId),
-            new(OAuthConst.OAuthRequestParameters.Scope, request.Scope ?? ""),
+            new(JwtRegisteredClaimNames.Sub, client.Id.ToString()),
+            new(OpenIdConnectParameterNames.ClientId, client.ClientId),
+            new(OpenIdConnectParameterNames.Scope, request.Scope ?? ""),
         };
 
         claims.AddRange(BuildAudienceClaims(client));
@@ -558,9 +560,9 @@ public class TokenManager(
         {
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Name, user.UserName),
-            new(OAuthConst.JwtClaimNames.Subject, user.Id.ToString()),
-            new(OAuthConst.JwtClaimNames.Name, user.UserName),
-            new(OAuthConst.OAuthRequestParameters.ClientId, client.ClientId),
+            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new(JwtRegisteredClaimNames.Name, user.UserName),
+            new(OpenIdConnectParameterNames.ClientId, client.ClientId),
         };
 
         claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
@@ -570,17 +572,17 @@ public class TokenManager(
         if (!string.IsNullOrEmpty(user.Email))
         {
             claims.Add(new Claim(ClaimTypes.Email, user.Email));
-            claims.Add(new Claim(OAuthConst.JwtClaimNames.Email, user.Email));
+            claims.Add(new Claim(JwtRegisteredClaimNames.Email, user.Email));
         }
 
         if (!string.IsNullOrEmpty(scope))
         {
-            claims.Add(new Claim(OAuthConst.OAuthRequestParameters.Scope, scope));
+            claims.Add(new Claim(OpenIdConnectParameterNames.Scope, scope));
         }
 
         if (!string.IsNullOrWhiteSpace(sessionId))
         {
-            claims.Add(new Claim("sid", sessionId));
+            claims.Add(new Claim(JwtRegisteredClaimNames.Sid, sessionId));
         }
 
         // Generate access token
@@ -671,28 +673,28 @@ public class TokenManager(
             {
                 new(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new(ClaimTypes.Name, user.UserName),
-                new(OAuthConst.JwtClaimNames.Subject, user.Id.ToString()),
-                new(OAuthConst.JwtClaimNames.Name, user.UserName),
+                new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new(JwtRegisteredClaimNames.Name, user.UserName),
             };
 
             idClaims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
-            idClaims.Add(new Claim(OAuthConst.JwtClaimNames.Audience, client.ClientId));
+            idClaims.Add(new Claim(JwtRegisteredClaimNames.Aud, client.ClientId));
 
             if (!string.IsNullOrEmpty(user.Email))
             {
                 idClaims.Add(new Claim(ClaimTypes.Email, user.Email));
-                idClaims.Add(new Claim(OAuthConst.JwtClaimNames.Email, user.Email));
+                idClaims.Add(new Claim(JwtRegisteredClaimNames.Email, user.Email));
             }
 
             if (!string.IsNullOrWhiteSpace(sessionId))
             {
-                idClaims.Add(new Claim("sid", sessionId));
+                idClaims.Add(new Claim(JwtRegisteredClaimNames.Sid, sessionId));
             }
 
             if (!string.IsNullOrWhiteSpace(nonce))
             {
-                idClaims.Add(new Claim("nonce", nonce));
+                idClaims.Add(new Claim(JwtRegisteredClaimNames.Nonce, nonce));
             }
 
             idToken = _oauthService.GenerateToken(

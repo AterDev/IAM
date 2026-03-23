@@ -1,3 +1,4 @@
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,21 +12,21 @@ public class LogoutRequestDto
     /// <summary>
     /// ID token hint
     /// </summary>
-    [ModelBinder(Name = "id_token_hint")]
-    [JsonPropertyName("id_token_hint")]
+    [ModelBinder(Name = OpenIdConnectParameterNames.IdTokenHint)]
+    [JsonPropertyName(OpenIdConnectParameterNames.IdTokenHint)]
     public string? IdTokenHint { get; set; }
 
     /// <summary>
     /// Post logout redirect URI
     /// </summary>
-    [ModelBinder(Name = "post_logout_redirect_uri")]
-    [JsonPropertyName("post_logout_redirect_uri")]
+    [ModelBinder(Name = OpenIdConnectParameterNames.PostLogoutRedirectUri)]
+    [JsonPropertyName(OpenIdConnectParameterNames.PostLogoutRedirectUri)]
     public string? PostLogoutRedirectUri { get; set; }
 
     /// <summary>
     /// State parameter
     /// </summary>
-    [ModelBinder(Name = "state")]
-    [JsonPropertyName("state")]
+    [ModelBinder(Name = OpenIdConnectParameterNames.State)]
+    [JsonPropertyName(OpenIdConnectParameterNames.State)]
     public string? State { get; set; }
 }

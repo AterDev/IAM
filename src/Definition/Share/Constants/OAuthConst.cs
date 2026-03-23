@@ -1,4 +1,4 @@
-using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace Share.Constants;
 
@@ -15,21 +15,11 @@ public static class OAuthConst
     /// </summary>
     public static class GrantTypes
     {
-        public const string AuthorizationCode = "authorization_code";
-        public const string RefreshToken = "refresh_token";
-        public const string ClientCredentials = "client_credentials";
-        public const string Password = "password";
+        public const string AuthorizationCode = OpenIdConnectGrantTypes.AuthorizationCode;
+        public const string RefreshToken = OpenIdConnectGrantTypes.RefreshToken;
+        public const string ClientCredentials = OpenIdConnectGrantTypes.ClientCredentials;
+        public const string Password = OpenIdConnectGrantTypes.Password;
         public const string DeviceCode = "urn:ietf:params:oauth:grant-type:device_code";
-    }
-
-    /// <summary>
-    /// OAuth 2.0 response type values
-    /// </summary>
-    public static class ResponseTypes
-    {
-        public const string Code = "code";
-        public const string Token = "token";
-        public const string IdToken = "id_token";
     }
 
     /// <summary>
@@ -125,30 +115,11 @@ public static class OAuthConst
     /// </summary>
     public static class Scopes
     {
-        public const string OpenId = "openid";
         public const string Profile = "profile";
-        public const string Email = "email";
-        public const string Address = "address";
-        public const string Phone = "phone";
-    }
-
-    /// <summary>
-    /// Standard JWT / OIDC claim names.
-    /// </summary>
-    public static class JwtClaimNames
-    {
-        public const string Subject = JwtRegisteredClaimNames.Sub;
-        public const string Name = JwtRegisteredClaimNames.Name;
-        public const string Email = JwtRegisteredClaimNames.Email;
-        public const string Audience = JwtRegisteredClaimNames.Aud;
-    }
-
-    /// <summary>
-    /// OAuth / OIDC authorization request parameters.
-    /// </summary>
-    public static class OAuthRequestParameters
-    {
-        public const string ClientId = "client_id";
-        public const string Scope = "scope";
+        public const string OpenId = OpenIdConnectScope.OpenId;
+        public const string Email = OpenIdConnectScope.Email;
+        public const string Address = OpenIdConnectScope.Address;
+        public const string Phone = OpenIdConnectScope.Phone;
+        public const string OfflineAccess = OpenIdConnectScope.OfflineAccess;
     }
 }

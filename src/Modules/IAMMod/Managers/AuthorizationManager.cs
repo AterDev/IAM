@@ -1,5 +1,6 @@
 using Entity.IAMMod;
 using IAMMod.Services;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace IAMMod.Managers;
 
@@ -36,7 +37,7 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
         }
 
         // Validate response type
-        if (!string.Equals(request.ResponseType, ResponseTypes.Code, StringComparison.Ordinal))
+        if (!string.Equals(request.ResponseType, OpenIdConnectResponseType.Code, StringComparison.Ordinal))
         {
             return (false, ErrorCodes.UnsupportedResponseType, client);
         }
