@@ -10,6 +10,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { AccountService } from 'src/app/services/account.service';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-forgot-password',
@@ -28,6 +29,7 @@ import { AccountService } from 'src/app/services/account.service';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ForgotPassword implements OnInit {
+  readonly i18n = I18N_KEYS;
   private accountService = inject(AccountService);
   private router = inject(Router);
   private translate = inject(TranslateService);

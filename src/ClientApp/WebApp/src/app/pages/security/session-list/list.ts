@@ -16,6 +16,7 @@ import { FormsModule, FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslateService } from '@ngx-translate/core';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-list',
@@ -38,6 +39,7 @@ import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/
   styleUrls: ['./list.scss']
 })
 export class SessionListComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   displayedColumns: string[] = ['select', 'sessionId', 'ipAddress', 'userAgent', 'loginTime', 'lastActivityTime', 'isActive', 'actions'];
 
   dataSource = signal<LoginSessionItemDto[]>([]);

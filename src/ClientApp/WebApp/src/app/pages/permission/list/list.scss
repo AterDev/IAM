@@ -1,5 +1,4 @@
 .permission-tree {
-  max-height: calc(100vh - 320px);
   overflow: auto;
   padding-right: 4px;
   min-width: 0;
@@ -41,24 +40,6 @@
   text-overflow: ellipsis;
 }
 
-.row-actions {
-  display: flex;
-  align-items: center;
-}
-
-.action-add mat-icon {
-  color: var(--mat-sys-primary);
-}
-
-.action-edit mat-icon {
-  color: var(--mat-sys-secondary);
-}
-
-.action-delete mat-icon {
-  color: var(--mat-sys-error);
-}
-
 .tree-invisible {
   display: none;
 }
-

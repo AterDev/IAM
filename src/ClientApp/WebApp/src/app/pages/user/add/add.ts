@@ -5,6 +5,7 @@ import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { UserAddDto } from 'src/app/services/api/models/iammod/user-add-dto.model';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-add',
@@ -17,6 +18,7 @@ import { UserAddDto } from 'src/app/services/api/models/iammod/user-add-dto.mode
   styleUrls: ['./add.scss']
 })
 export class UserAddComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   userForm!: FormGroup;
   hidePassword = true;
   hideConfirmPassword = true;

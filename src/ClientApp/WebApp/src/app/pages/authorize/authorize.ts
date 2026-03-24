@@ -11,6 +11,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from 'src/app/services/auth.service';
 import { AuthorizeInteractionContext, OauthInteractionService } from 'src/app/services/oauth-interaction.service';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-authorize',
@@ -28,6 +29,7 @@ import { AuthorizeInteractionContext, OauthInteractionService } from 'src/app/se
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Authorize implements OnInit {
+  readonly i18n = I18N_KEYS;
   private destroyRef = inject(DestroyRef);
   private interactionService = inject(OauthInteractionService);
   private authService = inject(AuthService);

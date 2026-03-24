@@ -12,6 +12,7 @@ import { ScopeUpdateDto } from 'src/app/services/api/models/iammod/scope-update-
 import { ScopeDetailDto } from 'src/app/services/api/models/iammod/scope-detail-dto.model';
 import { TranslateService } from '@ngx-translate/core';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-edit',
@@ -29,6 +30,7 @@ import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
   styleUrls: ['./edit.scss']
 })
 export class ScopeEditComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   scopeForm!: FormGroup;
   isSubmitting = false;
   isLoading = signal(true);

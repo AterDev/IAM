@@ -4,20 +4,20 @@
       <button mat-icon-button (click)="goBack()">
         <mat-icon>arrow_back</mat-icon>
       </button>
-      <h2 class="my-1">{{ 'client.clientDetail' | translate }}</h2>
+      <h2 class="my-1">{{ i18n.client.clientDetail | translate }}</h2>
     </div>
     <div class="d-flex gap-1">
-      <button matButton="filled" (click)="openEditDialog()">
+      <button matButton="filled" class="primary" (click)="openEditDialog()">
         <mat-icon>edit</mat-icon>
-        {{ 'common.edit' | translate }}
+        {{ i18n.common.edit | translate }}
       </button>
       <button matButton="filled" (click)="rotateSecret()">
         <mat-icon>refresh</mat-icon>
-        {{ 'client.rotateSecret' | translate }}
+        {{ i18n.client.rotateSecret | translate }}
       </button>
-      <button matButton="filled" (click)="deleteClient()">
+      <button matButton="filled" class="error" (click)="deleteClient()">
         <mat-icon>delete</mat-icon>
-        {{ 'common.delete' | translate }}
+        {{ i18n.common.delete | translate }}
       </button>
     </div>
   </div>
@@ -26,13 +26,13 @@
 
   @if (!isLoading() && client()) {
   <mat-tab-group>
-    <mat-tab [label]="'client.basicInfo' | translate">
+    <mat-tab [label]="i18n.client.basicInfo | translate">
       <div class="d-flex flex-column gap-2">
         <mat-card>
           <mat-card-content>
             <div class="row">
               <div class="col-md-6 mb-4">
-                <label class="fw-500 d-block mb-2">{{ 'client.clientId' | translate }}:</label>
+                <label class="fw-500 d-block mb-2">{{ i18n.client.clientId | translate }}:</label>
                 <span class="text-primary cursor-pointer d-flex align-items-center gap-2" (click)="copyClientId()"
                   role="button">
                   {{ client()!.clientId }}
@@ -40,33 +40,33 @@
                 </span>
               </div>
               <div class="col-md-6 mb-4">
-                <label class="fw-500 d-block mb-2">{{ 'client.displayName' | translate }}:</label>
+                <label class="fw-500 d-block mb-2">{{ i18n.client.displayName | translate }}:</label>
                 <span>{{ client()!.displayName }}</span>
               </div>
               @if (client()!.description) {
               <div class="col-12 mb-4">
-                <label class="fw-500 d-block mb-2">{{ 'client.description' | translate }}:</label>
+                <label class="fw-500 d-block mb-2">{{ i18n.client.description | translate }}:</label>
                 <span>{{ client()!.description }}</span>
               </div>
               }
               <div class="col-md-6 mb-4">
-                <label class="fw-500 d-block mb-2">{{ 'client.type' | translate }}:</label>
+                <label class="fw-500 d-block mb-2">{{ i18n.client.type | translate }}:</label>
                 <span>
                   <mat-chip>{{ client()!.type |enumText:'ClientType'}}</mat-chip>
                 </span>
               </div>
               <div class="col-md-6 mb-4">
-                <label class="fw-500 d-block mb-2">{{ 'client.applicationType' | translate }}:</label>
+                <label class="fw-500 d-block mb-2">{{ i18n.client.applicationType | translate }}:</label>
                 <span>
                   <mat-chip>{{ client()!.applicationType |enumText:'ApplicationType' }}</mat-chip>
                 </span>
               </div>
               <div class="col-md-6 mb-4">
-                <label class="fw-500 d-block mb-2">{{ 'client.consentType' | translate }}:</label>
+                <label class="fw-500 d-block mb-2">{{ i18n.client.consentType | translate }}:</label>
                 <span>{{ client()!.consentType |enumText:'ConsentType' }}</span>
               </div>
               <div class="col-md-6 mb-4">
-                <label class="fw-500 d-block mb-2">{{ 'client.requirePkce' | translate }}:</label>
+                <label class="fw-500 d-block mb-2">{{ i18n.client.requirePkce | translate }}:</label>
                 <span>
                   <mat-icon [style.color]="client()!.requirePkce ? '#4caf50' : '#f44336'">
                     {{ client()!.requirePkce ? 'check_circle' : 'cancel' }}
@@ -74,7 +74,7 @@
                 </span>
               </div>
               <div class="col-md-6 mb-4">
-                <label class="fw-500 d-block mb-2">{{ 'client.allowPasswordGrant' | translate }}:</label>
+                <label class="fw-500 d-block mb-2">{{ i18n.client.allowPasswordGrant | translate }}:</label>
                 <span>
                   <mat-chip>
                     <mat-icon class="small me-1" [style.color]="isPasswordGrantEnabled() ? '#ff9800' : '#4caf50'">
@@ -85,11 +85,11 @@
                 </span>
               </div>
               <div class="col-md-6 mb-4">
-                <label class="fw-500 d-block mb-2">{{ 'common.createdTime' | translate }}:</label>
+                <label class="fw-500 d-block mb-2">{{ i18n.common.createdTime | translate }}:</label>
                 <span>{{ client()!.createdTime | date:'yyyy-MM-dd HH:mm:ss' }}</span>
               </div>
               <div class="col-md-6 mb-4">
-                <label class="fw-500 d-block mb-2">{{ 'common.updatedTime' | translate }}:</label>
+                <label class="fw-500 d-block mb-2">{{ i18n.common.updatedTime | translate }}:</label>
                 <span>{{ client()!.updatedTime | date:'yyyy-MM-dd HH:mm:ss' }}</span>
               </div>
               <div class="col-12 mb-2">
@@ -99,13 +99,13 @@
                       {{ isPasswordGrantEnabled() ? 'gpp_maybe' : 'shield' }}
                     </mat-icon>
                     <div class="flex-1">
-                      <div class="fw-500 mb-1">{{ 'client.passwordGrantPolicy' | translate }}</div>
+                      <div class="fw-500 mb-1">{{ i18n.client.passwordGrantPolicy | translate }}</div>
                       <p class="mb-2 text-muted">
                         {{ (isPasswordGrantEnabled() ? 'client.passwordGrantRiskHint' : 'client.passwordGrantMigrationHint') | translate }}
                       </p>
                       @if (passwordGrantRestrictionReason()) {
                       <div>
-                        <label class="fw-500 d-block mb-1">{{ 'client.passwordGrantRestrictionReason' | translate }}:</label>
+                        <label class="fw-500 d-block mb-1">{{ i18n.client.passwordGrantRestrictionReason | translate }}:</label>
                         <span>{{ passwordGrantRestrictionReason() }}</span>
                       </div>
                       }
@@ -119,7 +119,7 @@
 
         <mat-card>
           <mat-card-header>
-            <mat-card-title>{{ 'client.redirectUris' | translate }}</mat-card-title>
+            <mat-card-title>{{ i18n.client.redirectUris | translate }}</mat-card-title>
           </mat-card-header>
           <mat-card-content>
             @if (client()!.redirectUris.length > 0) {
@@ -131,7 +131,7 @@
             }
             @if (client()!.redirectUris.length === 0) {
             <p class="text-center text-muted py-5">
-              {{ 'client.noRedirectUris' | translate }}
+              {{ i18n.client.noRedirectUris | translate }}
             </p>
             }
           </mat-card-content>
@@ -139,7 +139,7 @@
 
         <mat-card>
           <mat-card-header>
-            <mat-card-title>{{ 'client.postLogoutRedirectUris' | translate }}</mat-card-title>
+            <mat-card-title>{{ i18n.client.postLogoutRedirectUris | translate }}</mat-card-title>
           </mat-card-header>
           <mat-card-content>
             @if (client()!.postLogoutRedirectUris.length > 0) {
@@ -151,7 +151,7 @@
             }
             @if (client()!.postLogoutRedirectUris.length === 0) {
             <p class="text-center text-muted py-5">
-              {{ 'client.noPostLogoutRedirectUris' | translate }}
+              {{ i18n.client.noPostLogoutRedirectUris | translate }}
             </p>
             }
           </mat-card-content>
@@ -159,7 +159,7 @@
 
         <mat-card>
           <mat-card-header>
-            <mat-card-title>{{ 'client.scopes' | translate }}</mat-card-title>
+            <mat-card-title>{{ i18n.client.scopes | translate }}</mat-card-title>
           </mat-card-header>
           <mat-card-content>
             @if (client()!.scopes.length > 0) {
@@ -171,7 +171,7 @@
             }
             @if (client()!.scopes.length === 0) {
             <p class="text-center text-muted py-5">
-              {{ 'client.noScopes' | translate }}
+              {{ i18n.client.noScopes | translate }}
             </p>
             }
           </mat-card-content>
@@ -179,7 +179,7 @@
 
         <mat-card>
           <mat-card-header>
-            <mat-card-title>{{ 'client.resources' | translate }}</mat-card-title>
+            <mat-card-title>{{ i18n.client.resources | translate }}</mat-card-title>
           </mat-card-header>
           <mat-card-content>
             @if (client()!.resources.length > 0) {
@@ -196,7 +196,7 @@
             }
             @if (client()!.resources.length === 0) {
             <p class="text-center text-muted py-5">
-              {{ 'client.noResources' | translate }}
+              {{ i18n.client.noResources | translate }}
             </p>
             }
           </mat-card-content>
@@ -205,7 +205,7 @@
 
     </mat-tab>
 
-    <mat-tab [label]="'client.authorizations' | translate">
+    <mat-tab [label]="i18n.client.authorizations | translate">
       <mat-card>
         <mat-card-content>
           @if (isLoadingAuthorizations()) {
@@ -216,19 +216,19 @@
           <div class="table-responsive">
             <table mat-table [dataSource]="authorizations()" class="w-100">
               <ng-container matColumnDef="subjectId">
-                <th mat-header-cell *matHeaderCellDef>{{ 'client.subjectId' | translate }}</th>
+                <th mat-header-cell *matHeaderCellDef>{{ i18n.client.subjectId | translate }}</th>
                 <td mat-cell *matCellDef="let auth">{{ auth.subjectId }}</td>
               </ng-container>
 
               <ng-container matColumnDef="status">
-                <th mat-header-cell *matHeaderCellDef>{{ 'client.status' | translate }}</th>
+                <th mat-header-cell *matHeaderCellDef>{{ i18n.client.status | translate }}</th>
                 <td mat-cell *matCellDef="let auth">
                   <mat-chip>{{ auth.status }}</mat-chip>
                 </td>
               </ng-container>
 
               <ng-container matColumnDef="creationDate">
-                <th mat-header-cell *matHeaderCellDef>{{ 'client.creationDate' | translate }}</th>
+                <th mat-header-cell *matHeaderCellDef>{{ i18n.client.creationDate | translate }}</th>
                 <td mat-cell *matCellDef="let auth">{{ auth.creationDate | date:'yyyy-MM-dd HH:mm:ss' }}</td>
               </ng-container>
 
@@ -240,14 +240,14 @@
 
           @if (!isLoadingAuthorizations() && authorizations().length === 0) {
           <p class="text-center text-muted py-5">
-            {{ 'client.noAuthorizations' | translate }}
+            {{ i18n.client.noAuthorizations | translate }}
           </p>
           }
         </mat-card-content>
       </mat-card>
     </mat-tab>
 
-    <mat-tab [label]="'client.permissionsTitle' | translate">
+    <mat-tab [label]="i18n.client.permissionsTitle | translate">
       <app-client-permissions [clientId]="clientId!"></app-client-permissions>
     </mat-tab>
   </mat-tab-group>

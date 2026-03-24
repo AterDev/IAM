@@ -18,6 +18,7 @@ import { AuditLogDetailDto } from 'src/app/services/api/models/common-mod/audit-
 import { AuditLogItemDto } from 'src/app/services/api/models/common-mod/audit-log-item-dto.model';
 import { AuditLogDetailDialogComponent } from '../audit-log-detail-dialog/detail-dialog';
 import { PasswordGrantEventFilter, PasswordGrantAuditRow, PasswordGrantAuditSummary } from './password-grant-audit.model';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-password-grant-audit',
@@ -38,6 +39,7 @@ import { PasswordGrantEventFilter, PasswordGrantAuditRow, PasswordGrantAuditSumm
   styleUrls: ['./password-grant-audit.scss']
 })
 export class PasswordGrantAuditComponent implements OnInit, OnDestroy {
+  readonly i18n = I18N_KEYS;
   readonly embedded = input(false);
   readonly displayedColumns: string[] = ['event', 'clientId', 'summary', 'subjectId', 'ipAddress', 'createdTime', 'actions'];
   readonly eventOptions = [

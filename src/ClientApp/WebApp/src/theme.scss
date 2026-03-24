@@ -49,8 +49,14 @@ $dark-bg-color: #121212;
   @include mat.icon-overrides((color: $dark-primary-color,
     ));
 
+  @include mat.menu-overrides((item-icon-color: $dark-primary-color,
+    ));
+
   @media (prefers-color-scheme: light) {
     @include mat.icon-overrides((color: $light-primary-color,
+      ));
+
+    @include mat.menu-overrides((item-icon-color: $light-primary-color,
       ));
   }
 }
@@ -59,8 +65,13 @@ $dark-bg-color: #121212;
   @include mat.icon-overrides((color: $dark-accent-color,
     ));
 
+  @include mat.menu-overrides((item-icon-color: $dark-accent-color,
+    ));
+
   @media (prefers-color-scheme: light) {
     @include mat.icon-overrides((color: $light-accent-color,
+      ));
+    @include mat.menu-overrides((item-icon-color: $light-accent-color,
       ));
   }
 }
@@ -69,8 +80,13 @@ $dark-bg-color: #121212;
   @include mat.icon-overrides((color: $dark-error-color,
     ));
 
+  @include mat.menu-overrides((item-icon-color: $dark-error-color,
+    ));
+
   @media (prefers-color-scheme: light) {
     @include mat.icon-overrides((color: $light-error-color,
+      ));
+    @include mat.menu-overrides((item-icon-color: $light-error-color,
       ));
   }
 }

@@ -3,20 +3,20 @@
     <button mat-icon-button (click)="goBack()">
       <mat-icon>arrow_back</mat-icon>
     </button>
-    <h2>{{ 'role.roleDetail' | translate }}</h2>
+    <h2>{{ i18n.role.roleDetail | translate }}</h2>
 
     <div class="actions">
-      <button mat-raised-button  (click)="openEditDialog()">
+      <button mat-raised-button class="primary" (click)="openEditDialog()">
         <mat-icon>edit</mat-icon>
-        {{ 'common.edit' | translate }}
+        {{ i18n.common.edit | translate }}
       </button>
       <button mat-raised-button (click)="openPermissionsDialog()">
         <mat-icon>security</mat-icon>
-        {{ 'role.managePermissions' | translate }}
+        {{ i18n.role.managePermissions | translate }}
       </button>
-      <button mat-raised-button color="warn" (click)="deleteRole()">
+      <button mat-raised-button color="warn" class="error" (click)="deleteRole()">
         <mat-icon>delete</mat-icon>
-        {{ 'common.delete' | translate }}
+        {{ i18n.common.delete | translate }}
       </button>
     </div>
   </div>
@@ -28,27 +28,27 @@
   @if (!isLoading() && role()) {
     <mat-card class="info-card">
       <mat-card-header>
-        <mat-card-title>{{ 'role.basicInfo' | translate }}</mat-card-title>
+        <mat-card-title>{{ i18n.role.basicInfo | translate }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <div class="info-grid">
           <div class="info-item">
-            <label>{{ 'role.name' | translate }}</label>
+            <label>{{ i18n.role.name | translate }}</label>
             <p>{{ role()!.name }}</p>
           </div>
 
           <div class="info-item">
-            <label>{{ 'role.description' | translate }}</label>
+            <label>{{ i18n.role.description | translate }}</label>
             <p>{{ role()!.description || '-' }}</p>
           </div>
 
           <div class="info-item">
-            <label>{{ 'common.createdTime' | translate }}</label>
+            <label>{{ i18n.common.createdTime | translate }}</label>
             <p>{{ role()!.createdTime | date:'yyyy-MM-dd HH:mm:ss' }}</p>
           </div>
 
           <div class="info-item">
-            <label>{{ 'common.updatedTime' | translate }}</label>
+            <label>{{ i18n.common.updatedTime | translate }}</label>
             <p>{{ role()!.updatedTime | date:'yyyy-MM-dd HH:mm:ss' }}</p>
           </div>
         </div>

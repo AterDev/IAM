@@ -8,6 +8,7 @@ import { ApiClient } from 'src/app/services/api/api-client';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 import { OrganizationDetailDto } from 'src/app/services/api/models/iammod/organization-detail-dto.model';
 import { OrganizationUpdateDto } from 'src/app/services/api/models/iammod/organization-update-dto.model';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-edit',
@@ -22,6 +23,7 @@ import { OrganizationUpdateDto } from 'src/app/services/api/models/iammod/organi
   styleUrls: ['./edit.scss']
 })
 export class OrganizationEditComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   orgForm!: FormGroup;
   isSubmitting = false;
   isLoading = signal(true);

@@ -1,28 +1,28 @@
-<h2 mat-dialog-title>{{ 'role.addRole' | translate }}</h2>
+<h2 mat-dialog-title>{{ i18n.role.addRole | translate }}</h2>
 
 <mat-dialog-content>
   <form [formGroup]="roleForm">
     <mat-form-field appearance="outline" class="full-width">
-      <mat-label>{{ 'role.name' | translate }}</mat-label>
-      <input matInput [formControl]="name" [placeholder]="'role.namePlaceholder' | translate">
+      <mat-label>{{ i18n.role.name | translate }}</mat-label>
+      <input matInput [formControl]="name" [placeholder]="i18n.role.namePlaceholder | translate">
       @if (name.hasError('required')) {
-        <mat-error>{{ 'validation.required' | translate }}</mat-error>
+        <mat-error>{{ i18n.validation.required | translate }}</mat-error>
       }
       @if (name.hasError('minlength')) {
-        <mat-error>{{ 'validation.minlength' | translate: {requiredLength: 2} }}</mat-error>
+        <mat-error>{{ i18n.validation.minlength | translate: {requiredLength: 2} }}</mat-error>
       }
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="full-width">
-      <mat-label>{{ 'role.description' | translate }}</mat-label>
-      <textarea matInput [formControl]="description" rows="3" [placeholder]="'role.descriptionPlaceholder' | translate"></textarea>
+      <mat-label>{{ i18n.role.description | translate }}</mat-label>
+      <textarea matInput [formControl]="description" rows="3" [placeholder]="i18n.role.descriptionPlaceholder | translate"></textarea>
     </mat-form-field>
   </form>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()">{{ 'common.cancel' | translate }}</button>
+  <button mat-button (click)="onCancel()">{{ i18n.common.cancel | translate }}</button>
   <button mat-raised-button  (click)="onSubmit()" [disabled]="!roleForm.valid || isSubmitting">
-    {{ isSubmitting ? ('common.saving' | translate) : ('common.save' | translate) }}
+    {{ isSubmitting ? (i18n.common.saving | translate) : (i18n.common.save | translate) }}
   </button>
 </mat-dialog-actions>

@@ -10,6 +10,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { ScopeAddDto } from 'src/app/services/api/models/iammod/scope-add-dto.model';
 import { TranslateService } from '@ngx-translate/core';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-add',
@@ -26,6 +27,7 @@ import { TranslateService } from '@ngx-translate/core';
   styleUrls: ['./add.scss']
 })
 export class ScopeAddComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   scopeForm!: FormGroup;
   isSubmitting = false;
 

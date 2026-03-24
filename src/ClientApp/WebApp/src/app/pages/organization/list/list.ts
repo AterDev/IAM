@@ -13,6 +13,7 @@ import { OrganizationEditComponent } from '../edit/edit';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { OrganizationMembersComponent } from '../members/members';
 import { OrganizationTreeDto } from 'src/app/services/api/models/iammod/organization-tree-dto.model';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-list',
@@ -28,6 +29,7 @@ import { OrganizationTreeDto } from 'src/app/services/api/models/iammod/organiza
   styleUrls: ['./list.scss']
 })
 export class OrganizationListComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   treeControl = new NestedTreeControl<OrganizationTreeDto>(node => node.children);
   dataSource = new MatTreeNestedDataSource<OrganizationTreeDto>();
   // Keep signals for template-reactive values

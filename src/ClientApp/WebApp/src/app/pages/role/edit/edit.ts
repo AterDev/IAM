@@ -7,6 +7,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { RoleItemDto } from 'src/app/services/api/models/iammod/role-item-dto.model';
 import { RoleUpdateDto } from 'src/app/services/api/models/iammod/role-update-dto.model';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-edit',
@@ -19,6 +20,7 @@ import { RoleUpdateDto } from 'src/app/services/api/models/iammod/role-update-dt
   styleUrls: ['./edit.scss']
 })
 export class RoleEditComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   roleForm!: FormGroup;
   isSubmitting = false;
 

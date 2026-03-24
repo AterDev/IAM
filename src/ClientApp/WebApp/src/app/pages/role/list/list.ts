@@ -17,6 +17,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { RoleEditComponent } from '../edit/edit';
 import { RoleAddComponent } from '../add/add';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-list',
@@ -37,6 +38,7 @@ import { RoleAddComponent } from '../add/add';
   styleUrls: ['./list.scss']
 })
 export class RoleListComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   displayedColumns: string[] = ['select', 'name', 'description', 'createdTime', 'actions'];
 
   // Use signals only for reactive template values

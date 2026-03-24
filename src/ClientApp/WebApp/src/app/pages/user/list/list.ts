@@ -15,6 +15,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { UserEditComponent } from '../edit/edit';
 import { UserAddComponent } from '../add/add';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-list',
@@ -34,6 +35,7 @@ import { UserAddComponent } from '../add/add';
   styleUrls: ['./list.scss']
 })
 export class UserListComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   displayedColumns: string[] = ['select', 'userName', 'email', 'phoneNumber', 'lockoutEnabled', 'createdTime', 'actions'];
 
   // Use signals only for reactive template values

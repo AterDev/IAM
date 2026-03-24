@@ -2,7 +2,7 @@
   <div class="page-toolbar">
     <div class="page-toolbar__filters">
       <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
-        <mat-label>{{ 'common.search' | translate }}</mat-label>
+        <mat-label>{{ i18n.common.search | translate }}</mat-label>
         <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()" placeholder="Name or Display Name">
         <button mat-icon-button matSuffix (click)="onSearch()">
           <mat-icon>search</mat-icon>
@@ -10,7 +10,7 @@
       </mat-form-field>
 
       <button mat-icon-button (click)="clearFilters()" type="button" class="filter-clear-button"
-        [matTooltip]="'common.clearFilters' | translate" [attr.aria-label]="'common.clearFilters' | translate">
+        [matTooltip]="i18n.common.clearFilters | translate" [attr.aria-label]="i18n.common.clearFilters | translate">
         <mat-icon>filter_alt_off</mat-icon>
       </button>
     </div>
@@ -18,7 +18,7 @@
     <div class="page-toolbar__actions">
       <button matButton="filled" (click)="openAddDialog()" type="button">
         <mat-icon>add</mat-icon>
-        {{ 'common.add' | translate }}
+        {{ i18n.common.add | translate }}
       </button>
     </div>
   </div>
@@ -26,22 +26,22 @@
   <div class="table-container">
     <table mat-table [dataSource]="dataSource()" class="resource-table">
       <ng-container matColumnDef="name">
-        <th mat-header-cell *matHeaderCellDef>{{ 'resource.name' | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>{{ i18n.resource.name | translate }}</th>
         <td mat-cell *matCellDef="let resource"><strong>{{ resource.name }}</strong></td>
       </ng-container>
 
       <ng-container matColumnDef="displayName">
-        <th mat-header-cell *matHeaderCellDef>{{ 'resource.displayName' | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>{{ i18n.resource.displayName | translate }}</th>
         <td mat-cell *matCellDef="let resource">{{ resource.displayName }}</td>
       </ng-container>
 
       <ng-container matColumnDef="description">
-        <th mat-header-cell *matHeaderCellDef>{{ 'resource.description' | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>{{ i18n.resource.description | translate }}</th>
         <td mat-cell *matCellDef="let resource">{{ resource.description || '-' }}</td>
       </ng-container>
 
       <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>{{ i18n.common.actions | translate }}</th>
         <td mat-cell *matCellDef="let resource">
           <button mat-icon-button [matMenuTriggerFor]="menu">
             <mat-icon>more_vert</mat-icon>
@@ -49,11 +49,11 @@
           <mat-menu #menu="matMenu">
             <button mat-menu-item (click)="viewDetail(resource.id)">
               <mat-icon>visibility</mat-icon>
-              <span>{{ 'common.view' | translate }}</span>
+              <span>{{ i18n.common.view | translate }}</span>
             </button>
-            <button mat-menu-item (click)="deleteResource(resource.id)">
+            <button mat-menu-item (click)="deleteResource(resource.id)" class="error">
               <mat-icon>delete</mat-icon>
-              <span>{{ 'common.delete' | translate }}</span>
+              <span>{{ i18n.common.delete | translate }}</span>
             </button>
           </mat-menu>
         </td>

@@ -19,6 +19,7 @@ import { AuthorizationItemDto } from 'src/app/services/api/models/iammod/authori
 import { EnumTextPipe } from 'src/app/pipe/api/enum-text.pipe';
 import { ClientDetailViewModel } from '../client-password-grant-policy.model';
 import { ClientPermissionsComponent } from '../permissions/permissions';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-detail',
@@ -38,6 +39,7 @@ import { ClientPermissionsComponent } from '../permissions/permissions';
   styleUrls: ['./detail.scss']
 })
 export class ClientDetailComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   client = signal<ClientDetailViewModel | null>(null);
   authorizations = signal<AuthorizationItemDto[]>([]);
   isLoading = signal(false);

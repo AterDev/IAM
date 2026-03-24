@@ -1,5 +1,5 @@
 <h2 mat-dialog-title>
-  {{ data.permission ? ('permission.edit' | translate) : ('permission.add' | translate) }}
+  {{ data.permission ? (i18n.permission.edit | translate) : (i18n.permission.add | translate) }}
 </h2>
 
 <mat-dialog-content>
@@ -7,23 +7,23 @@
     @if (currentClientLabel) {
       <div class="client-context">
         <mat-icon>apps</mat-icon>
-        <span>{{ 'permission.client' | translate }}：{{ currentClientLabel }}</span>
+        <span>{{ i18n.permission.client | translate }}：{{ currentClientLabel }}</span>
       </div>
     }
 
     <div class="form-fields">
       <mat-form-field appearance="outline">
-        <mat-label>{{ 'permission.code' | translate }}</mat-label>
+        <mat-label>{{ i18n.permission.code | translate }}</mat-label>
         <input matInput [formControl]="code" />
       </mat-form-field>
 
       <mat-form-field appearance="outline">
-        <mat-label>{{ 'permission.displayName' | translate }}</mat-label>
+        <mat-label>{{ i18n.permission.displayName | translate }}</mat-label>
         <input matInput [formControl]="displayNameField" />
       </mat-form-field>
 
       <mat-form-field appearance="outline">
-        <mat-label>{{ 'permission.type' | translate }}</mat-label>
+        <mat-label>{{ i18n.permission.type | translate }}</mat-label>
         <mat-select [formControl]="type">
           @for (item of permissionTypes; track item.value) {
             <mat-option [value]="item.value">{{ item.labelKey | translate }}</mat-option>
@@ -32,9 +32,9 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline">
-        <mat-label>{{ 'permission.parent' | translate }}</mat-label>
+        <mat-label>{{ i18n.permission.parent | translate }}</mat-label>
         <mat-select [formControl]="parentId">
-          <mat-option [value]="null">{{ 'common.none' | translate }}</mat-option>
+          <mat-option [value]="null">{{ i18n.common.none | translate }}</mat-option>
           @for (item of data.parentOptions; track item.id) {
             @if (!data.permission || item.id !== data.permission.id) {
               <mat-option [value]="item.id">{{ item.displayName || item.name }}</mat-option>
@@ -44,31 +44,31 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline">
-        <mat-label>{{ 'permission.path' | translate }}</mat-label>
+        <mat-label>{{ i18n.permission.path | translate }}</mat-label>
         <input matInput [formControl]="path" />
       </mat-form-field>
 
       <mat-form-field appearance="outline">
-        <mat-label>{{ 'permission.icon' | translate }}</mat-label>
+        <mat-label>{{ i18n.permission.icon | translate }}</mat-label>
         <input matInput [formControl]="icon" />
       </mat-form-field>
 
       <mat-form-field appearance="outline">
-        <mat-label>{{ 'permission.sort' | translate }}</mat-label>
+        <mat-label>{{ i18n.permission.sort | translate }}</mat-label>
         <input matInput type="number" [formControl]="sort" />
       </mat-form-field>
     </div>
 
     <mat-form-field appearance="outline" class="form-field-full">
-      <mat-label>{{ 'permission.description' | translate }}</mat-label>
+      <mat-label>{{ i18n.permission.description | translate }}</mat-label>
       <textarea matInput rows="4" [formControl]="form.controls.description"></textarea>
     </mat-form-field>
   </form>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button (click)="cancel()">{{ 'common.cancel' | translate }}</button>
+  <button mat-button (click)="cancel()">{{ i18n.common.cancel | translate }}</button>
   <button mat-raised-button (click)="save()" [disabled]="isSaving()">
-    {{ isSaving() ? ('common.saving' | translate) : ('common.save' | translate) }}
+    {{ isSaving() ? (i18n.common.saving | translate) : (i18n.common.save | translate) }}
   </button>
 </mat-dialog-actions>

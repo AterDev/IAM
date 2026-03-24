@@ -5,6 +5,7 @@ import { MatDialogRef, MatDialogModule, MAT_DIALOG_DATA } from '@angular/materia
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { OrganizationAddDto } from 'src/app/services/api/models/iammod/organization-add-dto.model';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-add',
@@ -17,6 +18,7 @@ import { OrganizationAddDto } from 'src/app/services/api/models/iammod/organizat
   styleUrls: ['./add.scss']
 })
 export class OrganizationAddComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   orgForm!: FormGroup;
   isSubmitting = false;
 

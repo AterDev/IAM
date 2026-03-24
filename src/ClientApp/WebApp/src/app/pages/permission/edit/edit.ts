@@ -7,6 +7,7 @@ import { CommonModules, BaseMatModules, CommonFormModules } from 'src/app/share/
 import { PermissionAdminService } from 'src/app/services/permission-admin.service';
 import { PermissionItem, PermissionType, PermissionUpsertDto } from 'src/app/services/permission-admin.models';
 import { ClientItemDto } from 'src/app/services/api/models/iammod/client-item-dto.model';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 export interface PermissionEditDialogData {
   permission?: PermissionItem | null;
@@ -31,6 +32,7 @@ export interface PermissionEditDialogData {
   styleUrls: ['./edit.scss'],
 })
 export class PermissionEditComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   protected readonly permissionTypes = [
     { labelKey: 'permission.typeOptions.menu', value: PermissionType.Menu },
     { labelKey: 'permission.typeOptions.button', value: PermissionType.Button },

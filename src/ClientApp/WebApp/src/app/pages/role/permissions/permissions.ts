@@ -17,6 +17,7 @@ import { RoleDetailDto } from 'src/app/services/api/models/iammod/role-detail-dt
 import { PermissionAdminService } from 'src/app/services/permission-admin.service';
 import { PermissionTreeNode, PermissionType } from 'src/app/services/permission-admin.models';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-permissions',
@@ -36,6 +37,7 @@ import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
   styleUrls: ['./permissions.scss'],
 })
 export class RolePermissionsComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   readonly treeControl = new NestedTreeControl<PermissionTreeNode>((node) => node.children);
   readonly dataSource = new MatTreeNestedDataSource<PermissionTreeNode>();
   readonly isLoading = signal(false);

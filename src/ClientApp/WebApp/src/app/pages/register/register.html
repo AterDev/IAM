@@ -1,7 +1,7 @@
 <div class="register-container">
   <mat-card class="register-card">
     <mat-card-header>
-      <mat-card-title>{{ 'register.title' | translate }}</mat-card-title>
+      <mat-card-title>{{ i18n.register.title | translate }}</mat-card-title>
     </mat-card-header>
     
     <mat-card-content>
@@ -19,7 +19,7 @@
       
       <form [formGroup]="registerForm" (ngSubmit)="doRegister()">
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>{{ 'register.username' | translate }}</mat-label>
+          <mat-label>{{ i18n.register.username | translate }}</mat-label>
           <input matInput formControlName="username" type="text" autocomplete="username">
           @if (username.invalid && username.touched) {
             <mat-error>{{ getValidatorMessage(username) }}</mat-error>
@@ -27,7 +27,7 @@
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>{{ 'register.email' | translate }}</mat-label>
+          <mat-label>{{ i18n.register.email | translate }}</mat-label>
           <input matInput formControlName="email" type="email" autocomplete="email">
           @if (email.invalid && email.touched) {
             <mat-error>{{ getValidatorMessage(email) }}</mat-error>
@@ -35,7 +35,7 @@
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>{{ 'register.phoneNumber' | translate }}</mat-label>
+          <mat-label>{{ i18n.register.phoneNumber | translate }}</mat-label>
           <input matInput formControlName="phoneNumber" type="tel" autocomplete="tel">
           @if (phoneNumber.invalid && phoneNumber.touched) {
             <mat-error>{{ getValidatorMessage(phoneNumber) }}</mat-error>
@@ -43,7 +43,7 @@
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>{{ 'register.password' | translate }}</mat-label>
+          <mat-label>{{ i18n.register.password | translate }}</mat-label>
           <input matInput formControlName="password" type="password" autocomplete="new-password">
           @if (password.invalid && password.touched) {
             <mat-error>{{ getValidatorMessage(password) }}</mat-error>
@@ -51,7 +51,7 @@
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>{{ 'register.confirmPassword' | translate }}</mat-label>
+          <mat-label>{{ i18n.register.confirmPassword | translate }}</mat-label>
           <input matInput formControlName="confirmPassword" type="password" autocomplete="new-password">
           @if (confirmPassword.invalid && confirmPassword.touched) {
             <mat-error>{{ getValidatorMessage(confirmPassword) }}</mat-error>
@@ -60,10 +60,10 @@
 
         <div class="button-group">
           <button mat-raised-button  type="submit" [disabled]="isLoading || registerForm.invalid">
-            {{ 'register.submit' | translate }}
+            {{ i18n.register.submit | translate }}
           </button>
           <button mat-button type="button" (click)="goToLogin()">
-            {{ 'register.backToLogin' | translate }}
+            {{ i18n.register.backToLogin | translate }}
           </button>
         </div>
       </form>

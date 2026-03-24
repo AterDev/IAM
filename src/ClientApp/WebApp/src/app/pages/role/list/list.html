@@ -2,12 +2,12 @@
   <div class="d-flex justify-content-between align-items-center">
     <div class="d-flex align-items-center gap-1">
       <mat-form-field class="search-field" subscriptSizing="dynamic">
-        <mat-label>{{ 'common.search' | translate }}</mat-label>
+        <mat-label>{{ i18n.common.search | translate }}</mat-label>
         <input
           matInput
           [(ngModel)]="searchText"
           (keyup.enter)="onSearch()"
-          [placeholder]="'role.searchPlaceholder' | translate"
+          [placeholder]="i18n.role.searchPlaceholder | translate"
         />
         <button mat-icon-button matSuffix (click)="onSearch()">
           <mat-icon>search</mat-icon>
@@ -16,17 +16,17 @@
     </div>
     <button matButton="filled" (click)="openAddDialog()">
       <mat-icon>add</mat-icon>
-      {{ 'role.addRole' | translate }}
+      {{ i18n.role.addRole | translate }}
     </button>
   </div>
 
   <div class="table-container">
     @if (selectedIds().size > 0) {
     <div class="batch-actions">
-      <span>{{ 'common.selected' | translate }}: {{ selectedIds().size }}</span>
-      <button mat-button (click)="deleteBatch()">
+      <span>{{ i18n.common.selected | translate }}: {{ selectedIds().size }}</span>
+      <button mat-button (click)="deleteBatch()" class="error">
         <mat-icon>delete</mat-icon>
-        {{ 'common.delete' | translate }}
+        {{ i18n.common.delete | translate }}
       </button>
     </div>
     }
@@ -53,7 +53,7 @@
 
       <!-- Name Column -->
       <ng-container matColumnDef="name">
-        <th mat-header-cell *matHeaderCellDef>{{ 'role.name' | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>{{ i18n.role.name | translate }}</th>
         <td mat-cell *matCellDef="let role">
           <strong>{{ role.name }}</strong>
         </td>
@@ -62,7 +62,7 @@
       <!-- Description Column -->
       <ng-container matColumnDef="description">
         <th mat-header-cell *matHeaderCellDef>
-          {{ 'role.description' | translate }}
+          {{ i18n.role.description | translate }}
         </th>
         <td mat-cell *matCellDef="let role">{{ role.description || '-' }}</td>
       </ng-container>
@@ -70,7 +70,7 @@
       <!-- Created Time Column -->
       <ng-container matColumnDef="createdTime">
         <th mat-header-cell *matHeaderCellDef>
-          {{ 'common.createdTime' | translate }}
+          {{ i18n.common.createdTime | translate }}
         </th>
         <td mat-cell *matCellDef="let role">
           {{ role.createdTime | date:'yyyy-MM-dd HH:mm' }}
@@ -80,7 +80,7 @@
       <!-- Actions Column -->
       <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef>
-          {{ 'common.actions' | translate }}
+          {{ i18n.common.actions | translate }}
         </th>
         <td mat-cell *matCellDef="let role">
           <button mat-icon-button [matMenuTriggerFor]="menu">
@@ -89,24 +89,24 @@
           <mat-menu #menu="matMenu">
             <button mat-menu-item (click)="viewDetail(role.id)">
               <mat-icon>visibility</mat-icon>
-              <span>{{ 'common.view' | translate }}</span>
+              <span>{{ i18n.common.view | translate }}</span>
             </button>
-            <button mat-menu-item (click)="openEditDialog(role)">
+            <button mat-menu-item (click)="openEditDialog(role)" class="primary">
               <mat-icon>edit</mat-icon>
-              <span>{{ 'common.edit' | translate }}</span>
+              <span>{{ i18n.common.edit | translate }}</span>
             </button>
             <button mat-menu-item (click)="openPermissionsDialog(role)">
               <mat-icon>security</mat-icon>
-              <span>{{ 'role.permissions' | translate }}</span>
+              <span>{{ i18n.role.permissions | translate }}</span>
             </button>
             <mat-divider></mat-divider>
             <button
               mat-menu-item
               (click)="deleteRole(role.id)"
-              class="delete-action"
+              class="delete-action error"
             >
               <mat-icon>delete</mat-icon>
-              <span>{{ 'common.delete' | translate }}</span>
+              <span>{{ i18n.common.delete | translate }}</span>
             </button>
           </mat-menu>
         </td>
@@ -120,7 +120,7 @@
         <td class="mat-cell" [attr.colspan]="displayedColumns.length">
           <div class="no-data">
             <mat-icon>inbox</mat-icon>
-            <p>{{ 'common.noData' | translate }}</p>
+            <p>{{ i18n.common.noData | translate }}</p>
           </div>
         </td>
       </tr>
@@ -130,7 +130,7 @@
     @if (isLoading()) {
     <div class="loading-spinner">
       <mat-spinner diameter="50"></mat-spinner>
-      <p>{{ 'common.loading' | translate }}</p>
+      <p>{{ i18n.common.loading | translate }}</p>
     </div>
     }
 

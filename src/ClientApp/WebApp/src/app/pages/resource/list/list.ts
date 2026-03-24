@@ -13,6 +13,7 @@ import { ResourceItemDto } from 'src/app/services/api/models/iammod/resource-ite
 import { PageList } from 'src/app/services/api/models/perigon/page-list.model';
 import { ResourceAddComponent } from '../add/add';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-list',
@@ -29,6 +30,7 @@ import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/
   styleUrls: ['./list.scss']
 })
 export class ResourceListComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   displayedColumns: string[] = ['name', 'displayName', 'description', 'actions'];
 
   dataSource = signal<ResourceItemDto[]>([]);

@@ -330,6 +330,7 @@ export const I18N_KEYS = {
     "scopesHint": "client.scopesHint",
     "addScope": "client.addScope",
     "noScopes": "client.noScopes",
+    "noScopesSelected": "client.noScopesSelected",
     "resources": "client.resources",
     "resourcesHint": "client.resourcesHint",
     "availableResources": "client.availableResources",

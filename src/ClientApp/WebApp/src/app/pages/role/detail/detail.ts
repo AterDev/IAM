@@ -10,6 +10,7 @@ import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/
 import { RoleEditComponent } from '../edit/edit';
 import { MatCardModule } from '@angular/material/card';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-detail',
@@ -23,6 +24,7 @@ import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
   styleUrls: ['./detail.scss']
 })
 export class RoleDetailComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   role = signal<RoleDetailDto | null>(null);
   isLoading = signal(true);
 

@@ -11,6 +11,7 @@ import { PermissionSyncNodeDto, PermissionTreeNode, PermissionType } from 'src/a
 import { ClientPermissionNodeDialogComponent } from './node-dialog';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-client-permissions',
@@ -25,6 +26,7 @@ import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
   styleUrls: ['./permissions.scss'],
 })
 export class ClientPermissionsComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   readonly clientId = input.required<string>();
   readonly treeControl = new NestedTreeControl<PermissionSyncNodeDto>((node) => node.children);
   readonly dataSource = new MatTreeNestedDataSource<PermissionSyncNodeDto>();

@@ -3,15 +3,15 @@
     <button mat-icon-button (click)="goBack()">
       <mat-icon>arrow_back</mat-icon>
     </button>
-    <h2>{{ 'resource.resourceDetail' | translate }}</h2>
+    <h2>{{ i18n.resource.resourceDetail | translate }}</h2>
     <div class="actions">
-      <button mat-raised-button  (click)="openEditDialog()">
+      <button mat-raised-button class="primary" (click)="openEditDialog()">
         <mat-icon>edit</mat-icon>
-        {{ 'common.edit' | translate }}
+        {{ i18n.common.edit | translate }}
       </button>
-      <button mat-button color="warn" (click)="deleteResource()">
+      <button mat-button color="warn" class="error" (click)="deleteResource()">
         <mat-icon>delete</mat-icon>
-        {{ 'common.delete' | translate }}
+        {{ i18n.common.delete | translate }}
       </button>
     </div>
   </div>
@@ -20,28 +20,28 @@
 
   <mat-card *ngIf="!isLoading() && resource()">
     <mat-card-header>
-      <mat-card-title>{{ 'resource.basicInfo' | translate }}</mat-card-title>
+      <mat-card-title>{{ i18n.resource.basicInfo | translate }}</mat-card-title>
     </mat-card-header>
     <mat-card-content>
       <div class="info-grid">
         <div class="info-item">
-          <label>{{ 'resource.name' | translate }}:</label>
+          <label>{{ i18n.resource.name | translate }}:</label>
           <span><strong>{{ resource()!.name }}</strong></span>
         </div>
         <div class="info-item">
-          <label>{{ 'resource.displayName' | translate }}:</label>
+          <label>{{ i18n.resource.displayName | translate }}:</label>
           <span>{{ resource()!.displayName }}</span>
         </div>
         <div class="info-item full-width" *ngIf="resource()!.description">
-          <label>{{ 'resource.description' | translate }}:</label>
+          <label>{{ i18n.resource.description | translate }}:</label>
           <span>{{ resource()!.description }}</span>
         </div>
         <div class="info-item">
-          <label>{{ 'common.createdTime' | translate }}:</label>
+          <label>{{ i18n.common.createdTime | translate }}:</label>
           <span>{{ resource()!.createdTime | date:'yyyy-MM-dd HH:mm:ss' }}</span>
         </div>
         <div class="info-item">
-          <label>{{ 'common.updatedTime' | translate }}:</label>
+          <label>{{ i18n.common.updatedTime | translate }}:</label>
           <span>{{ resource()!.updatedTime | date:'yyyy-MM-dd HH:mm:ss' }}</span>
         </div>
       </div>

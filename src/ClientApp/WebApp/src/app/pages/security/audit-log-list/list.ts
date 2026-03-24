@@ -18,6 +18,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslateService } from '@ngx-translate/core';
 import { AuditLogDetailDialogComponent } from '../audit-log-detail-dialog/detail-dialog';
 import { PasswordGrantAuditComponent } from '../password-grant-audit/password-grant-audit';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-list',
@@ -40,6 +41,7 @@ import { PasswordGrantAuditComponent } from '../password-grant-audit/password-gr
   styleUrls: ['./list.scss']
 })
 export class AuditLogListComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   readonly currentTab = signal<'logs' | 'password-grant'>('logs');
   readonly selectedTabIndex = signal(0);
   displayedColumns: string[] = ['category', 'event', 'subjectId', 'ipAddress', 'createdTime', 'actions'];

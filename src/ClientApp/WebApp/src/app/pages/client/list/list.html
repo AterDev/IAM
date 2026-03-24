@@ -3,7 +3,7 @@
   <div class="page-toolbar">
     <div class="page-toolbar__filters">
       <mat-form-field appearance="outline" subscriptSizing="dynamic">
-        <mat-label>{{ 'common.search' | translate }}</mat-label>
+        <mat-label>{{ i18n.common.search | translate }}</mat-label>
         <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()" placeholder="Client ID / Display Name">
         <button mat-icon-button matSuffix (click)="onSearch()" type="button">
           <mat-icon>search</mat-icon>
@@ -11,9 +11,9 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline" subscriptSizing="dynamic">
-        <mat-label>{{ 'client.type' | translate }}</mat-label>
+        <mat-label>{{ i18n.client.type | translate }}</mat-label>
         <mat-select [(ngModel)]="typeFilter" (selectionChange)="onFilterChange()">
-          <mat-option [value]="null">{{ 'common.all' | translate }}</mat-option>
+          <mat-option [value]="null">{{ i18n.common.all | translate }}</mat-option>
           @for (item of ClientType| toKeyValue; track $index) {
           <mat-option [value]="item.key">{{ item.value | enumText:'ClientType'}}</mat-option>
           }
@@ -21,9 +21,9 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline" subscriptSizing="dynamic">
-        <mat-label>{{ 'client.applicationType' | translate }}</mat-label>
+        <mat-label>{{ i18n.client.applicationType | translate }}</mat-label>
         <mat-select [(ngModel)]="applicationTypeFilter" (selectionChange)="onFilterChange()">
-          <mat-option [value]="null">{{ 'common.all' | translate }}</mat-option>
+          <mat-option [value]="null">{{ i18n.common.all | translate }}</mat-option>
           @for (item of ApplicationType| toKeyValue; track $index) {
           <mat-option [value]="item.key">{{ item.value | enumText:'ApplicationType'}}</mat-option>
           }
@@ -31,7 +31,7 @@
       </mat-form-field>
 
       <button mat-icon-button (click)="clearFilters()" type="button" class="filter-clear-button"
-        [matTooltip]="'common.clearFilters' | translate" [attr.aria-label]="'common.clearFilters' | translate">
+        [matTooltip]="i18n.common.clearFilters | translate" [attr.aria-label]="i18n.common.clearFilters | translate">
         <mat-icon>filter_alt_off</mat-icon>
       </button>
     </div>
@@ -39,7 +39,7 @@
     <div class="page-toolbar__actions">
       <button matButton="filled" (click)="openAddDialog()" type="button">
         <mat-icon>add</mat-icon>
-        {{ 'common.add' | translate }}
+        {{ i18n.common.add | translate }}
       </button>
     </div>
   </div>
@@ -47,10 +47,10 @@
   <!-- 批量操作提示 -->
   @if (selectedIds().size > 0) {
   <div class="d-flex align-items-center gap-3 p-3 rounded">
-    <span class="fw-500">{{ selectedIds().size }} {{ 'common.selected' | translate }}</span>
-    <button mat-button color="warn" (click)="deleteSelected()" type="button" class="ms-auto">
+    <span class="fw-500">{{ selectedIds().size }} {{ i18n.common.selected | translate }}</span>
+    <button mat-button color="warn" (click)="deleteSelected()" type="button" class="ms-auto error">
       <mat-icon>delete</mat-icon>
-      {{ 'common.delete' | translate }}
+      {{ i18n.common.delete | translate }}
     </button>
   </div>
   }
@@ -60,12 +60,12 @@
     <table mat-table [dataSource]="dataSource()" class="w-100">
       <!-- 选择框列 -->
       <ng-container matColumnDef="select">
-        <th mat-header-cell *matHeaderCellDef class="text-center" style="width: 60px;">
+        <th mat-header-cell *matHeaderCellDef class="text-center col-select">
           <mat-checkbox [checked]="allSelected()" [indeterminate]="someSelected()" (change)="toggleSelectAll()"
             aria-label="Select all clients">
           </mat-checkbox>
         </th>
-        <td mat-cell *matCellDef="let row" class="text-center" style="width: 60px;">
+        <td mat-cell *matCellDef="let row" class="text-center col-select">
           <mat-checkbox [checked]="selectedIds().has(row.id)" (change)="toggleSelect(row.id)"
             [attr.aria-label]="'Select ' + row.displayName">
           </mat-checkbox>
@@ -74,19 +74,19 @@
 
       <!-- Client ID 列 -->
       <ng-container matColumnDef="clientId">
-        <th mat-header-cell *matHeaderCellDef>{{ 'client.clientId' | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>{{ i18n.client.clientId | translate }}</th>
         <td mat-cell *matCellDef="let client" class="font-monospace small">{{ client.clientId }}</td>
       </ng-container>
 
       <!-- 显示名称列 -->
       <ng-container matColumnDef="displayName">
-        <th mat-header-cell *matHeaderCellDef>{{ 'client.displayName' | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>{{ i18n.client.displayName | translate }}</th>
         <td mat-cell *matCellDef="let client" class="fw-500">{{ client.displayName }}</td>
       </ng-container>
 
       <!-- 类型列 -->
       <ng-container matColumnDef="type">
-        <th mat-header-cell *matHeaderCellDef>{{ 'client.type' | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>{{ i18n.client.type | translate }}</th>
         <td mat-cell *matCellDef="let client">
           <mat-chip class="small">
             {{ client.type | enumText: 'ClientType' }}
@@ -96,7 +96,7 @@
 
       <!-- 应用类型列 -->
       <ng-container matColumnDef="applicationType">
-        <th mat-header-cell *matHeaderCellDef>{{ 'client.applicationType' | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>{{ i18n.client.applicationType | translate }}</th>
         <td mat-cell *matCellDef="let client">
           <mat-chip class="small">
             {{ client.applicationType | enumText: 'ApplicationType' }}
@@ -106,13 +106,13 @@
 
       <!-- 创建时间列 -->
       <ng-container matColumnDef="createdTime">
-        <th mat-header-cell *matHeaderCellDef>{{ 'common.createdTime' | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>{{ i18n.common.createdTime | translate }}</th>
         <td mat-cell *matCellDef="let client" class="small text-muted">{{ client.createdTime | date:'short' }}</td>
       </ng-container>
 
       <!-- 操作列 -->
       <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>{{ i18n.common.actions | translate }}</th>
         <td mat-cell *matCellDef="let client" class="text-end">
           <button mat-icon-button [matMenuTriggerFor]="menu" [attr.aria-label]="'Actions for ' + client.displayName"
             type="button">
@@ -121,11 +121,11 @@
           <mat-menu #menu="matMenu">
             <button mat-menu-item (click)="viewDetail(client.id)" type="button">
               <mat-icon>visibility</mat-icon>
-              <span>{{ 'common.view' | translate }}</span>
+              <span>{{ i18n.common.view | translate }}</span>
             </button>
-            <button mat-menu-item (click)="deleteClient(client.id)" color="warn" type="button">
+            <button mat-menu-item (click)="deleteClient(client.id)" color="warn" type="button" class="error">
               <mat-icon>delete</mat-icon>
-              <span>{{ 'common.delete' | translate }}</span>
+              <span>{{ i18n.common.delete | translate }}</span>
             </button>
           </mat-menu>
         </td>
@@ -140,8 +140,8 @@
       <tr class="mat-row" *matNoDataRow>
         <td class="mat-cell" [attr.colspan]="displayedColumns.length">
           <div class="d-flex flex-column align-items-center justify-content-center py-5 text-muted">
-            <mat-icon class="mb-3" style="font-size: 48px; width: 48px; height: 48px; opacity: 0.3;">info</mat-icon>
-            <p>{{ 'common.noData' | translate }}</p>
+            <mat-icon class="mb-3 empty-icon">info</mat-icon>
+            <p>{{ i18n.common.noData | translate }}</p>
           </div>
         </td>
       </tr>
@@ -149,8 +149,7 @@
 
     <!-- 加载状态 -->
     @if (isLoading()) {
-    <div class="position-absolute w-100 h-100 d-flex align-items-center justify-content-center"
-      style="background-color: rgba(0, 0, 0, 0.05); top: 0; left: 0; z-index: 100;">
+    <div class="position-absolute w-100 h-100 d-flex align-items-center justify-content-center loading-overlay">
       <mat-spinner diameter="50"></mat-spinner>
     </div>
     }

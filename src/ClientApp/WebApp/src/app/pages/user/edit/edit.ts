@@ -7,6 +7,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { UserUpdateDto } from 'src/app/services/api/models/iammod/user-update-dto.model';
 import { UserDetailDto } from 'src/app/services/api/models/iammod/user-detail-dto.model';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-edit',
@@ -20,6 +21,7 @@ import { UserDetailDto } from 'src/app/services/api/models/iammod/user-detail-dt
   styleUrls: ['./edit.scss']
 })
 export class UserEditComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   userForm!: FormGroup;
   isSubmitting = false;
   isLoading = signal(true);

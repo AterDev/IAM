@@ -2,7 +2,7 @@
   <div class="header">
     <button matButton="filled" (click)="openAddDialog()">
       <mat-icon>add</mat-icon>
-      {{ 'organization.addRoot' | translate }}
+      {{ i18n.organization.addRoot | translate }}
     </button>
   </div>
 
@@ -10,7 +10,7 @@
     <div class="tree-panel">
       <mat-card>
         <mat-card-header>
-          <mat-card-title>{{ 'organization.tree' | translate }}</mat-card-title>
+          <mat-card-title>{{ i18n.organization.tree | translate }}</mat-card-title>
         </mat-card-header>
         <mat-card-content>
           @if(isLoading()){
@@ -26,19 +26,19 @@
                 </span>
                 <span class="node-actions">
                   <button mat-icon-button (click)="openAddDialog(node)"
-                    matTooltip="{{ 'organization.addChild' | translate }}">
+                    matTooltip="{{ i18n.organization.addChild | translate }}">
                     <mat-icon>add</mat-icon>
                   </button>
-                  <button mat-icon-button (click)="openEditDialog(node, $event)"
-                    matTooltip="{{ 'common.edit' | translate }}">
+                  <button mat-icon-button (click)="openEditDialog(node, $event)" class="primary"
+                    matTooltip="{{ i18n.common.edit | translate }}">
                     <mat-icon>edit</mat-icon>
                   </button>
                   <button mat-icon-button (click)="openMembersDialog(node, $event)"
-                    matTooltip="{{ 'organization.members' | translate }}">
+                    matTooltip="{{ i18n.organization.members | translate }}">
                     <mat-icon>people</mat-icon>
                   </button>
-                  <button mat-icon-button (click)="deleteNode(node, $event)"
-                    matTooltip="{{ 'common.delete' | translate }}">
+                  <button mat-icon-button (click)="deleteNode(node, $event)" class="error"
+                    matTooltip="{{ i18n.common.delete | translate }}">
                     <mat-icon>delete</mat-icon>
                   </button>
                 </span>
@@ -59,19 +59,19 @@
                   </span>
                   <span class="node-actions">
                     <button mat-icon-button (click)="openAddDialog(node)"
-                      matTooltip="{{ 'organization.addChild' | translate }}">
+                      matTooltip="{{ i18n.organization.addChild | translate }}">
                       <mat-icon>add</mat-icon>
                     </button>
-                    <button mat-icon-button (click)="openEditDialog(node, $event)"
-                      matTooltip="{{ 'common.edit' | translate }}">
+                    <button mat-icon-button (click)="openEditDialog(node, $event)" class="primary"
+                      matTooltip="{{ i18n.common.edit | translate }}">
                       <mat-icon>edit</mat-icon>
                     </button>
                     <button mat-icon-button (click)="openMembersDialog(node, $event)"
-                      matTooltip="{{ 'organization.members' | translate }}">
+                      matTooltip="{{ i18n.organization.members | translate }}">
                       <mat-icon>people</mat-icon>
                     </button>
-                    <button mat-icon-button (click)="deleteNode(node, $event)"
-                      matTooltip="{{ 'common.delete' | translate }}">
+                    <button mat-icon-button (click)="deleteNode(node, $event)" class="error"
+                      matTooltip="{{ i18n.common.delete | translate }}">
                       <mat-icon>delete</mat-icon>
                     </button>
                   </span>
@@ -83,7 +83,7 @@
             </mat-nested-tree-node>
           </mat-tree>
           @if(dataSource.data.length === 0){
-          {{ 'organization.noData' | translate }}
+          {{ i18n.organization.noData | translate }}
           }
           }
         </mat-card-content>
@@ -93,24 +93,24 @@
     <div class="detail-panel" *ngIf="selectedNode()">
       <mat-card>
         <mat-card-header>
-          <mat-card-title>{{ 'organization.detail' | translate }}</mat-card-title>
+          <mat-card-title>{{ i18n.organization.detail | translate }}</mat-card-title>
         </mat-card-header>
         <mat-card-content>
           <div class="info-grid">
             <div class="info-item">
-              <label>{{ 'organization.name' | translate }}:</label>
+              <label>{{ i18n.organization.name | translate }}:</label>
               <span>{{ selectedNode()!.name }}</span>
             </div>
             <div class="info-item">
-              <label>{{ 'organization.level' | translate }}:</label>
+              <label>{{ i18n.organization.level | translate }}:</label>
               <span>{{ selectedNode()!.level }}</span>
             </div>
             <div class="info-item">
-              <label>{{ 'organization.displayOrder' | translate }}:</label>
+              <label>{{ i18n.organization.displayOrder | translate }}:</label>
               <span>{{ selectedNode()!.displayOrder }}</span>
             </div>
             <div class="info-item full-width" *ngIf="selectedNode()!.description">
-              <label>{{ 'organization.description' | translate }}:</label>
+              <label>{{ i18n.organization.description | translate }}:</label>
               <span>{{ selectedNode()!.description }}</span>
             </div>
           </div>

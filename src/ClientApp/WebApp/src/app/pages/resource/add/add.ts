@@ -6,6 +6,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { ResourceAddDto } from 'src/app/services/api/models/iammod/resource-add-dto.model';
 import { TranslateService } from '@ngx-translate/core';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-add',
@@ -18,6 +19,7 @@ import { TranslateService } from '@ngx-translate/core';
   styleUrls: ['./add.scss']
 })
 export class ResourceAddComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   resourceForm!: FormGroup;
   isSubmitting = false;
 

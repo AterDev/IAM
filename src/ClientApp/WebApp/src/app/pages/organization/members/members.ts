@@ -7,6 +7,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormsModule } from '@angular/forms';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { UserItemDto } from 'src/app/services/api/models/iammod/user-item-dto.model';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-members',
@@ -23,6 +24,7 @@ import { UserItemDto } from 'src/app/services/api/models/iammod/user-item-dto.mo
   styleUrls: ['./members.scss']
 })
 export class OrganizationMembersComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   displayedColumns: string[] = ['userName', 'email', 'actions'];
   
   // Keep signals for template-reactive values

@@ -15,6 +15,7 @@ import { ClientAddDto } from 'src/app/services/api/models/iammod/client-add-dto.
 import { ResourceItemDto } from 'src/app/services/api/models/iammod/resource-item-dto.model';
 import { ScopeItemDto } from 'src/app/services/api/models/iammod/scope-item-dto.model';
 import { ClientAddPayload } from '../client-password-grant-policy.model';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-add',
@@ -30,6 +31,7 @@ import { ClientAddPayload } from '../client-password-grant-policy.model';
   styleUrls: ['./add.scss']
 })
 export class ClientAddComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   clientForm!: FormGroup;
   isSubmitting = false;
   clientSecret: string | null = null;

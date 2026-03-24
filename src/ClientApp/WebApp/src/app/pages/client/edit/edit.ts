@@ -16,6 +16,7 @@ import { ClientUpdateDto } from 'src/app/services/api/models/iammod/client-updat
 import { ResourceItemDto } from 'src/app/services/api/models/iammod/resource-item-dto.model';
 import { ScopeItemDto } from 'src/app/services/api/models/iammod/scope-item-dto.model';
 import { ClientDetailViewModel, ClientUpdatePayload } from '../client-password-grant-policy.model';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-edit',
@@ -32,6 +33,7 @@ import { ClientDetailViewModel, ClientUpdatePayload } from '../client-password-g
   styleUrls: ['./edit.scss']
 })
 export class ClientEditComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   clientForm!: FormGroup;
   isSubmitting = false;
   isLoading = signal(true);
@@ -79,7 +81,7 @@ export class ClientEditComponent implements OnInit {
         this.redirectUris.set(client.redirectUris || []);
 
         this.postLogoutRedirectUris.set(client.postLogoutRedirectUris || []);
-        
+
         // Extract scope IDs (from ScopeItemDto objects)
         const scopeIds = (client.scopes || []).map(s => s.id).filter(id => !!id);
         console.log('[ClientEdit] Extracted scope IDs:', scopeIds);

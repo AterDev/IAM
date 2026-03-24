@@ -9,6 +9,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
 import { MatTabsModule } from '@angular/material/tabs';
 import { FormsModule } from '@angular/forms';
+import { MatMenuModule } from '@angular/material/menu';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { ClientItemDto } from 'src/app/services/api/models/iammod/client-item-dto.model';
 import { PermissionAdminService } from 'src/app/services/permission-admin.service';
@@ -16,6 +17,7 @@ import { PermissionItem, PermissionTreeNode, PermissionType } from 'src/app/serv
 import { PermissionEditComponent } from '../edit/edit';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-permission-list',
@@ -28,6 +30,7 @@ import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
     MatListModule,
     MatTabsModule,
     FormsModule,
+    MatMenuModule,
     AppLoadingComponent,
   ],
   templateUrl: './list.html',
@@ -44,6 +47,8 @@ export class PermissionListComponent implements OnInit {
     { labelKey: 'permission.typeOptions.button', value: PermissionType.Button },
     { labelKey: 'permission.typeOptions.business', value: PermissionType.Business },
   ];
+
+  readonly i18n = I18N_KEYS;
 
   keyword = '';
   clientId: string | null = null;
@@ -77,7 +82,7 @@ export class PermissionListComponent implements OnInit {
         this.loadTree();
       },
       error: () => {
-        this.snackBar.open(this.translate.instant('error.loadClientsFailed'), this.translate.instant('common.close'), { duration: 3000 });
+        this.snackBar.open(this.translate.instant(this.i18n.error.loadClientsFailed), this.translate.instant(this.i18n.common.close), { duration: 3000 });
       },
     });
   }
@@ -104,7 +109,7 @@ export class PermissionListComponent implements OnInit {
       },
       error: () => {
         this.isLoading.set(false);
-        this.snackBar.open(this.translate.instant('permission.loadFailed'), this.translate.instant('common.close'), { duration: 3000 });
+        this.snackBar.open(this.translate.instant(this.i18n.permission.loadFailed), this.translate.instant(this.i18n.common.close), { duration: 3000 });
       },
     });
   }
@@ -138,20 +143,17 @@ export class PermissionListComponent implements OnInit {
     this.openEditDialog();
   }
 
-  addChild(node: PermissionTreeNode, event?: Event): void {
-    event?.stopPropagation();
+  addChild(node: PermissionTreeNode): void {
     this.openEditDialog(null, node.id);
   }
 
-  editNode(node: PermissionTreeNode, event?: Event): void {
-    event?.stopPropagation();
+  editNode(node: PermissionTreeNode): void {
     this.permissionAdminService.getPermissionDetail(node.id).subscribe({
       next: (permission) => this.openEditDialog(permission),
     });
   }
 
-  deleteNode(node: PermissionTreeNode, event?: Event): void {
-    event?.stopPropagation();
+  deleteNode(node: PermissionTreeNode): void {
     this.confirmDelete([node.id], 'permission.deleteConfirm').subscribe((confirmed) => {
       if (!confirmed) {
         return;
@@ -159,11 +161,11 @@ export class PermissionListComponent implements OnInit {
 
       this.permissionAdminService.deletePermission(node.id).subscribe({
         next: () => {
-          this.snackBar.open(this.translate.instant('permission.deleteSuccess'), this.translate.instant('common.close'), { duration: 3000 });
+          this.snackBar.open(this.translate.instant(this.i18n.permission.deleteSuccess), this.translate.instant(this.i18n.common.close), { duration: 3000 });
           this.loadTree();
         },
         error: () => {
-          this.snackBar.open(this.translate.instant('permission.deleteFailed'), this.translate.instant('common.close'), { duration: 3000 });
+          this.snackBar.open(this.translate.instant(this.i18n.permission.deleteFailed), this.translate.instant(this.i18n.common.close), { duration: 3000 });
         },
       });
     });
@@ -241,7 +243,7 @@ export class PermissionListComponent implements OnInit {
     return this.dialog.open(ConfirmDialogComponent, {
       width: '420px',
       data: {
-        title: this.translate.instant('common.delete'),
+        title: this.translate.instant(this.i18n.common.delete),
         message: this.translate.instant(messageKey, { count: ids.length }),
       },
     }).afterClosed();

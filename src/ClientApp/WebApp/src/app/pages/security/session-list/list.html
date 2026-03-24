@@ -8,7 +8,7 @@
       </button>
       <button mat-raised-button  (click)="loadData()" type="button">
         <mat-icon>refresh</mat-icon>
-        {{ 'common.refresh' | translate }}
+        {{ i18n.common.refresh | translate }}
       </button>
     </div>
   </div>
@@ -16,7 +16,7 @@
   <div class="page-toolbar">
     <div class="page-toolbar__filters">
       <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
-        <mat-label>{{ 'session.searchPlaceholder' | translate }}</mat-label>
+        <mat-label>{{ i18n.session.searchPlaceholder | translate }}</mat-label>
         <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()" placeholder="Session ID" />
         <button mat-icon-button matSuffix (click)="onSearch()">
           <mat-icon>search</mat-icon>
@@ -24,21 +24,21 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline" subscriptSizing="dynamic">
-        <mat-label>{{ 'session.ipAddress' | translate }}</mat-label>
+        <mat-label>{{ i18n.session.ipAddress | translate }}</mat-label>
         <input matInput [(ngModel)]="ipAddressFilter" (keyup.enter)="onFilterChange()" />
       </mat-form-field>
 
       <mat-form-field appearance="outline" subscriptSizing="dynamic">
-        <mat-label>{{ 'session.status' | translate }}</mat-label>
+        <mat-label>{{ i18n.session.status | translate }}</mat-label>
         <mat-select [(ngModel)]="isActiveFilter" (selectionChange)="onFilterChange()">
-          <mat-option [value]="null">{{ 'common.all' | translate }}</mat-option>
-          <mat-option [value]="true">{{ 'session.active' | translate }}</mat-option>
-          <mat-option [value]="false">{{ 'session.inactive' | translate }}</mat-option>
+          <mat-option [value]="null">{{ i18n.common.all | translate }}</mat-option>
+          <mat-option [value]="true">{{ i18n.session.active | translate }}</mat-option>
+          <mat-option [value]="false">{{ i18n.session.inactive | translate }}</mat-option>
         </mat-select>
       </mat-form-field>
 
       <mat-form-field appearance="outline" subscriptSizing="dynamic">
-        <mat-label>{{ 'session.startDate' | translate }}</mat-label>
+        <mat-label>{{ i18n.session.startDate | translate }}</mat-label>
         <input matInput [matDatepicker]="startPicker" [formControl]="startDateControl"
           (dateChange)="onFilterChange()" />
         <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
@@ -46,24 +46,24 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline" subscriptSizing="dynamic">
-        <mat-label>{{ 'session.endDate' | translate }}</mat-label>
+        <mat-label>{{ i18n.session.endDate | translate }}</mat-label>
         <input matInput [matDatepicker]="endPicker" [formControl]="endDateControl" (dateChange)="onFilterChange()" />
         <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
         <mat-datepicker #endPicker></mat-datepicker>
       </mat-form-field>
 
       <button mat-icon-button (click)="clearFilters()" type="button" class="filter-clear-button"
-        [matTooltip]="'common.clearFilters' | translate" [attr.aria-label]="'common.clearFilters' | translate">
+        [matTooltip]="i18n.common.clearFilters | translate" [attr.aria-label]="i18n.common.clearFilters | translate">
         <mat-icon>filter_alt_off</mat-icon>
       </button>
     </div>
   </div>
 
   <div class="batch-actions" *ngIf="selectedIds().size > 0">
-    <span class="selection-info">{{ selectedIds().size }} {{ 'common.selected' | translate }}</span>
+    <span class="selection-info">{{ selectedIds().size }} {{ i18n.common.selected | translate }}</span>
     <button mat-button color="warn" (click)="revokeSelected()">
       <mat-icon>block</mat-icon>
-      {{ 'session.revokeSelected' | translate }}
+      {{ i18n.session.revokeSelected | translate }}
     </button>
   </div>
 
@@ -84,7 +84,7 @@
       <!-- Session ID Column -->
       <ng-container matColumnDef="sessionId">
         <th mat-header-cell *matHeaderCellDef>
-          {{ 'session.sessionId' | translate }}
+          {{ i18n.session.sessionId | translate }}
         </th>
         <td mat-cell *matCellDef="let session">
           <span class="session-id">{{ session.sessionId.substring(0, 8) }}...</span>
@@ -94,7 +94,7 @@
       <!-- IP Address Column -->
       <ng-container matColumnDef="ipAddress">
         <th mat-header-cell *matHeaderCellDef>
-          {{ 'session.ipAddress' | translate }}
+          {{ i18n.session.ipAddress | translate }}
         </th>
         <td mat-cell *matCellDef="let session">
           <span class="ip-address">{{ session.ipAddress || '-' }}</span>
@@ -104,7 +104,7 @@
       <!-- User Agent Column -->
       <ng-container matColumnDef="userAgent">
         <th mat-header-cell *matHeaderCellDef>
-          {{ 'session.device' | translate }}
+          {{ i18n.session.device | translate }}
         </th>
         <td mat-cell *matCellDef="let session">
           <span class="user-agent" [title]="session.userAgent || ''">
@@ -116,7 +116,7 @@
       <!-- Login Time Column -->
       <ng-container matColumnDef="loginTime">
         <th mat-header-cell *matHeaderCellDef>
-          {{ 'session.loginTime' | translate }}
+          {{ i18n.session.loginTime | translate }}
         </th>
         <td mat-cell *matCellDef="let session">
           {{ session.loginTime | date:'short' }}
@@ -126,7 +126,7 @@
       <!-- Last Activity Time Column -->
       <ng-container matColumnDef="lastActivityTime">
         <th mat-header-cell *matHeaderCellDef>
-          {{ 'session.lastActivity' | translate }}
+          {{ i18n.session.lastActivity | translate }}
         </th>
         <td mat-cell *matCellDef="let session">
           {{ session.lastActivityTime | date:'short' }}
@@ -136,7 +136,7 @@
       <!-- Active Status Column -->
       <ng-container matColumnDef="isActive">
         <th mat-header-cell *matHeaderCellDef>
-          {{ 'session.status' | translate }}
+          {{ i18n.session.status | translate }}
         </th>
         <td mat-cell *matCellDef="let session">
           <mat-chip [class.active]="session.isActive" [class.inactive]="!session.isActive">
@@ -149,7 +149,7 @@
       <!-- Actions Column -->
       <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef>
-          {{ 'common.actions' | translate }}
+          {{ i18n.common.actions | translate }}
         </th>
         <td mat-cell *matCellDef="let session">
           <button mat-icon-button [matMenuTriggerFor]="menu">
@@ -158,11 +158,11 @@
           <mat-menu #menu="matMenu">
             <button mat-menu-item (click)="viewDetail(session)">
               <mat-icon>visibility</mat-icon>
-              <span>{{ 'common.view' | translate }}</span>
+              <span>{{ i18n.common.view | translate }}</span>
             </button>
             <button mat-menu-item (click)="revokeSession(session.id)" [disabled]="!session.isActive">
               <mat-icon>block</mat-icon>
-              <span>{{ 'session.revoke' | translate }}</span>
+              <span>{{ i18n.session.revoke | translate }}</span>
             </button>
           </mat-menu>
         </td>
@@ -175,7 +175,7 @@
         <td class="mat-cell" [attr.colspan]="displayedColumns.length">
           <div class="no-data">
             <mat-icon>info</mat-icon>
-            <p>{{ 'common.noData' | translate }}</p>
+            <p>{{ i18n.common.noData | translate }}</p>
           </div>
         </td>
       </tr>

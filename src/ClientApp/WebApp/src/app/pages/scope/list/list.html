@@ -2,25 +2,25 @@
   <div class="page-toolbar">
     <div class="page-toolbar__filters">
       <mat-form-field class="search-field" subscriptSizing="dynamic">
-        <mat-label>{{ 'common.search' | translate }}</mat-label>
+        <mat-label>{{ i18n.common.search | translate }}</mat-label>
         <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()"
-          [placeholder]="'scope.searchPlaceholder' | translate">
+          [placeholder]="i18n.scope.searchPlaceholder | translate">
         <button mat-icon-button matSuffix (click)="onSearch()">
           <mat-icon>search</mat-icon>
         </button>
       </mat-form-field>
 
       <mat-form-field class="filter-field" subscriptSizing="dynamic">
-        <mat-label>{{ 'scope.requiredFilter' | translate }}</mat-label>
+        <mat-label>{{ i18n.scope.requiredFilter | translate }}</mat-label>
         <mat-select [(ngModel)]="requiredFilter" (selectionChange)="onFilterChange()">
-          <mat-option [value]="null">{{ 'common.all' | translate }}</mat-option>
-          <mat-option [value]="true">{{ 'scope.required' | translate }}</mat-option>
-          <mat-option [value]="false">{{ 'scope.optional' | translate }}</mat-option>
+          <mat-option [value]="null">{{ i18n.common.all | translate }}</mat-option>
+          <mat-option [value]="true">{{ i18n.scope.required | translate }}</mat-option>
+          <mat-option [value]="false">{{ i18n.scope.optional | translate }}</mat-option>
         </mat-select>
       </mat-form-field>
 
       <button mat-icon-button (click)="clearFilters()" type="button" class="filter-clear-button"
-        [matTooltip]="'common.clearFilters' | translate" [attr.aria-label]="'common.clearFilters' | translate">
+        [matTooltip]="i18n.common.clearFilters | translate" [attr.aria-label]="i18n.common.clearFilters | translate">
         <mat-icon>filter_alt_off</mat-icon>
       </button>
     </div>
@@ -28,7 +28,7 @@
     <div class="page-toolbar__actions">
       <button matButton="filled" (click)="openAddDialog()" type="button">
         <mat-icon>add</mat-icon>
-        {{ 'common.add' | translate }}
+        {{ i18n.common.add | translate }}
       </button>
     </div>
   </div>
@@ -37,7 +37,7 @@
     <table mat-table [dataSource]="dataSource()" class="data-table">
       <!-- Name Column -->
       <ng-container matColumnDef="name">
-        <th mat-header-cell *matHeaderCellDef>{{ 'scope.name' | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>{{ i18n.scope.name | translate }}</th>
         <td mat-cell *matCellDef="let scope">
           <strong>{{ scope.name }}</strong>
         </td>
@@ -45,7 +45,7 @@
 
       <!-- Display Name Column -->
       <ng-container matColumnDef="displayName">
-        <th mat-header-cell *matHeaderCellDef>{{ 'scope.displayName' | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>{{ i18n.scope.displayName | translate }}</th>
         <td mat-cell *matCellDef="let scope">
           {{ scope.displayName }}
         </td>
@@ -53,19 +53,19 @@
 
       <!-- Required Column -->
       <ng-container matColumnDef="required">
-        <th mat-header-cell *matHeaderCellDef>{{ 'scope.required' | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>{{ i18n.scope.required | translate }}</th>
         <td mat-cell *matCellDef="let scope">
           @if (scope.required) {
-          <mat-chip class="required-chip">{{ 'scope.required' | translate }}</mat-chip>
+          <mat-chip class="required-chip">{{ i18n.scope.required | translate }}</mat-chip>
           } @else {
-          <mat-chip class="optional-chip">{{ 'scope.optional' | translate }}</mat-chip>
+          <mat-chip class="optional-chip">{{ i18n.scope.optional | translate }}</mat-chip>
           }
         </td>
       </ng-container>
 
       <!-- Emphasize Column -->
       <ng-container matColumnDef="emphasize">
-        <th mat-header-cell *matHeaderCellDef>{{ 'scope.emphasize' | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>{{ i18n.scope.emphasize | translate }}</th>
         <td mat-cell *matCellDef="let scope">
           @if (scope.emphasize) {
           <mat-icon class="emphasize-icon">star</mat-icon>
@@ -77,7 +77,7 @@
 
       <!-- Description Column -->
       <ng-container matColumnDef="description">
-        <th mat-header-cell *matHeaderCellDef>{{ 'scope.description' | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>{{ i18n.scope.description | translate }}</th>
         <td mat-cell *matCellDef="let scope">
           {{ scope.description || '-' }}
         </td>
@@ -85,7 +85,7 @@
 
       <!-- Actions Column -->
       <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>{{ i18n.common.actions | translate }}</th>
         <td mat-cell *matCellDef="let scope">
           <button mat-icon-button [matMenuTriggerFor]="menu">
             <mat-icon>more_vert</mat-icon>
@@ -93,11 +93,11 @@
           <mat-menu #menu="matMenu">
             <button mat-menu-item (click)="viewDetail(scope.id)">
               <mat-icon>visibility</mat-icon>
-              <span>{{ 'common.view' | translate }}</span>
+              <span>{{ i18n.common.view | translate }}</span>
             </button>
-            <button mat-menu-item (click)="deleteScope(scope.id)">
+            <button mat-menu-item (click)="deleteScope(scope.id)" class="error">
               <mat-icon>delete</mat-icon>
-              <span>{{ 'common.delete' | translate }}</span>
+              <span>{{ i18n.common.delete | translate }}</span>
             </button>
           </mat-menu>
         </td>
@@ -111,7 +111,7 @@
         <td class="mat-cell" [attr.colspan]="displayedColumns.length">
           <div class="no-data">
             <mat-icon>inbox</mat-icon>
-            <p>{{ 'common.noData' | translate }}</p>
+            <p>{{ i18n.common.noData | translate }}</p>
           </div>
         </td>
       </tr>
@@ -121,7 +121,7 @@
     @if (isLoading()) {
     <div class="loading-spinner">
       <mat-spinner diameter="50"></mat-spinner>
-      <p>{{ 'common.loading' | translate }}</p>
+      <p>{{ i18n.common.loading | translate }}</p>
     </div>
     }
 

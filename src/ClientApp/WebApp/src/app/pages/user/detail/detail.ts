@@ -11,6 +11,7 @@ import { UserDetailDto } from 'src/app/services/api/models/iammod/user-detail-dt
 import { UserEditComponent } from '../edit/edit';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-detail',
@@ -26,6 +27,7 @@ import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
   styleUrls: ['./detail.scss']
 })
 export class UserDetailComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   // Keep signals only for template-reactive values
   user = signal<UserDetailDto | null>(null);
 

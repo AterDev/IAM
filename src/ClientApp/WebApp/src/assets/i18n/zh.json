@@ -327,6 +327,7 @@
     "scopesHint": "选择该客户端被授权请求的作用域",
     "addScope": "添加作用域",
     "noScopes": "暂无作用域",
+    "noScopesSelected": "未选择任何作用域",
     "resources": "可访问资源",
     "resourcesHint": "选择该客户端可以访问的 API 资源。客户端在请求 Token 时可指定这些资源之一。",
     "availableResources": "可用资源",

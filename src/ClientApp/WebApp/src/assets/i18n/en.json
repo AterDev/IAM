@@ -293,6 +293,7 @@
     "scopesHint": "Select scopes that this client is authorized to request",
     "addScope": "Add Scope",
     "noScopes": "No scopes",
+    "noScopesSelected": "No scopes selected",
     "resources": "Accessible Resources",
     "resourcesHint": "Select the API resources that this client can access. The client can specify one of these resources when requesting a token.",
     "availableResources": "Available Resources",

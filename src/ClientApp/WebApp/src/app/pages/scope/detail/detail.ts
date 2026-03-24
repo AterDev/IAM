@@ -12,6 +12,7 @@ import { ScopeEditComponent } from '../edit/edit';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { TranslateService } from '@ngx-translate/core';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-detail',
@@ -27,6 +28,7 @@ import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
   styleUrls: ['./detail.scss']
 })
 export class ScopeDetailComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   scope = signal<ScopeDetailDto | null>(null);
 
   isLoading = signal(false);

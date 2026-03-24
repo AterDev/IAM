@@ -1,9 +1,9 @@
-<h2 mat-dialog-title>{{ 'resource.addResource' | translate }}</h2>
+<h2 mat-dialog-title>{{ i18n.resource.addResource | translate }}</h2>
 
 <mat-dialog-content>
   <form [formGroup]="resourceForm" class="resource-form">
     <mat-form-field appearance="outline">
-      <mat-label>{{ 'resource.name' | translate }}</mat-label>
+      <mat-label>{{ i18n.resource.name | translate }}</mat-label>
       <input matInput [formControl]="name" required>
       <mat-error *ngIf="name.invalid && name.touched">
         {{ getErrorMessage(name, 'name') }}
@@ -11,7 +11,7 @@
     </mat-form-field>
 
     <mat-form-field appearance="outline">
-      <mat-label>{{ 'resource.displayName' | translate }}</mat-label>
+      <mat-label>{{ i18n.resource.displayName | translate }}</mat-label>
       <input matInput [formControl]="displayName" required>
       <mat-error *ngIf="displayName.invalid && displayName.touched">
         {{ getErrorMessage(displayName, 'displayName') }}
@@ -19,7 +19,7 @@
     </mat-form-field>
 
     <mat-form-field appearance="outline">
-      <mat-label>{{ 'resource.description' | translate }}</mat-label>
+      <mat-label>{{ i18n.resource.description | translate }}</mat-label>
       <textarea matInput [formControl]="description" rows="3"></textarea>
     </mat-form-field>
   </form>
@@ -27,9 +27,9 @@
 
 <mat-dialog-actions align="end">
   <button mat-button (click)="onCancel()" [disabled]="isSubmitting">
-    {{ 'common.cancel' | translate }}
+    {{ i18n.common.cancel | translate }}
   </button>
   <button mat-raised-button  (click)="onSubmit()" [disabled]="isSubmitting">
-    {{ isSubmitting ? ('common.saving' | translate) : ('common.save' | translate) }}
+    {{ isSubmitting ? (i18n.common.saving | translate) : (i18n.common.save | translate) }}
   </button>
 </mat-dialog-actions>

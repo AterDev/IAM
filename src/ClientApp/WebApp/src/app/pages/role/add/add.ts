@@ -6,6 +6,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslateService } from '@ngx-translate/core';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { RoleAddDto } from 'src/app/services/api/models/iammod/role-add-dto.model';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-add',
@@ -18,6 +19,7 @@ import { RoleAddDto } from 'src/app/services/api/models/iammod/role-add-dto.mode
   styleUrls: ['./add.scss']
 })
 export class RoleAddComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   roleForm!: FormGroup;
   isSubmitting = false;
 

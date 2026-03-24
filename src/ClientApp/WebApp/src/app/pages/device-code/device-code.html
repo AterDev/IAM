@@ -1,7 +1,7 @@
 <div class="device-code-container">
   <mat-card class="device-code-card">
     <mat-card-header>
-      <mat-card-title>{{ 'deviceCode.title' | translate }}</mat-card-title>
+      <mat-card-title>{{ i18n.deviceCode.title | translate }}</mat-card-title>
     </mat-card-header>
     
     <mat-card-content>
@@ -13,11 +13,11 @@
         <div class="error-message">{{ errorMessage() }}</div>
       }
 
-      <p class="description">{{ 'deviceCode.description' | translate }}</p>
+      <p class="description">{{ i18n.deviceCode.description | translate }}</p>
 
       <form [formGroup]="deviceCodeForm" (ngSubmit)="submitCode()">
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>{{ 'deviceCode.userCode' | translate }}</mat-label>
+          <mat-label>{{ i18n.deviceCode.userCode | translate }}</mat-label>
           <input 
             matInput 
             [formControl]="userCode" 
@@ -26,7 +26,7 @@
             (input)="formatUserCode($event)"
             maxlength="9">
           @if (userCode.invalid && userCode.touched) {
-            <mat-error>{{ 'deviceCode.invalidFormat' | translate }}</mat-error>
+            <mat-error>{{ i18n.deviceCode.invalidFormat | translate }}</mat-error>
           }
         </mat-form-field>
 
@@ -39,17 +39,17 @@
             @if (isLoading()) {
               <mat-spinner diameter="20"></mat-spinner>
             } @else {
-              {{ 'deviceCode.submit' | translate }}
+              {{ i18n.deviceCode.submit | translate }}
             }
           </button>
           <button mat-button type="button" (click)="cancel()">
-            {{ 'deviceCode.cancel' | translate }}
+            {{ i18n.deviceCode.cancel | translate }}
           </button>
         </div>
       </form>
 
       <div class="help-text">
-        <p>{{ 'deviceCode.helpText' | translate }}</p>
+        <p>{{ i18n.deviceCode.helpText | translate }}</p>
       </div>
 
       @if (interaction(); as interaction) {
@@ -65,7 +65,7 @@
 
         @if (interaction.requestedScopes.length > 0) {
           <div class="scopes-section">
-            <h4>{{ 'deviceCode.requestedPermissions' | translate }}</h4>
+            <h4>{{ i18n.deviceCode.requestedPermissions | translate }}</h4>
             <mat-list>
               @for (scope of interaction.requestedScopes; track scope.name) {
                 <mat-list-item>
@@ -81,16 +81,16 @@
           <div class="user-info">
             <p class="info-text">
               <mat-icon>info</mat-icon>
-              {{ 'deviceCode.accountInfo' | translate: { username: authService.user()?.preferred_username || authService.user()?.name || 'User' } }}
+              {{ i18n.deviceCode.accountInfo | translate: { username: authService.user()?.preferred_username || authService.user()?.name || 'User' } }}
             </p>
           </div>
 
           <div class="button-group">
             <button mat-raised-button type="button" (click)="approve()" [disabled]="isLoading() || !interaction.canApprove">
-              {{ 'deviceCode.approve' | translate }}
+              {{ i18n.deviceCode.approve | translate }}
             </button>
             <button mat-stroked-button type="button" (click)="deny()" [disabled]="isLoading() || !interaction.canDeny">
-              {{ 'deviceCode.deny' | translate }}
+              {{ i18n.deviceCode.deny | translate }}
             </button>
           </div>
         }

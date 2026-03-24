@@ -19,6 +19,7 @@ import { ClientType } from 'src/app/services/api/models/entity/client-type.model
 import { ApplicationType } from 'src/app/services/api/models/entity/application-type.model';
 import { EnumTextPipe } from 'src/app/pipe/api/enum-text.pipe';
 import { ToKeyValuePipe } from 'src/app/share/pipe/to-key-value.pipe';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 
 @Component({
@@ -41,6 +42,7 @@ import { ToKeyValuePipe } from 'src/app/share/pipe/to-key-value.pipe';
   styleUrls: ['./list.scss']
 })
 export class ClientListComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
 
   ApplicationType = ApplicationType;
   ClientType = ClientType;

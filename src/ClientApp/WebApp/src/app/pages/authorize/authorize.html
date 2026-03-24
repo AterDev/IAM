@@ -1,7 +1,7 @@
 <div class="authorize-container">
   <mat-card class="authorize-card">
     <mat-card-header>
-      <mat-card-title>{{ 'authorize.title' | translate }}</mat-card-title>
+      <mat-card-title>{{ i18n.authorize.title | translate }}</mat-card-title>
     </mat-card-header>
     
     <mat-card-content>
@@ -18,24 +18,24 @@
       </div>
 
       <div class="consent-message">
-        <p>{{ 'authorize.consentMessage' | translate }}</p>
+        <p>{{ i18n.authorize.consentMessage | translate }}</p>
       </div>
 
       @if (interaction()?.hasValidConsent) {
         <div class="success-message">
-          {{ 'authorize.existingConsent' | translate }}
+          {{ i18n.authorize.existingConsent | translate }}
         </div>
       }
 
       <div class="scopes-section">
-        <h4>{{ 'authorize.requestedPermissions' | translate }}</h4>
+        <h4>{{ i18n.authorize.requestedPermissions | translate }}</h4>
         <mat-list>
           @for (scope of scopes(); track scope.name) {
             <mat-list-item>
               <mat-icon matListItemIcon>check_circle</mat-icon>
               <div matListItemTitle>{{ scope.description || scope.displayName }}</div>
               @if (scope.required) {
-                <span matListItemMeta class="required-badge">{{ 'authorize.required' | translate }}</span>
+                <span matListItemMeta class="required-badge">{{ i18n.authorize.required | translate }}</span>
               }
             </mat-list-item>
           }
@@ -45,12 +45,12 @@
       <div class="user-info">
         <p class="info-text">
           <mat-icon>info</mat-icon>
-          {{ 'authorize.accountInfo' | translate: { username: username() } }}
+          {{ i18n.authorize.accountInfo | translate: { username: username() } }}
         </p>
       </div>
 
       <mat-checkbox [checked]="rememberConsent()" (change)="toggleRememberConsent($event.checked)">
-        {{ 'authorize.rememberConsent' | translate }}
+        {{ i18n.authorize.rememberConsent | translate }}
       </mat-checkbox>
 
       <div class="button-group">
@@ -58,18 +58,18 @@
           mat-raised-button 
           (click)="allowAccess()" 
           [disabled]="isLoading()">
-          {{ 'authorize.allow' | translate }}
+          {{ i18n.authorize.allow | translate }}
         </button>
         <button 
           mat-raised-button 
           (click)="denyAccess()" 
           [disabled]="isLoading()">
-          {{ 'authorize.deny' | translate }}
+          {{ i18n.authorize.deny | translate }}
         </button>
       </div>
 
       <div class="privacy-notice">
-        <p>{{ 'authorize.privacyNotice' | translate }}</p>
+        <p>{{ i18n.authorize.privacyNotice | translate }}</p>
       </div>
     </mat-card-content>
   </mat-card>

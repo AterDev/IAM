@@ -14,6 +14,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from 'src/app/services/auth.service';
 import { DeviceAuthorizationInteraction, OauthInteractionService } from 'src/app/services/oauth-interaction.service';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-device-code',
@@ -34,6 +35,7 @@ import { DeviceAuthorizationInteraction, OauthInteractionService } from 'src/app
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DeviceCode implements OnInit {
+  readonly i18n = I18N_KEYS;
   readonly authService = inject(AuthService);
 
   private destroyRef = inject(DestroyRef);

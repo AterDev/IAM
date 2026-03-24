@@ -2,14 +2,14 @@
   <div class="d-flex gap-1">
     <button mat-button [routerLink]="['/index']" routerLinkActive="active">{{i18n.home | translate}}</button>
   </div>
-  <span style="display:flex;flex:1 1 auto"></span>
+  <span class="flex-fill d-flex"></span>
   <div class="d-flex align-items-center align-content-center">
     <mat-button-toggle-group (change)="setLanguage($event.value)" value="zh" aria-label="Language" class="me-2">
       <mat-button-toggle value="zh">中</mat-button-toggle>
       <mat-button-toggle value="en">En</mat-button-toggle>
     </mat-button-toggle-group>
     @if (isLogin) {
-    <button [matMenuTriggerFor]="appMenu" mat-button style="flex-direction: row-reverse;">
+    <button [matMenuTriggerFor]="appMenu" mat-button class="menu-btn-reverse">
       {{username}}
       <mat-icon>arrow_drop_down</mat-icon>
     </button>
