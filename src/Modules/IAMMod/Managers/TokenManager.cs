@@ -6,7 +6,6 @@ using Share.Exceptions;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.Json;
-using ClaimTypes = System.Security.Claims.ClaimTypes;
 
 namespace IAMMod.Managers;
 
@@ -284,6 +283,22 @@ public class TokenManager(
         return audiences.Select(aud => new Claim(JwtRegisteredClaimNames.Aud, aud!));
     }
 
+    private static IEnumerable<Claim> BuildStandardUserClaims(User user)
+    {
+        yield return new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString());
+        yield return new Claim(JwtRegisteredClaimNames.Name, user.UserName);
+
+        if (!string.IsNullOrEmpty(user.Email))
+        {
+            yield return new Claim(JwtRegisteredClaimNames.Email, user.Email);
+        }
+    }
+
+    private static IEnumerable<Claim> BuildRoleClaims(IEnumerable<string> roles)
+    {
+        return roles.Select(role => new Claim(ClaimTypes.Role, role));
+    }
+
     private async Task<User?> GetUserWithRolesAsync(string? subjectId)
     {
         if (string.IsNullOrWhiteSpace(subjectId) || !Guid.TryParse(subjectId, out var userId))
@@ -558,22 +573,14 @@ public class TokenManager(
         // Build claims
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Name, user.UserName),
-            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new(JwtRegisteredClaimNames.Name, user.UserName),
             new(OpenIdConnectParameterNames.ClientId, client.ClientId),
         };
 
-        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+        claims.AddRange(BuildStandardUserClaims(user));
+
+        claims.AddRange(BuildRoleClaims(roles));
 
         claims.AddRange(BuildAudienceClaims(client));
-
-        if (!string.IsNullOrEmpty(user.Email))
-        {
-            claims.Add(new Claim(ClaimTypes.Email, user.Email));
-            claims.Add(new Claim(JwtRegisteredClaimNames.Email, user.Email));
-        }
 
         if (!string.IsNullOrEmpty(scope))
         {
@@ -669,23 +676,11 @@ public class TokenManager(
         string? idToken = null;
         if (HasScope(scope, Scopes.OpenId))
         {
-            var idClaims = new List<Claim>
-            {
-                new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new(ClaimTypes.Name, user.UserName),
-                new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                new(JwtRegisteredClaimNames.Name, user.UserName),
-            };
+            var idClaims = new List<Claim>(BuildStandardUserClaims(user));
 
-            idClaims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+            idClaims.AddRange(BuildRoleClaims(roles));
 
             idClaims.Add(new Claim(JwtRegisteredClaimNames.Aud, client.ClientId));
-
-            if (!string.IsNullOrEmpty(user.Email))
-            {
-                idClaims.Add(new Claim(ClaimTypes.Email, user.Email));
-                idClaims.Add(new Claim(JwtRegisteredClaimNames.Email, user.Email));
-            }
 
             if (!string.IsNullOrWhiteSpace(sessionId))
             {
