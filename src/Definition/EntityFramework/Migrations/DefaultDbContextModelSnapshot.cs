@@ -677,10 +677,6 @@ namespace EntityFramework.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Action")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -693,14 +689,6 @@ namespace EntityFramework.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
-                    b.Property<string>("DisplayName")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("Icon")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
@@ -708,10 +696,6 @@ namespace EntityFramework.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
-
-                    b.Property<string>("Namespace")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
 
                     b.Property<Guid?>("OwnedClientId")
                         .HasColumnType("uuid");
@@ -722,13 +706,6 @@ namespace EntityFramework.Migrations
                     b.Property<string>("Path")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
-
-                    b.Property<string>("Resource")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<int>("Sort")
-                        .HasColumnType("integer");
 
                     b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid");

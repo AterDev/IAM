@@ -1,13 +1,15 @@
 import { NestedTreeControl } from '@angular/cdk/tree';
 import { Component, OnInit, input, signal } from '@angular/core';
-import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { TranslateService } from '@ngx-translate/core';
-import { CommonModules, BaseMatModules } from 'src/app/share/shared-modules';
 import { MatCardModule } from '@angular/material/card';
-import { PermissionAdminService } from 'src/app/services/permission-admin.service';
-import { PermissionSyncNodeDto, PermissionTreeNode, PermissionType } from 'src/app/services/permission-admin.models';
+import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
+import { TranslateService } from '@ngx-translate/core';
+import { DotnetSwaggerClient } from 'src/app/services/dotnet-swagger/dotnet-swagger-client';
+import { PermissionType } from 'src/app/services/dotnet-swagger/models/entity/permission-type.model';
+import { PermissionSyncNodeDto } from 'src/app/services/dotnet-swagger/models/iammod/permission-sync-node-dto.model';
+import { PermissionTreeNodeDto } from 'src/app/services/dotnet-swagger/models/iammod/permission-tree-node-dto.model';
+import { CommonModules, BaseMatModules } from 'src/app/share/shared-modules';
 import { ClientPermissionNodeDialogComponent } from './node-dialog';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
@@ -40,7 +42,7 @@ export class ClientPermissionsComponent implements OnInit {
   };
 
   constructor(
-    private readonly permissionAdminService: PermissionAdminService,
+    private readonly api: DotnetSwaggerClient,
     private readonly dialog: MatDialog,
     private readonly snackBar: MatSnackBar,
     private readonly translate: TranslateService,
@@ -52,17 +54,13 @@ export class ClientPermissionsComponent implements OnInit {
 
   hasChild = (_: number, node: PermissionSyncNodeDto) => !!node.children && node.children.length > 0;
 
-  getNodeLabel(node: Pick<PermissionSyncNodeDto, 'displayName' | 'name'>): string {
-    return this.translateLabel(node.displayName || node.name);
+  getNodeLabel(node: Pick<PermissionSyncNodeDto, 'name'>): string {
+    return this.translateLabel(node.name);
   }
 
   loadTree(): void {
     this.isLoading.set(true);
-    this.permissionAdminService.getClientPermissionTree(this.clientId(), {
-      onlyNonBusiness: true,
-      pageIndex: 1,
-      pageSize: 2000,
-    }).subscribe({
+    this.api.clients.getPermissionTree(this.clientId(), null, null, null, null, null, true, 1, 2000, null).subscribe({
       next: (tree) => {
         this.dataSource.data = this.toSyncNodes(tree);
         this.expandAll(this.dataSource.data);
@@ -119,7 +117,7 @@ export class ClientPermissionsComponent implements OnInit {
     }
 
     this.isSaving.set(true);
-    this.permissionAdminService.syncClientMenuPermissions(this.clientId(), {
+    this.api.clients.syncMenuPermissions(this.clientId(), {
       permissions: this.dataSource.data,
     }).subscribe({
       next: () => {
@@ -136,7 +134,7 @@ export class ClientPermissionsComponent implements OnInit {
 
   private openNodeDialog(node?: PermissionSyncNodeDto, parent?: PermissionSyncNodeDto): void {
     const dialogRef = this.dialog.open(ClientPermissionNodeDialogComponent, {
-      width: '820px',
+      width: '720px',
       data: { node },
     });
 
@@ -157,25 +155,19 @@ export class ClientPermissionsComponent implements OnInit {
         return;
       }
 
-      this.dataSource.data = [...this.dataSource.data, result].sort((left, right) => left.sort - right.sort);
+      this.dataSource.data = [...this.dataSource.data, result].sort((left, right) => left.code.localeCompare(right.code));
     });
   }
 
-  private toSyncNodes(nodes: PermissionTreeNode[]): PermissionSyncNodeDto[] {
+  private toSyncNodes(nodes: PermissionTreeNodeDto[]): PermissionSyncNodeDto[] {
     return nodes
       .filter((node) => node.type === PermissionType.Menu || node.type === PermissionType.Button)
       .map((node) => ({
         code: node.code,
         name: node.name,
-        displayName: node.displayName,
         description: node.description,
         type: node.type,
-        namespace: node.namespace,
-        resource: node.resource,
-        action: node.action,
         path: node.path,
-        icon: node.icon,
-        sort: node.sort,
         children: this.toSyncNodes(node.children),
       }));
   }
@@ -201,7 +193,7 @@ export class ClientPermissionsComponent implements OnInit {
       if (node.code === parentCode) {
         return {
           ...node,
-          children: [...node.children, child].sort((left, right) => left.sort - right.sort),
+          children: [...node.children, child].sort((left, right) => left.code.localeCompare(right.code)),
         };
       }
 

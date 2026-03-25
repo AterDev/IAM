@@ -35,17 +35,11 @@ public class PermissionManager(
                 Id = permission.Id,
                 Code = permission.Code,
                 Name = permission.Name,
-                DisplayName = permission.DisplayName,
                 Description = permission.Description,
                 Type = permission.Type,
                 ParentId = permission.ParentId,
                 ParentCode = permission.Parent != null ? permission.Parent.Code : null,
-                Namespace = permission.Namespace,
-                Resource = permission.Resource,
-                Action = permission.Action,
                 Path = permission.Path,
-                Icon = permission.Icon,
-                Sort = permission.Sort,
                 OwnedClientId = permission.OwnedClientId,
                 OwnedClientCode = permission.OwnedClient != null ? permission.OwnedClient.ClientId : null,
                 CreatedTime = permission.CreatedTime,
@@ -54,7 +48,7 @@ public class PermissionManager(
 
         query = filter.OrderBy != null && filter.OrderBy.Count > 0
             ? query.OrderBy(filter.OrderBy)
-            : query.OrderBy(permission => permission.Sort).ThenBy(permission => permission.Code);
+            : query.OrderBy(permission => permission.Code);
 
         var count = await query.CountAsync();
         var data = await query
@@ -85,17 +79,11 @@ public class PermissionManager(
                 Id = permission.Id,
                 Code = permission.Code,
                 Name = permission.Name,
-                DisplayName = permission.DisplayName,
                 Description = permission.Description,
                 Type = permission.Type,
                 ParentId = permission.ParentId,
                 ParentCode = permission.Parent != null ? permission.Parent.Code : null,
-                Namespace = permission.Namespace,
-                Resource = permission.Resource,
-                Action = permission.Action,
                 Path = permission.Path,
-                Icon = permission.Icon,
-                Sort = permission.Sort,
                 OwnedClientId = permission.OwnedClientId,
                 OwnedClientCode = permission.OwnedClient != null ? permission.OwnedClient.ClientId : null,
                 CreatedTime = permission.CreatedTime,
@@ -111,23 +99,16 @@ public class PermissionManager(
     {
         var clientId = await ResolveClientIdAsync(filter.ClientId, filter.ClientCode);
         var items = await BuildFilteredPermissionQuery(filter, clientId)
-            .OrderBy(permission => permission.Sort)
-            .ThenBy(permission => permission.Code)
+            .OrderBy(permission => permission.Code)
             .Select(permission => new PermissionTreeNodeDto
             {
                 Id = permission.Id,
                 Code = permission.Code,
                 Name = permission.Name,
-                DisplayName = permission.DisplayName,
                 Description = permission.Description,
                 Type = permission.Type,
                 ParentId = permission.ParentId,
-                Namespace = permission.Namespace,
-                Resource = permission.Resource,
-                Action = permission.Action,
                 Path = permission.Path,
-                Icon = permission.Icon,
-                Sort = permission.Sort,
                 OwnedClientId = permission.OwnedClientId,
                 OwnedClientCode = permission.OwnedClient != null ? permission.OwnedClient.ClientId : null,
             })
@@ -148,23 +129,16 @@ public class PermissionManager(
 
         var clientId = await ResolveClientIdAsync(filter.ClientId, filter.ClientCode);
         var items = await BuildFilteredPermissionQuery(filter, clientId)
-            .OrderBy(permission => permission.Sort)
-            .ThenBy(permission => permission.Code)
+            .OrderBy(permission => permission.Code)
             .Select(permission => new PermissionTreeNodeDto
             {
                 Id = permission.Id,
                 Code = permission.Code,
                 Name = permission.Name,
-                DisplayName = permission.DisplayName,
                 Description = permission.Description,
                 Type = permission.Type,
                 ParentId = permission.ParentId,
-                Namespace = permission.Namespace,
-                Resource = permission.Resource,
-                Action = permission.Action,
                 Path = permission.Path,
-                Icon = permission.Icon,
-                Sort = permission.Sort,
                 OwnedClientId = permission.OwnedClientId,
                 OwnedClientCode = permission.OwnedClient != null ? permission.OwnedClient.ClientId : null,
             })
@@ -186,23 +160,16 @@ public class PermissionManager(
             .ToListAsync();
 
         var items = await BuildFilteredPermissionQuery(filter, clientId)
-            .OrderBy(permission => permission.Sort)
-            .ThenBy(permission => permission.Code)
+            .OrderBy(permission => permission.Code)
             .Select(permission => new PermissionTreeNodeDto
             {
                 Id = permission.Id,
                 Code = permission.Code,
                 Name = permission.Name,
-                DisplayName = permission.DisplayName,
                 Description = permission.Description,
                 Type = permission.Type,
                 ParentId = permission.ParentId,
-                Namespace = permission.Namespace,
-                Resource = permission.Resource,
-                Action = permission.Action,
                 Path = permission.Path,
-                Icon = permission.Icon,
-                Sort = permission.Sort,
                 OwnedClientId = permission.OwnedClientId,
                 OwnedClientCode = permission.OwnedClient != null ? permission.OwnedClient.ClientId : null,
             })
@@ -212,19 +179,10 @@ public class PermissionManager(
     }
 
     /// <summary>
-    /// Get the current user's permitted menu tree for the specified client.
+    /// Get the current user's effective permissions from all assigned roles.
     /// </summary>
-    public async Task<List<PermissionTreeNodeDto>> GetCurrentUserMenuTreeAsync(Guid userId, string clientCode)
+    public async Task<List<UserPermissionDto>> GetCurrentUserPermissionsAsync(Guid userId)
     {
-        var client = await _dbContext.Clients
-            .AsNoTracking()
-            .FirstOrDefaultAsync(item => item.ClientId == clientCode);
-
-        if (client == null)
-        {
-            return [];
-        }
-
         var roleIds = await _dbContext.UserRoles
             .Where(item => item.UserId == userId)
             .Select(item => item.RoleId)
@@ -236,60 +194,27 @@ public class PermissionManager(
             return [];
         }
 
-        var selectedPermissionIds = await _dbContext.RolePermissions
-            .Where(item => roleIds.Contains(item.RoleId))
-            .Select(item => item.PermissionId)
-            .Distinct()
-            .ToListAsync();
-
-        if (selectedPermissionIds.Count == 0)
-        {
-            return [];
-        }
-
-        var clientPermissionIds = await _dbContext.ClientPermissions
-            .Where(item => item.ClientId == client.Id)
-            .Select(item => item.PermissionId)
-            .Distinct()
-            .ToListAsync();
-
-        if (clientPermissionIds.Count == 0)
-        {
-            return [];
-        }
-
-        var allowedPermissionIds = selectedPermissionIds
-            .Intersect(clientPermissionIds)
-            .ToHashSet();
-
-        var items = await _dbContext.Permissions
+        var items = await _dbContext.RolePermissions
             .AsNoTracking()
-            .Include(permission => permission.OwnedClient)
-            .Where(permission => allowedPermissionIds.Contains(permission.Id))
-            .Where(permission => permission.Type == PermissionType.Menu || permission.Type == PermissionType.Button)
-            .OrderBy(permission => permission.Sort)
-            .ThenBy(permission => permission.Code)
-            .Select(permission => new PermissionTreeNodeDto
+            .Where(item => roleIds.Contains(item.RoleId))
+            .Select(item => new
             {
-                Id = permission.Id,
-                Code = permission.Code,
-                Name = permission.Name,
-                DisplayName = permission.DisplayName,
-                Description = permission.Description,
-                Type = permission.Type,
-                ParentId = permission.ParentId,
-                Namespace = permission.Namespace,
-                Resource = permission.Resource,
-                Action = permission.Action,
-                Path = permission.Path,
-                Icon = permission.Icon,
-                Sort = permission.Sort,
-                OwnedClientId = permission.OwnedClientId,
-                OwnedClientCode = permission.OwnedClient != null ? permission.OwnedClient.ClientId : null,
+                item.Permission.Code,
+                item.Permission.Type,
+                OwnedClientCode = item.Permission.OwnedClient != null ? item.Permission.OwnedClient.ClientId : null,
             })
+            .Distinct()
+            .OrderBy(item => item.OwnedClientCode)
+            .ThenBy(item => item.Type)
+            .ThenBy(item => item.Code)
             .ToListAsync();
 
-        return BuildTree(items, []);
+        return items.Select(item => new UserPermissionDto
+        {
+            Code = item.Code,
+            Type = item.Type,
+            OwnedClientCode = item.OwnedClientCode,
+        }).ToList();
     }
 
     /// <summary>
@@ -604,7 +529,7 @@ public class PermissionManager(
 
         var createdPermissions = new List<Permission>();
         var createdRelations = new List<ClientPermission>();
-        foreach (var node in dto.Permissions.OrderBy(item => item.Sort).ThenBy(item => item.Code))
+        foreach (var node in dto.Permissions.OrderBy(item => item.Code))
         {
             await CreateClientPermissionNodeAsync(clientId, node, null, createdPermissions, createdRelations);
         }
@@ -671,7 +596,6 @@ public class PermissionManager(
                 permission =>
                     permission.Code.Contains(filter.Keyword!)
                     || permission.Name.Contains(filter.Keyword!)
-                    || (permission.DisplayName != null && permission.DisplayName.Contains(filter.Keyword!))
                     || (permission.Description != null && permission.Description.Contains(filter.Keyword!)));
 
         if (clientId.HasValue)
@@ -727,16 +651,10 @@ public class PermissionManager(
     {
         entity.Code = dto.Code.Trim();
         entity.Name = dto.Name.Trim();
-        entity.DisplayName = dto.DisplayName?.Trim();
         entity.Description = dto.Description?.Trim();
         entity.Type = dto.Type;
         entity.ParentId = dto.ParentId;
-        entity.Namespace = dto.Namespace?.Trim();
-        entity.Resource = dto.Resource?.Trim();
-        entity.Action = dto.Action?.Trim();
         entity.Path = dto.Path?.Trim();
-        entity.Icon = dto.Icon?.Trim();
-        entity.Sort = dto.Sort;
         entity.OwnedClientId = dto.OwnedClientId;
     }
 
@@ -813,7 +731,7 @@ public class PermissionManager(
         }
 
         var roots = new List<PermissionTreeNodeDto>();
-        foreach (var node in nodes.OrderBy(item => item.Sort).ThenBy(item => item.Code))
+        foreach (var node in nodes.OrderBy(item => item.Code))
         {
             if (node.ParentId.HasValue && lookup.TryGetValue(node.ParentId.Value, out var parent))
             {
@@ -831,9 +749,7 @@ public class PermissionManager(
 
     private static void SortTree(List<PermissionTreeNodeDto> nodes)
     {
-        nodes.Sort((left, right) => left.Sort != right.Sort
-            ? left.Sort.CompareTo(right.Sort)
-            : string.Compare(left.Code, right.Code, StringComparison.Ordinal));
+        nodes.Sort((left, right) => string.Compare(left.Code, right.Code, StringComparison.Ordinal));
 
         foreach (var node in nodes)
         {
@@ -868,16 +784,10 @@ public class PermissionManager(
         {
             Code = node.Code.Trim(),
             Name = node.Name.Trim(),
-            DisplayName = node.DisplayName?.Trim(),
             Description = node.Description?.Trim(),
             Type = node.Type,
             Parent = parent,
-            Namespace = node.Namespace?.Trim(),
-            Resource = node.Resource?.Trim(),
-            Action = node.Action?.Trim(),
             Path = node.Path?.Trim(),
-            Icon = node.Icon?.Trim(),
-            Sort = node.Sort,
             OwnedClientId = clientId,
             TenantId = GetTenantId(),
         };
@@ -890,7 +800,7 @@ public class PermissionManager(
             TenantId = GetTenantId(),
         });
 
-        foreach (var child in node.Children.OrderBy(item => item.Sort).ThenBy(item => item.Code))
+        foreach (var child in node.Children.OrderBy(item => item.Code))
         {
             CreateClientPermissionNodeAsync(clientId, child, permission, createdPermissions, createdRelations);
         }

@@ -629,14 +629,8 @@ public class InitHostService(
         }
 
         permission.Name = seed.Name;
-        permission.DisplayName = seed.DisplayName;
         permission.Type = seed.Type;
-        permission.Namespace = seed.Namespace;
-        permission.Resource = seed.Resource;
-        permission.Action = seed.Action;
         permission.Path = seed.Path;
-        permission.Icon = seed.Icon;
-        permission.Sort = seed.Sort;
         permission.Parent = parent;
         permission.ParentId = parent?.Id;
         permission.OwnedClientId = ownerClientId;

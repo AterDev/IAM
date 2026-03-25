@@ -18,12 +18,6 @@ public class Permission : EntityBase
     public required string Name { get; set; }
 
     /// <summary>
-    /// Display name shown in UI.
-    /// </summary>
-    [MaxLength(200)]
-    public string? DisplayName { get; set; }
-
-    /// <summary>
     /// Description.
     /// </summary>
     [MaxLength(1000)]
@@ -40,39 +34,10 @@ public class Permission : EntityBase
     public Guid? ParentId { get; set; }
 
     /// <summary>
-    /// Namespace for structured permission composition.
-    /// </summary>
-    [MaxLength(100)]
-    public string? Namespace { get; set; }
-
-    /// <summary>
-    /// Resource for structured permission composition.
-    /// </summary>
-    [MaxLength(100)]
-    public string? Resource { get; set; }
-
-    /// <summary>
-    /// Action for structured permission composition.
-    /// </summary>
-    [MaxLength(100)]
-    public string? Action { get; set; }
-
-    /// <summary>
     /// Optional route path when used as a menu.
     /// </summary>
     [MaxLength(500)]
     public string? Path { get; set; }
-
-    /// <summary>
-    /// Optional icon when used as a menu/button.
-    /// </summary>
-    [MaxLength(100)]
-    public string? Icon { get; set; }
-
-    /// <summary>
-    /// Sort order for menu/button tree.
-    /// </summary>
-    public int Sort { get; set; }
 
     /// <summary>
     /// The client that owns this permission tree branch.

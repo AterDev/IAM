@@ -29,11 +29,11 @@ export class CallbackComponent implements OnInit {
 
     try {
       const result = await firstValueFrom(this.oidcSecurityService.checkAuth());
-      await this.router.navigateByUrl(result.isAuthenticated ? '/home' : '/unauthorized', { replaceUrl: true });
+      await this.router.navigateByUrl(result.isAuthenticated ? '/home' : '/home', { replaceUrl: true });
     } catch (error) {
       console.error('OIDC 回调处理失败', error);
-      this.statusText = '登录回调处理失败，正在跳转到未授权页面...';
-      await this.router.navigateByUrl('/unauthorized', { replaceUrl: true });
+      this.statusText = '登录回调处理失败，正在返回首页...';
+      await this.router.navigateByUrl('/home', { replaceUrl: true });
     }
   }
 }

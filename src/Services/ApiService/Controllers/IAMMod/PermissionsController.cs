@@ -32,17 +32,17 @@ public class PermissionsController(
     }
 
     /// <summary>
-    /// Get current user's menu tree for a client.
+    /// Get current user's effective permissions.
     /// </summary>
-    [HttpGet("my-menu-tree")]
-    public async Task<ActionResult<List<PermissionTreeNodeDto>>> GetMyMenuTree([FromQuery] string clientCode)
+    [HttpGet("user-permissions")]
+    public async Task<ActionResult<List<UserPermissionDto>>> GetUserPermissions()
     {
         if (_user.UserId == Guid.Empty)
         {
             return Unauthorized();
         }
 
-        return await _manager.GetCurrentUserMenuTreeAsync(_user.UserId, clientCode);
+        return await _manager.GetCurrentUserPermissionsAsync(_user.UserId);
     }
 
     /// <summary>

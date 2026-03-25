@@ -1,0 +1,17 @@
+import { AdminUserInfo } from '../iammod/admin-user-info.model';
+
+/**
+ * Admin login response DTO
+ */
+export interface AdminLoginResponseDto {
+  /** JWT access token */
+  accessToken: string;
+  /** Token type (Bearer) */
+  tokenType: string;
+  /** Token expiration in seconds */
+  expiresIn: number;
+  /** Unified session identifier */
+  sessionId: string;
+  /** Admin user information */
+  user: AdminUserInfo;
+}

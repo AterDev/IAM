@@ -33,7 +33,7 @@ export const appConfig: ApplicationConfig = {
         secureRoutes: [environment.backendApiUrl, `${environment.backendApiUrl}/api`],
         customParamsAuthRequest: {},
         renewUserInfoAfterTokenRenew: false,
-        unauthorizedRoute: '/unauthorized',
+        unauthorizedRoute: '/home',
         ignoreNonceAfterRefresh: true,
       },
     }),

@@ -56,7 +56,6 @@
               <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle>
                 <li class="tree-node">
                   <button mat-icon-button disabled></button>
-                  <mat-icon>{{ node.icon || 'key' }}</mat-icon>
                   <div class="node-text">
                     <strong>{{ getNodeLabel(node) }}</strong>
                     <span>{{ node.code }}</span>
@@ -87,7 +86,6 @@
                     <button mat-icon-button matTreeNodeToggle>
                       <mat-icon>{{ treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right' }}</mat-icon>
                     </button>
-                    <mat-icon>{{ node.icon || 'folder' }}</mat-icon>
                     <div class="node-text">
                       <strong>{{ getNodeLabel(node) }}</strong>
                       <span>{{ node.code }}</span>

@@ -1,6 +1,6 @@
 <mat-drawer-container class="sidenav-container" autosize>
   <mat-drawer #sidenav mode="side" opened="true" [disableClose]="true">
-    <div class="d-flex justify-content-end" style="overflow: hidden;">
+    <div class="drawer-toggle-row d-flex justify-content-end">
       @if(opened){
       <button mat-icon-button (click)="toggle()">
         <mat-icon>keyboard_double_arrow_left</mat-icon>

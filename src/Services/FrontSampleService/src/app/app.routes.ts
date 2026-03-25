@@ -26,10 +26,6 @@ export const routes: Routes = [
     canActivate: [AutoLoginPartialRoutesGuard],
   },
   {
-    path: 'unauthorized',
-    loadComponent: () => import('./unauthorized/unauthorized.component').then((m) => m.UnauthorizedComponent),
-  },
-  {
     path: '**',
     redirectTo: '/home',
   },

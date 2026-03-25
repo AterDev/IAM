@@ -11,20 +11,19 @@ public static class PermissionSeedCatalog
 
     public static IReadOnlyList<PermissionSeedDefinition> AdminWebMenuPermissions { get; } =
     [
-        new("identity", "Identity", "menu.identity", PermissionType.Menu, icon: "people", sort: 0, children:
+        new("identity", "Identity", PermissionType.Menu, children:
         [
-            new("user", "User", "menu.user", PermissionType.Menu, path: "/user", icon: "manage_accounts", sort: 0),
-            new("role", "Role", "menu.role", PermissionType.Menu, path: "/role", icon: "groups", sort: 1),
-            new("organization", "Organization", "menu.organization", PermissionType.Menu, path: "/organization", icon: "corporate_fare", sort: 2),
-            new("permission", "Permission", "menu.permission", PermissionType.Menu, path: "/permission", icon: "key", sort: 3),
-            new("security-audit-logs", "Audit Logs", "menu.auditLogs", PermissionType.Menu, path: "/security/audit-logs", icon: "history", sort: 4),
+            new("user", "User", PermissionType.Menu, path: "/user"),
+            new("role", "Role", PermissionType.Menu, path: "/role"),
+            new("organization", "Organization", PermissionType.Menu, path: "/organization"),
+            new("security-audit-logs", "Audit Logs", PermissionType.Menu, path: "/security/audit-logs"),
         ]),
-        new("oauth", "OAuth", "menu.oauth", PermissionType.Menu, icon: "security", sort: 1, children:
+        new("oauth", "OAuth", PermissionType.Menu, children:
         [
-            new("client", "Client", "menu.application", PermissionType.Menu, path: "/client", icon: "apps", sort: 0),
-            new("resource", "Resource", "menu.resource", PermissionType.Menu, path: "/resource", icon: "api", sort: 1),
-            new("scope", "Scope", "menu.scope", PermissionType.Menu, path: "/scope", icon: "vpn_key", sort: 2),
-            new("security-sessions", "Sessions", "menu.sessions", PermissionType.Menu, path: "/security/sessions", icon: "devices", sort: 3),
+            new("client", "Client", PermissionType.Menu, path: "/client"),
+            new("resource", "Resource", PermissionType.Menu, path: "/resource"),
+            new("scope", "Scope", PermissionType.Menu, path: "/scope"),
+            new("security-sessions", "Sessions", PermissionType.Menu, path: "/security/sessions"),
         ]),
     ];
 
@@ -50,12 +49,8 @@ public static class PermissionSeedCatalog
         {
             yield return new PermissionSeedDefinition(
                 Code: $"{resource}.{action}",
-                Name: $"{displayName}.{action}",
-                DisplayName: $"{displayName} {action}",
-                Type: PermissionType.Business,
-                @namespace: "iam",
-                resource: resource,
-                action: action);
+                Name: $"{displayName} {action}",
+                Type: PermissionType.Business);
         }
     }
 }
@@ -66,21 +61,10 @@ public static class PermissionSeedCatalog
 public sealed record PermissionSeedDefinition(
     string Code,
     string Name,
-    string? DisplayName,
     PermissionType Type,
-    string? @namespace = null,
-    string? resource = null,
-    string? action = null,
     string? path = null,
-    string? icon = null,
-    int sort = 0,
     IReadOnlyList<PermissionSeedDefinition>? children = null)
 {
-    public string? Namespace { get; init; } = @namespace;
-    public string? Resource { get; init; } = resource;
-    public string? Action { get; init; } = action;
     public string? Path { get; init; } = path;
-    public string? Icon { get; init; } = icon;
-    public int Sort { get; init; } = sort;
     public IReadOnlyList<PermissionSeedDefinition> Children { get; init; } = children ?? [];
 }

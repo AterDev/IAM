@@ -1,0 +1,29 @@
+.toolbar-spacer {
+  flex: 1 1 auto;
+}
+
+:host {
+  display: block;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.app-sidenav {
+  width: 280px;
+}
+
+.app-content {
+  padding: 1.5rem;
+}
+
+.active {
+  font-weight: 600;
+}
+
+@media (max-width: 960px) {
+  .app-sidenav {
+    width: 220px;
+  }
+}

@@ -41,7 +41,7 @@ src/
 - 模块主要是通过继承 ManagerBase<T> 来实现业务逻辑，所有Manager都要继承 ManagerBase<T> 或 ManagerBase
 - 在模块中业务验证错误，抛出 `BusinessException`
 
-模块之间不能相互依赖，除了`CoreMod`块可以被所有模块依赖外，其他模块只能依赖`Share`和`ServiceDefaults`。
+多模块共用的逻辑在`CoreMod`中实现，它作为核心模块被其他模块引用；除此之外，模块间不允许互相引用，以保持模块的独立性和可维护性。
 
 ### Services
 
@@ -51,9 +51,8 @@ src/
 
 在Controller层，做用户输入验证和权限验证，不做业务验证，返回 `Problem()` / `NotFound()` 等 HTTP 错误响应。
 
-**接口返回规范**:
-
-- **成功**：直接返回类型化的DTO对象或集合，不要`return Ok(xxx);`，有多种状态返回时，使用`ActionResult<T>`.
+### 返回值
+- **成功**：`ActionResult<T>` 或直接返回类型
 - **错误**：使用 `Problem()` 或 `NotFound()`，直接使用多语言常量作为错误消息，而不要new一个对象或使用字符串硬编码。
 - **参数绑定**：有歧义时使用显式特性 `[FromBody]` / `[FromQuery]` / `[FromRoute]`
 
@@ -71,16 +70,8 @@ src/
 4. **Modules** → 模块的业务逻辑实现和DTO，依赖 Entity 和 Share
 5. **Services** → API 控制器，依赖 Modules
 
-**禁止**：
-
-- ❌ Manager之间直接调用
-- ❌ Controller 绕过 Manager 直接访问 DbContext
-- ❌ Entity 包含业务逻辑（仅数据模型和验证注解）
-- ❌ 不要面向接口编程。没有多个实现类的服务，不要为其创建接口。
-
 ## 开发流程
 
-0. 先查询Perigon Mcp工具提供的功能，以便后续开发中调用。
 1. 定义层，即实体的定义，DbContext的处理，以及共享服务的编写(封装以便简化和复用)
 2. 模块层，即Manager和DTO的生成和编写; 并检查是否添加新的服务注入等。
 3. 服务层，即Controller的生成和编写
@@ -89,7 +80,7 @@ src/
 
 **要优先使用MCP工具`Perigon`，生成或创建模块/Entity/DTO/Manager/Controller等内容。**
 
-## 构建验证
+## 构建验证（每次修改后必须执行）
 
 通过`dotnet build`，构建对应的服务项目，如`ApiService`或`AdminService`，验证编译无错误。
 
@@ -98,9 +89,15 @@ src/
 
 MCP server config lives in [.vscode/mcp.json](../../../.vscode/mcp.json); use configured endpoints when invoking tools.
 
+
 ## 约定与规范
 
-解决方案使用全局命名空间和中央包管理
+- 解决方案使用全局命名空间(`GlobalUsings.cs`)和中央包管理
+- Manager之间不允许直接调用
+- Module之间不会互相依赖
+- Controller调用Manager方法，不直接访问 DbContext
+- 不要面向接口编程。没有多个实现类的服务，不要为其创建接口。
+- 遵守项目核心约定和模式（如Manager继承ManagerBase、控制器继承RestControllerBase）
 
 ### 代码复用
 
@@ -108,15 +105,13 @@ MCP server config lives in [.vscode/mcp.json](../../../.vscode/mcp.json); use co
 
 业务实体的类型转换，可直接在实体中实现。
 
-`Perigon.AspNetCore`中提供了`Utils`以及`Helpers`等工具类，优先使用这些工具类来简化开发。
-
 ### 多租户
 
 架构支持多租户，也支持单租户，从AppHost的`appsettings.Development.json`配置中，可以知道当前是单租户还是多租户模式。如果是单租户模式，tenantId默认为Guid.Empty。
 
 ### 对象映射
 
-优先使用`Perigon.AspNetCore.Utils.Extensions` 中的扩展方法`Merge/MapTo`进行类型转换或映射。
+优先使用`Perigon.AspNetCore.Utils.Extensions` 中的扩展方法`Merge/MapTo`进行映射。
 
 ### Aspire集成 
 

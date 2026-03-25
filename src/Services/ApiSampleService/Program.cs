@@ -23,14 +23,7 @@ app.MapGet("/api/protected", (HttpContext context) =>
     return Results.Ok(new
     {
         Message = "这是一个受保护端点，需要有效的JWT令牌",
-        User = new
-        {
-            IsAuthenticated = user.Identity?.IsAuthenticated ?? false,
-            Name = user.Identity?.Name,
-            Subject = user.FindFirst("sub")?.Value,
-            Email = user.FindFirst("email")?.Value,
-            Claims = user.Claims.Select(c => new { c.Type, c.Value }).ToList(),
-        },
+    RequestedBy = user.Identity?.Name ?? user.FindFirst("sub")?.Value,
         Timestamp = DateTime.UtcNow,
     });
 }).RequireAuthorization()

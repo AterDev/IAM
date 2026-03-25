@@ -1,13 +1,13 @@
-import { Component, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Component, inject, signal } from '@angular/core';
+import { forkJoin } from 'rxjs';
 import { BaseMatModules, CommonModules } from 'src/app/share/shared-modules';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatListModule } from '@angular/material/list';
-import { TranslateService } from '@ngx-translate/core';
-import { BreadcrumbComponent } from '../../share/components/breadcrumb/breadcrumb';
 import { AuthService } from '../../services/auth.service';
-import { PermissionAdminService } from '../../services/permission-admin.service';
-import { PermissionTreeNode, PermissionType } from '../../services/permission-admin.models';
+import { DotnetSwaggerClient } from '../../services/dotnet-swagger/dotnet-swagger-client';
+import { PermissionType } from '../../services/dotnet-swagger/models/entity/permission-type.model';
 
 @Component({
   selector: 'app-navigation',
@@ -16,14 +16,13 @@ import { PermissionTreeNode, PermissionType } from '../../services/permission-ad
   styleUrl: './navigation.scss'
 })
 export class NavigationComponent {
-  events: string[] = [];
+  private readonly http = inject(HttpClient);
   opened = true;
   expanded = true;
   menus = signal<Menu[]>([]);
   constructor(
     private readonly authService: AuthService,
-    private readonly permissionAdminService: PermissionAdminService,
-    private readonly translate: TranslateService,
+    private readonly api: DotnetSwaggerClient,
   ) {
   }
   ngOnInit(): void {
@@ -35,10 +34,18 @@ export class NavigationComponent {
   }
 
   updateMenus(): void {
-    this.permissionAdminService.getMyMenuTree(this.authService.getOidcClientId())
+    forkJoin({
+      menuConfig: this.http.get<Menu[]>('assets/menus.json'),
+      permissions: this.api.permissions.getUserPermissions(),
+    })
       .subscribe({
-        next: (res) => {
-          this.menus.set(this.mapMenus(res));
+        next: ({ menuConfig, permissions }) => {
+          const allowedCodes = new Set(
+            permissions
+              .filter((item) => item.type === PermissionType.Menu && item.ownedClientCode === this.authService.getOidcClientId())
+              .map((item) => item.code),
+          );
+          this.menus.set(this.filterMenusByPermissions(menuConfig, allowedCodes));
         },
         error: () => {
           this.menus.set([]);
@@ -46,24 +53,14 @@ export class NavigationComponent {
       });
   }
 
-  private mapMenus(nodes: PermissionTreeNode[]): Menu[] {
+  private filterMenusByPermissions(nodes: Menu[], allowedCodes: Set<string>): Menu[] {
     return nodes
-      .filter((node) => node.type === PermissionType.Menu)
-      .sort((left, right) => left.sort - right.sort)
       .map((node) => ({
-        name: this.translateMenuLabel(node.displayName || node.name),
-        path: node.path || null,
-        accessCode: node.code,
-        icon: node.icon || 'menu',
-        sort: node.sort,
-        menuType: 0,
-        children: this.mapMenus(node.children),
-      }));
-  }
-
-  private translateMenuLabel(label: string): string {
-    const translated = this.translate.instant(label);
-    return typeof translated === 'string' && translated.trim().length > 0 ? translated : label;
+        ...node,
+        children: this.filterMenusByPermissions(node.children ?? [], allowedCodes),
+      }))
+      .filter((node) => allowedCodes.has(node.accessCode) || (node.children?.length ?? 0) > 0)
+      .sort((left, right) => left.sort - right.sort);
   }
 }
 export interface Menu {

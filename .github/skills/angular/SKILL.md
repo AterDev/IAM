@@ -49,7 +49,8 @@ src/ClientApp/WebApp/
 
 <workflow>
 
-0. 先调用MCP 工具，从Api文档生成客户端请求服务，`outputPath`参数为前端的`src\ClientApp\WebApp\src\app`目录的绝对路径,不要再添加子路径了。clientType为:NgHttp。这一步需要将`AppHost`项目启动起来之后，才能正常调用工具生成请求服务。
+0. 生成前端请求服务及类型：通过perigon 提供的命令行工具`generate request`或`perigon mcp`工具，根据后端swagger文件生成前端代码，
+`outputPath`参数为前端项目根目录下的`\src\app`目录的绝对路径(生成错了要删除)。
 1. 创建独立组件：目录及文件结构
 2. 配置路由和菜单
 3. 实现ts逻辑和HTML模板
@@ -102,11 +103,9 @@ npm run start  # 启动开发服务器，实时查看编译错误
 
 **样式规范**：
 - 优先使用Angular Material提供的组件和样式类，而不是自己定义样式类和样式。
-- 布局使用bootstrap5中的d-flex相关工具类，而不是使用row和col等栅格系统，以避免不必要的嵌套和复杂性。
 - 关注行内元素垂直居中对齐
 - 整体页面不要出现水平滚动条(内部表格除外)，要注意组件的宽度和外层容器的宽度关系
 - ✗ 不要在组件中使用内联样式，而是在scss中定义。
-- 为交互元素(icon/button/list-item)适当添加不同的颜色，以提供视觉反馈（例如，错误状态使用红色，成功状态使用绿色）
 
 ### 多语言
 

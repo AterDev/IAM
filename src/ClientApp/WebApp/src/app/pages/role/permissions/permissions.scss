@@ -16,7 +16,7 @@
 
 .tree-node {
   display: grid;
-  grid-template-columns: auto auto auto minmax(0, 1fr);
+  grid-template-columns: auto auto minmax(0, 1fr);
   gap: 12px;
   align-items: center;
   min-height: 48px;

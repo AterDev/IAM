@@ -1,21 +1,21 @@
 import { NestedTreeControl } from '@angular/cdk/tree';
 import { Component, OnInit, computed, signal } from '@angular/core';
-import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { TranslateService } from '@ngx-translate/core';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
-import { CommonModules, CommonFormModules, BaseMatModules } from 'src/app/share/shared-modules';
-import { ActivatedRoute, Router } from '@angular/router';
+import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
+import { TranslateService } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
-import { ApiClient } from 'src/app/services/api/api-client';
-import { ClientItemDto } from 'src/app/services/api/models/iammod/client-item-dto.model';
-import { RoleDetailDto } from 'src/app/services/api/models/iammod/role-detail-dto.model';
-import { PermissionAdminService } from 'src/app/services/permission-admin.service';
-import { PermissionTreeNode, PermissionType } from 'src/app/services/permission-admin.models';
+import { DotnetSwaggerClient } from 'src/app/services/dotnet-swagger/dotnet-swagger-client';
+import { PermissionType } from 'src/app/services/dotnet-swagger/models/entity/permission-type.model';
+import { ClientItemDto } from 'src/app/services/dotnet-swagger/models/iammod/client-item-dto.model';
+import { PermissionTreeNodeDto } from 'src/app/services/dotnet-swagger/models/iammod/permission-tree-node-dto.model';
+import { RoleDetailDto } from 'src/app/services/dotnet-swagger/models/iammod/role-detail-dto.model';
+import { CommonModules, CommonFormModules, BaseMatModules } from 'src/app/share/shared-modules';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
@@ -38,13 +38,13 @@ import { I18N_KEYS } from 'src/app/share/i18n-keys';
 })
 export class RolePermissionsComponent implements OnInit {
   readonly i18n = I18N_KEYS;
-  readonly treeControl = new NestedTreeControl<PermissionTreeNode>((node) => node.children);
-  readonly dataSource = new MatTreeNestedDataSource<PermissionTreeNode>();
+  readonly treeControl = new NestedTreeControl<PermissionTreeNodeDto>((node) => node.children);
+  readonly dataSource = new MatTreeNestedDataSource<PermissionTreeNodeDto>();
   readonly isLoading = signal(false);
   readonly isSaving = signal(false);
   readonly role = signal<RoleDetailDto | null>(null);
   readonly clients = signal<ClientItemDto[]>([]);
-  readonly clientTree = signal<PermissionTreeNode[]>([]);
+  readonly clientTree = signal<PermissionTreeNodeDto[]>([]);
   readonly currentClientCodes = signal<Set<string>>(new Set());
   readonly baselineRoleCodes = signal<Set<string>>(new Set());
   readonly selectedClient = computed(() => this.clients().find((client) => client.id === this.clientId) ?? null);
@@ -64,8 +64,7 @@ export class RolePermissionsComponent implements OnInit {
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
-    private readonly permissionAdminService: PermissionAdminService,
-    private readonly api: ApiClient,
+    private readonly api: DotnetSwaggerClient,
     private readonly snackBar: MatSnackBar,
     private readonly translate: TranslateService,
   ) {}
@@ -80,7 +79,7 @@ export class RolePermissionsComponent implements OnInit {
     this.loadPage();
   }
 
-  hasChild = (_: number, node: PermissionTreeNode) => !!node.children && node.children.length > 0;
+  hasChild = (_: number, node: PermissionTreeNodeDto) => !!node.children && node.children.length > 0;
 
   loadTree(): void {
     if (!this.clientId || !this.roleId) {
@@ -93,11 +92,7 @@ export class RolePermissionsComponent implements OnInit {
     }
 
     this.isLoading.set(true);
-    this.permissionAdminService.getRolePermissionTree(this.roleId, {
-      clientId: this.clientId,
-      pageIndex: 1,
-      pageSize: 2000,
-    }).subscribe({
+    this.api.roles.getPermissionTree(this.roleId, this.clientId, null, null, null, null, null, 1, 2000, null).subscribe({
       next: (tree) => {
         this.clientTree.set(tree);
         this.currentClientCodes.set(new Set(this.collectCodes(tree)));
@@ -112,11 +107,11 @@ export class RolePermissionsComponent implements OnInit {
     });
   }
 
-  isSelected(node: PermissionTreeNode): boolean {
+  isSelected(node: PermissionTreeNodeDto): boolean {
     return this.selectedCodes().has(node.code);
   }
 
-  isIndeterminate(node: PermissionTreeNode): boolean {
+  isIndeterminate(node: PermissionTreeNodeDto): boolean {
     if (node.children.length === 0) {
       return false;
     }
@@ -126,7 +121,7 @@ export class RolePermissionsComponent implements OnInit {
     return selectedCount > 0 && selectedCount < descendants.length;
   }
 
-  toggleNode(node: PermissionTreeNode, checked: boolean): void {
+  toggleNode(node: PermissionTreeNodeDto, checked: boolean): void {
     const selected = new Set(this.selectedCodes());
     this.collectCodes([node]).forEach((code) => checked ? selected.add(code) : selected.delete(code));
     this.selectedCodes.set(selected);
@@ -170,7 +165,7 @@ export class RolePermissionsComponent implements OnInit {
     this.selectedCodes().forEach((code) => mergedCodes.add(code));
 
     this.isSaving.set(true);
-    this.permissionAdminService.grantRolePermissions(this.roleId, Array.from(mergedCodes).sort()).subscribe({
+    this.api.roles.grantPermissions(this.roleId, { permissionCodes: Array.from(mergedCodes).sort() }).subscribe({
       next: () => {
         this.baselineRoleCodes.set(mergedCodes);
         this.isSaving.set(false);
@@ -198,22 +193,22 @@ export class RolePermissionsComponent implements OnInit {
     this.applyTreeView();
   }
 
-  getNodeLabel(node: Pick<PermissionTreeNode, 'displayName' | 'name'>): string {
-    return this.translateLabel(node.displayName || node.name);
+  getNodeLabel(node: Pick<PermissionTreeNodeDto, 'name'>): string {
+    return this.translateLabel(node.name);
   }
 
-  private collectSelectedCodes(nodes: PermissionTreeNode[]): string[] {
+  private collectSelectedCodes(nodes: PermissionTreeNodeDto[]): string[] {
     return nodes.flatMap((node) => [
       ...(node.selected ? [node.code] : []),
       ...this.collectSelectedCodes(node.children),
     ]);
   }
 
-  private collectCodes(nodes: PermissionTreeNode[]): string[] {
+  private collectCodes(nodes: PermissionTreeNodeDto[]): string[] {
     return nodes.flatMap((node) => [node.code, ...this.collectCodes(node.children)]);
   }
 
-  private expandAll(nodes: PermissionTreeNode[]): void {
+  private expandAll(nodes: PermissionTreeNodeDto[]): void {
     nodes.forEach((node) => {
       this.treeControl.expand(node);
       this.expandAll(node.children);
@@ -229,7 +224,7 @@ export class RolePermissionsComponent implements OnInit {
     forkJoin({
       role: this.api.roles.getDetail(this.roleId),
       clients: this.api.clients.getClients(null, null, null, null, 1, 200, null),
-      roleCodes: this.permissionAdminService.getRolePermissionCodes(this.roleId),
+      roleCodes: this.api.roles.getPermissions(this.roleId),
     }).subscribe({
       next: ({ role, clients, roleCodes }) => {
         this.role.set(role);
@@ -256,7 +251,7 @@ export class RolePermissionsComponent implements OnInit {
     this.expandAll(filteredTree);
   }
 
-  private filterTree(nodes: PermissionTreeNode[], type: PermissionType, keyword: string): PermissionTreeNode[] {
+  private filterTree(nodes: PermissionTreeNodeDto[], type: PermissionType, keyword: string): PermissionTreeNodeDto[] {
     return nodes.flatMap((node) => {
       const children = this.filterTree(node.children, type, keyword);
       const matchesType = node.type === type;
@@ -270,8 +265,8 @@ export class RolePermissionsComponent implements OnInit {
     });
   }
 
-  private matchesKeyword(node: PermissionTreeNode, keyword: string): boolean {
-    const label = this.translateLabel(node.displayName || node.name).toLocaleLowerCase();
+  private matchesKeyword(node: PermissionTreeNodeDto, keyword: string): boolean {
+    const label = this.translateLabel(node.name).toLocaleLowerCase();
     return label.includes(keyword)
       || node.code.toLocaleLowerCase().includes(keyword)
       || (node.description?.toLocaleLowerCase().includes(keyword) ?? false);

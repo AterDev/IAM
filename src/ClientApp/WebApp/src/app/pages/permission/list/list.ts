@@ -1,23 +1,24 @@
 import { NestedTreeControl } from '@angular/cdk/tree';
 import { Component, OnInit, computed, signal } from '@angular/core';
-import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
+import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { TranslateService } from '@ngx-translate/core';
-import { CommonModules, BaseMatModules, CommonFormModules } from 'src/app/share/shared-modules';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
 import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
-import { MatTabsModule } from '@angular/material/tabs';
-import { FormsModule } from '@angular/forms';
-import { MatMenuModule } from '@angular/material/menu';
-import { ApiClient } from 'src/app/services/api/api-client';
-import { ClientItemDto } from 'src/app/services/api/models/iammod/client-item-dto.model';
-import { PermissionAdminService } from 'src/app/services/permission-admin.service';
-import { PermissionItem, PermissionTreeNode, PermissionType } from 'src/app/services/permission-admin.models';
-import { PermissionEditComponent } from '../edit/edit';
+import { TranslateService } from '@ngx-translate/core';
+import { DotnetSwaggerClient } from 'src/app/services/dotnet-swagger/dotnet-swagger-client';
+import { PermissionType } from 'src/app/services/dotnet-swagger/models/entity/permission-type.model';
+import { ClientItemDto } from 'src/app/services/dotnet-swagger/models/iammod/client-item-dto.model';
+import { PermissionDetailDto } from 'src/app/services/dotnet-swagger/models/iammod/permission-detail-dto.model';
+import { PermissionTreeNodeDto } from 'src/app/services/dotnet-swagger/models/iammod/permission-tree-node-dto.model';
+import { CommonModules, BaseMatModules, CommonFormModules } from 'src/app/share/shared-modules';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 import { I18N_KEYS } from 'src/app/share/i18n-keys';
+import { PermissionEditComponent, PermissionParentOption } from '../edit/edit';
 
 @Component({
   selector: 'app-permission-list',
@@ -37,8 +38,8 @@ import { I18N_KEYS } from 'src/app/share/i18n-keys';
   styleUrls: ['./list.scss'],
 })
 export class PermissionListComponent implements OnInit {
-  readonly treeControl = new NestedTreeControl<PermissionTreeNode>((node) => node.children);
-  readonly dataSource = new MatTreeNestedDataSource<PermissionTreeNode>();
+  readonly treeControl = new NestedTreeControl<PermissionTreeNodeDto>((node) => node.children);
+  readonly dataSource = new MatTreeNestedDataSource<PermissionTreeNodeDto>();
   readonly isLoading = signal(false);
   readonly clients = signal<ClientItemDto[]>([]);
   readonly selectedClient = computed(() => this.clients().find((client) => client.id === this.clientId) ?? null);
@@ -56,8 +57,7 @@ export class PermissionListComponent implements OnInit {
   activeTabIndex = 0;
 
   constructor(
-    private readonly permissionAdminService: PermissionAdminService,
-    private readonly api: ApiClient,
+    private readonly api: DotnetSwaggerClient,
     private readonly dialog: MatDialog,
     private readonly snackBar: MatSnackBar,
     private readonly translate: TranslateService,
@@ -67,7 +67,7 @@ export class PermissionListComponent implements OnInit {
     this.loadClients();
   }
 
-  hasChild = (_: number, node: PermissionTreeNode) => !!node.children && node.children.length > 0;
+  hasChild = (_: number, node: PermissionTreeNodeDto) => !!node.children && node.children.length > 0;
 
   loadClients(): void {
     this.api.clients.getClients(null, null, null, null, 1, 200, null).subscribe({
@@ -95,13 +95,7 @@ export class PermissionListComponent implements OnInit {
     }
 
     this.isLoading.set(true);
-    this.permissionAdminService.getPermissionTree({
-      clientId: this.clientId,
-      type: this.type,
-      keyword: this.keyword || null,
-      pageIndex: 1,
-      pageSize: 2000,
-    }).subscribe({
+    this.api.permissions.getPermissionTree(this.clientId, null, this.type, null, this.keyword || null, null, 1, 2000, null).subscribe({
       next: (tree) => {
         this.dataSource.data = tree;
         this.expandAll(tree);
@@ -143,23 +137,23 @@ export class PermissionListComponent implements OnInit {
     this.openEditDialog();
   }
 
-  addChild(node: PermissionTreeNode): void {
+  addChild(node: PermissionTreeNodeDto): void {
     this.openEditDialog(null, node.id);
   }
 
-  editNode(node: PermissionTreeNode): void {
-    this.permissionAdminService.getPermissionDetail(node.id).subscribe({
+  editNode(node: PermissionTreeNodeDto): void {
+    this.api.permissions.getDetail(node.id).subscribe({
       next: (permission) => this.openEditDialog(permission),
     });
   }
 
-  deleteNode(node: PermissionTreeNode): void {
+  deleteNode(node: PermissionTreeNodeDto): void {
     this.confirmDelete([node.id], 'permission.deleteConfirm').subscribe((confirmed) => {
       if (!confirmed) {
         return;
       }
 
-      this.permissionAdminService.deletePermission(node.id).subscribe({
+      this.api.permissions.delete(node.id).subscribe({
         next: () => {
           this.snackBar.open(this.translate.instant(this.i18n.permission.deleteSuccess), this.translate.instant(this.i18n.common.close), { duration: 3000 });
           this.loadTree();
@@ -176,22 +170,20 @@ export class PermissionListComponent implements OnInit {
     this.loadTree();
   }
 
-  getNodeLabel(node: Pick<PermissionTreeNode, 'displayName' | 'name'>): string {
-    return this.translateLabel(node.displayName || node.name);
+  getNodeLabel(node: Pick<PermissionTreeNodeDto, 'name'>): string {
+    return this.translateLabel(node.name);
   }
 
-  private openEditDialog(permission?: PermissionItem | null, defaultParentId?: string | null): void {
+  private openEditDialog(permission?: PermissionDetailDto | null, defaultParentId?: string | null): void {
     const currentClient = this.selectedClient();
     const dialogRef = this.dialog.open(PermissionEditComponent, {
       width: '720px',
       data: {
         permission,
         defaultParentId,
-        clients: this.clients(),
         parentOptions: this.flattenPermissions(this.dataSource.data),
         currentClientId: permission?.ownedClientId ?? this.clientId,
         currentClientLabel: currentClient ? `${currentClient.displayName || currentClient.clientId} · ${currentClient.clientId}` : null,
-        lockClient: true,
       },
     });
 
@@ -202,35 +194,20 @@ export class PermissionListComponent implements OnInit {
     });
   }
 
-  private flattenPermissions(nodes: PermissionTreeNode[], depth = 0): PermissionItem[] {
+  private flattenPermissions(nodes: PermissionTreeNodeDto[], depth = 0): PermissionParentOption[] {
     return nodes.flatMap((node) => {
       const labelPrefix = '—'.repeat(depth);
-      const label = this.translateLabel(node.displayName || node.name);
-      const item: PermissionItem = {
+      const label = this.translateLabel(node.name);
+      const item: PermissionParentOption = {
         id: node.id,
-        code: node.code,
         name: `${labelPrefix}${label}`,
-        displayName: `${labelPrefix}${label}`,
-        description: node.description,
-        type: node.type,
-        parentId: node.parentId,
-        namespace: node.namespace,
-        resource: node.resource,
-        action: node.action,
-        path: node.path,
-        icon: node.icon,
-        sort: node.sort,
-        ownedClientId: node.ownedClientId,
-        ownedClientCode: node.ownedClientCode,
-        createdTime: '',
-        updatedTime: '',
       };
 
       return [item, ...this.flattenPermissions(node.children, depth + 1)];
     });
   }
 
-  private expandAll(nodes: PermissionTreeNode[]): void {
+  private expandAll(nodes: PermissionTreeNodeDto[]): void {
     nodes.forEach((node) => {
       this.treeControl.expand(node);
       if (node.children.length > 0) {

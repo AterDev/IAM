@@ -28,21 +28,14 @@ public class WeatherForecastController(ILogger<WeatherForecastController> logger
             Summary = Summaries[Random.Shared.Next(Summaries.Length)],
         }).ToArray();
 
-        var userInfo = new
-        {
-            Username = User.Identity?.Name,
-            IsAuthenticated = User.Identity?.IsAuthenticated ?? false,
-            UserId = User.FindFirst("sub")?.Value,
-            Email = User.FindFirst("email")?.Value,
-            Claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList(),
-        };
+        var userId = User.FindFirst("sub")?.Value;
 
-        logger.LogInformation("Weather forecast requested by user: {UserId}", userInfo.UserId);
+        logger.LogInformation("Weather forecast requested by user: {UserId}", userId);
 
         return Ok(new
         {
             Message = "成功获取天气预报",
-            UserInfo = userInfo,
+            RequestedBy = User.Identity?.Name ?? userId,
             Forecast = forecast,
             Timestamp = DateTime.UtcNow,
         });

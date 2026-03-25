@@ -86,7 +86,6 @@
                   <mat-checkbox [checked]="isSelected(node)" [indeterminate]="isIndeterminate(node)"
                     (change)="toggleNode(node, $event.checked)">
                   </mat-checkbox>
-                  <mat-icon>{{ node.icon || 'key' }}</mat-icon>
                   <div class="node-text">
                     <strong>{{ getNodeLabel(node) }}</strong>
                     <span>{{ node.code }}</span>
@@ -103,7 +102,6 @@
                     <mat-checkbox [checked]="isSelected(node)" [indeterminate]="isIndeterminate(node)"
                       (change)="toggleNode(node, $event.checked)">
                     </mat-checkbox>
-                    <mat-icon>{{ node.icon || 'folder' }}</mat-icon>
                     <div class="node-text">
                       <strong>{{ getNodeLabel(node) }}</strong>
                       <span>{{ node.code }}</span>

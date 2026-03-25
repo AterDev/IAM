@@ -18,8 +18,8 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline">
-        <mat-label>{{ i18n.permission.displayName | translate }}</mat-label>
-        <input matInput [formControl]="displayNameField" />
+        <mat-label>{{ i18n.permission.name | translate }}</mat-label>
+        <input matInput [formControl]="nameField" />
       </mat-form-field>
 
       <mat-form-field appearance="outline">
@@ -37,7 +37,7 @@
           <mat-option [value]="null">{{ i18n.common.none | translate }}</mat-option>
           @for (item of data.parentOptions; track item.id) {
             @if (!data.permission || item.id !== data.permission.id) {
-              <mat-option [value]="item.id">{{ item.displayName || item.name }}</mat-option>
+              <mat-option [value]="item.id">{{ item.name }}</mat-option>
             }
           }
         </mat-select>
@@ -46,16 +46,6 @@
       <mat-form-field appearance="outline">
         <mat-label>{{ i18n.permission.path | translate }}</mat-label>
         <input matInput [formControl]="path" />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>{{ i18n.permission.icon | translate }}</mat-label>
-        <input matInput [formControl]="icon" />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>{{ i18n.permission.sort | translate }}</mat-label>
-        <input matInput type="number" [formControl]="sort" />
       </mat-form-field>
     </div>
 
