@@ -23,6 +23,7 @@ export class AuthService {
   id?: string | null = null;
   sessionId?: string | null = null;
   readonly sessionExpired = signal(false);
+  private refreshRequest: Promise<string | null> | null = null;
 
   constructor(
     private readonly http: HttpClient,
@@ -44,6 +45,32 @@ export class AuthService {
     } else {
       localStorage.removeItem('sessionId');
     }
+  }
+
+  private persistTokenResponse(response: TokenResponseDto): string {
+    const accessToken = response.access_token;
+    const userName = this.extractUserName(accessToken) ?? this.userName ?? localStorage.getItem('username') ?? 'admin';
+    const sessionId = this.extractJwtClaim(accessToken, 'sid');
+    const userId = this.extractJwtClaim(accessToken, 'sub');
+
+    this.saveLoginState(userName, accessToken, sessionId);
+    this.id = userId;
+
+    if (userId) {
+      localStorage.setItem('userId', userId);
+    } else {
+      localStorage.removeItem('userId');
+    }
+
+    if (response.refresh_token) {
+      localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, response.refresh_token);
+    }
+
+    if (response.id_token) {
+      localStorage.setItem(ID_TOKEN_STORAGE_KEY, response.id_token);
+    }
+
+    return accessToken;
   }
 
   private getAuthorityUrl(): string {
@@ -257,25 +284,60 @@ export class AuthService {
       throw new Error('Token exchange failed');
     }
 
-    const userName = this.extractUserName(response.access_token) ?? 'admin';
-    const sessionId = this.extractJwtClaim(response.access_token, 'sid');
-    const userId = this.extractJwtClaim(response.access_token, 'sub');
-
-    this.saveLoginState(userName, response.access_token, sessionId);
-    this.id = userId;
-    if (userId) {
-      localStorage.setItem('userId', userId);
-    }
-
-    if (response.refresh_token) {
-      localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, response.refresh_token);
-    }
-    if (response.id_token) {
-      localStorage.setItem(ID_TOKEN_STORAGE_KEY, response.id_token);
-    }
+    this.persistTokenResponse(response);
 
     sessionStorage.removeItem(CODE_VERIFIER_STORAGE_KEY);
     sessionStorage.removeItem(OIDC_STATE_STORAGE_KEY);
+  }
+
+  hasRefreshToken(): boolean {
+    return !!localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
+  }
+
+  async refreshAccessToken(): Promise<string | null> {
+    if (this.refreshRequest) {
+      return this.refreshRequest;
+    }
+
+    const refreshToken = localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
+    if (!refreshToken) {
+      return null;
+    }
+
+    this.refreshRequest = this.executeRefreshToken(refreshToken)
+      .finally(() => {
+        this.refreshRequest = null;
+      });
+
+    return this.refreshRequest;
+  }
+
+  private async executeRefreshToken(refreshToken: string): Promise<string | null> {
+    try {
+      const body = new URLSearchParams({
+        grant_type: 'refresh_token',
+        client_id: OIDC_CLIENT_ID,
+        refresh_token: refreshToken,
+      });
+
+      const response = await firstValueFrom(
+        this.http.post<TokenResponseDto>(`${this.getAuthorityUrl()}/connect/token`, body.toString(), {
+          headers: new HttpHeaders({
+            'Content-Type': 'application/x-www-form-urlencoded',
+          }),
+        }),
+      );
+
+      if (!response?.access_token) {
+        this.clearLocalState(true);
+        return null;
+      }
+
+      return this.persistTokenResponse(response);
+    } catch {
+      this.clearLocalState(true);
+      return null;
+    }
   }
 
   private extractUserName(token: string): string | null {

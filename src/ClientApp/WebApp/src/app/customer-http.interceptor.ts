@@ -12,15 +12,55 @@ export class CustomerHttpInterceptor implements HttpInterceptor {
   private snb = inject(MatSnackBar);
   private router = inject(Router);
   private auth = inject(AuthService);
+  private readonly refreshAttemptHeader = 'X-Refresh-Attempt';
   
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     return next.handle(request)
       .pipe(
         catchError((error: HttpErrorResponse) => {
+          if (this.shouldRefreshToken(request, error)) {
+            return from(this.auth.refreshAccessToken()).pipe(
+              switchMap((accessToken) => {
+                if (!accessToken) {
+                  return this.handleError(error);
+                }
+
+                const retriedRequest = request.clone({
+                  setHeaders: {
+                    Authorization: `Bearer ${accessToken}`,
+                    [this.refreshAttemptHeader]: 'true',
+                  },
+                });
+
+                return next.handle(retriedRequest).pipe(
+                  catchError((retryError: HttpErrorResponse) => this.handleError(retryError))
+                );
+              }),
+              catchError(() => this.handleError(error))
+            );
+          }
+
           return this.handleError(error);
         })
       );
   }
+
+  private shouldRefreshToken(request: HttpRequest<any>, error: HttpErrorResponse): boolean {
+    if (error.status !== 401) {
+      return false;
+    }
+
+    if (request.headers.has(this.refreshAttemptHeader)) {
+      return false;
+    }
+
+    if (request.url.includes('/connect/token')) {
+      return false;
+    }
+
+    return this.auth.hasRefreshToken();
+  }
+
   handleError(error: HttpErrorResponse) {
     if (error.error instanceof Blob) {
       return from(error.error.text()).pipe(
