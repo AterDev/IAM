@@ -210,14 +210,14 @@ export class AuthService {
     return sessionStorage.getItem(RETURN_URL_STORAGE_KEY);
   }
 
-  consumeReturnUrl(defaultUrl = '/user'): string {
+  consumeReturnUrl(defaultUrl = '/user/list'): string {
     const returnUrl = sessionStorage.getItem(RETURN_URL_STORAGE_KEY);
     sessionStorage.removeItem(RETURN_URL_STORAGE_KEY);
     return returnUrl?.trim() || defaultUrl;
   }
 
   async startLogin(returnUrl?: string | null): Promise<void> {
-    sessionStorage.setItem(RETURN_URL_STORAGE_KEY, returnUrl?.trim() || '/user');
+    sessionStorage.setItem(RETURN_URL_STORAGE_KEY, returnUrl?.trim() || '/user/list');
     this.sessionExpired.set(false);
     const verifier = this.createRandomString(48);
     const state = this.createRandomString(24);

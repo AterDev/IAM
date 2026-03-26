@@ -43,34 +43,11 @@ handoffs:
 
 - 根据对任务的理解，制定一个清晰简洁、可执行的计划，列出实现步骤，以及验证方法。并针对功能模块以及前后端进行任务拆分，以及依赖关系分析，以便后续可以并行开发。
 - 对重点技术方向和难点，先通过搜索或MCP查阅官方文档或GitHub上的最佳实践，确保计划的可行性和效率。
-- 保存计划到 session memory，使用#tool:vscode/memory的`create`命令，存储在`/memories/session/task-{name}.md`路径，内容格式遵循<plan_style_guide>。
-
-<plan_style_guide>
-```markdown
-## Tasks: {Title}
-
-{TL;DR — what, how, why. Reference key decisions. (30-500 words, depending on complexity)}
-
-**Steps: {completed}/{total}**
-
-**Steps**
-1. [ ] {Action with [file](path) links and `symbol` refs}
-2. [ ] {Next step}
-3. [ ] {…}
-
-**Verification**
-{How to test: commands, tests, manual checks}
-
-**未完成**
-{哪些功能因何原因暂时无法完成的，需要后续人工如何做}
-```
-</plan_style_guide>
 
 **2 代码实现**
 
 1. 根据制定的计划编写代码，根据<skills> 选择合适的技能。要充分考虑代码的复用性，可维护性。
 2. 根据步骤和依赖关系，尝试并行实现任务，如利用`subAgent`或`Copilot CLI`执行前端开发工作，最后进行整合和验证。
-3. 更新任务进度到 session memory，使用#tool:vscode/memory的`update`命令，存储在`/memories/session/task-{name}.md`路径，内容格式遵循<plan_style_guide>。
 
 <skills>
 
@@ -87,7 +64,7 @@ handoffs:
 **3 结果输出**
 
 - 验证代码无错误，清理无用代码，临时文件，临时产生的中间产物等，停止或关闭不使用的命令行工具或窗口。
-- 输出 task.md 中的计划完成度和步骤状态，展示结果。
+- 输出`task-{name}.md`中的计划完成度和步骤状态，展示结果。
 
 </workflow>
 

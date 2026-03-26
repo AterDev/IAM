@@ -5,13 +5,12 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { LoginSessionItemDto } from 'src/app/services/api/models/iammod/login-session-item-dto.model';
 import { PageList } from 'src/app/services/api/models/perigon/page-list.model';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule, FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslateService } from '@ngx-translate/core';
@@ -19,7 +18,7 @@ import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/
 import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
-  selector: 'app-list',
+	selector: 'app-list',
   imports: [
     ...CommonModules,
     ...BaseMatModules,
@@ -29,7 +28,6 @@ import { I18N_KEYS } from 'src/app/share/i18n-keys';
     MatCheckboxModule,
     MatChipsModule,
     MatDialogModule,
-    MatMenuModule,
     MatDatepickerModule,
     MatNativeDateModule,
     FormsModule,
@@ -75,6 +73,7 @@ export class SessionListComponent implements OnInit {
 
   constructor(
     private api: ApiClient,
+    private route: ActivatedRoute,
     private router: Router,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
@@ -82,7 +81,10 @@ export class SessionListComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.loadData();
+    this.route.paramMap.subscribe(params => {
+      this.searchText = params.get('id') ?? '';
+      this.loadData();
+    });
   }
 
   ngOnDestroy(): void {
@@ -253,7 +255,7 @@ export class SessionListComponent implements OnInit {
   }
 
   viewDetail(session: LoginSessionItemDto): void {
-    this.router.navigate(['/security/sessions', session.id]);
+    this.router.navigate(['/security/session-list', session.id]);
   }
 
   toggleAutoRefresh(): void {

@@ -3,7 +3,6 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 20px;
 }
 
@@ -17,14 +16,8 @@
   align-items: center;
   gap: 16px;
   padding: 16px;
-  border-radius: 8px;
+  border-radius: var(--app-radius-md);
   margin-bottom: 20px;
-}
-
-.client-icon {
-  font-size: 48px;
-  width: 48px;
-  height: 48px;
 }
 
 .client-details h3 {
@@ -41,8 +34,7 @@
 .consent-message {
   margin-bottom: 20px;
   padding: 12px;
-  border-left: 4px solid;
-  border-radius: 4px;
+  border-radius: var(--app-radius-sm);
 }
 
 .consent-message p {
@@ -64,6 +56,8 @@
   border-radius: 12px;
   font-size: 12px;
   font-weight: 500;
+  background: var(--app-surface-warning);
+  color: var(--app-icon-color-warning);
 }
 
 .user-info {
@@ -76,7 +70,7 @@
   gap: 8px;
   margin: 0;
   padding: 12px;
-  border-radius: 4px;
+  border-radius: var(--app-radius-sm);
   font-size: 14px;
 }
 
@@ -105,6 +99,6 @@
 .error-message {
   padding: 12px;
   margin-bottom: 16px;
-  border-radius: 4px;
+  border-radius: var(--app-radius-sm);
   text-align: center;
 }

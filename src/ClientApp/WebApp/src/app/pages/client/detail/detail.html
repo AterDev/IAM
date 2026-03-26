@@ -2,21 +2,21 @@
   <div class="d-flex align-items-center justify-content-between">
     <div class="d-flex align-items-center gap-1">
       <button mat-icon-button (click)="goBack()">
-        <mat-icon>arrow_back</mat-icon>
+        <mat-icon class="secondary">arrow_back</mat-icon>
       </button>
       <h2 class="my-1">{{ i18n.client.clientDetail | translate }}</h2>
     </div>
     <div class="d-flex gap-1">
       <button matButton="filled" class="primary" (click)="openEditDialog()">
-        <mat-icon>edit</mat-icon>
+        <mat-icon class="primary">edit</mat-icon>
         {{ i18n.common.edit | translate }}
       </button>
       <button matButton="filled" (click)="rotateSecret()">
-        <mat-icon>refresh</mat-icon>
+        <mat-icon class="secondary">refresh</mat-icon>
         {{ i18n.client.rotateSecret | translate }}
       </button>
       <button matButton="filled" class="error" (click)="deleteClient()">
-        <mat-icon>delete</mat-icon>
+        <mat-icon class="error">delete</mat-icon>
         {{ i18n.common.delete | translate }}
       </button>
     </div>
@@ -33,10 +33,9 @@
             <div class="row">
               <div class="col-md-6 mb-4">
                 <label class="fw-500 d-block mb-2">{{ i18n.client.clientId | translate }}:</label>
-                <span class="text-primary cursor-pointer d-flex align-items-center gap-2" (click)="copyClientId()"
-                  role="button">
+                <span class="primary d-flex align-items-center gap-2" role="button">
                   {{ client()!.clientId }}
-                  <mat-icon class="small">content_copy</mat-icon>
+                  <mat-icon class="primary clickable" (click)="copyClientId()">content_copy</mat-icon>
                 </span>
               </div>
               <div class="col-md-6 mb-4">
@@ -68,7 +67,7 @@
               <div class="col-md-6 mb-4">
                 <label class="fw-500 d-block mb-2">{{ i18n.client.requirePkce | translate }}:</label>
                 <span>
-                  <mat-icon [style.color]="client()!.requirePkce ? '#4caf50' : '#f44336'">
+                  <mat-icon [class.primary]="client()!.requirePkce" [class.error]="!client()!.requirePkce">
                     {{ client()!.requirePkce ? 'check_circle' : 'cancel' }}
                   </mat-icon>
                 </span>
@@ -77,10 +76,12 @@
                 <label class="fw-500 d-block mb-2">{{ i18n.client.allowPasswordGrant | translate }}:</label>
                 <span>
                   <mat-chip>
-                    <mat-icon class="small me-1" [style.color]="isPasswordGrantEnabled() ? '#ff9800' : '#4caf50'">
+                    <mat-icon class="me-1" [class.accent]="isPasswordGrantEnabled()"
+                      [class.primary]="!isPasswordGrantEnabled()">
                       {{ isPasswordGrantEnabled() ? 'warning' : 'verified' }}
                     </mat-icon>
-                    {{ (isPasswordGrantEnabled() ? 'client.passwordGrantEnabled' : 'client.passwordGrantDisabled') | translate }}
+                    {{ (isPasswordGrantEnabled() ? 'client.passwordGrantEnabled' : 'client.passwordGrantDisabled') |
+                    translate }}
                   </mat-chip>
                 </span>
               </div>
@@ -95,17 +96,19 @@
               <div class="col-12 mb-2">
                 <div class="border rounded p-3 bg-light">
                   <div class="d-flex align-items-start gap-2">
-                    <mat-icon [style.color]="isPasswordGrantEnabled() ? '#ff9800' : '#4caf50'">
+                    <mat-icon [class.accent]="isPasswordGrantEnabled()" [class.primary]="!isPasswordGrantEnabled()">
                       {{ isPasswordGrantEnabled() ? 'gpp_maybe' : 'shield' }}
                     </mat-icon>
                     <div class="flex-1">
                       <div class="fw-500 mb-1">{{ i18n.client.passwordGrantPolicy | translate }}</div>
                       <p class="mb-2 text-muted">
-                        {{ (isPasswordGrantEnabled() ? 'client.passwordGrantRiskHint' : 'client.passwordGrantMigrationHint') | translate }}
+                        {{ (isPasswordGrantEnabled() ? 'client.passwordGrantRiskHint' :
+                        'client.passwordGrantMigrationHint') | translate }}
                       </p>
                       @if (passwordGrantRestrictionReason()) {
                       <div>
-                        <label class="fw-500 d-block mb-1">{{ i18n.client.passwordGrantRestrictionReason | translate }}:</label>
+                        <label class="fw-500 d-block mb-1">{{ i18n.client.passwordGrantRestrictionReason | translate
+                          }}:</label>
                         <span>{{ passwordGrantRestrictionReason() }}</span>
                       </div>
                       }

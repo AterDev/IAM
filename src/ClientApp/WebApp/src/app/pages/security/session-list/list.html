@@ -1,25 +1,25 @@
-<div class="session-list-container">
-  <div class="my-1 py-1">
-    <div class="d-flex justify-content-end gap-1">
-      <button mat-raised-button [color]="autoRefreshEnabled ? 'accent' : 'basic'" (click)="toggleAutoRefresh()" type="button">
-        <mat-icon>{{ autoRefreshEnabled ? 'pause' : 'autorenew' }}</mat-icon>
-        {{ (autoRefreshEnabled ? 'session.stopAutoRefresh' :
-        'session.startAutoRefresh') | translate }}
-      </button>
-      <button mat-raised-button  (click)="loadData()" type="button">
-        <mat-icon>refresh</mat-icon>
-        {{ i18n.common.refresh | translate }}
-      </button>
-    </div>
+<div class="d-flex flex-column gap-3">
+  <div class="d-flex justify-content-end gap-1 flex-wrap my-1 py-1">
+    <button mat-raised-button [color]="autoRefreshEnabled ? 'accent' : 'basic'" (click)="toggleAutoRefresh()"
+      type="button">
+      <mat-icon [class.accent]="autoRefreshEnabled"
+        [class.secondary]="!autoRefreshEnabled">{{ autoRefreshEnabled ? 'pause' : 'autorenew' }}</mat-icon>
+      {{ (autoRefreshEnabled ? 'session.stopAutoRefresh' : 'session.startAutoRefresh') | translate }}
+    </button>
+    <button mat-raised-button (click)="loadData()" type="button">
+      <mat-icon class="secondary">refresh</mat-icon>
+      {{ i18n.common.refresh | translate }}
+    </button>
   </div>
 
   <div class="page-toolbar">
     <div class="page-toolbar__filters">
-      <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>{{ i18n.session.searchPlaceholder | translate }}</mat-label>
         <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()" placeholder="Session ID" />
-        <button mat-icon-button matSuffix (click)="onSearch()">
-          <mat-icon>search</mat-icon>
+        <button mat-icon-button matSuffix (click)="onSearch()" type="button"
+          [attr.aria-label]="i18n.common.search | translate">
+          <mat-icon class="secondary">search</mat-icon>
         </button>
       </mat-form-field>
 
@@ -54,18 +54,20 @@
 
       <button mat-icon-button (click)="clearFilters()" type="button" class="filter-clear-button"
         [matTooltip]="i18n.common.clearFilters | translate" [attr.aria-label]="i18n.common.clearFilters | translate">
-        <mat-icon>filter_alt_off</mat-icon>
+        <mat-icon class="secondary">filter_alt_off</mat-icon>
       </button>
     </div>
   </div>
 
-  <div class="batch-actions" *ngIf="selectedIds().size > 0">
-    <span class="selection-info">{{ selectedIds().size }} {{ i18n.common.selected | translate }}</span>
-    <button mat-button color="warn" (click)="revokeSelected()">
-      <mat-icon>block</mat-icon>
+  @if (selectedIds().size > 0) {
+  <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+    <span>{{ selectedIds().size }} {{ i18n.common.selected | translate }}</span>
+    <button mat-button color="warn" (click)="revokeSelected()" type="button">
+      <mat-icon class="error">block</mat-icon>
       {{ i18n.session.revokeSelected | translate }}
     </button>
   </div>
+  }
 
   <div class="table-container">
     <table mat-table [dataSource]="dataSource()" class="session-table">
@@ -87,7 +89,9 @@
           {{ i18n.session.sessionId | translate }}
         </th>
         <td mat-cell *matCellDef="let session">
-          <span class="session-id">{{ session.sessionId.substring(0, 8) }}...</span>
+          <button mat-button class="primary p-0 font-monospace small" (click)="viewDetail(session)">
+            {{ session.sessionId.substring(0, 8) }}...
+          </button>
         </td>
       </ng-container>
 
@@ -97,7 +101,7 @@
           {{ i18n.session.ipAddress | translate }}
         </th>
         <td mat-cell *matCellDef="let session">
-          <span class="ip-address">{{ session.ipAddress || '-' }}</span>
+          {{ session.ipAddress || '-' }}
         </td>
       </ng-container>
 
@@ -139,7 +143,7 @@
           {{ i18n.session.status | translate }}
         </th>
         <td mat-cell *matCellDef="let session">
-          <mat-chip [class.active]="session.isActive" [class.inactive]="!session.isActive">
+          <mat-chip>
             {{ (session.isActive ? 'session.active' : 'session.inactive') |
             translate }}
           </mat-chip>
@@ -152,19 +156,12 @@
           {{ i18n.common.actions | translate }}
         </th>
         <td mat-cell *matCellDef="let session">
-          <button mat-icon-button [matMenuTriggerFor]="menu">
-            <mat-icon>more_vert</mat-icon>
-          </button>
-          <mat-menu #menu="matMenu">
-            <button mat-menu-item (click)="viewDetail(session)">
-              <mat-icon>visibility</mat-icon>
-              <span>{{ i18n.common.view | translate }}</span>
+          <div class="d-flex gap-1 flex-wrap">
+            <button mat-icon-button (click)="revokeSession(session.id)" [disabled]="!session.isActive" type="button"
+              [matTooltip]="i18n.session.revoke | translate">
+              <mat-icon class="error">block</mat-icon>
             </button>
-            <button mat-menu-item (click)="revokeSession(session.id)" [disabled]="!session.isActive">
-              <mat-icon>block</mat-icon>
-              <span>{{ i18n.session.revoke | translate }}</span>
-            </button>
-          </mat-menu>
+          </div>
         </td>
       </ng-container>
 
@@ -173,8 +170,8 @@
 
       <tr class="mat-row" *matNoDataRow>
         <td class="mat-cell" [attr.colspan]="displayedColumns.length">
-          <div class="no-data">
-            <mat-icon>info</mat-icon>
+          <div class="d-flex align-items-center justify-content-center gap-1 py-3">
+            <mat-icon class="secondary">info</mat-icon>
             <p>{{ i18n.common.noData | translate }}</p>
           </div>
         </td>

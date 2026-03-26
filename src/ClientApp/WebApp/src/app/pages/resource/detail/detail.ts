@@ -61,7 +61,7 @@ export class ResourceDetailComponent implements OnInit {
           this.translate.instant('common.close'),
           { duration: 3000 }
         );
-        this.router.navigate(['/resource']);
+        this.router.navigate(['/resource/list']);
       }
     });
   }
@@ -102,7 +102,7 @@ export class ResourceDetailComponent implements OnInit {
               this.translate.instant('common.close'),
               { duration: 3000 }
             );
-            this.router.navigate(['/resource']);
+            this.router.navigate(['/resource/list']);
           },
           error: () => {
             this.snackBar.open(
@@ -117,6 +117,6 @@ export class ResourceDetailComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/resource']);
+    this.router.navigate(['/resource/list']);
   }
 }

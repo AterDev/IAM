@@ -1,8 +1,6 @@
 @use 'sass:map';
 @use '@angular/material' as mat;
 
-
-
 $dark-theme: mat.define-theme((color: (theme-type: dark,
         primary: mat.$violet-palette,
         tertiary: mat.$orange-palette,
@@ -52,7 +50,10 @@ $dark-bg-color: #121212;
   @include mat.menu-overrides((item-icon-color: $dark-primary-color,
     ));
 
+  color: $dark-primary-color;
+
   @media (prefers-color-scheme: light) {
+    color: $light-primary-color;
     @include mat.icon-overrides((color: $light-primary-color,
       ));
 

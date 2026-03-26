@@ -64,27 +64,18 @@ mat-panel-title .mat-icon {
 .page-toolbar {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 16px;
   flex-wrap: wrap;
 }
 
 .page-toolbar__filters {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
   flex-wrap: wrap;
   flex: 1 1 720px;
   min-width: min(100%, 280px);
-}
-
-.page-toolbar__filters .mat-mdc-form-field {
-  flex: 1 1 180px;
-  min-width: min(100%, 180px);
-}
-
-.page-toolbar__filters .search-field {
-  flex: 2 1 260px;
 }
 
 .page-toolbar__actions {

@@ -1,17 +1,4 @@
-.success-icon {
-  font-size: 64px;
-  width: 64px;
-  height: 64px;
-  color: #4caf50;
-  margin: 0 auto;
-}
-
 .warning-banner {
-  background-color: #fff3e0;
-  border-left: 4px solid #f57c00;
-}
-
-.warning-icon {
-  color: #f57c00;
-  margin-top: 2px;
+  background-color: var(--app-surface-warning);
+  border-left: 4px solid var(--app-icon-color-warning);
 }

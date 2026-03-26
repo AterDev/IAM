@@ -17,12 +17,12 @@
 }
 
 .enabled {
-  color: #15803d;
+  color: var(--app-icon-color-success);
   font-weight: 600;
 }
 
 .disabled {
-  color: #b91c1c;
+  color: var(--app-icon-color-error);
   font-weight: 600;
 }
 
@@ -30,8 +30,8 @@
   margin-bottom: 16px;
   padding: 12px 16px;
   border-radius: 12px;
-  background: #fef2f2;
-  color: #b91c1c;
+  background: var(--app-surface-danger);
+  color: var(--app-icon-color-error);
 }
 
 .copy-row {
@@ -45,7 +45,8 @@
     flex: 1;
     padding: 12px;
     border-radius: 12px;
-    background: #f8fafc;
+    background: var(--app-code-background);
+    border: 1px solid var(--app-border-subtle);
     word-break: break-all;
   }
 }

@@ -59,7 +59,7 @@ export class UserDetailComponent implements OnInit {
       error: () => {
   this.isLoading.set(false);
         this.snackBar.open('Failed to load user', 'Close', { duration: 3000 });
-        this.router.navigate(['/user']);
+        this.router.navigate(['/user/list']);
       }
     });
   }
@@ -119,7 +119,7 @@ export class UserDetailComponent implements OnInit {
         this.api.users.deleteUser(this.userId!, false).subscribe({
           next: () => {
             this.snackBar.open('User deleted successfully', 'Close', { duration: 3000 });
-            this.router.navigate(['/user']);
+            this.router.navigate(['/user/list']);
           },
           error: () => {
             this.snackBar.open('Failed to delete user', 'Close', { duration: 3000 });
@@ -130,6 +130,6 @@ export class UserDetailComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/user']);
+    this.router.navigate(['/user/list']);
   }
 }

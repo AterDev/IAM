@@ -1,28 +1,28 @@
-<div class="authorize-container">
-  <mat-card class="authorize-card">
+<div class="authorize-container page-shell">
+  <mat-card class="authorize-card page-card">
     <mat-card-header>
       <mat-card-title>{{ i18n.authorize.title | translate }}</mat-card-title>
     </mat-card-header>
     
     <mat-card-content>
       @if (errorMessage()) {
-        <div class="error-message">{{ errorMessage() | translate }}</div>
+        <div class="error-message surface-danger">{{ errorMessage() | translate }}</div>
       }
 
       <div class="client-info">
-        <mat-icon class="client-icon">apps</mat-icon>
+        <mat-icon class="primary">apps</mat-icon>
         <div class="client-details">
           <h3>{{ clientName() }}</h3>
           <p>{{ clientDescription() }}</p>
         </div>
       </div>
 
-      <div class="consent-message">
+      <div class="consent-message surface-muted">
         <p>{{ i18n.authorize.consentMessage | translate }}</p>
       </div>
 
       @if (interaction()?.hasValidConsent) {
-        <div class="success-message">
+        <div class="success-message surface-subtle text-success">
           {{ i18n.authorize.existingConsent | translate }}
         </div>
       }
@@ -43,8 +43,8 @@
       </div>
 
       <div class="user-info">
-        <p class="info-text">
-          <mat-icon>info</mat-icon>
+        <p class="info-text surface-subtle">
+          <mat-icon class="secondary">info</mat-icon>
           {{ i18n.authorize.accountInfo | translate: { username: username() } }}
         </p>
       </div>

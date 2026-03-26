@@ -7,15 +7,19 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { Router } from '@angular/router';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
 import { firstValueFrom } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SamplePermissionsService } from './shared/sample-permissions.service';
+import { I18N_KEYS } from './shared/i18n-keys';
+import { getInitialLanguage, languageStorageKey } from './app.config';
 
 interface NavigationItem {
-  label: string;
+  labelKey: string;
   icon: string;
   path: string;
   requiresAuth?: boolean;
@@ -35,6 +39,8 @@ interface NavigationItem {
     MatIconModule,
     MatListModule,
     MatDividerModule,
+    MatButtonToggleModule,
+    TranslateModule,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
@@ -44,23 +50,36 @@ export class AppComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
   private readonly permissionsService = inject(SamplePermissionsService);
+  private readonly translate = inject(TranslateService);
 
   isAuthenticated = false;
   userData: Record<string, unknown> | null = null;
   sidenavOpened = true;
   isInitialized = false;
-  displayName = '访客';
+  displayName = '';
+  currentLanguage: 'zh' | 'en' = getInitialLanguage();
+  readonly i18n = I18N_KEYS;
 
   readonly navigationItems: NavigationItem[] = [
-    { label: '首页', icon: 'home', path: '/home' },
-    { label: '受保护页面', icon: 'shield', path: '/protected', requiresAuth: true },
-    { label: '我的授权', icon: 'fact_check', path: '/authorizations', requiresAuth: true },
+    { labelKey: I18N_KEYS.navigation.home, icon: 'home', path: '/home' },
+    { labelKey: I18N_KEYS.navigation.protected, icon: 'shield', path: '/protected', requiresAuth: true },
+    { labelKey: I18N_KEYS.navigation.authorizations, icon: 'fact_check', path: '/authorizations', requiresAuth: true },
   ];
 
   readonly permissionEntries = this.permissionsService.permissions;
   readonly permissionsLoading = this.permissionsService.loading;
 
   async ngOnInit() {
+    this.translate.use(this.currentLanguage);
+    this.updateDisplayName();
+
+    this.translate.onLangChange
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.currentLanguage = this.translate.currentLang === 'en' ? 'en' : 'zh';
+        this.updateDisplayName();
+      });
+
     if (!this.isAuthCallbackRoute()) {
       try {
         await firstValueFrom(this.oidcSecurityService.checkAuth());
@@ -102,9 +121,20 @@ export class AppComponent implements OnInit {
 
         queueMicrotask(() => {
           this.userData = normalizedUserData ?? null;
-          this.displayName = this.pickDisplayName(this.userData) ?? '用户';
+          this.updateDisplayName();
         });
       });
+  }
+
+  setLanguage(lang: string) {
+    const nextLanguage = lang === 'en' ? 'en' : 'zh';
+    this.currentLanguage = nextLanguage;
+
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(languageStorageKey, nextLanguage);
+    }
+
+    this.translate.use(nextLanguage);
   }
 
   login() {
@@ -143,5 +173,9 @@ export class AppComponent implements OnInit {
     }
 
     return null;
+  }
+
+  private updateDisplayName(): void {
+    this.displayName = this.pickDisplayName(this.userData) ?? this.translate.instant(this.i18n.session.guest);
   }
 }

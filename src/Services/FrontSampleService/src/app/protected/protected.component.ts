@@ -7,9 +7,11 @@ import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
 import { environment } from '../../environments/environment';
 import { SnackbarService } from '../shared/snackbar.service';
+import { I18N_KEYS } from '../shared/i18n-keys';
 
 @Component({
   selector: 'app-protected',
@@ -21,6 +23,7 @@ import { SnackbarService } from '../shared/snackbar.service';
     MatListModule,
     MatProgressSpinnerModule,
     MatExpansionModule,
+    TranslateModule,
   ],
   templateUrl: './protected.component.html',
 })
@@ -29,10 +32,12 @@ export class ProtectedComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly snackbar = inject(SnackbarService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly translate = inject(TranslateService);
 
   userData: Record<string, unknown> | null = null;
   apiResponse: unknown;
   loading = false;
+  readonly i18n = I18N_KEYS;
 
   ngOnInit() {
     this.oidcSecurityService.userData$
@@ -60,18 +65,18 @@ export class ProtectedComponent implements OnInit {
   }
 
   callPublicApi() {
-    this.invokeApi(`${environment.backendApiUrl}/api/public`, '公开 API 调用成功', '调用公开 API 失败');
+    this.invokeApi(`${environment.backendApiUrl}/api/public`, this.i18n.protected.publicApiSuccess, this.i18n.protected.publicApiError);
   }
 
   callProtectedApi() {
-    this.invokeApi(`${environment.backendApiUrl}/api/protected`, '受保护 API 调用成功', '调用受保护 API 失败');
+    this.invokeApi(`${environment.backendApiUrl}/api/protected`, this.i18n.protected.protectedApiSuccess, this.i18n.protected.protectedApiError);
   }
 
   callWeatherApi() {
-    this.invokeApi(`${environment.backendApiUrl}/api/weatherforecast`, '天气预报获取成功', '获取天气预报失败');
+    this.invokeApi(`${environment.backendApiUrl}/api/weatherforecast`, this.i18n.protected.weatherSuccess, this.i18n.protected.weatherError);
   }
 
-  private invokeApi(url: string, successMessage: string, errorMessage: string) {
+  private invokeApi(url: string, successKey: string, errorKey: string) {
     this.loading = true;
     this.apiResponse = null;
 
@@ -81,32 +86,33 @@ export class ProtectedComponent implements OnInit {
         next: (response) => {
           this.apiResponse = response;
           this.loading = false;
-          this.snackbar.showSuccess(successMessage);
+          this.snackbar.showSuccess(this.translate.instant(successKey));
         },
         error: (err) => {
-          this.handleError(err, errorMessage);
+          this.handleError(err, errorKey);
         },
       });
   }
 
-  private handleError(err: { status?: number; error?: { message?: string }; message?: string }, message: string) {
+  private handleError(err: { status?: number; error?: { message?: string }; message?: string }, messageKey: string) {
     this.loading = false;
+    const message = this.translate.instant(messageKey);
 
     if (err.status === 401) {
-      this.snackbar.showError(`${message}: 未授权 (401)`);
+      this.snackbar.showError(`${message}: ${this.translate.instant(this.i18n.protected.errors.unauthorized401)}`);
       return;
     }
 
     if (err.status === 403) {
-      this.snackbar.showError(`${message}: 禁止访问 (403)`);
+      this.snackbar.showError(`${message}: ${this.translate.instant(this.i18n.protected.errors.forbidden403)}`);
       return;
     }
 
     if (err.status === 0) {
-      this.snackbar.showError(`${message}: 无法连接到 API 服务`);
+      this.snackbar.showError(`${message}: ${this.translate.instant(this.i18n.protected.errors.apiUnavailable)}`);
       return;
     }
 
-    this.snackbar.showError(`${message}: ${err.error?.message || err.message || '未知错误'}`);
+    this.snackbar.showError(`${message}: ${err.error?.message || err.message || this.translate.instant(this.i18n.common.unknownError)}`);
   }
 }

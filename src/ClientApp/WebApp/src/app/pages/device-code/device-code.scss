@@ -3,7 +3,6 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .device-code-card {
@@ -32,7 +31,7 @@
 .help-text {
   margin-top: 24px;
   padding: 12px;
-  border-radius: 4px;
+  border-radius: var(--app-radius-sm);
   font-size: 13px;
 }
 
@@ -40,6 +39,6 @@
 .error-message {
   padding: 12px;
   margin-bottom: 16px;
-  border-radius: 4px;
+  border-radius: var(--app-radius-sm);
   text-align: center;
 }

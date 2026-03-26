@@ -1,0 +1,31 @@
+.table-container {
+	overflow: auto;
+}
+
+.session-table {
+	width: 100%;
+}
+
+.mat-column-sessionId,
+.mat-column-ipAddress,
+.mat-column-loginTime,
+.mat-column-lastActivityTime,
+.mat-column-isActive,
+.mat-column-actions,
+.mat-column-select {
+	white-space: nowrap;
+}
+
+.user-agent {
+	display: inline-block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	vertical-align: middle;
+	max-width: 200px;
+}
+
+@media (max-width: 959px) {
+	.user-agent {
+		max-width: 140px;
+	}
+}

@@ -1,0 +1,117 @@
+{
+  "app": {
+    "brand": "FrontSampleService",
+    "title": "IAM Sample App"
+  },
+  "language": {
+    "label": "Language",
+    "zh": "中",
+    "en": "En"
+  },
+  "common": {
+    "ok": "OK",
+    "close": "Close",
+    "loading": "Loading...",
+    "notAvailable": "Not provided",
+    "unknownError": "Unknown error",
+    "publicPermission": "Public permission"
+  },
+  "navigation": {
+    "toggle": "Toggle navigation",
+    "home": "Home",
+    "protected": "Protected",
+    "authorizations": "My Authorizations",
+    "currentSession": "Current Session"
+  },
+  "session": {
+    "guest": "Guest",
+    "user": "User",
+    "notLoggedIn": "Not signed in",
+    "loginHint": "Sign in to inspect the current user's permissions",
+    "loadedPermissions": "Loaded {{count}} permissions"
+  },
+  "auth": {
+    "login": "Sign in",
+    "logout": "Sign out",
+    "initializing": "Initializing...",
+    "loginStatus": "Authentication Status",
+    "loggedIn": "Signed in",
+    "loggedOut": "Signed out"
+  },
+  "home": {
+    "userInfoTitle": "User Profile",
+    "userInfoSubtitle": "From the active sign-in session",
+    "name": "Name",
+    "email": "Email",
+    "userId": "User ID",
+    "permissionsTitle": "Permissions",
+    "permissionsSubtitle": "Effective permissions granted to the current user",
+    "loadingPermissions": "Loading current user permissions...",
+    "noPermissions": "No permissions are available for this sample client.",
+    "permissionType": "Type: {{type}}",
+    "permissionClient": "Client: {{client}}"
+  },
+  "callback": {
+    "title": "Signing in",
+    "pending": "Completing the sign-in callback, please wait...",
+    "failedRedirecting": "Sign-in callback failed. Redirecting back home..."
+  },
+  "unauthorized": {
+    "title": "Unauthorized",
+    "message": "You do not have permission to access this resource.",
+    "hint": "Please sign in again with an account that has the required permissions.",
+    "backHome": "Back to home"
+  },
+  "protected": {
+    "title": "Protected Resource",
+    "loadingUser": "Loading user profile...",
+    "name": "Name",
+    "email": "Email",
+    "userId": "User ID",
+    "viewClaims": "View user claims",
+    "apiTestTitle": "API Test",
+    "apiTestSubtitle": "The access token is automatically attached by the HTTP interceptor.",
+    "callPublicApi": "Call public API",
+    "callProtectedApi": "Call protected API",
+    "callWeatherApi": "Get weather forecast",
+    "apiResponse": "API Response",
+    "publicApiSuccess": "Public API call succeeded",
+    "publicApiError": "Public API call failed",
+    "protectedApiSuccess": "Protected API call succeeded",
+    "protectedApiError": "Protected API call failed",
+    "weatherSuccess": "Weather forecast loaded successfully",
+    "weatherError": "Failed to load weather forecast",
+    "errors": {
+      "unauthorized401": "Unauthorized (401)",
+      "forbidden403": "Forbidden (403)",
+      "apiUnavailable": "Unable to reach the API service"
+    }
+  },
+  "authorizations": {
+    "title": "My Authorizations",
+    "subtitle": "Manage the access you granted to client applications",
+    "empty": "There are no authorization records yet",
+    "clientId": "Client ID",
+    "scopes": "Scopes",
+    "createdAt": "Created",
+    "expiresAt": "Expires",
+    "neverExpires": "Never expires",
+    "revoke": "Revoke authorization",
+    "revokeSuccess": "Authorization revoked",
+    "loadFailed": "Failed to load authorizations",
+    "revokeFailed": "Failed to revoke authorization",
+    "confirmTitle": "Confirm revocation",
+    "confirmMessage": "Are you sure you want to revoke access for {{clientName}}?",
+    "confirmHint": "After revocation, the app can no longer access your data until you grant consent again.",
+    "cancel": "Cancel",
+    "confirmRevoke": "Confirm revoke",
+    "types": {
+      "permanent": "Permanent",
+      "adHoc": "Ad hoc"
+    },
+    "statuses": {
+      "valid": "Active",
+      "revoked": "Revoked"
+    }
+  }
+}

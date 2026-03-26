@@ -1,0 +1,117 @@
+{
+  "app": {
+    "brand": "FrontSampleService",
+    "title": "IAM 示例应用"
+  },
+  "language": {
+    "label": "语言",
+    "zh": "中",
+    "en": "En"
+  },
+  "common": {
+    "ok": "确定",
+    "close": "关闭",
+    "loading": "加载中...",
+    "notAvailable": "未提供",
+    "unknownError": "未知错误",
+    "publicPermission": "公共权限"
+  },
+  "navigation": {
+    "toggle": "切换导航",
+    "home": "首页",
+    "protected": "受保护页面",
+    "authorizations": "我的授权",
+    "currentSession": "当前会话"
+  },
+  "session": {
+    "guest": "访客",
+    "user": "用户",
+    "notLoggedIn": "未登录",
+    "loginHint": "登录后可查看当前用户权限",
+    "loadedPermissions": "已加载 {{count}} 项权限"
+  },
+  "auth": {
+    "login": "登录",
+    "logout": "登出",
+    "initializing": "初始化中...",
+    "loginStatus": "登录状态",
+    "loggedIn": "已登录",
+    "loggedOut": "未登录"
+  },
+  "home": {
+    "userInfoTitle": "用户基本信息",
+    "userInfoSubtitle": "来自当前登录会话",
+    "name": "名称",
+    "email": "邮箱",
+    "userId": "用户 ID",
+    "permissionsTitle": "权限列表",
+    "permissionsSubtitle": "当前用户角色对应的有效权限",
+    "loadingPermissions": "正在加载当前用户权限...",
+    "noPermissions": "当前账号在此示例客户端下暂无可展示权限。",
+    "permissionType": "类型：{{type}}",
+    "permissionClient": "所属客户端：{{client}}"
+  },
+  "callback": {
+    "title": "登录处理中",
+    "pending": "正在完成登录回调，请稍候...",
+    "failedRedirecting": "登录回调处理失败，正在返回首页..."
+  },
+  "unauthorized": {
+    "title": "未授权",
+    "message": "您没有权限访问此资源。",
+    "hint": "请使用具有相应权限的账号重新登录。",
+    "backHome": "返回首页"
+  },
+  "protected": {
+    "title": "受保护资源",
+    "loadingUser": "正在加载用户信息...",
+    "name": "姓名",
+    "email": "邮箱",
+    "userId": "用户 ID",
+    "viewClaims": "查看用户声明",
+    "apiTestTitle": "API 调用测试",
+    "apiTestSubtitle": "访问令牌会自动通过 HTTP 拦截器附加到请求头中。",
+    "callPublicApi": "调用公开 API",
+    "callProtectedApi": "调用受保护 API",
+    "callWeatherApi": "获取天气预报",
+    "apiResponse": "API 响应",
+    "publicApiSuccess": "公开 API 调用成功",
+    "publicApiError": "调用公开 API 失败",
+    "protectedApiSuccess": "受保护 API 调用成功",
+    "protectedApiError": "调用受保护 API 失败",
+    "weatherSuccess": "天气预报获取成功",
+    "weatherError": "获取天气预报失败",
+    "errors": {
+      "unauthorized401": "未授权 (401)",
+      "forbidden403": "禁止访问 (403)",
+      "apiUnavailable": "无法连接到 API 服务"
+    }
+  },
+  "authorizations": {
+    "title": "我的授权管理",
+    "subtitle": "管理您授予各客户端应用的访问权限",
+    "empty": "当前没有授权记录",
+    "clientId": "客户端ID",
+    "scopes": "授权范围",
+    "createdAt": "授权时间",
+    "expiresAt": "过期时间",
+    "neverExpires": "永不过期",
+    "revoke": "撤销授权",
+    "revokeSuccess": "授权已撤销",
+    "loadFailed": "加载授权记录失败",
+    "revokeFailed": "撤销授权失败",
+    "confirmTitle": "确认撤销授权",
+    "confirmMessage": "确定要撤销对 {{clientName}} 的授权吗？",
+    "confirmHint": "撤销后，该应用将无法继续访问您的数据，需要重新授权后才能再次使用。",
+    "cancel": "取消",
+    "confirmRevoke": "确认撤销",
+    "types": {
+      "permanent": "永久",
+      "adHoc": "临时"
+    },
+    "statuses": {
+      "valid": "有效",
+      "revoked": "已撤销"
+    }
+  }
+}

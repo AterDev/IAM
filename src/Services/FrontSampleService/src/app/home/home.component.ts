@@ -7,19 +7,32 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
+import { map, startWith } from 'rxjs';
 import { SamplePermissionsService } from '../shared/sample-permissions.service';
+import { I18N_KEYS } from '../shared/i18n-keys';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatListModule, MatChipsModule, MatProgressSpinnerModule, MatIconModule, MatDividerModule],
+  imports: [CommonModule, MatCardModule, MatListModule, MatChipsModule, MatProgressSpinnerModule, MatIconModule, MatDividerModule, TranslateModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
 export class HomeComponent {
   private readonly oidcSecurityService = inject(OidcSecurityService);
   private readonly permissionsService = inject(SamplePermissionsService);
+  private readonly translate = inject(TranslateService);
+  private readonly currentLang = toSignal(
+    this.translate.onLangChange.pipe(
+      map((event) => event.lang),
+      startWith(this.translate.currentLang || 'zh'),
+    ),
+    { initialValue: this.translate.currentLang || 'zh' },
+  );
+
+  readonly i18n = I18N_KEYS;
 
   readonly authState = toSignal(this.oidcSecurityService.isAuthenticated$);
 
@@ -38,9 +51,21 @@ export class HomeComponent {
       : (value as Record<string, unknown>);
   });
 
-  readonly displayName = computed(() => this.readFirstString(['name', 'preferred_username', 'email', 'sub']) ?? '未获取到');
-  readonly email = computed(() => this.readFirstString(['email']) ?? '未提供');
-  readonly userId = computed(() => this.readFirstString(['sub']) ?? '未提供');
+  readonly displayName = computed(() => {
+    this.currentLang();
+    return this.readFirstString(['name', 'preferred_username', 'email', 'sub'])
+      ?? this.translate.instant(this.i18n.common.notAvailable);
+  });
+
+  readonly email = computed(() => {
+    this.currentLang();
+    return this.readFirstString(['email']) ?? this.translate.instant(this.i18n.common.notAvailable);
+  });
+
+  readonly userId = computed(() => {
+    this.currentLang();
+    return this.readFirstString(['sub']) ?? this.translate.instant(this.i18n.common.notAvailable);
+  });
   readonly permissions = this.permissionsService.permissions;
   readonly permissionsLoading = this.permissionsService.loading;
 

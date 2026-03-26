@@ -1,11 +1,11 @@
 <div>
   <mat-card>
     <mat-card-header>
-      <mat-card-title>登录状态</mat-card-title>
+      <mat-card-title>{{ i18n.auth.loginStatus | translate }}</mat-card-title>
     </mat-card-header>
     <mat-card-content>
       <mat-chip [color]="isAuthenticated() ? 'primary' : 'accent'" selected>
-        {{ isAuthenticated() ? '已登录' : '未登录' }}
+        {{ isAuthenticated() ? (i18n.auth.loggedIn | translate) : (i18n.auth.loggedOut | translate) }}
       </mat-chip>
     </mat-card-content>
   </mat-card>
@@ -14,26 +14,26 @@
   <div class="info-grid">
     <mat-card>
       <mat-card-header>
-        <mat-card-title>用户基本信息</mat-card-title>
-        <mat-card-subtitle>来自当前登录会话</mat-card-subtitle>
+        <mat-card-title>{{ i18n.home.userInfoTitle | translate }}</mat-card-title>
+        <mat-card-subtitle>{{ i18n.home.userInfoSubtitle | translate }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         <mat-list>
           <mat-list-item>
             <mat-icon matListItemIcon>badge</mat-icon>
-            <span matListItemTitle>名称</span>
+            <span matListItemTitle>{{ i18n.home.name | translate }}</span>
             <span matListItemLine>{{ displayName() }}</span>
           </mat-list-item>
           <mat-divider></mat-divider>
           <mat-list-item>
             <mat-icon matListItemIcon>mail</mat-icon>
-            <span matListItemTitle>邮箱</span>
+            <span matListItemTitle>{{ i18n.home.email | translate }}</span>
             <span matListItemLine>{{ email() }}</span>
           </mat-list-item>
           <mat-divider></mat-divider>
           <mat-list-item>
             <mat-icon matListItemIcon>fingerprint</mat-icon>
-            <span matListItemTitle>用户 ID</span>
+            <span matListItemTitle>{{ i18n.home.userId | translate }}</span>
             <span matListItemLine><code>{{ userId() }}</code></span>
           </mat-list-item>
         </mat-list>
@@ -42,14 +42,14 @@
 
     <mat-card>
       <mat-card-header>
-        <mat-card-title>权限列表</mat-card-title>
-        <mat-card-subtitle>当前用户角色对应的有效权限</mat-card-subtitle>
+        <mat-card-title>{{ i18n.home.permissionsTitle | translate }}</mat-card-title>
+        <mat-card-subtitle>{{ i18n.home.permissionsSubtitle | translate }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         @if (permissionsLoading()) {
         <div class="permissions-loading">
           <mat-spinner diameter="28"></mat-spinner>
-          <span>正在加载当前用户权限...</span>
+          <span>{{ i18n.home.loadingPermissions | translate }}</span>
         </div>
         } @else if (permissions().length > 0) {
         <mat-list>
@@ -57,8 +57,8 @@
           <mat-list-item>
             <mat-icon matListItemIcon>verified_user</mat-icon>
             <span matListItemTitle>{{ permission.code }}</span>
-            <span matListItemLine>类型：{{ permission.typeLabel }}</span>
-            <span matListItemLine>所属客户端：{{ permission.ownedClientCode || '公共权限' }}</span>
+            <span matListItemLine>{{ i18n.home.permissionType | translate: { type: permission.typeLabel } }}</span>
+            <span matListItemLine>{{ i18n.home.permissionClient | translate: { client: permission.ownedClientCode || (i18n.common.publicPermission | translate) } }}</span>
           </mat-list-item>
           @if (!$last) {
           <mat-divider></mat-divider>
@@ -66,7 +66,7 @@
           }
         </mat-list>
         } @else {
-        <p>当前账号在此示例客户端下暂无可展示权限。</p>
+        <p>{{ i18n.home.noPermissions | translate }}</p>
         }
       </mat-card-content>
     </mat-card>

@@ -1,7 +1,7 @@
-<div class="scope-list-container">
+<div>
   <div class="page-toolbar">
     <div class="page-toolbar__filters">
-      <mat-form-field class="search-field" subscriptSizing="dynamic">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>{{ i18n.common.search | translate }}</mat-label>
         <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()"
           [placeholder]="i18n.scope.searchPlaceholder | translate">
@@ -10,7 +10,7 @@
         </button>
       </mat-form-field>
 
-      <mat-form-field class="filter-field" subscriptSizing="dynamic">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>{{ i18n.scope.requiredFilter | translate }}</mat-label>
         <mat-select [(ngModel)]="requiredFilter" (selectionChange)="onFilterChange()">
           <mat-option [value]="null">{{ i18n.common.all | translate }}</mat-option>
@@ -39,7 +39,9 @@
       <ng-container matColumnDef="name">
         <th mat-header-cell *matHeaderCellDef>{{ i18n.scope.name | translate }}</th>
         <td mat-cell *matCellDef="let scope">
-          <strong>{{ scope.name }}</strong>
+          <button mat-button class="primary p-0 fw-bold" (click)="viewDetail(scope.id)">
+            {{ scope.name }}
+          </button>
         </td>
       </ng-container>
 
@@ -68,7 +70,7 @@
         <th mat-header-cell *matHeaderCellDef>{{ i18n.scope.emphasize | translate }}</th>
         <td mat-cell *matCellDef="let scope">
           @if (scope.emphasize) {
-          <mat-icon class="emphasize-icon">star</mat-icon>
+          <mat-icon class="accent">star</mat-icon>
           } @else {
           <span>-</span>
           }
@@ -87,19 +89,11 @@
       <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef>{{ i18n.common.actions | translate }}</th>
         <td mat-cell *matCellDef="let scope">
-          <button mat-icon-button [matMenuTriggerFor]="menu">
-            <mat-icon>more_vert</mat-icon>
-          </button>
-          <mat-menu #menu="matMenu">
-            <button mat-menu-item (click)="viewDetail(scope.id)">
-              <mat-icon>visibility</mat-icon>
-              <span>{{ i18n.common.view | translate }}</span>
+          <div class="d-flex gap-1 flex-wrap">
+            <button mat-icon-button (click)="deleteScope(scope.id)" [matTooltip]="i18n.common.delete | translate">
+              <mat-icon class="error">delete</mat-icon>
             </button>
-            <button mat-menu-item (click)="deleteScope(scope.id)" class="error">
-              <mat-icon>delete</mat-icon>
-              <span>{{ i18n.common.delete | translate }}</span>
-            </button>
-          </mat-menu>
+          </div>
         </td>
       </ng-container>
 

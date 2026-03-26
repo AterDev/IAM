@@ -33,7 +33,7 @@ mat-dialog-content {
   margin-bottom: 16px;
   padding: 10px 12px;
   border-radius: 12px;
-  background: rgba(0, 0, 0, 0.04);
+  background: var(--app-surface-muted);
 }
 
 .form-field-full {

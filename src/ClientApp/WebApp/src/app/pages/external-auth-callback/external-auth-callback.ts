@@ -39,7 +39,7 @@ export class ExternalAuthCallbackComponent {
       .subscribe(params => {
         const status = params.get('status') ?? 'failed';
         const provider = (params.get('provider') ?? '').toLowerCase();
-        const returnUrl = params.get('returnUrl') ?? '/user';
+        const returnUrl = params.get('returnUrl') ?? '/user/list';
 
         this.provider.set(provider);
 
@@ -58,7 +58,7 @@ export class ExternalAuthCallbackComponent {
   }
 
   backToLogin(): void {
-    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/user';
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/user/list';
     this.router.navigate(['/login'], {
       queryParams: { returnUrl }
     });

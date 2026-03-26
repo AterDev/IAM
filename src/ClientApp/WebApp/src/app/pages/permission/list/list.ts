@@ -2,7 +2,6 @@ import { NestedTreeControl } from '@angular/cdk/tree';
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
@@ -31,7 +30,6 @@ import { PermissionEditComponent, PermissionParentOption } from '../edit/edit';
     MatListModule,
     MatTabsModule,
     FormsModule,
-    MatMenuModule,
     AppLoadingComponent,
   ],
   templateUrl: './list.html',

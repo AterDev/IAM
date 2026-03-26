@@ -9,8 +9,10 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { environment } from '../../environments/environment';
 import { SnackbarService } from '../shared/snackbar.service';
+import { I18N_KEYS } from '../shared/i18n-keys';
 
 interface Authorization {
   id: string;
@@ -48,6 +50,7 @@ interface AuthorizationViewModel {
     MatIconModule,
     MatChipsModule,
     MatDialogModule,
+    TranslateModule,
   ],
   templateUrl: './authorizations.component.html',
   styleUrl: './authorizations.component.scss',
@@ -57,12 +60,21 @@ export class AuthorizationsComponent implements OnInit {
   private readonly snackbar = inject(SnackbarService);
   private readonly dialog = inject(MatDialog);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly translate = inject(TranslateService);
 
   authorizations: AuthorizationViewModel[] = [];
   loading = false;
   private readonly apiUrl = `${environment.iamApiUrl}/api/authorization`;
+  private rawAuthorizations: Authorization[] = [];
+  readonly i18n = I18N_KEYS;
 
   ngOnInit() {
+    this.translate.onLangChange
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.authorizations = this.rawAuthorizations.map((item) => this.toViewModel(item));
+      });
+
     this.loadAuthorizations();
   }
 
@@ -72,12 +84,13 @@ export class AuthorizationsComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (data) => {
+          this.rawAuthorizations = data;
           this.authorizations = data.map((item) => this.toViewModel(item));
           this.loading = false;
         },
         error: (err) => {
           this.loading = false;
-          this.snackbar.showError(`加载授权记录失败: ${err.error?.message || err.message}`);
+          this.snackbar.showError(`${this.translate.instant(this.i18n.authorizations.loadFailed)}: ${err.error?.message || err.message}`);
         },
       });
   }
@@ -100,12 +113,12 @@ export class AuthorizationsComponent implements OnInit {
           .subscribe({
             next: () => {
               this.loading = false;
-              this.snackbar.showSuccess('授权已撤销');
+              this.snackbar.showSuccess(this.translate.instant(this.i18n.authorizations.revokeSuccess));
               this.loadAuthorizations();
             },
             error: (err) => {
               this.loading = false;
-              this.snackbar.showError(`撤销授权失败: ${err.error?.message || err.message}`);
+              this.snackbar.showError(`${this.translate.instant(this.i18n.authorizations.revokeFailed)}: ${err.error?.message || err.message}`);
             },
           });
       });
@@ -125,9 +138,9 @@ export class AuthorizationsComponent implements OnInit {
   private getTypeLabel(type: string): string {
     switch (type.toLowerCase()) {
       case 'permanent':
-        return '永久';
+        return this.translate.instant(this.i18n.authorizations.types.permanent);
       case 'ad_hoc':
-        return '临时';
+        return this.translate.instant(this.i18n.authorizations.types.adHoc);
       default:
         return type;
     }
@@ -136,9 +149,9 @@ export class AuthorizationsComponent implements OnInit {
   private getStatusLabel(status: string): string {
     switch (status.toLowerCase()) {
       case 'valid':
-        return '有效';
+        return this.translate.instant(this.i18n.authorizations.statuses.valid);
       case 'revoked':
-        return '已撤销';
+        return this.translate.instant(this.i18n.authorizations.statuses.revoked);
       default:
         return status;
     }
@@ -146,10 +159,11 @@ export class AuthorizationsComponent implements OnInit {
 
   private formatDate(date: string | null): string {
     if (!date) {
-      return '永不过期';
+      return this.translate.instant(this.i18n.authorizations.neverExpires);
     }
 
-    return new Date(date).toLocaleString('zh-CN');
+    const locale = this.translate.currentLang === 'en' ? 'en-US' : 'zh-CN';
+    return new Date(date).toLocaleString(locale);
   }
 
   private toViewModel(item: Authorization): AuthorizationViewModel {
@@ -171,19 +185,21 @@ export class AuthorizationsComponent implements OnInit {
 @Component({
   selector: 'app-confirm-dialog',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, MatButtonModule],
+  imports: [CommonModule, MatDialogModule, MatButtonModule, TranslateModule],
   template: `
-    <h2 mat-dialog-title>确认撤销授权</h2>
+    <h2 mat-dialog-title>{{ i18n.authorizations.confirmTitle | translate }}</h2>
     <mat-dialog-content>
-      <p>确定要撤销对 <strong>{{ data.clientName }}</strong> 的授权吗？</p>
-      <p>撤销后，该应用将无法继续访问您的数据，需要重新授权后才能再次使用。</p>
+      <p>{{ i18n.authorizations.confirmMessage | translate: { clientName: data.clientName } }}</p>
+      <p>{{ i18n.authorizations.confirmHint | translate }}</p>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>取消</button>
-      <button mat-raised-button color="warn" [mat-dialog-close]="true">确认撤销</button>
+      <button mat-button mat-dialog-close>{{ i18n.authorizations.cancel | translate }}</button>
+      <button mat-raised-button color="warn" [mat-dialog-close]="true">{{ i18n.authorizations.confirmRevoke | translate }}</button>
     </mat-dialog-actions>
   `,
 })
 export class ConfirmDialogComponent {
+  readonly i18n = I18N_KEYS;
+
   constructor(@Inject(MAT_DIALOG_DATA) public data: { clientName: string }) {}
 }

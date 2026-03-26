@@ -5,7 +5,6 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatMenuModule } from '@angular/material/menu';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { UserItemDto } from 'src/app/services/api/models/iammod/user-item-dto.model';
 import { PageList } from 'src/app/services/api/models/perigon/page-list.model';
@@ -28,7 +27,6 @@ import { I18N_KEYS } from 'src/app/share/i18n-keys';
     MatCheckboxModule,
     MatChipsModule,
     MatDialogModule,
-    MatMenuModule,
     FormsModule
   ],
   templateUrl: './list.html',
@@ -154,7 +152,7 @@ export class UserListComponent implements OnInit {
   }
 
   viewDetail(user: UserItemDto): void {
-    this.router.navigate(['/user', user.id]);
+    this.router.navigate(['/user/detail', user.id]);
   }
 
   toggleUserStatus(user: UserItemDto): void {

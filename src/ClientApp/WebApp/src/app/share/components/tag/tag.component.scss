@@ -1,87 +1,36 @@
-@import 'src/vars.scss';
-
 .tag {
   display: inline-block;
   padding: 2px 8px;
-  color: #f1f1f1;
+  color: var(--app-text-on-color);
   border-radius: 12px;
   margin-right: 2px 4px;
   cursor: pointer;
   transition: all 0.3s;
 }
 
-@media (prefers-color-scheme: dark) {
-  .primary {
-    background-color: darken($color: $dark-primary-color, $amount: 5%);
+.primary {
+  background-color: color-mix(in srgb, var(--app-icon-color-primary) 88%, black 12%);
 
-    &:hover {
-      background-color: darken($color: $dark-primary-color, $amount: 10%);
-    }
-
-    &.active {
-      background-color: lighten($color: $dark-primary-color, $amount: 0);
-    }
-  }
-
-  .accent {
-    background-color: darken($color: $accent-color, $amount: 5%);
-
-    &:hover {
-      background-color: darken($color: $accent-color, $amount: 10%);
-    }
-
-    &.active {
-      background-color: lighten($color: $accent-color, $amount: 0);
-    }
-  }
-
-  .warn {
-    background-color: darken($color: $error-color, $amount: 5%);
-
-    &:hover {
-      background-color: darken($color: $error-color, $amount: 10%);
-    }
-
-    &.active {
-      background-color: lighten($color: $error-color, $amount: 0);
-    }
+  &:hover,
+  &.active {
+    background-color: var(--app-icon-color-primary);
   }
 }
 
-@media (prefers-color-scheme: light) {
-  .primary {
-    background-color: darken($color: $light-primary-color, $amount: 5%);
+.accent {
+  background-color: color-mix(in srgb, var(--app-icon-color-accent) 88%, black 12%);
 
-    &:hover {
-      background-color: darken($color: $light-primary-color, $amount: 10%);
-    }
-
-    &.active {
-      background-color: lighten($color: $light-primary-color, $amount: 0);
-    }
+  &:hover,
+  &.active {
+    background-color: var(--app-icon-color-accent);
   }
+}
 
-  .accent {
-    background-color: darken($color: $accent-color, $amount: 5%);
+.warn {
+  background-color: color-mix(in srgb, var(--app-icon-color-error) 88%, black 12%);
 
-    &:hover {
-      background-color: darken($color: $accent-color, $amount: 10%);
-    }
-
-    &.active {
-      background-color: lighten($color: $accent-color, $amount: 0);
-    }
-  }
-
-  .warn {
-    background-color: darken($color: $error-color, $amount: 5%);
-
-    &:hover {
-      background-color: darken($color: $error-color, $amount: 10%);
-    }
-
-    &.active {
-      background-color: lighten($color: $error-color, $amount: 0);
-    }
+  &:hover,
+  &.active {
+    background-color: var(--app-icon-color-error);
   }
 }

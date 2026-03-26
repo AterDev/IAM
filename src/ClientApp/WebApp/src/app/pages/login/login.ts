@@ -29,7 +29,7 @@ export class Login implements OnInit, AfterViewInit {
   i18nKeys = I18N_KEYS;
   isLoading = false;
   errorMessage = '';
-  private returnUrl = '/user';
+  private returnUrl = '/user/list';
 
   ngAfterViewInit(): void {
     const canvas = document.getElementById('starfield') as HTMLCanvasElement | null;
@@ -41,7 +41,7 @@ export class Login implements OnInit, AfterViewInit {
   ngOnInit(): void {
     this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl')
       ?? this.authService.peekReturnUrl()
-      ?? '/user';
+      ?? '/user/list';
 
     this.authService.updateUserLoginState();
     if (this.authService.isAuthenticated()) {

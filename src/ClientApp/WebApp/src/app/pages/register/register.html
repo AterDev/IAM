@@ -1,20 +1,20 @@
-<div class="register-container">
-  <mat-card class="register-card">
+<div class="register-container page-shell">
+  <mat-card class="register-card page-card">
     <mat-card-header>
       <mat-card-title>{{ i18n.register.title | translate }}</mat-card-title>
     </mat-card-header>
     
     <mat-card-content>
       @if (successMessage) {
-        <div class="success-message">{{ successMessage }}</div>
+        <div class="success-message surface-subtle text-success">{{ successMessage }}</div>
       }
       
       @if (errorMessage) {
-        <div class="error-message">{{ errorMessage }}</div>
+        <div class="error-message surface-danger">{{ errorMessage }}</div>
       }
       
       @if (getFormError()) {
-        <div class="error-message">{{ getFormError() }}</div>
+        <div class="error-message surface-danger">{{ getFormError() }}</div>
       }
       
       <form [formGroup]="registerForm" (ngSubmit)="doRegister()">

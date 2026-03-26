@@ -2,12 +2,12 @@
   <mat-card-header class="justify-content-center">
     <mat-icon fontIcon="lock" style="font-size: 48px;"></mat-icon>
   </mat-card-header>
-  <mat-card-title>未授权</mat-card-title>
+  <mat-card-title>{{ i18n.unauthorized.title | translate }}</mat-card-title>
   <mat-card-content>
-    <p>您没有权限访问此资源。</p>
-    <p>请使用具有相应权限的账号重新登录。</p>
+    <p>{{ i18n.unauthorized.message | translate }}</p>
+    <p>{{ i18n.unauthorized.hint | translate }}</p>
   </mat-card-content>
   <mat-card-actions class="justify-content-center">
-    <a mat-raised-button color="primary" routerLink="/home">返回首页</a>
+    <a mat-raised-button color="primary" routerLink="/home">{{ i18n.unauthorized.backHome | translate }}</a>
   </mat-card-actions>
 </mat-card>

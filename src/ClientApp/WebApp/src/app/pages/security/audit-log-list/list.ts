@@ -167,7 +167,7 @@ export class AuditLogListComponent implements OnInit {
       return;
     }
 
-    this.router.navigate([nextTab === 'password-grant' ? '/security/password-grant-audit' : '/security/audit-logs']);
+    this.router.navigate([nextTab === 'password-grant' ? '/security/password-grant-audit' : '/security/audit-log-list']);
   }
 
   viewDetail(log: AuditLogItemDto): void {

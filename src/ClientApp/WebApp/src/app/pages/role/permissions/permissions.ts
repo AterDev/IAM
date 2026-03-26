@@ -72,7 +72,7 @@ export class RolePermissionsComponent implements OnInit {
   ngOnInit(): void {
     this.roleId = this.route.snapshot.paramMap.get('id');
     if (!this.roleId) {
-      this.router.navigate(['/role']);
+      this.router.navigate(['/role/list']);
       return;
     }
 
@@ -181,11 +181,11 @@ export class RolePermissionsComponent implements OnInit {
 
   goBack(): void {
     if (!this.roleId) {
-      this.router.navigate(['/role']);
+      this.router.navigate(['/role/list']);
       return;
     }
 
-    this.router.navigate(['/role', this.roleId]);
+    this.router.navigate(['/role/detail', this.roleId]);
   }
 
   clearFilters(): void {

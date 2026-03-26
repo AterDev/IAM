@@ -1,16 +1,16 @@
 <div class="scope-detail-container">
   <div class="header">
     <button mat-icon-button (click)="goBack()">
-      <mat-icon>arrow_back</mat-icon>
+      <mat-icon class="secondary">arrow_back</mat-icon>
     </button>
     <h2>{{ i18n.scope.scopeDetail | translate }}</h2>
     <div class="actions">
       <button mat-raised-button class="primary" (click)="openEditDialog()">
-        <mat-icon>edit</mat-icon>
+        <mat-icon class="primary">edit</mat-icon>
         {{ i18n.common.edit | translate }}
       </button>
       <button mat-button color="warn" class="error" (click)="deleteScope()">
-        <mat-icon>delete</mat-icon>
+        <mat-icon class="error">delete</mat-icon>
         {{ i18n.common.delete | translate }}
       </button>
     </div>
@@ -39,7 +39,8 @@
         <div class="info-item">
           <label>{{ i18n.scope.required | translate }}:</label>
           <span>
-            <mat-icon [class.confirmed]="scope()!.required" [class.not-confirmed]="!scope()!.required">
+            <mat-icon [class.primary]="scope()!.required"
+              [class.error]="!scope()!.required">
               {{ scope()!.required ? 'check_circle' : 'cancel' }}
             </mat-icon>
           </span>
@@ -47,7 +48,8 @@
         <div class="info-item">
           <label>{{ i18n.scope.emphasize | translate }}:</label>
           <span>
-            <mat-icon [class.confirmed]="scope()!.emphasize" [class.not-confirmed]="!scope()!.emphasize">
+            <mat-icon [class.primary]="scope()!.emphasize"
+              [class.error]="!scope()!.emphasize">
               {{ scope()!.emphasize ? 'star' : 'star_border' }}
             </mat-icon>
           </span>

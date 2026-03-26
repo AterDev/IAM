@@ -5,7 +5,6 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatMenuModule } from '@angular/material/menu';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -33,7 +32,6 @@ import { I18N_KEYS } from 'src/app/share/i18n-keys';
     MatCheckboxModule,
     MatChipsModule,
     MatDialogModule,
-    MatMenuModule,
     FormsModule,
     EnumTextPipe,
     ToKeyValuePipe
@@ -155,7 +153,7 @@ export class ClientListComponent implements OnInit {
   }
 
   viewDetail(id: string): void {
-    this.router.navigate(['/client', id]);
+    this.router.navigate(['/client/detail', id]);
   }
 
   openAddDialog(): void {

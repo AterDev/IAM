@@ -3,9 +3,9 @@
     <mat-card-header>
       <mat-card-title>
         <mat-icon>security</mat-icon>
-        我的授权管理
+        {{ i18n.authorizations.title | translate }}
       </mat-card-title>
-      <mat-card-subtitle>管理您授予各客户端应用的访问权限</mat-card-subtitle>
+      <mat-card-subtitle>{{ i18n.authorizations.subtitle | translate }}</mat-card-subtitle>
     </mat-card-header>
 
     <mat-card-content>
@@ -16,7 +16,7 @@
       } @else if (authorizations.length === 0) {
         <div class="empty-state">
           <mat-icon>info</mat-icon>
-          <p>当前没有授权记录</p>
+          <p>{{ i18n.authorizations.empty | translate }}</p>
         </div>
       } @else {
         <mat-list>
@@ -26,7 +26,7 @@
                 <div class="authorization-header">
                   <div class="app-info">
                     <h3>{{ auth.clientName }}</h3>
-                    <p class="client-id">客户端ID: {{ auth.clientId }}</p>
+                    <p class="client-id">{{ i18n.authorizations.clientId | translate }}: {{ auth.clientId }}</p>
                   </div>
                   <div class="authorization-status">
                     <mat-chip [color]="auth.statusColor" selected>
@@ -39,7 +39,7 @@
                 <div class="authorization-details">
                   <div class="detail-row">
                     <mat-icon>vpn_key</mat-icon>
-                    <strong>授权范围：</strong>
+                    <strong>{{ i18n.authorizations.scopes | translate }}：</strong>
                     <div class="scopes">
                       @for (scope of auth.scopes; track scope) {
                         <mat-chip>{{ scope }}</mat-chip>
@@ -49,14 +49,14 @@
 
                   <div class="detail-row">
                     <mat-icon>event</mat-icon>
-                    <strong>授权时间：</strong>
+                    <strong>{{ i18n.authorizations.createdAt | translate }}：</strong>
                     <span>{{ auth.creationDateText }}</span>
                   </div>
 
                   @if (auth.expirationDateText) {
                     <div class="detail-row">
                       <mat-icon>schedule</mat-icon>
-                      <strong>过期时间：</strong>
+                      <strong>{{ i18n.authorizations.expiresAt | translate }}：</strong>
                       <span>{{ auth.expirationDateText }}</span>
                     </div>
                   }
@@ -65,7 +65,7 @@
                 <div class="authorization-actions">
                   <button mat-raised-button color="warn" (click)="revokeAuthorization(auth.id, auth.clientName)" [disabled]="auth.isRevoked">
                     <mat-icon>block</mat-icon>
-                    撤销授权
+                    {{ i18n.authorizations.revoke | translate }}
                   </button>
                 </div>
               </div>

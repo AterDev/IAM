@@ -1,12 +1,7 @@
 .breadcrumb-container {
   padding: 0.5rem 1rem;
-  background-color: rgba(0, 0, 0, 0.02);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-
-  @media (prefers-color-scheme: dark) {
-    background-color: rgba(255, 255, 255, 0.02);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  }
+  background-color: var(--app-surface-subtle);
+  border-bottom: 1px solid var(--app-divider-color);
 }
 
 .breadcrumb {
@@ -25,26 +20,18 @@
     &:not(:last-child)::after {
       content: '/';
       padding: 0 0.5rem;
-      color: rgba(0, 0, 0, 0.38);
-
-      @media (prefers-color-scheme: dark) {
-        color: rgba(255, 255, 255, 0.38);
-      }
+      color: var(--app-text-tertiary);
     }
 
     a {
       text-decoration: none;
-      color: rgba(0, 0, 0, 0.87);
+      color: var(--app-text-primary);
       transition: color 0.2s;
       display: flex;
       align-items: center;
 
-      @media (prefers-color-scheme: dark) {
-        color: rgba(255, 255, 255, 0.87);
-      }
-
       &:hover {
-        color: var(--mat-primary-color, #6750a4);
+        color: var(--app-icon-color-primary);
       }
 
       mat-icon {
@@ -56,11 +43,7 @@
 
     &.active {
       span {
-        color: rgba(0, 0, 0, 0.6);
-
-        @media (prefers-color-scheme: dark) {
-          color: rgba(255, 255, 255, 0.6);
-        }
+        color: var(--app-text-secondary);
       }
     }
   }

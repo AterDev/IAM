@@ -9,7 +9,7 @@ export class BaseService {
   protected baseUrl: string | null;
   constructor(
     protected http: HttpClient,
-    @Inject('DOTNET-SWAGGER_BASE_URL') baseUrl: string
+    @Inject('API_BASE_URL') baseUrl: string
   ) {
     if (baseUrl.endsWith('/')) {
       this.baseUrl = baseUrl.slice(0, -1);

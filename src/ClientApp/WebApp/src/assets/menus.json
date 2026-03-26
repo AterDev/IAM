@@ -9,7 +9,7 @@
         "children": [
             {
                 "name": "menu.user",
-                "path": "/user",
+                "path": "/user/list",
                 "accessCode": "user",
                 "icon": "manage_accounts",
                 "sort": 0,
@@ -17,26 +17,34 @@
             },
             {
                 "name": "menu.role",
-                "path": "/role",
+                "path": "/role/list",
                 "accessCode": "role",
                 "icon": "groups",
                 "sort": 1,
                 "menuType": 0
             },
             {
-                "name": "menu.organization",
-                "path": "/organization",
-                "accessCode": "organization",
-                "icon": "corporate_fare",
+                "name": "menu.permission",
+                "path": "/permission/list",
+                "accessCode": "permission",
+                "icon": "account_tree",
                 "sort": 2,
                 "menuType": 0
             },
             {
+                "name": "menu.organization",
+                "path": "/organization/list",
+                "accessCode": "organization",
+                "icon": "corporate_fare",
+                "sort": 3,
+                "menuType": 0
+            },
+            {
                 "name": "menu.auditLogs",
-                "path": "/security/audit-logs",
+                "path": "/security/audit-log-list",
                 "accessCode": "security-audit-logs",
                 "icon": "history",
-                "sort": 3,
+                "sort": 4,
                 "menuType": 0
             }
         ]
@@ -51,7 +59,7 @@
         "children": [
             {
                 "name": "menu.application",
-                "path": "/client",
+                "path": "/client/list",
                 "accessCode": "client",
                 "icon": "apps",
                 "sort": 0,
@@ -59,7 +67,7 @@
             },
             {
                 "name": "menu.resource",
-                "path": "/resource",
+                "path": "/resource/list",
                 "accessCode": "resource",
                 "icon": "api",
                 "sort": 1,
@@ -67,7 +75,7 @@
             },
             {
                 "name": "menu.scope",
-                "path": "/scope",
+                "path": "/scope/list",
                 "accessCode": "scope",
                 "icon": "vpn_key",
                 "sort": 2,
@@ -75,7 +83,7 @@
             },
             {
                 "name": "menu.sessions",
-                "path": "/security/sessions",
+                "path": "/security/session-list",
                 "accessCode": "security-sessions",
                 "icon": "devices",
                 "sort": 3,

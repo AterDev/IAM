@@ -3,7 +3,6 @@ import { CommonModules, BaseMatModules, CommonFormModules } from 'src/app/share/
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatMenuModule } from '@angular/material/menu';
 import { FormsModule } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
@@ -25,7 +24,6 @@ import { I18N_KEYS } from 'src/app/share/i18n-keys';
     MatTableModule,
     MatPaginatorModule,
     MatChipsModule,
-    MatMenuModule,
     FormsModule
   ],
   templateUrl: './list.html',
@@ -108,7 +106,7 @@ export class ScopeListComponent implements OnInit {
   }
 
   viewDetail(id: string): void {
-    this.router.navigate(['/scope', id]);
+    this.router.navigate(['/scope/detail', id]);
   }
 
   openAddDialog(): void {

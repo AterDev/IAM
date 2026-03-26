@@ -5,8 +5,6 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatDividerModule } from '@angular/material/divider';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { RoleItemDto } from 'src/app/services/api/models/iammod/role-item-dto.model';
 import { PageList } from 'src/app/services/api/models/perigon/page-list.model';
@@ -30,8 +28,6 @@ import { I18N_KEYS } from 'src/app/share/i18n-keys';
     MatCheckboxModule,
     MatChipsModule,
     MatDialogModule,
-    MatMenuModule,
-    MatDividerModule,
     FormsModule
   ],
   templateUrl: './list.html',
@@ -171,11 +167,11 @@ export class RoleListComponent implements OnInit {
   }
 
   openPermissionsDialog(role: RoleItemDto): void {
-    this.router.navigate(['/role', role.id, 'permissions']);
+    this.router.navigate(['/role/permissions', role.id]);
   }
 
   viewDetail(id: string): void {
-    this.router.navigate(['/role', id]);
+    this.router.navigate(['/role/detail', id]);
   }
 
   deleteRole(id: string): void {

@@ -14,7 +14,7 @@
         </mat-nav-list>
         } @else {
         <div class="d-flex flex-column align-items-center justify-content-center gap-3 py-4">
-          <mat-icon>apps_outage</mat-icon>
+          <mat-icon class="secondary">apps_outage</mat-icon>
           <p>{{ i18n.common.noData | translate }}</p>
         </div>
         }
@@ -37,7 +37,7 @@
           </div>
           <div>
             <button matButton="filled" (click)="addRoot()" [disabled]="!clientId">
-              <mat-icon>add</mat-icon>
+              <mat-icon class="primary">add</mat-icon>
               {{ i18n.permission.add | translate }}
             </button>
           </div>
@@ -47,7 +47,7 @@
           <app-loading [diameter]="36"></app-loading>
           } @else if (dataSource.data.length === 0) {
           <div class="d-flex flex-column align-items-center justify-content-center gap-3 py-5">
-            <mat-icon>inventory_2</mat-icon>
+            <mat-icon class="secondary">inventory_2</mat-icon>
             <p>{{ i18n.common.noData | translate }}</p>
           </div>
           } @else {
@@ -60,23 +60,17 @@
                     <strong>{{ getNodeLabel(node) }}</strong>
                     <span>{{ node.code }}</span>
                   </div>
-                  <button mat-icon-button [matMenuTriggerFor]="leafMenu" (click)="$event.stopPropagation()">
-                    <mat-icon>more_vert</mat-icon>
-                  </button>
-                  <mat-menu #leafMenu="matMenu">
-                    <button mat-menu-item (click)="addChild(node)">
-                      <mat-icon>add</mat-icon>
-                      <span>{{ i18n.permission.add | translate }}</span>
+                  <div class="node-actions">
+                    <button mat-icon-button (click)="addChild(node); $event.stopPropagation()">
+                      <mat-icon class="primary">add</mat-icon>
                     </button>
-                    <button mat-menu-item (click)="editNode(node)" class="primary">
-                      <mat-icon>edit</mat-icon>
-                      <span>{{ i18n.common.edit | translate }}</span>
+                    <button mat-icon-button (click)="editNode(node); $event.stopPropagation()">
+                      <mat-icon class="primary">edit</mat-icon>
                     </button>
-                    <button mat-menu-item class="error" (click)="deleteNode(node)">
-                      <mat-icon>delete</mat-icon>
-                      <span>{{ i18n.common.delete | translate }}</span>
+                    <button mat-icon-button (click)="deleteNode(node); $event.stopPropagation()">
+                      <mat-icon class="error">delete</mat-icon>
                     </button>
-                  </mat-menu>
+                  </div>
                 </li>
               </mat-tree-node>
 
@@ -84,29 +78,23 @@
                 <li>
                   <div class="tree-node">
                     <button mat-icon-button matTreeNodeToggle>
-                      <mat-icon>{{ treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right' }}</mat-icon>
+                      <mat-icon class="secondary">{{ treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right' }}</mat-icon>
                     </button>
                     <div class="node-text">
                       <strong>{{ getNodeLabel(node) }}</strong>
                       <span>{{ node.code }}</span>
                     </div>
-                    <button mat-icon-button [matMenuTriggerFor]="nestedMenu" (click)="$event.stopPropagation()">
-                      <mat-icon>more_vert</mat-icon>
-                    </button>
-                    <mat-menu #nestedMenu="matMenu">
-                      <button mat-menu-item (click)="addChild(node)">
-                        <mat-icon>add</mat-icon>
-                        <span>{{ i18n.permission.add | translate }}</span>
+                    <div class="node-actions">
+                      <button mat-icon-button (click)="addChild(node); $event.stopPropagation()">
+                        <mat-icon class="primary">add</mat-icon>
                       </button>
-                      <button mat-menu-item (click)="editNode(node)" class="primary">
-                        <mat-icon>edit</mat-icon>
-                        <span>{{ i18n.common.edit | translate }}</span>
+                      <button mat-icon-button (click)="editNode(node); $event.stopPropagation()">
+                        <mat-icon class="primary">edit</mat-icon>
                       </button>
-                      <button mat-menu-item class="error" (click)="deleteNode(node)">
-                        <mat-icon>delete</mat-icon>
-                        <span>{{ i18n.common.delete | translate }}</span>
+                      <button mat-icon-button (click)="deleteNode(node); $event.stopPropagation()">
+                        <mat-icon class="error">delete</mat-icon>
                       </button>
-                    </mat-menu>
+                    </div>
                   </div>
                   <ul [class.tree-invisible]="!treeControl.isExpanded(node)">
                     <ng-container matTreeNodeOutlet></ng-container>
@@ -129,7 +117,7 @@
         </mat-tab-group>
         } @else {
         <div class="d-flex flex-column align-items-center justify-content-center gap-3 py-5">
-          <mat-icon>touch_app</mat-icon>
+          <mat-icon class="secondary">touch_app</mat-icon>
           <p>{{ i18n.permission.selectClientHint | translate }}</p>
         </div>
         }

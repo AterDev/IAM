@@ -1,17 +1,17 @@
 .login-container {
-  min-height: 100vh;
-  width: 100vw;
+  min-height: 100dvh;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
   background:
-    radial-gradient(circle at top, rgba(36, 102, 255, 0.18), transparent 32%),
-    radial-gradient(circle at 20% 20%, rgba(0, 214, 201, 0.12), transparent 28%),
-    linear-gradient(145deg, #060816 0%, #090d1f 42%, #03050c 100%);
+    radial-gradient(circle at top, color-mix(in srgb, var(--app-icon-color-primary) 18%, transparent), transparent 32%),
+    radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--app-icon-color-accent) 12%, transparent), transparent 28%),
+    linear-gradient(180deg, var(--app-surface-subtle) 0%, var(--app-page-shell-background) 100%);
   position: relative;
   overflow: hidden;
   padding: 2rem;
+  box-sizing: border-box;
 }
 
 .login-container::before,
@@ -24,8 +24,8 @@
 
 .login-container::before {
   background:
-    linear-gradient(rgba(114, 137, 218, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(114, 137, 218, 0.08) 1px, transparent 1px);
+    linear-gradient(color-mix(in srgb, var(--app-icon-color-primary) 10%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--app-icon-color-primary) 10%, transparent) 1px, transparent 1px);
   background-size: 72px 72px;
   mask-image: radial-gradient(circle at center, black 35%, transparent 85%);
   opacity: 0.35;
@@ -107,7 +107,7 @@
   left: 10%;
   width: 18rem;
   height: 18rem;
-  background: radial-gradient(circle, rgba(74, 222, 255, 0.32) 0%, rgba(74, 222, 255, 0) 70%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--app-icon-color-accent) 28%, transparent) 0%, transparent 70%);
 }
 
 .login-orb--secondary {
@@ -115,7 +115,7 @@
   bottom: 10%;
   width: 24rem;
   height: 24rem;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.26) 0%, rgba(99, 102, 241, 0) 72%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--app-icon-color-primary) 24%, transparent) 0%, transparent 72%);
 }
 
 .login-shell {
@@ -135,8 +135,8 @@
   width: 0.9rem;
   height: 3.6rem;
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(78, 216, 255, 0.95) 0%, rgba(81, 134, 255, 0.18) 100%);
-  box-shadow: 0 0 18px rgba(78, 216, 255, 0.28);
+  background: linear-gradient(180deg, var(--app-icon-color-accent) 0%, color-mix(in srgb, var(--app-icon-color-primary) 20%, transparent) 100%);
+  box-shadow: 0 0 18px var(--app-icon-shadow-color);
 }
 
 .brand-mark span:nth-child(2) {
@@ -152,7 +152,7 @@
   font-size: 0.82rem;
   letter-spacing: 0.24rem;
   text-transform: uppercase;
-  color: rgba(143, 225, 255, 0.72);
+  color: var(--app-text-secondary);
 }
 
 .login-headline {
@@ -161,7 +161,7 @@
   line-height: 1.08;
   font-weight: 700;
   letter-spacing: -0.04em;
-  color: #f4f8ff;
+  color: var(--app-text-primary);
 }
 
 .login-brand {
@@ -175,19 +175,19 @@
 .login-card {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(180deg, rgba(9, 14, 31, 0.9) 0%, rgba(10, 18, 38, 0.82) 100%);
+  background: linear-gradient(180deg, var(--app-surface-muted) 0%, var(--app-surface-subtle) 100%);
   backdrop-filter: blur(18px) saturate(130%);
   -webkit-backdrop-filter: blur(18px) saturate(130%);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow: var(--app-shadow-subtle);
   border-radius: 28px;
-  border: 1px solid rgba(120, 156, 255, 0.14);
+  border: 1px solid var(--app-border-subtle);
 }
 
 .login-card::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(75, 205, 255, 0.12), transparent 30%, transparent 70%, rgba(91, 98, 255, 0.12));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--app-icon-accent, var(--app-icon-color-accent)) 12%, transparent), transparent 30%, transparent 70%, color-mix(in srgb, var(--app-icon-color-primary) 12%, transparent));
   pointer-events: none;
 }
 
@@ -201,9 +201,9 @@
   margin-bottom: 1.25rem;
   padding: 0.9rem 1rem;
   border-radius: 16px;
-  border: 1px solid rgba(255, 115, 115, 0.26);
-  background: rgba(255, 102, 102, 0.08);
-  color: #ffb4b4;
+  border: 1px solid color-mix(in srgb, var(--app-icon-color-error) 26%, transparent);
+  background: var(--app-surface-danger);
+  color: var(--app-icon-color-error);
   line-height: 1.6;
   text-align: center;
 }
@@ -220,19 +220,16 @@
 }
 
 .login-actions button[mat-flat-button] {
-  background: linear-gradient(90deg, #287dff 0%, #41d8ff 100%);
-  color: #f8fbff;
   font-weight: 700;
   letter-spacing: 0.02em;
-  box-shadow: 0 16px 30px rgba(50, 142, 255, 0.28);
 }
 
 .login-actions button[mat-flat-button]:hover {
-  box-shadow: 0 20px 38px rgba(50, 142, 255, 0.36);
+  box-shadow: var(--app-shadow-subtle);
 }
 
 .login-actions button[mat-button] {
-  color: #9ddfff;
+  color: var(--app-text-secondary);
   font-weight: 600;
 }
 

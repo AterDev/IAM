@@ -24,7 +24,7 @@ export class AuthCallbackComponent {
       this.authService.completeLogin(code, state)
         .then(() => {
           if (this.authService.isAuthenticated()) {
-            this.router.navigateByUrl(this.authService.consumeReturnUrl('/user'));
+            this.router.navigateByUrl(this.authService.consumeReturnUrl('/user/list'));
             return;
           }
 

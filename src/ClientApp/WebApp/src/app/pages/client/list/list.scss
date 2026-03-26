@@ -1,14 +1,7 @@
 .col-select { width: 60px; }
 
-.empty-icon {
-  font-size: 48px;
-  width: 48px;
-  height: 48px;
-  opacity: 0.3;
-}
-
 .loading-overlay {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: var(--app-surface-muted);
   top: 0;
   left: 0;
   z-index: 100;

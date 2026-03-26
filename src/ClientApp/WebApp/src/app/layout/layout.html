@@ -1,6 +1,6 @@
 <mat-toolbar class="d-flex flex-row gap-1 header">
   <div class="d-flex gap-1">
-    <button mat-button [routerLink]="['/index']" routerLinkActive="active">{{i18n.home | translate}}</button>
+    <button mat-button [routerLink]="['/user/list']" routerLinkActive="active">{{i18n.home | translate}}</button>
   </div>
   <span class="flex-fill d-flex"></span>
   <div class="d-flex align-items-center align-content-center">
@@ -11,7 +11,7 @@
     @if (isLogin) {
     <button [matMenuTriggerFor]="appMenu" mat-button class="menu-btn-reverse">
       {{username}}
-      <mat-icon>arrow_drop_down</mat-icon>
+      <mat-icon class="secondary">arrow_drop_down</mat-icon>
     </button>
     <mat-menu #appMenu="matMenu">
       <span mat-menu-item>
@@ -20,11 +20,11 @@
       </span>
       <button mat-menu-item [routerLink]="['/security/mfa']">
         <span>{{i18n.mfa.title| translate}}</span>
-        <mat-icon>verified_user</mat-icon>
+        <mat-icon class="primary">verified_user</mat-icon>
       </button>
       <button mat-menu-item (click)="logout()">
         <span>{{i18n.login.logout| translate}}</span>
-        <mat-icon>exit_to_app</mat-icon>
+        <mat-icon class="error">exit_to_app</mat-icon>
       </button>
     </mat-menu>
     }@else {

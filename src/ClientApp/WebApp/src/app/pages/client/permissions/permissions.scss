@@ -13,7 +13,7 @@
 
 .header p {
   margin: 4px 0 0;
-  color: rgba(0, 0, 0, 0.64);
+  color: var(--app-text-secondary);
 }
 
 .actions {
@@ -39,7 +39,7 @@
 }
 
 .tree-node.active {
-  background: rgba(25, 118, 210, 0.08);
+  background: color-mix(in srgb, var(--app-icon-color-primary) 10%, transparent);
 }
 
 .node-text {
@@ -49,7 +49,7 @@
 
 .node-text span {
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.62);
+  color: var(--app-text-secondary);
 }
 
 .tree-invisible { display: none; }
@@ -70,7 +70,7 @@
 .detail-grid label {
   display: block;
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.62);
+  color: var(--app-text-secondary);
 }
 
 .empty-state {
@@ -80,7 +80,7 @@
   justify-content: center;
   flex-direction: column;
   gap: 12px;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--app-text-secondary);
 }
 
 .empty-state.compact { min-height: 180px; }

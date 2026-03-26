@@ -2,7 +2,6 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModules, BaseMatModules, CommonFormModules } from 'src/app/share/shared-modules';
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -23,7 +22,6 @@ import { I18N_KEYS } from 'src/app/share/i18n-keys';
     ...CommonFormModules,
     MatTableModule,
     MatPaginatorModule,
-    MatMenuModule,
     FormsModule
   ],
   templateUrl: './list.html',
@@ -98,7 +96,7 @@ export class ResourceListComponent implements OnInit {
   }
 
   viewDetail(id: string): void {
-    this.router.navigate(['/resource', id]);
+    this.router.navigate(['/resource/detail', id]);
   }
 
   openAddDialog(): void {

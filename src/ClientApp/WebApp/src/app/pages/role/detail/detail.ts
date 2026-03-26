@@ -87,7 +87,7 @@ export class RoleDetailComponent implements OnInit {
       return;
     }
 
-    this.router.navigate(['/role', currentRole.id, 'permissions']);
+    this.router.navigate(['/role/permissions', currentRole.id]);
   }
 
   deleteRole(): void {
@@ -113,7 +113,7 @@ export class RoleDetailComponent implements OnInit {
               this.translate.instant('common.close'),
               { duration: 3000 }
             );
-            this.router.navigate(['/role']);
+            this.router.navigate(['/role/list']);
           },
           error: (error) => {
             console.error('Failed to delete role:', error);
@@ -129,6 +129,6 @@ export class RoleDetailComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/role']);
+    this.router.navigate(['/role/list']);
   }
 }

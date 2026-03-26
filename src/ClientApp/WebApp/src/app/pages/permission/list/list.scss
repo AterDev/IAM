@@ -24,7 +24,7 @@
 }
 
 .tree-node:hover {
-  background: rgba(0, 0, 0, 0.03);
+  background: var(--app-surface-subtle);
 }
 
 .node-text {
@@ -38,6 +38,12 @@
   opacity: 0.72;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.node-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .tree-invisible {

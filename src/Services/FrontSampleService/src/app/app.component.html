@@ -1,13 +1,13 @@
 <mat-sidenav-container class="app-shell" autosize>
   <mat-sidenav mode="side" [opened]="sidenavOpened" class="app-sidenav">
-    <mat-toolbar>FrontSampleService</mat-toolbar>
+    <mat-toolbar>{{ i18n.app.brand | translate }}</mat-toolbar>
 
     <mat-nav-list>
       @for (item of navigationItems; track item.path) {
       @if (!item.requiresAuth || isAuthenticated) {
       <a mat-list-item [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
         <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-        <span matListItemTitle>{{ item.label }}</span>
+        <span matListItemTitle>{{ item.labelKey | translate }}</span>
       </a>
       }
       }
@@ -16,18 +16,18 @@
     <mat-divider></mat-divider>
 
     <mat-list>
-      <div matSubheader>当前会话</div>
+      <div matSubheader>{{ i18n.navigation.currentSession | translate }}</div>
       @if (isAuthenticated) {
       <mat-list-item>
         <mat-icon matListItemIcon>account_circle</mat-icon>
         <span matListItemTitle>{{ displayName }}</span>
-        <span matListItemLine>已加载 {{ permissionEntries().length }} 项权限</span>
+        <span matListItemLine>{{ i18n.session.loadedPermissions | translate: { count: permissionEntries().length } }}</span>
       </mat-list-item>
       } @else {
       <mat-list-item>
         <mat-icon matListItemIcon>login</mat-icon>
-        <span matListItemTitle>未登录</span>
-        <span matListItemLine>登录后可查看当前用户权限</span>
+        <span matListItemTitle>{{ i18n.session.notLoggedIn | translate }}</span>
+        <span matListItemLine>{{ i18n.session.loginHint | translate }}</span>
       </mat-list-item>
       }
     </mat-list>
@@ -35,20 +35,31 @@
 
   <mat-sidenav-content>
     <mat-toolbar color="primary">
-      <button mat-icon-button (click)="sidenavOpened = !sidenavOpened" aria-label="切换导航">
+      <button mat-icon-button (click)="sidenavOpened = !sidenavOpened" [attr.aria-label]="i18n.navigation.toggle | translate">
         <mat-icon>menu</mat-icon>
       </button>
 
-      <span>IAM 示例应用</span>
+      <span class="toolbar-title">{{ i18n.app.title | translate }}</span>
       <span class="toolbar-spacer"></span>
 
+      <mat-button-toggle-group
+        class="language-switch"
+        [value]="currentLanguage"
+        (change)="setLanguage($event.value)"
+        [attr.aria-label]="i18n.language.label | translate">
+        <mat-button-toggle value="zh">{{ i18n.language.zh | translate }}</mat-button-toggle>
+        <mat-button-toggle value="en">{{ i18n.language.en | translate }}</mat-button-toggle>
+      </mat-button-toggle-group>
+
       @if (isAuthenticated) {
-      <mat-icon>account_circle</mat-icon>
-      <span>{{ displayName }}</span>
-      <button mat-button (click)="logout()">登出</button>
+      <div class="user-summary">
+        <mat-icon>account_circle</mat-icon>
+        <span>{{ displayName }}</span>
+      </div>
+      <button mat-button (click)="logout()">{{ i18n.auth.logout | translate }}</button>
       } @else {
       <button mat-button (click)="login()" [disabled]="!isInitialized">
-        {{ isInitialized ? '登录' : '初始化中...' }}
+        {{ isInitialized ? (i18n.auth.login | translate) : (i18n.auth.initializing | translate) }}
       </button>
       }
     </mat-toolbar>

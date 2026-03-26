@@ -82,7 +82,7 @@ export class ClientDetailComponent implements OnInit {
           this.translate.instant('common.close'),
           { duration: 3000 }
         );
-        this.router.navigate(['/client']);
+        this.router.navigate(['/client/list']);
       }
     });
   }
@@ -188,7 +188,7 @@ export class ClientDetailComponent implements OnInit {
               this.translate.instant('common.close'),
               { duration: 3000 }
             );
-            this.router.navigate(['/client']);
+            this.router.navigate(['/client/list']);
           },
           error: () => {
             this.snackBar.open(
@@ -203,6 +203,6 @@ export class ClientDetailComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/client']);
+    this.router.navigate(['/client/list']);
   }
 }

@@ -37,70 +37,78 @@ export const routes: Routes = [
     canActivateChild: [AuthGuard],
     children: [
       {
-        path: 'user',
+        path: '',
+        redirectTo: 'user/list',
+        pathMatch: 'full'
+      },
+      {
+        path: 'user/list',
         loadComponent: () => import('./pages/user/list/list').then(m => m.UserListComponent)
       },
       {
-        path: 'user/:id',
+        path: 'user/detail/:id',
         loadComponent: () => import('./pages/user/detail/detail').then(m => m.UserDetailComponent)
       },
       {
-        path: 'organization',
+        path: 'organization/list',
         loadComponent: () => import('./pages/organization/list/list').then(m => m.OrganizationListComponent)
       },
       {
-        path: 'role',
+        path: 'role/list',
         loadComponent: () => import('./pages/role/list/list').then(m => m.RoleListComponent)
       },
       {
-        path: 'role/:id/permissions',
+        path: 'role/permissions/:id',
         loadComponent: () => import('./pages/role/permissions/permissions').then(m => m.RolePermissionsComponent)
       },
       {
-        path: 'role/:id',
+        path: 'role/detail/:id',
         loadComponent: () => import('./pages/role/detail/detail').then(m => m.RoleDetailComponent)
       },
       {
-        path: 'client',
+        path: 'client/list',
         loadComponent: () => import('./pages/client/list/list').then(m => m.ClientListComponent)
       },
       {
-        path: 'client/:id',
+        path: 'client/detail/:id',
         loadComponent: () => import('./pages/client/detail/detail').then(m => m.ClientDetailComponent)
       },
       {
-        path: 'permission',
+        path: 'permission/list',
         loadComponent: () => import('./pages/permission/list/list').then(m => m.PermissionListComponent)
       },
       {
-        path: 'scope',
+        path: 'scope/list',
         loadComponent: () => import('./pages/scope/list/list').then(m => m.ScopeListComponent)
       },
       {
-        path: 'scope/:id',
+        path: 'scope/detail/:id',
         loadComponent: () => import('./pages/scope/detail/detail').then(m => m.ScopeDetailComponent)
       },
       {
-        path: 'resource',
+        path: 'resource/list',
         loadComponent: () => import('./pages/resource/list/list').then(m => m.ResourceListComponent)
       },
       {
-        path: 'resource/:id',
+        path: 'resource/detail/:id',
         loadComponent: () => import('./pages/resource/detail/detail').then(m => m.ResourceDetailComponent)
       },
       {
-        path: 'security/sessions',
+        path: 'security/session-list',
         loadComponent: () => import('./pages/security/session-list/list').then(m => m.SessionListComponent)
       },
       {
-        path: 'security/audit-logs',
+        path: 'security/session-list/:id',
+        loadComponent: () => import('./pages/security/session-list/list').then(m => m.SessionListComponent)
+      },
+      {
+        path: 'security/audit-log-list',
         loadComponent: () => import('./pages/security/audit-log-list/list').then(m => m.AuditLogListComponent),
         data: { auditTab: 'logs' }
       },
       {
         path: 'security/password-grant-audit',
-        loadComponent: () => import('./pages/security/audit-log-list/list').then(m => m.AuditLogListComponent),
-        data: { auditTab: 'password-grant' }
+        loadComponent: () => import('./pages/security/password-grant-audit/password-grant-audit').then(m => m.PasswordGrantAuditComponent)
       },
       {
         path: 'security/mfa',

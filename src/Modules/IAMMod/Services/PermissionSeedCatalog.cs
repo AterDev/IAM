@@ -13,17 +13,18 @@ public static class PermissionSeedCatalog
     [
         new("identity", "Identity", PermissionType.Menu, children:
         [
-            new("user", "User", PermissionType.Menu, path: "/user"),
-            new("role", "Role", PermissionType.Menu, path: "/role"),
-            new("organization", "Organization", PermissionType.Menu, path: "/organization"),
-            new("security-audit-logs", "Audit Logs", PermissionType.Menu, path: "/security/audit-logs"),
+            new("user", "User", PermissionType.Menu, path: "/user/list"),
+            new("role", "Role", PermissionType.Menu, path: "/role/list"),
+            new("permission", "Permission", PermissionType.Menu, path: "/permission/list"),
+            new("organization", "Organization", PermissionType.Menu, path: "/organization/list"),
+            new("security-audit-logs", "Audit Logs", PermissionType.Menu, path: "/security/audit-log-list"),
         ]),
         new("oauth", "OAuth", PermissionType.Menu, children:
         [
-            new("client", "Client", PermissionType.Menu, path: "/client"),
-            new("resource", "Resource", PermissionType.Menu, path: "/resource"),
-            new("scope", "Scope", PermissionType.Menu, path: "/scope"),
-            new("security-sessions", "Sessions", PermissionType.Menu, path: "/security/sessions"),
+            new("client", "Client", PermissionType.Menu, path: "/client/list"),
+            new("resource", "Resource", PermissionType.Menu, path: "/resource/list"),
+            new("scope", "Scope", PermissionType.Menu, path: "/scope/list"),
+            new("security-sessions", "Sessions", PermissionType.Menu, path: "/security/session-list"),
         ]),
     ];
 

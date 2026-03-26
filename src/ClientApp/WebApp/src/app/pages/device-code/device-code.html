@@ -1,16 +1,16 @@
-<div class="device-code-container">
-  <mat-card class="device-code-card">
+<div class="device-code-container page-shell">
+  <mat-card class="device-code-card page-card">
     <mat-card-header>
       <mat-card-title>{{ i18n.deviceCode.title | translate }}</mat-card-title>
     </mat-card-header>
     
     <mat-card-content>
       @if (successMessage()) {
-        <div class="success-message">{{ successMessage() }}</div>
+        <div class="success-message surface-subtle text-success">{{ successMessage() }}</div>
       }
       
       @if (errorMessage()) {
-        <div class="error-message">{{ errorMessage() }}</div>
+        <div class="error-message surface-danger">{{ errorMessage() }}</div>
       }
 
       <p class="description">{{ i18n.deviceCode.description | translate }}</p>
@@ -48,13 +48,13 @@
         </div>
       </form>
 
-      <div class="help-text">
+        <div class="help-text surface-muted">
         <p>{{ i18n.deviceCode.helpText | translate }}</p>
       </div>
 
       @if (interaction(); as interaction) {
         <div class="client-info">
-          <mat-icon class="client-icon">devices</mat-icon>
+          <mat-icon class="primary">devices</mat-icon>
           <div class="client-details">
             <h3>{{ interaction.clientName || interaction.clientId }}</h3>
             @if (interaction.clientDescription) {
@@ -79,8 +79,8 @@
 
         @if (interaction.status === 'pending' && authService.isAuthenticated()) {
           <div class="user-info">
-            <p class="info-text">
-              <mat-icon>info</mat-icon>
+            <p class="info-text surface-subtle">
+              <mat-icon class="secondary">info</mat-icon>
               {{ i18n.deviceCode.accountInfo | translate: { username: authService.user()?.preferred_username || authService.user()?.name || 'User' } }}
             </p>
           </div>

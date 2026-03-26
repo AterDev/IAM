@@ -3,11 +3,11 @@
     <div class="drawer-toggle-row d-flex justify-content-end">
       @if(opened){
       <button mat-icon-button (click)="toggle()">
-        <mat-icon>keyboard_double_arrow_left</mat-icon>
+        <mat-icon class="secondary">keyboard_double_arrow_left</mat-icon>
       </button>
       }@else {
       <button mat-icon-button (click)="toggle()">
-        <mat-icon>keyboard_double_arrow_right</mat-icon>
+        <mat-icon class="secondary">keyboard_double_arrow_right</mat-icon>
       </button>
       }
     </div>
@@ -20,7 +20,7 @@
         <mat-expansion-panel-header>
           <mat-panel-title>
             <a class="nav-title">
-              <mat-icon>{{menu.icon}}</mat-icon>
+              <mat-icon class="primary">{{menu.icon}}</mat-icon>
               @if(opened){
               <span>{{menu.name | translate}}</span>
               }
@@ -33,7 +33,7 @@
         <mat-nav-list>
           <a mat-list-item [routerLink]="item.path" routerLinkActive="active"
             [matTooltip]="opened? '': (item.name | translate)" matTooltipPosition="right">
-            <mat-icon fontSet="">{{item.icon}}</mat-icon>
+            <mat-icon fontSet="" class="secondary">{{item.icon}}</mat-icon>
             @if(opened){
             <span>{{item.name | translate}}</span>
             }

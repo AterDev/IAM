@@ -64,7 +64,7 @@ export class ScopeDetailComponent implements OnInit {
           this.translate.instant('common.close'),
           { duration: 3000 }
         );
-        this.router.navigate(['/scope']);
+        this.router.navigate(['/scope/list']);
       }
     });
   }
@@ -105,7 +105,7 @@ export class ScopeDetailComponent implements OnInit {
               this.translate.instant('common.close'),
               { duration: 3000 }
             );
-            this.router.navigate(['/scope']);
+            this.router.navigate(['/scope/list']);
           },
           error: () => {
             this.snackBar.open(
@@ -120,6 +120,6 @@ export class ScopeDetailComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/scope']);
+    this.router.navigate(['/scope/list']);
   }
 }

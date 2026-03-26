@@ -4,9 +4,10 @@
   "description": "Front sample service with IAM OIDC integration",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve --port 4201",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
+    "start": "pnpm i18n:keys && ng serve --port 4201",
+    "build": "pnpm i18n:keys && ng build",
+    "watch": "pnpm i18n:keys && ng build --watch --configuration development",
+    "i18n:keys": "node scripts/i18n-keys.js",
     "test": "ng test"
   },
   "private": true,
@@ -21,6 +22,8 @@
     "@angular/platform-browser": "^20.3.10",
     "@angular/platform-browser-dynamic": "^20.3.10",
     "@angular/router": "^20.3.10",
+    "@ngx-translate/core": "^17.0.0",
+    "@ngx-translate/http-loader": "^17.0.0",
     "angular-auth-oidc-client": "^20.0.3",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",

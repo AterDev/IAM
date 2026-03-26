@@ -195,7 +195,7 @@ export class PasswordGrantAuditComponent implements OnInit, OnDestroy {
           return;
         }
 
-        this.router.navigate(['/client', target.id]);
+        this.router.navigate(['/client/detail', target.id]);
       },
       error: (error) => {
         console.error('[PasswordGrantAudit] Failed to resolve client detail route:', error);

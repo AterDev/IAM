@@ -1,0 +1,51 @@
+<h2 mat-dialog-title>{{ 'auditLog.detailTitle' | translate }}</h2>
+
+<mat-dialog-content class="audit-detail-dialog__content">
+  <div class="audit-detail-grid">
+    <div class="audit-detail-item">
+      <label>{{ 'auditLog.id' | translate }}</label>
+      <span class="audit-detail-value">{{ data.id }}</span>
+    </div>
+
+    <div class="audit-detail-item">
+      <label>{{ 'auditLog.category' | translate }}</label>
+      <span class="audit-detail-value">{{ data.category }}</span>
+    </div>
+
+    <div class="audit-detail-item">
+      <label>{{ 'auditLog.event' | translate }}</label>
+      <span class="audit-detail-value">{{ data.event }}</span>
+    </div>
+
+    <div class="audit-detail-item">
+      <label>{{ 'auditLog.subjectId' | translate }}</label>
+      <span class="audit-detail-value">{{ data.subjectId || '-' }}</span>
+    </div>
+
+    <div class="audit-detail-item">
+      <label>{{ 'auditLog.ipAddress' | translate }}</label>
+      <span class="audit-detail-value">{{ data.ipAddress || '-' }}</span>
+    </div>
+
+    <div class="audit-detail-item">
+      <label>{{ 'auditLog.userAgent' | translate }}</label>
+      <span class="audit-detail-value">{{ data.userAgent || '-' }}</span>
+    </div>
+
+    <div class="audit-detail-item">
+      <label>{{ 'auditLog.createdTime' | translate }}</label>
+      <span class="audit-detail-value">{{ data.createdTime | date:'medium' }}</span>
+    </div>
+
+    @if (data.payload) {
+    <div class="audit-detail-item audit-detail-item--full">
+      <label>{{ 'auditLog.payload' | translate }}</label>
+      <pre class="audit-detail-payload code-surface">{{ formatPayload(data.payload) }}</pre>
+    </div>
+    }
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">{{ 'common.close' | translate }}</button>
+</mat-dialog-actions>
