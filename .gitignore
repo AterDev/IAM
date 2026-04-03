@@ -60,6 +60,7 @@ BenchmarkDotNet.Artifacts/
 project.lock.json
 project.fragment.lock.json
 artifacts/
+.artifacts/
 
 # StyleCop
 StyleCopReport.xml
@@ -276,6 +277,7 @@ FakesAssemblies/
 node_modules/
 .angular/
 dist/
+src/Services/ApiService/wwwroot/
 
 # Visual Studio 6 build log
 *.plg
