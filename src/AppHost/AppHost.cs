@@ -8,23 +8,22 @@ var aspireSetting = AppSettingsHelper.LoadAspireSettings(builder.Configuration);
 IResourceBuilder<IResourceWithConnectionString>? database = null;
 IResourceBuilder<IResourceWithConnectionString>? cache = null;
 
-// var externalDatabase = builder.Configuration.GetConnectionString(AppConst.Default);
-// var externalCache = builder.Configuration.GetConnectionString(AppConst.Cache);
+var externalDatabase = builder.Configuration.GetConnectionString(AppConst.Default);
+var externalCache = builder.Configuration.GetConnectionString(AppConst.Cache);
 
-// if (!string.IsNullOrWhiteSpace(externalDatabase))
-// {
-//     database = builder.AddConnectionString(AppConst.Default);
-// }
+if (!string.IsNullOrWhiteSpace(externalDatabase))
+{
+    database = builder.AddConnectionString(AppConst.Default);
+}
 
-// if (!string.IsNullOrWhiteSpace(externalCache))
-// {
-//     cache = builder.AddConnectionString(AppConst.Cache);
-// }
+if (!string.IsNullOrWhiteSpace(externalCache))
+{
+    cache = builder.AddConnectionString(AppConst.Cache);
+}
 
 
 #region containers
-// 当前本地开发默认使用外部 PostgreSQL / Redis 资源，不再依赖 Docker 容器。
-// 如需恢复容器模式，可取消以下代码注释，并在未提供 ConnectionStrings 时使用这些资源。
+// 未提供外部连接串时，回退到本地容器资源，便于开发环境开箱即用。
 var defaultName = "IAM_dev";
 var devPassword = builder.AddParameter(
     "sql-password",
@@ -32,30 +31,36 @@ var devPassword = builder.AddParameter(
     secret: true
 );
 
-_ = aspireSetting.DatabaseType?.ToLowerInvariant() switch
+if (database is null)
 {
-    "postgresql" => database = builder
-        .AddPostgres(name: "db", password: devPassword, port: aspireSetting.DbPort)
-        .WithImageTag("18.1-alpine")
-        .WithDataVolume()
-        .AddDatabase(AppConst.Default, databaseName: defaultName),
-    "sqlserver" => database = builder
-        .AddSqlServer(name: "db", password: devPassword, port: aspireSetting.DbPort)
-        .WithImageTag("2025-latest")
-        .WithDataVolume()
-        .AddDatabase(AppConst.Default, databaseName: defaultName),
-    _ => null,
-};
+    _ = aspireSetting.DatabaseType?.ToLowerInvariant() switch
+    {
+        "postgresql" => database = builder
+            .AddPostgres(name: "db", password: devPassword, port: aspireSetting.DbPort)
+            .WithImageTag("18.1-alpine")
+            .WithDataVolume()
+            .AddDatabase(AppConst.Default, databaseName: defaultName),
+        "sqlserver" => database = builder
+            .AddSqlServer(name: "db", password: devPassword, port: aspireSetting.DbPort)
+            .WithImageTag("2025-latest")
+            .WithDataVolume()
+            .AddDatabase(AppConst.Default, databaseName: defaultName),
+        _ => null,
+    };
+}
 
-_ = aspireSetting.CacheType?.ToLowerInvariant() switch
+if (cache is null)
 {
-    "memory" => null,
-    _ => cache = builder
-        .AddRedis(AppConst.Cache, password: devPassword, port: aspireSetting.CachePort)
-        .WithImageTag("8.2-alpine")
-        .WithDataVolume()
-        .WithPersistence(interval: TimeSpan.FromMinutes(5)),
-};
+    _ = aspireSetting.CacheType?.ToLowerInvariant() switch
+    {
+        "memory" => null,
+        _ => cache = builder
+            .AddRedis(AppConst.Cache, password: devPassword, port: aspireSetting.CachePort)
+            .WithImageTag("8.2-alpine")
+            .WithDataVolume()
+            .WithPersistence(interval: TimeSpan.FromMinutes(5)),
+    };
+}
 
 #endregion
 
