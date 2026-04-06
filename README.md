@@ -65,12 +65,23 @@
 - .NET SDK 10
 - Node.js 20+
 - pnpm 9+
+- Docker（用于构建和运行单镜像）
 
-## 本地配置
+## 运行模式
 
-通过Aspire提供本地开发环境，或使用现有资源。主要依赖数据库和缓存。
+当前仓库推荐分成两种运行方式：
 
-## 运行项目
+1. **本地开发：Aspire 编排**
+  - 适用于开发、调试、查看资源状态
+  - 会编排数据库、缓存、前后端示例项目
+  - 本地迁移仍通过 `MigrationService` 完成
+2. **单镜像运行：外部数据库 / 外部缓存**
+  - 适用于自托管部署与镜像分发
+  - 只运行一个应用镜像
+  - 数据库与缓存由用户自行准备
+  - 应用启动时可自动执行迁移与初始化数据
+
+## 本地开发
 
 ### 推荐方式：使用 Aspire 一键启动
 
@@ -100,9 +111,143 @@ dotnet run
 | 示例 API | `https://localhost:9001` | 受保护 API      |
 | 示例前端 | `http://localhost:4201`  | OIDC 客户端样例 |
 
+### 本地初始化说明
+
+- 本地开发环境下，数据库迁移由 `MigrationService` 负责。
+- `ApiService` 中的 `InitHostService` 负责补齐签名密钥、默认管理员、默认客户端、默认作用域与权限种子。
+- 如果首次启动后管理后台点击登录出现 `invalid_client`，或者 `https://localhost:9900` 长时间超时，请优先检查 `MigrationService` 是否已完成数据库初始化。当前本地编排下，若 `ApiService` 早于数据库创建完成而启动，`InitHostService` 可能会提前失败，导致默认管理员、`AdminWebClient`、`FrontSampleClient` 等种子尚未写入。此时重新启动一次 `ApiService` 资源即可恢复。
+
+## 单镜像部署（外部数据库 / 缓存）
+
+此模式下：
+
+- **只运行一个应用镜像**
+- **数据库与缓存由用户自己准备**
+- **不要求使用 Docker Compose**
+- 应用通过环境变量或挂载配置文件读取连接串
+
+### 部署前提
+
+至少需要准备以下基础设施：
+
+- 一个 PostgreSQL 或 SQL Server 数据库
+- 一个可选缓存（当前默认 `Memory`，因此不配 Redis 也能运行）
+
+### 配置方式
+
+推荐优先通过环境变量提供配置：
+
+- `ASPNETCORE_ENVIRONMENT=Production`
+- `Components__Database=PostgreSQL` 或 `SQLServer`
+- `Components__Cache=Memory` 或 `Redis`
+- `ConnectionStrings__Default=<数据库连接串>`
+- `ConnectionStrings__Cache=<缓存连接串，仅在 Components__Cache=Redis 时需要>`
+
+如果你希望通过文件管理配置，也可以直接挂载 `appsettings.Production.json` 到容器内，例如：
+
+```powershell
+docker run -d --name iam-app `
+  -p 8080:8080 `
+  --mount "type=bind,source=${PWD}\deploy\appsettings.Production.json,target=/app/appsettings.Production.json,readonly" `
+  niltor/iam:latest
+```
+
+其中 `deploy/appsettings.Production.json` 可以写成：
+
+```json
+{
+  "Components": {
+    "Database": "PostgreSQL",
+    "Cache": "Redis"
+  },
+  "ConnectionStrings": {
+    "Default": "Host=your-db-host;Port=5432;Database=IAM;Username=iam;Password=your_password;Include Error Detail=true",
+    "Cache": "your-redis-host:6379,password=your_password"
+  }
+}
+```
+
+如果使用默认内存缓存，则将 `Components:Cache` 设为 `Memory`，并移除 `ConnectionStrings:Cache` 即可。
+
+### 构建并推送镜像
+
+在仓库根目录执行：
+
+```powershell
+.\scripts\Publish-DockerImage.ps1 -Tag latest
+```
+
+默认会完成以下步骤：
+
+- 构建 Angular 管理后台并同步到 `ApiService/wwwroot`
+- 发布 `ApiService`
+- 构建 Docker 镜像
+- 推送镜像到 `docker.io/niltor/iam:<tag>`
+
+### 运行示例：PostgreSQL
+
+先准备数据库，例如本地测试环境可运行：
+
+```powershell
+docker run -d --name iam-db `
+  -e POSTGRES_USER=iam `
+  -e POSTGRES_PASSWORD=iam_test_pwd `
+  -e POSTGRES_DB=IAM `
+  -p 5432:5432 `
+  postgres:18.1-alpine
+```
+
+然后启动应用镜像：
+
+```powershell
+docker run -d --name iam-app `
+  -p 8080:8080 `
+  -e ASPNETCORE_ENVIRONMENT=Production `
+  -e Components__Database=PostgreSQL `
+  -e Components__Cache=Memory `
+  -e ConnectionStrings__Default="Host=host.docker.internal;Port=5432;Database=IAM;Username=iam;Password=iam_test_pwd;Include Error Detail=true" `
+  niltor/iam:latest
+```
+
+> 如果数据库不在宿主机上，请将 `host.docker.internal` 替换为对应的主机名或 IP。
+
+如果使用 Redis，可追加：
+
+```powershell
+-e Components__Cache=Redis `
+-e ConnectionStrings__Cache="host.docker.internal:6379,password=your_redis_password"
+```
+
+### 启动行为
+
+生产环境下，`ApiService` 启动后会：
+
+1. 自动执行 `MigrateAsync()`
+2. 幂等初始化签名密钥、默认管理员、默认客户端、默认作用域、默认 API 资源与权限种子
+3. 正常启动 HTTP 服务
+
+### 访问地址
+
+默认容器端口为 `8080`，如果使用上面的示例命令，可访问：
+
+- `http://localhost:8080/`
+- `http://localhost:8080/swagger`
+
+### 日志查看
+
+```powershell
+docker logs -f iam-app
+```
+
+如果启动迁移与初始化成功，日志中会看到类似输出：
+
+- `Starting application initialization...`
+- `Running startup database migrations...`
+- `Application initialization completed successfully`
+
 ## 初始化数据
 
-应用首次启动时，会在 `InitHostService` 中自动初始化以下数据：
+应用首次启动并在数据库可用时，会在 `InitHostService` 中自动初始化以下数据：
 
 - 一个默认管理员账号
   - 用户名：`admin`
@@ -168,8 +313,6 @@ IAM 自身管理接口继续通过现有管理员策略（`WebConst.AdminUser`�
 
 如需查看管理后台统一认证的详细链路、兼容策略与验证步骤，请参考 [`docs/管理后台统一认证使用说明.md`](docs/管理后台统一认证使用说明.md)。
 
-如果首次启动后管理后台点击登录出现 `invalid_client`，或者 `https://localhost:9900` 长时间超时，请优先检查 `MigrationService` 是否已完成数据库初始化。当前本地编排下，若 `ApiService` 早于数据库创建完成而启动，`InitHostService` 可能会提前失败，导致默认管理员、`AdminWebClient`、`FrontSampleClient` 等种子尚未写入。此时重新启动一次 `ApiService` 资源即可恢复。
-
 ### 第四步：访问示例前端
 
 打开 `http://localhost:4201`：
@@ -193,6 +336,8 @@ dotnet run
 cd ../ApiService
 dotnet run
 ```
+
+> 该方式主要用于本地调试，不是推荐的生产部署模式。
 
 ### 管理后台
 

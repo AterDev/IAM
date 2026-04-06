@@ -10,6 +10,7 @@ namespace IAMMod.Services;
 /// </summary>
 public class InitHostService(
     IServiceProvider serviceProvider,
+    IHostEnvironment hostEnvironment,
     ILogger<InitHostService> logger
 ) : BackgroundService
 {
@@ -21,6 +22,12 @@ public class InitHostService(
         try
         {
             logger.LogInformation("Starting application initialization...");
+
+            if (hostEnvironment.IsProduction())
+            {
+                logger.LogInformation("Running startup database migrations...");
+                await RunMigrationAsync(dbContext, stoppingToken);
+            }
 
             var now = DateTimeOffset.UtcNow;
             var hasActiveKey = await dbContext.SigningKeys
@@ -69,9 +76,17 @@ public class InitHostService(
             logger.LogError(ex, "Application initialization failed");
             return;
         }
-        finally
+    }
+
+    private static async Task RunMigrationAsync(
+        DefaultDbContext dbContext,
+        CancellationToken cancellationToken)
+    {
+        var strategy = dbContext.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
         {
-        }
+            await dbContext.Database.MigrateAsync(cancellationToken);
+        });
     }
 
     /// <summary>
