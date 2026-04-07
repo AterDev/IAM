@@ -98,11 +98,17 @@ Invoke-Checked -FilePath (Get-CommandExecutable $dotnet) -Arguments @(
     'publish',
     (Join-Path $repoRoot 'src\Services\ApiService\ApiService.csproj'),
     '-c', 'Release',
-    '-o', $apiOutput,
+    '--os', 'linux',
+    '--arch', 'x64',
+    '/t:PublishContainer',
     '/p:UseAppHost=false',
+    '/p:InvariantGlobalization=false',
+    '/p:ContainerFamily=alpine-extra',
+    '/p:ContainerRepository=niltor/iam',
+    '/p:ContainerImageTag=local',
     '/p:InvariantGlobalization=false'
+    '/p:ContainerPort=8080'
 ) -WorkingDirectory $repoRoot
 
 Write-Host ''
 Write-Host 'Done.' -ForegroundColor Green
-Write-Host "Local publish folder: $apiOutput" -ForegroundColor Green

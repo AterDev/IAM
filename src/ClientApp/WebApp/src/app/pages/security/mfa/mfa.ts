@@ -11,6 +11,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatListModule } from '@angular/material/list';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import QRCode from 'qrcode';
 import { MfaService, MfaSetupResponse, MfaStatus } from 'src/app/services/mfa.service';
 import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
@@ -44,6 +45,7 @@ export class MfaSettingsComponent {
   readonly status = signal<MfaStatus | null>(null);
   readonly setup = signal<MfaSetupResponse | null>(null);
   readonly recoveryCodes = signal<string[]>([]);
+  readonly qrCodeDataUrl = signal<string | null>(null);
   readonly isLoading = signal(false);
   readonly isSaving = signal(false);
   readonly errorMessage = signal('');
@@ -96,6 +98,7 @@ export class MfaSettingsComponent {
       .subscribe({
         next: (response) => {
           this.setup.set(response);
+          void this.renderQrCode(response.otpAuthUri);
           this.isSaving.set(false);
           this.snackBar.open(this.translate.instant('mfa.setupReady'), undefined, { duration: 3000 });
           this.loadStatus();
@@ -122,6 +125,7 @@ export class MfaSettingsComponent {
         next: (response) => {
           this.recoveryCodes.set(response.recoveryCodes);
           this.setup.set(null);
+          this.qrCodeDataUrl.set(null);
           this.setupForm.reset({ code: '' });
           this.isSaving.set(false);
           this.snackBar.open(this.translate.instant('mfa.enabled'), undefined, { duration: 3000 });
@@ -149,6 +153,7 @@ export class MfaSettingsComponent {
         next: () => {
           this.recoveryCodes.set([]);
           this.setup.set(null);
+          this.qrCodeDataUrl.set(null);
           this.manageForm.reset({ code: '' });
           this.isSaving.set(false);
           this.snackBar.open(this.translate.instant('mfa.disabled'), undefined, { duration: 3000 });
@@ -191,5 +196,22 @@ export class MfaSettingsComponent {
     navigator.clipboard.writeText(text).then(() => {
       this.snackBar.open(this.translate.instant(messageKey), undefined, { duration: 2500 });
     });
+  }
+
+  private async renderQrCode(uri: string): Promise<void> {
+    try {
+      const dataUrl = await QRCode.toDataURL(uri, {
+        errorCorrectionLevel: 'M',
+        margin: 1,
+        width: 220,
+        color: {
+          dark: '#111827',
+          light: '#FFFFFFFF',
+        },
+      });
+      this.qrCodeDataUrl.set(dataUrl);
+    } catch {
+      this.qrCodeDataUrl.set(null);
+    }
   }
 }

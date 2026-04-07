@@ -19,6 +19,11 @@ export interface ResetPasswordRequest {
   newPassword: string;
 }
 
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export interface AccountMessageResponse {
   message: string;
 }
@@ -37,5 +42,9 @@ export class AccountService extends BaseService {
 
   resetPassword(data: ResetPasswordRequest): Observable<AccountMessageResponse> {
     return this.request<AccountMessageResponse>('post', '/api/Account/reset-password', data);
+  }
+
+  changePassword(data: ChangePasswordRequest): Observable<AccountMessageResponse> {
+    return this.request<AccountMessageResponse>('post', '/api/Account/change-password', data);
   }
 }

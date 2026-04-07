@@ -57,6 +57,18 @@ export const I18N_KEYS = {
     "codeSent": "forgotPassword.codeSent",
     "resetSuccess": "forgotPassword.resetSuccess"
   },
+  "changePassword": {
+    "title": "changePassword.title",
+    "subtitle": "changePassword.subtitle",
+    "currentPassword": "changePassword.currentPassword",
+    "newPassword": "changePassword.newPassword",
+    "confirmPassword": "changePassword.confirmPassword",
+    "submit": "changePassword.submit",
+    "cancel": "changePassword.cancel",
+    "success": "changePassword.success",
+    "failed": "changePassword.failed",
+    "logoutHint": "changePassword.logoutHint"
+  },
   "deviceCode": {
     "title": "deviceCode.title",
     "description": "deviceCode.description",
@@ -100,6 +112,10 @@ export const I18N_KEYS = {
     "setupHint": "mfa.setupHint",
     "startSetup": "mfa.startSetup",
     "setupReady": "mfa.setupReady",
+    "qrCodeHint": "mfa.qrCodeHint",
+    "qrCodeAlt": "mfa.qrCodeAlt",
+    "issuerLabel": "mfa.issuerLabel",
+    "accountNameLabel": "mfa.accountNameLabel",
     "secretLabel": "mfa.secretLabel",
     "otpauthUriLabel": "mfa.otpauthUriLabel",
     "verifyCode": "mfa.verifyCode",

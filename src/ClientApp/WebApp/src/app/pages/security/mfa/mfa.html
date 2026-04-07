@@ -1,111 +1,148 @@
-<mat-card class="mfa-page">
-  <mat-card-header>
-    <mat-card-title>{{ i18n.mfa.title | translate }}</mat-card-title>
-    <mat-card-subtitle>{{ i18n.mfa.subtitle | translate }}</mat-card-subtitle>
-  </mat-card-header>
+<div class="d-flex justify-content-center px-3 py-3">
+  <div class="w-100 mfa-page-shell">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>{{ i18n.mfa.title | translate }}</mat-card-title>
+        <mat-card-subtitle>{{ i18n.mfa.subtitle | translate }}</mat-card-subtitle>
+      </mat-card-header>
 
-  <mat-card-content>
-    @if (isLoading()) {
-      <p>{{ i18n.common.loading | translate }}</p>
-    } @else {
-      @if (errorMessage()) {
-        <div class="error-banner">{{ errorMessage() }}</div>
-      }
-
-      <section class="status-panel">
-        <div>
-          <strong>{{ i18n.mfa.status | translate }}:</strong>
-          <span [class.enabled]="status()?.isEnabled" [class.disabled]="!status()?.isEnabled">
-            {{ (status()?.isEnabled ? i18n.mfa.enabledStatus : i18n.mfa.disabledStatus) | translate }}
-          </span>
-        </div>
-        <div>
-          <strong>{{ i18n.mfa.recoveryCodesRemaining | translate }}:</strong>
-          <span>{{ status()?.recoveryCodesRemaining ?? 0 }}</span>
-        </div>
-      </section>
-
-      <mat-divider></mat-divider>
-
-      <section class="setup-panel">
-        <h3>{{ i18n.mfa.setupTitle | translate }}</h3>
-        <p>{{ i18n.mfa.setupHint | translate }}</p>
-
-        <button mat-raised-button color="primary" (click)="startSetup()" [disabled]="isSaving()">
-          {{ i18n.mfa.startSetup | translate }}
-        </button>
-
-        @if (setup(); as currentSetup) {
-          <div class="setup-result">
-            <p>{{ i18n.mfa.secretLabel | translate }}</p>
-            <div class="copy-row">
-              <code>{{ currentSetup.secret }}</code>
-              <button mat-stroked-button type="button" (click)="copy(currentSetup.secret, 'mfa.secretCopied')">
-                {{ i18n.common.copy | translate }}
-              </button>
-            </div>
-
-            <p>{{ i18n.mfa.otpauthUriLabel | translate }}</p>
-            <div class="copy-row uri-row">
-              <code>{{ currentSetup.otpAuthUri }}</code>
-              <button mat-stroked-button type="button" (click)="copy(currentSetup.otpAuthUri, 'mfa.uriCopied')">
-                {{ i18n.common.copy | translate }}
-              </button>
-            </div>
-
-            <form [formGroup]="setupForm" class="action-form">
-              <mat-form-field appearance="outline">
-                <mat-label>{{ i18n.mfa.verifyCode | translate }}</mat-label>
-                <input matInput [formControl]="setupCode" maxlength="6" autocomplete="one-time-code" />
-              </mat-form-field>
-
-              <button mat-raised-button color="accent" type="button" (click)="enable()" [disabled]="isSaving()">
-                {{ i18n.mfa.enable | translate }}
-              </button>
-            </form>
-          </div>
-        }
-      </section>
-
-      @if (status()?.isEnabled) {
-        <mat-divider></mat-divider>
-
-        <section class="manage-panel">
-          <h3>{{ i18n.mfa.manageTitle | translate }}</h3>
-          <p>{{ i18n.mfa.manageHint | translate }}</p>
-
-          <form [formGroup]="manageForm" class="action-form">
-            <mat-form-field appearance="outline">
-              <mat-label>{{ i18n.mfa.currentCode | translate }}</mat-label>
-              <input matInput [formControl]="manageCode" autocomplete="one-time-code" />
-            </mat-form-field>
-
-            <div class="button-group">
-              <button mat-raised-button color="primary" type="button" (click)="regenerateRecoveryCodes()" [disabled]="isSaving()">
-                {{ i18n.mfa.regenerateRecoveryCodes | translate }}
-              </button>
-              <button mat-stroked-button color="warn" type="button" (click)="disable()" [disabled]="isSaving()">
-                {{ i18n.mfa.disable | translate }}
-              </button>
-            </div>
-          </form>
-        </section>
-      }
-
-      @if (recoveryCodes().length > 0) {
-        <mat-divider></mat-divider>
-
-        <section class="recovery-codes-panel">
-          <h3>{{ i18n.mfa.recoveryCodesTitle | translate }}</h3>
-          <p>{{ i18n.mfa.recoveryCodesHint | translate }}</p>
-
-          <mat-list>
-            @for (code of recoveryCodes(); track code) {
-              <mat-list-item>{{ code }}</mat-list-item>
+      <mat-card-content class="d-flex flex-column gap-3">
+          @if (isLoading()) {
+            <p class="mb-0">{{ i18n.common.loading | translate }}</p>
+          } @else {
+            @if (errorMessage()) {
+              <mat-card appearance="outlined">
+                <mat-card-content class="py-3 text-danger">{{ errorMessage() }}</mat-card-content>
+              </mat-card>
             }
-          </mat-list>
-        </section>
-      }
-    }
-  </mat-card-content>
-</mat-card>
+
+            <section class="py-2 d-flex flex-column gap-3">
+              <div class="d-flex flex-wrap gap-3">
+                <div>
+                  <strong>{{ i18n.mfa.status | translate }}:</strong>
+                  <span class="ms-1 fw-semibold" [class.text-success]="status()?.isEnabled" [class.text-danger]="!status()?.isEnabled">
+                    {{ (status()?.isEnabled ? i18n.mfa.enabledStatus : i18n.mfa.disabledStatus) | translate }}
+                  </span>
+                </div>
+                <div>
+                  <strong>{{ i18n.mfa.recoveryCodesRemaining | translate }}:</strong>
+                  <span class="ms-1">{{ status()?.recoveryCodesRemaining ?? 0 }}</span>
+                </div>
+              </div>
+            </section>
+
+            <mat-divider></mat-divider>
+
+            <section class="py-2 d-flex flex-column gap-3">
+              <div class="d-flex flex-column gap-2">
+                <h3 class="mb-0">{{ i18n.mfa.setupTitle | translate }}</h3>
+                <p class="mb-0">{{ i18n.mfa.setupHint | translate }}</p>
+              </div>
+
+              <div>
+                <button mat-raised-button color="primary" (click)="startSetup()" [disabled]="isSaving()">
+                  {{ i18n.mfa.startSetup | translate }}
+                </button>
+              </div>
+
+              @if (setup(); as currentSetup) {
+                <div class="d-flex flex-column gap-3">
+                  <p class="mb-0">{{ i18n.mfa.qrCodeHint | translate }}</p>
+                  @if (qrCodeDataUrl(); as qrCodeDataUrlValue) {
+                    <div class="d-inline-flex p-3 rounded-4 border bg-white align-self-start">
+                      <img [src]="qrCodeDataUrlValue" [alt]="i18n.mfa.qrCodeAlt | translate" class="img-fluid" width="220" height="220" />
+                    </div>
+                  }
+
+                  <div>
+                    <p class="mb-2">{{ i18n.mfa.issuerLabel | translate }}</p>
+                    <code class="d-block w-100 p-3 border rounded-3 text-break">{{ currentSetup.issuer }}</code>
+                  </div>
+
+                  <div>
+                    <p class="mb-2">{{ i18n.mfa.accountNameLabel | translate }}</p>
+                    <code class="d-block w-100 p-3 border rounded-3 text-break">{{ currentSetup.accountName }}</code>
+                  </div>
+
+                  <div class="d-flex flex-column flex-lg-row gap-2 align-items-lg-center">
+                    <div class="flex-fill">
+                      <p class="mb-2">{{ i18n.mfa.secretLabel | translate }}</p>
+                      <code class="d-block w-100 p-3 border rounded-3 text-break">{{ currentSetup.secret }}</code>
+                    </div>
+                    <button mat-stroked-button type="button" (click)="copy(currentSetup.secret, 'mfa.secretCopied')">
+                      {{ i18n.common.copy | translate }}
+                    </button>
+                  </div>
+
+                  <div class="d-flex flex-column flex-lg-row gap-2 align-items-lg-center">
+                    <div class="flex-fill">
+                      <p class="mb-2">{{ i18n.mfa.otpauthUriLabel | translate }}</p>
+                      <code class="d-block w-100 p-3 border rounded-3 text-break small">{{ currentSetup.otpAuthUri }}</code>
+                    </div>
+                    <button mat-stroked-button type="button" (click)="copy(currentSetup.otpAuthUri, 'mfa.uriCopied')">
+                      {{ i18n.common.copy | translate }}
+                    </button>
+                  </div>
+
+                  <form [formGroup]="setupForm" class="d-flex flex-wrap gap-3 align-items-start">
+                    <mat-form-field appearance="outline" class="flex-fill">
+                      <mat-label>{{ i18n.mfa.verifyCode | translate }}</mat-label>
+                      <input matInput [formControl]="setupCode" maxlength="6" autocomplete="one-time-code" />
+                    </mat-form-field>
+
+                    <button mat-raised-button color="accent" type="button" (click)="enable()" [disabled]="isSaving()">
+                      {{ i18n.mfa.enable | translate }}
+                    </button>
+                  </form>
+                </div>
+              }
+            </section>
+
+            @if (status()?.isEnabled) {
+              <mat-divider></mat-divider>
+
+              <section class="py-2 d-flex flex-column gap-3">
+                <div class="d-flex flex-column gap-2">
+                  <h3 class="mb-0">{{ i18n.mfa.manageTitle | translate }}</h3>
+                  <p class="mb-0">{{ i18n.mfa.manageHint | translate }}</p>
+                </div>
+
+                <form [formGroup]="manageForm" class="d-flex flex-wrap gap-3 align-items-start">
+                  <mat-form-field appearance="outline" class="flex-fill">
+                    <mat-label>{{ i18n.mfa.currentCode | translate }}</mat-label>
+                    <input matInput [formControl]="manageCode" autocomplete="one-time-code" />
+                  </mat-form-field>
+
+                  <div class="d-flex flex-wrap gap-2">
+                    <button mat-raised-button color="primary" type="button" (click)="regenerateRecoveryCodes()" [disabled]="isSaving()">
+                      {{ i18n.mfa.regenerateRecoveryCodes | translate }}
+                    </button>
+                    <button mat-stroked-button color="warn" type="button" (click)="disable()" [disabled]="isSaving()">
+                      {{ i18n.mfa.disable | translate }}
+                    </button>
+                  </div>
+                </form>
+              </section>
+            }
+
+            @if (recoveryCodes().length > 0) {
+              <mat-divider></mat-divider>
+
+              <section class="py-2 d-flex flex-column gap-3">
+                <div class="d-flex flex-column gap-2">
+                  <h3 class="mb-0">{{ i18n.mfa.recoveryCodesTitle | translate }}</h3>
+                  <p class="mb-0">{{ i18n.mfa.recoveryCodesHint | translate }}</p>
+                </div>
+
+                <mat-list>
+                  @for (code of recoveryCodes(); track code) {
+                    <mat-list-item>{{ code }}</mat-list-item>
+                  }
+                </mat-list>
+              </section>
+            }
+          }
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

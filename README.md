@@ -70,79 +70,90 @@
 
 先准备数据库与缓存容器，例如：
 
-```powershell
+```bash
 docker network create iam-test-net
 
-docker run -d --name iam-db `
-  --network iam-test-net `
-  -e POSTGRES_USER=iam `
-  -e POSTGRES_PASSWORD=iam_test_pwd `
-  -e POSTGRES_DB=IAM `
+docker run -d --name iam-db \
+  --network iam-test-net \
+  -e POSTGRES_USER=iam \
+  -e POSTGRES_PASSWORD=iam_test_pwd \
+  -e POSTGRES_DB=IAM \
   postgres:18.1-alpine
 
-docker run -d --name iam-redis `
-  --network iam-test-net `
+docker run -d --name iam-redis \
+  --network iam-test-net \
   redis:7.4-alpine
 ```
 
 然后启动本地镜像：
 
-```powershell
-docker run -d --name iam-app `
-  --network iam-test-net `
-  -p 8080:8080 `
-  -e ASPNETCORE_ENVIRONMENT=Production `
-  -e Components__Database=PostgreSQL `
-  -e Components__Cache=Redis `
-  -e ConnectionStrings__Default="Host=iam-db;Port=5432;Database=IAM;Username=iam;Password=iam_test_pwd;Include Error Detail=true" `
-  -e ConnectionStrings__Cache="iam-redis:6379" `
+```bash
+docker run -d --name iam-app \
+  --network iam-test-net \
+  -p 8080:8080 \
+  -e ASPNETCORE_ENVIRONMENT=Production \
+  -e Components__Database=PostgreSQL \
+  -e Components__Cache=Redis \
+  -e ConnectionStrings__Default="Host=iam-db;Port=5432;Database=IAM;Username=iam;Password=iam_test_pwd;Include Error Detail=true" \
+  -e ConnectionStrings__Cache="iam-redis:6379" \
   niltor/iam:latest
 ```
 
-### 推送到 Docker Hub
+### 容器部署运行
 
-本地验证通过后，再执行：
+请在应用运行前，确保已经准备好数据库与缓存，并且应用能够通过连接串访问到它们。
 
-```powershell
-.\scripts\Publish-DockerImage.ps1 -Tag latest
+如果你希望通过配置文件管理生产环境参数，可以在宿主机准备一个 `appsettings.Production.json`，例如：
+
+```json
+{
+  "Components": {
+    "Database": "PostgreSQL",
+    "Cache": "Memory"
+  },
+  "Authentication": {
+    "PublicOrigin": "https://auth.xxx.cn"
+  },
+  "ConnectionStrings": {
+    "Default": "Host=host.docker.internal;Port=5432;Database=IAM;Username=iam;Password=iam_test_pwd;Include Error Detail=true"
+  }
+}
 ```
 
-这一步会把同一套发布产物推送到 `docker.io/niltor/iam:<tag>`，用于外部访问和正式分发。
+然后把这个文件挂载到容器内：
 
-> 这一步现在由 .NET SDK 的 `dotnet publish /t:PublishContainer` 完成，不再依赖 `Dockerfile`、`docker build` 或 `docker push`。
-> Alpine extra 变体会保留 globalization 支持，否则 `zh-CN` 等区域设置无法正常加载。
-
-### 运行示例：PostgreSQL
-
-先准备数据库，例如本地测试环境可运行：
-
-```powershell
-docker run -d --name iam-db `
-  -e POSTGRES_USER=iam `
-  -e POSTGRES_PASSWORD=iam_test_pwd `
-  -e POSTGRES_DB=IAM `
-  -p 5432:5432 `
-  postgres:18.1-alpine
-```
-
-然后启动应用镜像：
-
-```powershell
-docker run -d --name iam-app `
-  -p 8080:8080 `
-  -e ASPNETCORE_ENVIRONMENT=Production `
-  -e Components__Database=PostgreSQL `
-  -e Components__Cache=Memory `
-  -e ConnectionStrings__Default="Host=host.docker.internal;Port=5432;Database=IAM;Username=iam;Password=iam_test_pwd;Include Error Detail=true" `
+```bash
+docker run -d --name iam-app \
+  -p 8080:8080 \
+  -e ASPNETCORE_ENVIRONMENT=Production \
+  --mount type=bind,source=/opt/iam/appsettings.Production.json,target=/app/appsettings.Production.json,readonly \
   niltor/iam:latest
 ```
 
-> 如果数据库不在宿主机上，请将 `host.docker.internal` 替换为对应的主机名或 IP。
+这样在生产环境里，`InitHostService` 初始化 `AdminWebClient` 时会优先使用 `Authentication:PublicOrigin`，例如：
+
+- `https://auth.xxx.cn`
+- `https://auth.xxx.cn/auth/callback`
+
+如果不想挂载配置文件，也可以继续通过环境变量传入同样的值：
+
+```bash
+docker run -d --name iam-app \
+  -p 8080:8080 \
+  -e ASPNETCORE_ENVIRONMENT=Production \
+  -e Authentication__PublicOrigin="https://auth.xxx.cn" \
+  -e Components__Database=PostgreSQL \
+  -e Components__Cache=Memory \
+  -e ConnectionStrings__Default="Host=host.docker.internal;Port=5432;Database=IAM;Username=iam;Password=iam_test_pwd;Include Error Detail=true" \
+  niltor/iam:latest
+```
+
+> 数据库在宿主机上时，使用 `host.docker.internal` 作为对应的主机名，并添加 `--add-host=host.docker.internal:host-gateway` 参数。
 
 如果使用 Redis，可追加：
 
-```powershell
--e Components__Cache=Redis `
+```bash
+-e Components__Cache=Redis \
 -e ConnectionStrings__Cache="host.docker.internal:6379,password=your_redis_password"
 ```
 
@@ -163,7 +174,7 @@ docker run -d --name iam-app `
 
 ### 日志查看
 
-```powershell
+```bash
 docker logs -f iam-app
 ```
 

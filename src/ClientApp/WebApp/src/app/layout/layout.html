@@ -18,13 +18,17 @@
         {{i18n.hello| translate}},
         {{username}}
       </span>
+      <button mat-menu-item [routerLink]="['/security/change-password']">
+        <mat-icon class="primary">lock_reset</mat-icon>
+        <span>{{i18n.changePassword.title| translate}}</span>
+      </button>
       <button mat-menu-item [routerLink]="['/security/mfa']">
-        <span>{{i18n.mfa.title| translate}}</span>
         <mat-icon class="primary">verified_user</mat-icon>
+        <span>{{i18n.mfa.title| translate}}</span>
       </button>
       <button mat-menu-item (click)="logout()">
-        <span>{{i18n.login.logout| translate}}</span>
         <mat-icon class="error">exit_to_app</mat-icon>
+        <span>{{i18n.login.logout| translate}}</span>
       </button>
     </mat-menu>
     }@else {

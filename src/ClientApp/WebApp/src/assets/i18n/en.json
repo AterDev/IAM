@@ -67,6 +67,10 @@
     "setupHint": "Start setup to generate a new TOTP secret, add it to your authenticator app, then enter a fresh 6-digit code to enable MFA.",
     "startSetup": "Start setup",
     "setupReady": "A new MFA secret has been generated. Finish verification to enable it.",
+    "qrCodeHint": "Scan this QR code with your authenticator app to add the account quickly, or use the manual secret below instead.",
+    "qrCodeAlt": "MFA enrollment QR code",
+    "issuerLabel": "Website name",
+    "accountNameLabel": "Account name",
     "secretLabel": "Manual entry secret",
     "otpauthUriLabel": "otpauth URI",
     "verifyCode": "6-digit verification code",
@@ -89,6 +93,18 @@
     "enableFailed": "Failed to enable MFA. Verify the code and try again.",
     "disableFailed": "Failed to disable MFA. Check the current TOTP or recovery code.",
     "regenerateFailed": "Failed to regenerate recovery codes. Check the current verification code."
+  },
+  "changePassword": {
+    "title": "Change password",
+    "subtitle": "Update the password for your current account. You will be asked to sign in again afterwards.",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "submit": "Update password",
+    "cancel": "Cancel",
+    "success": "Password updated successfully. Signing you out now.",
+    "failed": "Failed to update password. Check your current password and try again.",
+    "logoutHint": "For security reasons, changing your password signs out the current session."
   },
   "scopes": {
     "openid": "Access your basic identity",

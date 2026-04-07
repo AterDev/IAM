@@ -33,7 +33,7 @@
         <mat-nav-list>
           <a mat-list-item [routerLink]="item.path" routerLinkActive="active"
             [matTooltip]="opened? '': (item.name | translate)" matTooltipPosition="right">
-            <mat-icon fontSet="" class="secondary">{{item.icon}}</mat-icon>
+            <mat-icon>{{item.icon}}</mat-icon>
             @if(opened){
             <span>{{item.name | translate}}</span>
             }

@@ -434,6 +434,48 @@ public class UserManager(
         return true;
     }
 
+    public async Task<bool> ChangeOwnPasswordAsync(
+        Guid id,
+        string currentPassword,
+        string newPassword,
+        string? ipAddress = null,
+        string? userAgent = null)
+    {
+        var entity = await FindAsync(id);
+        if (entity == null)
+        {
+            throw new BusinessException("UserNotFound", StatusCodes.Status404NotFound);
+        }
+
+        if (string.IsNullOrWhiteSpace(entity.PasswordHash)
+            || string.IsNullOrWhiteSpace(entity.PasswordSalt)
+            || !HashCrypto.Validate(currentPassword, entity.PasswordSalt, entity.PasswordHash))
+        {
+            await _auditLogManager.AddAuditLogAsync(
+                category: "Authentication",
+                eventName: "PasswordChangeFailed",
+                subjectId: entity.Id.ToString(),
+                payload: JsonSerializer.Serialize(new { reason = "InvalidCurrentPassword" }),
+                ipAddress: ipAddress,
+                userAgent: userAgent
+            );
+            throw new BusinessException(Localizer.InvalidUserOrPassword, StatusCodes.Status400BadRequest);
+        }
+
+        await ChangePasswordAsync(id, newPassword);
+
+        await _auditLogManager.AddAuditLogAsync(
+            category: "Authentication",
+            eventName: "PasswordChanged",
+            subjectId: entity.Id.ToString(),
+            payload: JsonSerializer.Serialize(new { changedAt = DateTimeOffset.UtcNow }),
+            ipAddress: ipAddress,
+            userAgent: userAgent
+        );
+
+        return true;
+    }
+
     public async Task<string?> RequestPasswordResetAsync(
         string email,
         string? ipAddress = null,

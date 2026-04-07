@@ -113,6 +113,34 @@ public class AccountController(
         }
     }
 
+    [HttpPost("change-password")]
+    [Authorize]
+    public async Task<ActionResult> ChangePassword([FromBody] ChangePasswordRequestDto dto)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            await _userManager.ChangeOwnPasswordAsync(
+                userId.Value,
+                dto.CurrentPassword,
+                dto.NewPassword,
+                HttpContext.Connection.RemoteIpAddress?.ToString(),
+                HttpContext.Request.Headers.UserAgent.ToString()
+            );
+
+            return Ok(new { message = "Password changed" });
+        }
+        catch (BusinessException ex)
+        {
+            return BadRequest(ex.LanguageKey);
+        }
+    }
+
     [HttpGet("mfa")]
     [Authorize]
     public async Task<ActionResult<MfaStatusDto>> GetMfaStatus()
@@ -210,14 +238,27 @@ public class AccountController(
 
     private string ResolveIssuer()
     {
+        var displayName = _configuration["Authentication:DisplayName"]
+            ?? _configuration["Otel:Service:Name"];
+
+        if (!string.IsNullOrWhiteSpace(displayName))
+        {
+            return displayName.Trim();
+        }
+
         var configuredIssuer = _configuration["Authentication:Issuer"]
             ?? _configuration["Authentication:Jwt:ValidIssuer"];
 
         if (Uri.TryCreate(configuredIssuer, UriKind.Absolute, out var issuerUri))
         {
-            return issuerUri.ToString().TrimEnd('/');
+            return issuerUri.Host;
         }
 
-        return $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+        if (!string.IsNullOrWhiteSpace(configuredIssuer))
+        {
+            return configuredIssuer.Trim();
+        }
+
+        return HttpContext.Request.Host.Host;
     }
 }

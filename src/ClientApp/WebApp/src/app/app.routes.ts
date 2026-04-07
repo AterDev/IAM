@@ -111,6 +111,10 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/security/password-grant-audit/password-grant-audit').then(m => m.PasswordGrantAuditComponent)
       },
       {
+        path: 'security/change-password',
+        loadComponent: () => import('./pages/security/change-password/change-password').then(m => m.ChangePasswordComponent)
+      },
+      {
         path: 'security/mfa',
         loadComponent: () => import('./pages/security/mfa/mfa').then(m => m.MfaSettingsComponent)
       }

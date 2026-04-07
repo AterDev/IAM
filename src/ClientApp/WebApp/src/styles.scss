@@ -82,8 +82,8 @@ mat-panel-title .mat-icon {
   vertical-align: middle;
 }
 
-.mat-mdc-button-base .mat-icon {
-  vertical-align: middle;
+button.mat-mdc-menu-item.mat-focus-indicator .mat-icon {
+  align-content: center;
 }
 
 .page-toolbar {
