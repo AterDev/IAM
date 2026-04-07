@@ -1,11 +1,8 @@
 [CmdletBinding()]
 param(
     [Parameter()]
-    [string]$Tag = 'latest'
+    [string]$Tag = 'localtest'
 )
-
-$env:HTTP_PROXY  = "http://127.0.0.1:7890"
-$env:HTTPS_PROXY = "http://127.0.0.1:7890"
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -87,24 +84,25 @@ if (-not (Test-Path (Join-Path $frontendOutput 'index.html'))) {
 Write-Host 'Syncing frontend files to ApiService/wwwroot ...' -ForegroundColor Cyan
 Sync-DirectoryContents -SourceDirectory $frontendOutput -DestinationDirectory $apiWwwroot
 
-Write-Host 'Publishing and pushing ApiService container image...' -ForegroundColor Cyan
+$localPublishRoot = Join-Path $repoRoot '.artifacts\local-publish'
+$apiOutput = Join-Path $localPublishRoot 'ApiService'
+
+if (Test-Path $apiOutput) {
+    Remove-Item $apiOutput -Recurse -Force
+}
+
+New-Item -ItemType Directory -Path $apiOutput -Force | Out-Null
+
+Write-Host 'Publishing local runnable output...' -ForegroundColor Cyan
 Invoke-Checked -FilePath (Get-CommandExecutable $dotnet) -Arguments @(
     'publish',
     (Join-Path $repoRoot 'src\Services\ApiService\ApiService.csproj'),
     '-c', 'Release',
-    '--os', 'linux',
-    '--arch', 'x64',
-    '/t:PublishContainer',
+    '-o', $apiOutput,
     '/p:UseAppHost=false',
-    '/p:InvariantGlobalization=false',
-    '/p:ContainerFamily=alpine-extra',
-    '/p:ContainerEnvironmentVariable=DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false',
-    '/p:ContainerRegistry=docker.io',
-    '/p:ContainerRepository=niltor/iam',
-    "/p:ContainerImageTag=$Tag",
-    '/p:ContainerPort=8080'
+    '/p:InvariantGlobalization=false'
 ) -WorkingDirectory $repoRoot
 
 Write-Host ''
 Write-Host 'Done.' -ForegroundColor Green
-Write-Host "Image: docker.io/niltor/iam:$Tag" -ForegroundColor Green
+Write-Host "Local publish folder: $apiOutput" -ForegroundColor Green

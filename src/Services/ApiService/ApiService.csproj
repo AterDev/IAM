@@ -7,12 +7,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <UserSecretsId>1e75aae5-d684-4140-a34b-a1afb03ab13f</UserSecretsId>
     </PropertyGroup>
-    <ItemGroup>
-      <Compile Remove="Middleware\**" />
-      <Content Remove="Middleware\**" />
-      <EmbeddedResource Remove="Middleware\**" />
-      <None Remove="Middleware\**" />
-    </ItemGroup>
+    
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.SpaProxy" />
     </ItemGroup>

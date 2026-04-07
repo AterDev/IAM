@@ -1,5 +1,6 @@
 @use './theme.scss' as theme;
 @use '@angular/material' as mat;
+@import '@fontsource/material-symbols-outlined/index.css';
 @import 'bootstrap/dist/css/bootstrap-grid.min.css';
 @import 'bootstrap/dist/css/bootstrap-utilities.min.css';
 
@@ -11,6 +12,26 @@ body {
   height: 100%;
   margin: 0;
   font-family: Ginto, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", Segoe UI Symbol, "Noto Color Emoji";
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 300,
+    'GRAD' 0,
+    'opsz' 24;
+  font-style: normal;
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
 }
 
 html {
@@ -58,6 +79,10 @@ mat-nav-list .mat-icon {
 
 mat-panel-title .mat-icon {
   margin-right: 4px;
+  vertical-align: middle;
+}
+
+.mat-mdc-button-base .mat-icon {
   vertical-align: middle;
 }
 

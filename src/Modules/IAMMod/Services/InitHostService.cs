@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Perigon.AspNetCore.Services;
@@ -10,6 +11,7 @@ namespace IAMMod.Services;
 /// </summary>
 public class InitHostService(
     IServiceProvider serviceProvider,
+    IConfiguration configuration,
     IHostEnvironment hostEnvironment,
     ILogger<InitHostService> logger
 ) : BackgroundService
@@ -217,18 +219,8 @@ public class InitHostService(
 
         // Create AdminWebClient for IAM management portal
         var adminWebClientId = "AdminWebClient";
-        var adminWebClientRedirectUris = new[]
-        {
-            "http://localhost:4200",
-            "https://localhost:4200",
-            "http://localhost:4200/auth/callback",
-            "https://localhost:4200/auth/callback"
-        };
-        var adminWebClientPostLogoutRedirectUris = new[]
-        {
-            "http://localhost:4200",
-            "https://localhost:4200"
-        };
+        var adminWebClientRedirectUris = GetAdminWebClientRedirectUris();
+        var adminWebClientPostLogoutRedirectUris = GetAdminWebClientPostLogoutRedirectUris();
         var adminWebClientExists = await dbContext.Clients.AnyAsync(
             c => c.ClientId == adminWebClientId,
             cancellationToken
@@ -584,6 +576,83 @@ public class InitHostService(
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private IReadOnlyList<string> GetAdminWebClientRedirectUris()
+    {
+        if (hostEnvironment.IsDevelopment())
+        {
+            return new[]
+            {
+                "http://localhost:4200",
+                "https://localhost:4200",
+                "http://localhost:4200/auth/callback",
+                "https://localhost:4200/auth/callback"
+            };
+        }
+
+        var baseOrigin = ResolveAdminWebClientBaseOrigin();
+        return new[]
+        {
+            baseOrigin,
+            $"{baseOrigin}/auth/callback",
+        };
+    }
+
+    private IReadOnlyList<string> GetAdminWebClientPostLogoutRedirectUris()
+    {
+        if (hostEnvironment.IsDevelopment())
+        {
+            return new[]
+            {
+                "http://localhost:4200",
+                "https://localhost:4200"
+            };
+        }
+
+        var baseOrigin = ResolveAdminWebClientBaseOrigin();
+        return new[] { baseOrigin };
+    }
+
+    private string ResolveAdminWebClientBaseOrigin()
+    {
+        var configuredOrigin = configuration["Authentication:PublicOrigin"]
+            ?? configuration["Authentication:AdminWebClientOrigin"]
+            ?? configuration["App:PublicOrigin"];
+
+        if (Uri.TryCreate(configuredOrigin, UriKind.Absolute, out var configuredUri))
+        {
+            return configuredUri.GetLeftPart(UriPartial.Authority);
+        }
+
+        var runtimePort = GetRuntimePort(configuration["ASPNETCORE_HTTP_PORTS"])
+            ?? GetRuntimePort(configuration["ASPNETCORE_URLS"])
+            ?? 8080;
+
+        return $"http://localhost:{runtimePort}";
+    }
+
+    private static int? GetRuntimePort(string? rawValue)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return null;
+        }
+
+        foreach (var token in rawValue.Split([';', ',', ' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (int.TryParse(token, out var port))
+            {
+                return port;
+            }
+
+            if (Uri.TryCreate(token, UriKind.Absolute, out var uri) && uri.Port > 0)
+            {
+                return uri.Port;
+            }
+        }
+
+        return null;
     }
 
     private static async Task<Role> EnsureRoleAsync(

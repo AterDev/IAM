@@ -38,6 +38,9 @@ importers:
       '@angular/router':
         specifier: ^20.3.2
         version: 20.3.2(@angular/common@20.3.2(@angular/core@20.3.2(@angular/compiler@20.3.2)(rxjs@7.8.1)(zone.js@0.15.0))(rxjs@7.8.1))(@angular/core@20.3.2(@angular/compiler@20.3.2)(rxjs@7.8.1)(zone.js@0.15.0))(@angular/platform-browser@20.3.2(@angular/animations@20.3.2(@angular/core@20.3.2(@angular/compiler@20.3.2)(rxjs@7.8.1)(zone.js@0.15.0)))(@angular/common@20.3.2(@angular/core@20.3.2(@angular/compiler@20.3.2)(rxjs@7.8.1)(zone.js@0.15.0))(rxjs@7.8.1))(@angular/core@20.3.2(@angular/compiler@20.3.2)(rxjs@7.8.1)(zone.js@0.15.0)))(rxjs@7.8.1)
+      '@fontsource/material-symbols-outlined':
+        specifier: ^5.2.40
+        version: 5.2.40
       '@ngx-translate/core':
         specifier: ^17.0.0
         version: 17.0.0(@angular/common@20.3.2(@angular/core@20.3.2(@angular/compiler@20.3.2)(rxjs@7.8.1)(zone.js@0.15.0))(rxjs@7.8.1))(@angular/core@20.3.2(@angular/compiler@20.3.2)(rxjs@7.8.1)(zone.js@0.15.0))
@@ -692,6 +695,9 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@fontsource/material-symbols-outlined@5.2.40':
+    resolution: {integrity: sha512-mrWUxruvmp/m2047MEnIiaX1FvQVoj3Ctk1Yond6cycFoybZWYhETWFkBJ5ua8+IA6SaAOHSLoXm6aFgxv37CA==}
 
   '@inquirer/ansi@1.0.0':
     resolution: {integrity: sha512-JWaTfCxI1eTmJ1BIv86vUfjVatOdxwD0DAVKYevY8SazeUUZtW+tNbsdejVO1GYE0GXJW1N1ahmiC3TFd+7wZA==}
@@ -4782,6 +4788,8 @@ snapshots:
 
   '@esbuild/win32-x64@0.25.9':
     optional: true
+
+  '@fontsource/material-symbols-outlined@5.2.40': {}
 
   '@inquirer/ansi@1.0.0': {}
 
