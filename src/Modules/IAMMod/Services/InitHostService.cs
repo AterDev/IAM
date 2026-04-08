@@ -116,7 +116,8 @@ public class InitHostService(
         var adminEmail = "admin@default.com";
         var normalizedAdminEmail = adminEmail.ToUpperInvariant();
         var adminUser = await dbContext.Users.FirstOrDefaultAsync(
-            u => u.NormalizedEmail == normalizedAdminEmail
+            u => u.NormalizedUserName == normalizedAdminUserName
+                || u.NormalizedEmail == normalizedAdminEmail
                 || (u.Email ?? string.Empty).ToUpper() == normalizedAdminEmail,
             cancellationToken);
 
