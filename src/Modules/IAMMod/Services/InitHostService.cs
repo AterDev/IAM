@@ -113,8 +113,11 @@ public class InitHostService(
 
         var adminUserName = "admin";
         var normalizedAdminUserName = adminUserName.ToUpperInvariant();
+        var adminEmail = "admin@default.com";
+        var normalizedAdminEmail = adminEmail.ToUpperInvariant();
         var adminUser = await dbContext.Users.FirstOrDefaultAsync(
-            u => u.NormalizedUserName == normalizedAdminUserName,
+            u => u.NormalizedEmail == normalizedAdminEmail
+                || (u.Email ?? string.Empty).ToUpper() == normalizedAdminEmail,
             cancellationToken);
 
         if (adminUser == null)
@@ -124,8 +127,8 @@ public class InitHostService(
             {
                 UserName = adminUserName,
                 NormalizedUserName = normalizedAdminUserName,
-                Email = "admin@default.com",
-                NormalizedEmail = "ADMIN@DEFAULT.COM",
+                Email = adminEmail,
+                NormalizedEmail = normalizedAdminEmail,
                 EmailConfirmed = true,
                 PasswordSalt = salt,
                 PasswordHash = HashCrypto.GeneratePwd("Perigon.2026", salt),
@@ -139,6 +142,34 @@ public class InitHostService(
 
             dbContext.Users.Add(adminUser);
             await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        else
+        {
+            var requiresUpdate = false;
+
+            if (!string.Equals(adminUser.Email, adminEmail, StringComparison.OrdinalIgnoreCase))
+            {
+                adminUser.Email = adminEmail;
+                requiresUpdate = true;
+            }
+
+            if (!string.Equals(adminUser.NormalizedEmail, normalizedAdminEmail, StringComparison.Ordinal))
+            {
+                adminUser.NormalizedEmail = normalizedAdminEmail;
+                requiresUpdate = true;
+            }
+
+            if (!adminUser.EmailConfirmed)
+            {
+                adminUser.EmailConfirmed = true;
+                requiresUpdate = true;
+            }
+
+            if (requiresUpdate)
+            {
+                adminUser.UpdatedTime = DateTimeOffset.UtcNow;
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
         }
 
         var hasSuperAdminRole = await dbContext.UserRoles.AnyAsync(

@@ -100,15 +100,15 @@ public class UserManager(
     /// <returns>Created user detail or null</returns>
     public async Task<UserDetailDto?> AddAsync(UserAddDto dto)
     {
+        if (string.IsNullOrWhiteSpace(dto.Email))
+        {
+            throw new BusinessException(Localizer.BadRequest, StatusCodes.Status400BadRequest);
+        }
+
         var userName = dto.UserName.Trim();
         var normalizedUserName = userName.ToUpperInvariant();
         var email = dto.Email.Trim();
         var normalizedEmail = email.ToUpperInvariant();
-
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            throw new BusinessException(Localizer.BadRequest, StatusCodes.Status400BadRequest);
-        }
 
         // Check if email already exists
         if (await _dbSet.AnyAsync(q => q.NormalizedEmail == normalizedEmail))
@@ -348,12 +348,12 @@ public class UserManager(
         // Check if email already exists (if changing)
         if (dto.Email != null)
         {
-            var email = dto.Email.Trim();
-            if (string.IsNullOrWhiteSpace(email))
+            if (string.IsNullOrWhiteSpace(dto.Email))
             {
                 throw new BusinessException(Localizer.BadRequest, StatusCodes.Status400BadRequest);
             }
 
+            var email = dto.Email.Trim();
             var normalizedEmail = email.ToUpperInvariant();
             if (!string.Equals(normalizedEmail, entity.NormalizedEmail, StringComparison.Ordinal)
                 && await _dbSet.AnyAsync(q => q.NormalizedEmail == normalizedEmail && q.Id != id))
