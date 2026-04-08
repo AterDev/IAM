@@ -10,13 +10,26 @@ namespace EntityFramework.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql(
+                """
+                UPDATE \"Users\"
+                SET \"Email\" = CONCAT('legacy+', REPLACE(CAST(\"Id\" AS text), '-', ''), '@default.local')
+                WHERE \"Email\" IS NULL OR BTRIM(\"Email\") = '';
+                """);
+
+            migrationBuilder.Sql(
+                """
+                UPDATE \"Users\"
+                SET \"NormalizedEmail\" = UPPER(BTRIM(\"Email\"))
+                WHERE \"NormalizedEmail\" IS NULL OR BTRIM(\"NormalizedEmail\") = '';
+                """);
+
             migrationBuilder.AlterColumn<string>(
                 name: "NormalizedEmail",
                 table: "Users",
                 type: "character varying(256)",
                 maxLength: 256,
                 nullable: false,
-                defaultValue: "",
                 oldClrType: typeof(string),
                 oldType: "character varying(256)",
                 oldMaxLength: 256,
@@ -28,7 +41,6 @@ namespace EntityFramework.Migrations
                 type: "character varying(256)",
                 maxLength: 256,
                 nullable: false,
-                defaultValue: "",
                 oldClrType: typeof(string),
                 oldType: "character varying(256)",
                 oldMaxLength: 256,

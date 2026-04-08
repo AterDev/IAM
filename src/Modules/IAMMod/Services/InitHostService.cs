@@ -115,10 +115,12 @@ public class InitHostService(
         var normalizedAdminUserName = adminUserName.ToUpperInvariant();
         var adminEmail = "admin@default.com";
         var normalizedAdminEmail = adminEmail.ToUpperInvariant();
-        var adminUser = await dbContext.Users.FirstOrDefaultAsync(
-            u => u.NormalizedUserName == normalizedAdminUserName
-                || u.NormalizedEmail == normalizedAdminEmail
-                || (u.Email ?? string.Empty).ToUpperInvariant() == normalizedAdminEmail,
+        var adminUser = await FindAdminUserAsync(
+            dbContext,
+            adminUserName,
+            normalizedAdminUserName,
+            adminEmail,
+            normalizedAdminEmail,
             cancellationToken);
 
         if (adminUser == null)
@@ -182,6 +184,59 @@ public class InitHostService(
             dbContext.UserRoles.Add(new UserRole { UserId = adminUser.Id, RoleId = superAdminRole.Id });
             await dbContext.SaveChangesAsync(cancellationToken);
         }
+    }
+
+    private async Task<User?> FindAdminUserAsync(
+        DefaultDbContext dbContext,
+        string adminUserName,
+        string normalizedAdminUserName,
+        string adminEmail,
+        string normalizedAdminEmail,
+        CancellationToken cancellationToken)
+    {
+        var adminUser = await dbContext.Users
+            .Where(u => u.NormalizedEmail == normalizedAdminEmail)
+            .OrderBy(u => u.CreatedTime)
+            .ThenBy(u => u.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (adminUser != null)
+        {
+            return adminUser;
+        }
+
+        adminUser = await dbContext.Users
+            .Where(u => u.Email == adminEmail || (u.Email != null && u.Email.ToUpper() == normalizedAdminEmail))
+            .OrderBy(u => u.CreatedTime)
+            .ThenBy(u => u.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (adminUser != null)
+        {
+            return adminUser;
+        }
+
+        var legacyAdminCandidates = await dbContext.Users
+            .Where(u => u.NormalizedUserName == normalizedAdminUserName || u.UserName == adminUserName)
+            .OrderBy(u => u.CreatedTime)
+            .ThenBy(u => u.Id)
+            .Take(2)
+            .ToListAsync(cancellationToken);
+
+        if (legacyAdminCandidates.Count == 1)
+        {
+            return legacyAdminCandidates[0];
+        }
+
+        if (legacyAdminCandidates.Count > 1)
+        {
+            logger.LogWarning(
+                "Multiple legacy admin candidates matched username {AdminUserName}. A dedicated default admin account will be created using email {AdminEmail} instead of mutating an arbitrary user.",
+                adminUserName,
+                adminEmail);
+        }
+
+        return null;
     }
 
     /// <summary>

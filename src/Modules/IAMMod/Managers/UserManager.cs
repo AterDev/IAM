@@ -222,6 +222,34 @@ public class UserManager(
                 var updatedEmail = email.Trim();
                 var updatedNormalizedEmail = updatedEmail.ToUpperInvariant();
 
+                var emailOwner = await _dbSet.FirstOrDefaultAsync(q =>
+                    q.NormalizedEmail == updatedNormalizedEmail && q.Id != existingLogin.UserId);
+
+                if (emailOwner != null)
+                {
+                    await WriteExternalAuditAsync(
+                        "ExternalLoginConflict",
+                        existingLogin.UserId.ToString(),
+                        new
+                        {
+                            provider = normalizedProvider,
+                            email = updatedEmail,
+                            conflictingUserId = emailOwner.Id,
+                        },
+                        ipAddress,
+                        userAgent);
+
+                    return new ExternalLoginResolutionResultDto
+                    {
+                        Status = "email_conflict",
+                        Provider = normalizedProvider,
+                        UserId = emailOwner.Id,
+                        UserName = emailOwner.UserName,
+                        Email = emailOwner.Email,
+                        Message = "An account with the same email already exists.",
+                    };
+                }
+
                 existingLogin.User.Email = updatedEmail;
                 existingLogin.User.NormalizedEmail = updatedNormalizedEmail;
                 existingLogin.User.EmailConfirmed = true;
