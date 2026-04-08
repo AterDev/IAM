@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Share.Constants;
+using Share.Exceptions;
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -26,9 +27,10 @@ public class LoginModel(UserManager userManager, SessionManager sessionManager, 
     private const string PendingMfaExpiresAtKey = "PendingMfaExpiresAt";
 
     [BindProperty]
-    [Required(ErrorMessage = "请输入用户名或邮箱")]
-    [Display(Name = "用户名或邮箱")]
-    public string Username { get; set; } = string.Empty;
+    [Required(ErrorMessage = "请输入邮箱")]
+    [EmailAddress(ErrorMessage = "请输入有效的邮箱地址")]
+    [Display(Name = "邮箱")]
+    public string Email { get; set; } = string.Empty;
 
     [BindProperty]
     [Required(ErrorMessage = "请输入密码")]
@@ -83,12 +85,12 @@ public class LoginModel(UserManager userManager, SessionManager sessionManager, 
         try
         {
             // Attempt to authenticate user
-            var user = await _userManager.ValidateCredentialsAsync(Username, Password);
+            var user = await _userManager.ValidateCredentialsAsync(Email, Password);
 
             if (user == null)
             {
-                _logger.LogWarning("Authentication failed for user: {Username}", Username);
-                ModelState.AddModelError(string.Empty, "用户名或密码错误");
+                _logger.LogWarning("Authentication failed for email: {Email}", Email);
+                ModelState.AddModelError(string.Empty, Localizer.InvalidEmailOrPassword);
                 return Page();
             }
 
@@ -106,12 +108,12 @@ public class LoginModel(UserManager userManager, SessionManager sessionManager, 
             // Check if user is locked out
             if (user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow)
             {
-                _logger.LogWarning("User {Username} is locked out until {LockoutEnd}", Username, user.LockoutEnd);
+                _logger.LogWarning("User {Email} is locked out until {LockoutEnd}", Email, user.LockoutEnd);
                 ModelState.AddModelError(string.Empty, "账号已被锁定,请稍后再试");
                 return Page();
             }
 
-            _logger.LogInformation("User {Username} logged in successfully", Username);
+            _logger.LogInformation("User {Email} logged in successfully", Email);
 
             var sessionId = Guid.CreateVersion7().ToString();
             var sessionExpiresAt = RememberMe
@@ -177,9 +179,15 @@ public class LoginModel(UserManager userManager, SessionManager sessionManager, 
 
             return Redirect("~/");
         }
+        catch (BusinessException ex)
+        {
+            _logger.LogWarning("Login rejected for email {Email}: {LanguageKey}", Email, ex.LanguageKey);
+            ModelState.AddModelError(string.Empty, ex.LanguageKey);
+            return Page();
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Login failed for user {Username}", Username);
+            _logger.LogError(ex, "Login failed for email {Email}", Email);
             ModelState.AddModelError(string.Empty, "登录过程中发生错误,请稍后重试");
             return Page();
         }

@@ -34,7 +34,7 @@ export class UserAddComponent implements OnInit {
   ngOnInit(): void {
     this.userForm = this.fb.group({
       userName: ['', [Validators.required, Validators.minLength(3)]],
-      email: ['', [Validators.email]],
+      email: ['', [Validators.required, Validators.email]],
       phoneNumber: [''],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]]
@@ -79,7 +79,7 @@ export class UserAddComponent implements OnInit {
     const formValue = this.userForm.value;
     const dto: UserAddDto = {
       userName: formValue.userName,
-      email: formValue.email || null,
+      email: formValue.email,
       phoneNumber: formValue.phoneNumber || null,
       password: formValue.password,
       emailConfirmed: false,

@@ -15,6 +15,8 @@ public class TokenManagerTests
         {
             UserName = "alice",
             NormalizedUserName = "ALICE",
+            Email = "alice@example.com",
+            NormalizedEmail = "ALICE@EXAMPLE.COM",
             PasswordSalt = "salt",
             PasswordHash = HashCrypto.GeneratePwd("P@ssw0rd!", "salt"),
             LockoutEnabled = true,
@@ -29,7 +31,7 @@ public class TokenManagerTests
             {
                 GrantType = OAuthConst.GrantTypes.Password,
                 ClientId = client.ClientId,
-                Username = "alice",
+                Username = "alice@example.com",
                 Password = "P@ssw0rd!",
             },
             signingKey));
@@ -174,6 +176,8 @@ public class TokenManagerTests
         {
             UserName = "bob",
             NormalizedUserName = "BOB",
+            Email = "bob@example.com",
+            NormalizedEmail = "BOB@EXAMPLE.COM",
             PasswordSalt = "salt",
             PasswordHash = HashCrypto.GeneratePwd("P@ssw0rd!", "salt"),
             LockoutEnabled = true,
@@ -193,7 +197,7 @@ public class TokenManagerTests
             {
                 GrantType = OAuthConst.GrantTypes.Password,
                 ClientId = client.ClientId,
-                Username = "bob",
+                Username = "BOB@example.com",
                 Password = "P@ssw0rd!",
                 Scope = "openid profile",
             },
@@ -203,6 +207,39 @@ public class TokenManagerTests
 
         Assert.DoesNotContain(jwt.Claims, claim => claim.Type == "permissions");
         Assert.Contains(jwt.Claims, claim => claim.Type == ClaimTypes.Role && claim.Value == "AdminUser");
+    }
+
+    [Fact]
+    public async Task ProcessTokenRequestAsync_WhenPasswordGrantUsesUserNameInsteadOfEmail_ThrowsBusinessException()
+    {
+        await using var dbContext = TestDbContextFactory.Create(nameof(ProcessTokenRequestAsync_WhenPasswordGrantUsesUserNameInsteadOfEmail_ThrowsBusinessException));
+        var client = SeedClient(dbContext, "password-email-only-client");
+        dbContext.Users.Add(new User
+        {
+            UserName = "charlie",
+            NormalizedUserName = "CHARLIE",
+            Email = "charlie@example.com",
+            NormalizedEmail = "CHARLIE@EXAMPLE.COM",
+            PasswordSalt = "salt",
+            PasswordHash = HashCrypto.GeneratePwd("P@ssw0rd!", "salt"),
+            LockoutEnabled = true,
+        });
+        await dbContext.SaveChangesAsync();
+
+        var manager = CreateTokenManager(dbContext);
+        var signingKey = CreateSigningKey();
+
+        var exception = await Assert.ThrowsAsync<BusinessException>(() => manager.ProcessTokenRequestAsync(
+            new TokenRequestDto
+            {
+                GrantType = OAuthConst.GrantTypes.Password,
+                ClientId = client.ClientId,
+                Username = "charlie",
+                Password = "P@ssw0rd!",
+            },
+            signingKey));
+
+        Assert.Equal(Localizer.InvalidEmailOrPassword, exception.LanguageKey);
     }
 
     private static TokenManager CreateTokenManager(DefaultDbContext dbContext)

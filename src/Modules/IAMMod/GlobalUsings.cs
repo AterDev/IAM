@@ -1,3 +1,4 @@
+global using Mapster;
 global using Entity.IAMMod;
 global using EntityFramework.AppDbContext;
 global using EntityFramework.AppDbFactory;

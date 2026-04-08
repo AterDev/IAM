@@ -23,13 +23,13 @@ public class User : EntityBase
     /// Email address
     /// </summary>
     [MaxLength(256)]
-    public string? Email { get; set; }
+    public required string Email { get; set; }
 
     /// <summary>
     /// Normalized email for case-insensitive unique lookup
     /// </summary>
     [MaxLength(256)]
-    public string? NormalizedEmail { get; set; }
+    public required string NormalizedEmail { get; set; }
 
     /// <summary>
     /// Email confirmed flag

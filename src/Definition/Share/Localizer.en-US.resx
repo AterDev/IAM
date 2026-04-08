@@ -132,6 +132,9 @@
   <data name="InvalidUserOrPassword" xml:space="preserve">
     <value>Invalid username or password</value>
   </data>
+  <data name="InvalidEmailOrPassword" xml:space="preserve">
+    <value>Invalid email or password</value>
+  </data>
   <data name="AddFailed" xml:space="preserve">
     <value>Add Failed</value>
   </data>

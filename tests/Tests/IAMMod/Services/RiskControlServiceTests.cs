@@ -12,6 +12,8 @@ public class RiskControlServiceTests
         {
             UserName = "alice",
             NormalizedUserName = "ALICE",
+            Email = "alice@example.com",
+            NormalizedEmail = "ALICE@EXAMPLE.COM",
             PasswordHash = "hash",
             PasswordSalt = "salt",
         };

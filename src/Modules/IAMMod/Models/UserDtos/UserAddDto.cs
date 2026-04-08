@@ -9,8 +9,9 @@ public class UserAddDto
     public required string UserName { get; set; }
 
     [MaxLength(256)]
+    [Required]
     [EmailAddress]
-    public string? Email { get; set; }
+    public required string Email { get; set; }
 
     [MaxLength(50)]
     [Phone]

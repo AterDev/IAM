@@ -408,16 +408,18 @@ public class TokenManager(
             throw new BusinessException(Localizer.OAuthPasswordGrantDisabled, StatusCodes.Status400BadRequest);
         }
 
-        // Find user
+        var normalizedEmail = request.Username.Trim().ToUpperInvariant();
+
+        // Find user by email only
         var user = await _dbContext.Users
             .Include(u => u.UserRoles)
             .ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(u => u.NormalizedUserName == request.Username.ToUpper());
+            .FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail);
 
         if (user == null || string.IsNullOrEmpty(user.PasswordHash))
         {
-            _riskControlService.RegisterLoginFailure(request.Username.ToUpperInvariant(), user?.Id, null);
-            throw new BusinessException(Localizer.InvalidUserOrPassword);
+            _riskControlService.RegisterLoginFailure(normalizedEmail, user?.Id, null);
+            throw new BusinessException(Localizer.InvalidEmailOrPassword);
         }
 
         if (user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow)
@@ -429,7 +431,7 @@ public class TokenManager(
         var passwordValid = HashCrypto.Validate(request.Password, user.PasswordSalt, user.PasswordHash);
         if (!passwordValid)
         {
-            _riskControlService.RegisterLoginFailure(request.Username.ToUpperInvariant(), user.Id, null);
+            _riskControlService.RegisterLoginFailure(normalizedEmail, user.Id, null);
             user.AccessFailedCount++;
             if (user.LockoutEnabled && user.AccessFailedCount >= _riskControlService.LoginFailureThreshold)
             {
@@ -450,10 +452,10 @@ public class TokenManager(
                     lockoutEnd = user.LockoutEnd,
                 })
             );
-            throw new BusinessException(Localizer.InvalidUserOrPassword);
+            throw new BusinessException(Localizer.InvalidEmailOrPassword);
         }
 
-        _riskControlService.ResetLoginFailures(request.Username.ToUpperInvariant(), user.Id, null);
+        _riskControlService.ResetLoginFailures(normalizedEmail, user.Id, null);
         if (user.AccessFailedCount != 0)
         {
             user.AccessFailedCount = 0;

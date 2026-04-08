@@ -8,11 +8,12 @@ namespace IAMMod.Models.AdminAuthDtos;
 public class AdminLoginDto
 {
     /// <summary>
-    /// Username or email address
+    /// Email address used for login
     /// </summary>
     [Required]
+    [EmailAddress]
     [StringLength(256, MinimumLength = 4)]
-    public required string UserName { get; set; }
+    public required string Email { get; set; }
 
     /// <summary>
     /// Password

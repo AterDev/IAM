@@ -3,11 +3,13 @@ param(
     [Parameter()]
     [string]$Tag = 'latest',
     [Parameter()]
-    [bool]$proxy = $false
+    [switch]$UseProxy,
+    [Parameter()]
+    [switch]$Local
 )
 
 
-if ($proxy) {
+if ($UseProxy) {
     $env:HTTP_PROXY = "http://127.0.0.1:7890"
     $env:HTTPS_PROXY = "http://127.0.0.1:7890"
 }
@@ -93,8 +95,7 @@ if (-not (Test-Path (Join-Path $frontendOutput 'index.html'))) {
 Write-Host 'Syncing frontend files to ApiService/wwwroot ...' -ForegroundColor Cyan
 Sync-DirectoryContents -SourceDirectory $frontendOutput -DestinationDirectory $apiWwwroot
 
-Write-Host 'Publishing and pushing ApiService container image...' -ForegroundColor Cyan
-Invoke-Checked -FilePath (Get-CommandExecutable $dotnet) -Arguments @(
+$publishArguments = @(
     'publish',
     (Join-Path $repoRoot 'src\Services\ApiService\ApiService.csproj'),
     '-c', 'Release',
@@ -103,14 +104,26 @@ Invoke-Checked -FilePath (Get-CommandExecutable $dotnet) -Arguments @(
     '/t:PublishContainer',
     '/p:UseAppHost=false',
     '/p:InvariantGlobalization=false',
-    '/p:ContainerFamily=alpine-extra',
+    '/p:ContainerBaseImage=mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra'
     '/p:ContainerEnvironmentVariable=DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false',
-    '/p:ContainerRegistry=docker.io',
     '/p:ContainerRepository=niltor/iam',
     "/p:ContainerImageTag=$Tag",
     '/p:ContainerPort=8080'
-) -WorkingDirectory $repoRoot
+)
+
+if (-not $Local) {
+    $publishArguments += '/p:ContainerRegistry=docker.io'
+}
+
+$targetDescription = if ($Local) { 'local container runtime' } else { 'Docker Hub' }
+Write-Host "Publishing ApiService container image to $targetDescription ..." -ForegroundColor Cyan
+Invoke-Checked -FilePath (Get-CommandExecutable $dotnet) -Arguments $publishArguments -WorkingDirectory $repoRoot
 
 Write-Host ''
 Write-Host 'Done.' -ForegroundColor Green
-Write-Host "Image: docker.io/niltor/iam:$Tag" -ForegroundColor Green
+if ($Local) {
+    Write-Host "Image: niltor/iam:$Tag" -ForegroundColor Green
+}
+else {
+    Write-Host "Image: docker.io/niltor/iam:$Tag" -ForegroundColor Green
+}

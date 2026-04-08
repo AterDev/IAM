@@ -2,8 +2,8 @@
  * Admin login request DTO
  */
 export interface AdminLoginDto {
-  /** Username */
-  userName: string;
+  /** Email address used for login */
+  email: string;
   /** Password */
   password: string;
 }

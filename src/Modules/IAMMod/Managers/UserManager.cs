@@ -102,22 +102,25 @@ public class UserManager(
     {
         var userName = dto.UserName.Trim();
         var normalizedUserName = userName.ToUpperInvariant();
+        var email = dto.Email.Trim();
+        var normalizedEmail = email.ToUpperInvariant();
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            throw new BusinessException(Localizer.BadRequest, StatusCodes.Status400BadRequest);
+        }
 
         // Check if email already exists
-        if (!string.IsNullOrWhiteSpace(dto.Email))
+        if (await _dbSet.AnyAsync(q => q.NormalizedEmail == normalizedEmail))
         {
-            var normalizedEmail = dto.Email.Trim().ToUpperInvariant();
-            if (await _dbSet.AnyAsync(q => q.NormalizedEmail == normalizedEmail))
-            {
-                throw new BusinessException("EmailExists", StatusCodes.Status400BadRequest);
-            }
+            throw new BusinessException("EmailExists", StatusCodes.Status400BadRequest);
         }
 
         var entity = dto.MapTo<User>();
         entity.UserName = userName;
         entity.NormalizedUserName = normalizedUserName;
-        entity.Email = string.IsNullOrWhiteSpace(dto.Email) ? null : dto.Email.Trim();
-        entity.NormalizedEmail = entity.Email?.ToUpperInvariant();
+        entity.Email = email;
+        entity.NormalizedEmail = normalizedEmail;
         entity.SecurityStamp = Guid.NewGuid().ToString();
         entity.ConcurrencyStamp = Guid.NewGuid().ToString();
 
@@ -217,7 +220,7 @@ public class UserManager(
             if (!string.IsNullOrWhiteSpace(email) && !string.Equals(existingLogin.User.Email, email, StringComparison.OrdinalIgnoreCase))
             {
                 existingLogin.User.Email = email.Trim();
-                existingLogin.User.NormalizedEmail = normalizedEmail;
+                existingLogin.User.NormalizedEmail = normalizedEmail!;
                 existingLogin.User.EmailConfirmed = true;
                 existingLogin.User.UpdatedTime = DateTime.UtcNow;
                 await _dbContext.SaveChangesAsync();
@@ -264,15 +267,25 @@ public class UserManager(
                 };
             }
         }
+        else
+        {
+            return new ExternalLoginResolutionResultDto
+            {
+                Status = "invalid_external_identity",
+                Provider = normalizedProvider,
+                Message = "Missing email address.",
+            };
+        }
 
         var userName = await GenerateUniqueExternalUserNameAsync(displayName, email, normalizedProvider, normalizedProviderKey);
+        var externalEmail = email!.Trim();
         var user = new User
         {
             UserName = userName,
             NormalizedUserName = userName.ToUpperInvariant(),
-            Email = string.IsNullOrWhiteSpace(email) ? null : email.Trim(),
-            NormalizedEmail = normalizedEmail,
-            EmailConfirmed = !string.IsNullOrWhiteSpace(email),
+            Email = externalEmail,
+            NormalizedEmail = normalizedEmail!,
+            EmailConfirmed = true,
             PhoneNumberConfirmed = false,
             LockoutEnabled = true,
             SecurityStamp = Guid.NewGuid().ToString(),
@@ -333,14 +346,22 @@ public class UserManager(
         }
 
         // Check if email already exists (if changing)
-        if (!string.IsNullOrWhiteSpace(dto.Email) && dto.Email != entity.Email)
+        if (dto.Email != null)
         {
-            var normalizedEmail = dto.Email.ToUpperInvariant();
-            if (await _dbSet.AnyAsync(q => q.NormalizedEmail == normalizedEmail && q.Id != id))
+            var email = dto.Email.Trim();
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                throw new BusinessException(Localizer.BadRequest, StatusCodes.Status400BadRequest);
+            }
+
+            var normalizedEmail = email.ToUpperInvariant();
+            if (!string.Equals(normalizedEmail, entity.NormalizedEmail, StringComparison.Ordinal)
+                && await _dbSet.AnyAsync(q => q.NormalizedEmail == normalizedEmail && q.Id != id))
             {
                 throw new BusinessException("EmailExists", StatusCodes.Status400BadRequest);
             }
-            entity.Email = dto.Email;
+
+            entity.Email = email;
             entity.NormalizedEmail = normalizedEmail;
         }
 
@@ -691,7 +712,7 @@ public class UserManager(
     /// <summary>
     /// Validate user credentials
     /// </summary>
-    /// <param name="userName">User name</param>
+    /// <param name="userName">Email address</param>
     /// <param name="password">Password to verify</param>
     /// <param name="ipAddress">IP address for audit log</param>
     /// <param name="userAgent">User agent for audit log</param>
@@ -705,38 +726,12 @@ public class UserManager(
     {
         var loginId = userName.Trim();
         var normalizedLoginId = loginId.ToUpperInvariant();
-        var lookupByEmail = loginId.Contains('@');
-
-        List<User> matchedUsers;
-
-        if (lookupByEmail)
-        {
-            matchedUsers = await _dbSet
-                .Where(q => q.NormalizedEmail == normalizedLoginId)
-                .OrderBy(q => q.CreatedTime)
-                .ThenBy(q => q.Id)
-                .Take(2)
-                .ToListAsync();
-        }
-        else
-        {
-            matchedUsers = await _dbSet
-                .Where(q => q.UserName == loginId)
-                .OrderBy(q => q.CreatedTime)
-                .ThenBy(q => q.Id)
-                .Take(2)
-                .ToListAsync();
-
-            if (matchedUsers.Count == 0)
-            {
-                matchedUsers = await _dbSet
-                    .Where(q => q.NormalizedUserName == normalizedLoginId)
-                    .OrderBy(q => q.CreatedTime)
-                    .ThenBy(q => q.Id)
-                    .Take(2)
-                    .ToListAsync();
-            }
-        }
+        var matchedUsers = await _dbSet
+            .Where(q => q.NormalizedEmail == normalizedLoginId)
+            .OrderBy(q => q.CreatedTime)
+            .ThenBy(q => q.Id)
+            .Take(2)
+            .ToListAsync();
 
         if (matchedUsers.Count > 1)
         {
@@ -747,13 +742,13 @@ public class UserManager(
                 subjectId: loginId,
                 payload: JsonSerializer.Serialize(new
                 {
-                    reason = lookupByEmail ? "DuplicateEmail" : "AmbiguousUserName",
+                    reason = "DuplicateEmail",
                     ipFailureCount = failureWindow.IpFailureCount,
                 }),
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );
-            throw new BusinessException(Localizer.InvalidUserOrPassword, StatusCodes.Status401Unauthorized);
+            throw new BusinessException(Localizer.InvalidEmailOrPassword, StatusCodes.Status401Unauthorized);
         }
 
         var user = matchedUsers.SingleOrDefault();
@@ -774,7 +769,7 @@ public class UserManager(
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );
-            throw new BusinessException(Localizer.UserNotFound, StatusCodes.Status401Unauthorized);
+            throw new BusinessException(Localizer.InvalidEmailOrPassword, StatusCodes.Status401Unauthorized);
         }
 
         // Check if user is locked out
@@ -838,7 +833,7 @@ public class UserManager(
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );
-            throw new BusinessException(Localizer.InvalidUserOrPassword, StatusCodes.Status401Unauthorized);
+            throw new BusinessException(Localizer.InvalidEmailOrPassword, StatusCodes.Status401Unauthorized);
         }
 
         // Reset access failed count on successful login

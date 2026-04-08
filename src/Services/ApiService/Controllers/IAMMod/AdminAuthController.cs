@@ -50,7 +50,7 @@ public class AdminAuthController(
 
         // Validate credentials using UserManager
         var userDetail = await _userManager.ValidateCredentialsAsync(
-            loginDto.UserName,
+            loginDto.Email,
             loginDto.Password,
             ipAddress,
             userAgent
