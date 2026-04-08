@@ -60,8 +60,8 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
         // User configuration
         builder.Entity<User>(entity =>
         {
-            entity.HasIndex(e => e.NormalizedUserName).IsUnique();
-            entity.HasIndex(e => e.NormalizedEmail);
+            entity.HasIndex(e => e.NormalizedUserName);
+            entity.HasIndex(e => e.NormalizedEmail).IsUnique();
             entity.HasIndex(e => e.TenantId);
             entity.Property(e => e.ConcurrencyStamp).IsConcurrencyToken();
         });

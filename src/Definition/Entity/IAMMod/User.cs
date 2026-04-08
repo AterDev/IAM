@@ -14,7 +14,7 @@ public class User : EntityBase
     public required string UserName { get; set; }
 
     /// <summary>
-    /// Normalized user name for search
+    /// Normalized user name for search and filtering
     /// </summary>
     [MaxLength(256)]
     public required string NormalizedUserName { get; set; }
@@ -26,7 +26,7 @@ public class User : EntityBase
     public string? Email { get; set; }
 
     /// <summary>
-    /// Normalized email for search
+    /// Normalized email for case-insensitive unique lookup
     /// </summary>
     [MaxLength(256)]
     public string? NormalizedEmail { get; set; }

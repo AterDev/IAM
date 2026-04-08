@@ -8,7 +8,7 @@ namespace IAMMod.Models.AdminAuthDtos;
 public class AdminLoginDto
 {
     /// <summary>
-    /// Username
+    /// Username or email address
     /// </summary>
     [Required]
     [StringLength(256, MinimumLength = 4)]

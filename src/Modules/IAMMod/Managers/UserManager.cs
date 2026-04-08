@@ -82,8 +82,15 @@ public class UserManager(
     /// <returns>User detail or null</returns>
     public async Task<UserDetailDto?> GetByUserNameAsync(string userName)
     {
-        var normalizedUserName = userName.ToUpperInvariant();
-        return await FindAsync<UserDetailDto>(q => q.NormalizedUserName == normalizedUserName);
+        var normalizedUserName = userName.Trim().ToUpperInvariant();
+
+        return await _dbSet
+            .Where(q => q.UserName == userName || q.NormalizedUserName == normalizedUserName)
+            .OrderBy(q => q.UserName == userName ? 0 : 1)
+            .ThenBy(q => q.CreatedTime)
+            .ThenBy(q => q.Id)
+            .ProjectToType<UserDetailDto>()
+            .FirstOrDefaultAsync();
     }
 
     /// <summary>
@@ -93,18 +100,13 @@ public class UserManager(
     /// <returns>Created user detail or null</returns>
     public async Task<UserDetailDto?> AddAsync(UserAddDto dto)
     {
-        var normalizedUserName = dto.UserName.ToUpperInvariant();
-
-        // Check if username already exists
-        if (await _dbSet.AnyAsync(q => q.NormalizedUserName == normalizedUserName))
-        {
-            throw new BusinessException("UsernameExists", StatusCodes.Status400BadRequest);
-        }
+        var userName = dto.UserName.Trim();
+        var normalizedUserName = userName.ToUpperInvariant();
 
         // Check if email already exists
         if (!string.IsNullOrWhiteSpace(dto.Email))
         {
-            var normalizedEmail = dto.Email.ToUpperInvariant();
+            var normalizedEmail = dto.Email.Trim().ToUpperInvariant();
             if (await _dbSet.AnyAsync(q => q.NormalizedEmail == normalizedEmail))
             {
                 throw new BusinessException("EmailExists", StatusCodes.Status400BadRequest);
@@ -112,8 +114,10 @@ public class UserManager(
         }
 
         var entity = dto.MapTo<User>();
+        entity.UserName = userName;
         entity.NormalizedUserName = normalizedUserName;
-        entity.NormalizedEmail = dto.Email?.ToUpperInvariant();
+        entity.Email = string.IsNullOrWhiteSpace(dto.Email) ? null : dto.Email.Trim();
+        entity.NormalizedEmail = entity.Email?.ToUpperInvariant();
         entity.SecurityStamp = Guid.NewGuid().ToString();
         entity.ConcurrencyStamp = Guid.NewGuid().ToString();
 
@@ -699,19 +703,69 @@ public class UserManager(
         string? userAgent = null
     )
     {
-        var normalizedUserName = userName.ToUpperInvariant();
-        var user = await _dbSet
-            .Where(q => q.NormalizedUserName == normalizedUserName)
-            .SingleOrDefaultAsync();
+        var loginId = userName.Trim();
+        var normalizedLoginId = loginId.ToUpperInvariant();
+        var lookupByEmail = loginId.Contains('@');
+
+        List<User> matchedUsers;
+
+        if (lookupByEmail)
+        {
+            matchedUsers = await _dbSet
+                .Where(q => q.NormalizedEmail == normalizedLoginId)
+                .OrderBy(q => q.CreatedTime)
+                .ThenBy(q => q.Id)
+                .Take(2)
+                .ToListAsync();
+        }
+        else
+        {
+            matchedUsers = await _dbSet
+                .Where(q => q.UserName == loginId)
+                .OrderBy(q => q.CreatedTime)
+                .ThenBy(q => q.Id)
+                .Take(2)
+                .ToListAsync();
+
+            if (matchedUsers.Count == 0)
+            {
+                matchedUsers = await _dbSet
+                    .Where(q => q.NormalizedUserName == normalizedLoginId)
+                    .OrderBy(q => q.CreatedTime)
+                    .ThenBy(q => q.Id)
+                    .Take(2)
+                    .ToListAsync();
+            }
+        }
+
+        if (matchedUsers.Count > 1)
+        {
+            var failureWindow = _riskControlService.RegisterLoginFailure(normalizedLoginId, null, ipAddress);
+            await _auditLogManager.AddAuditLogAsync(
+                category: "Authentication",
+                eventName: "LoginFailed",
+                subjectId: loginId,
+                payload: JsonSerializer.Serialize(new
+                {
+                    reason = lookupByEmail ? "DuplicateEmail" : "AmbiguousUserName",
+                    ipFailureCount = failureWindow.IpFailureCount,
+                }),
+                ipAddress: ipAddress,
+                userAgent: userAgent
+            );
+            throw new BusinessException(Localizer.InvalidUserOrPassword, StatusCodes.Status401Unauthorized);
+        }
+
+        var user = matchedUsers.SingleOrDefault();
 
         if (user == null)
         {
-            var failureWindow = _riskControlService.RegisterLoginFailure(normalizedUserName, null, ipAddress);
+            var failureWindow = _riskControlService.RegisterLoginFailure(normalizedLoginId, null, ipAddress);
             // Write audit log for failed login - user not found
             await _auditLogManager.AddAuditLogAsync(
                 category: "Authentication",
                 eventName: "LoginFailed",
-                subjectId: userName,
+                subjectId: loginId,
                 payload: JsonSerializer.Serialize(new
                 {
                     reason = "UserNotFound",
@@ -750,7 +804,7 @@ public class UserManager(
         )
         {
             var loginRisk = await _riskControlService.EvaluateLoginRiskAsync(user.Id, ipAddress, userAgent);
-            var failureWindow = _riskControlService.RegisterLoginFailure(normalizedUserName, user.Id, ipAddress);
+            var failureWindow = _riskControlService.RegisterLoginFailure(normalizedLoginId, user.Id, ipAddress);
 
             // Increment access failed count
             user.AccessFailedCount++;
@@ -789,7 +843,7 @@ public class UserManager(
 
         // Reset access failed count on successful login
     var successRisk = await _riskControlService.EvaluateLoginRiskAsync(user.Id, ipAddress, userAgent);
-    _riskControlService.ResetLoginFailures(normalizedUserName, user.Id, ipAddress);
+    _riskControlService.ResetLoginFailures(normalizedLoginId, user.Id, ipAddress);
         user.AccessFailedCount = 0;
         user.UpdatedTime = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
