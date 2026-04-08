@@ -219,8 +219,11 @@ public class UserManager(
 
             if (!string.IsNullOrWhiteSpace(email) && !string.Equals(existingLogin.User.Email, email, StringComparison.OrdinalIgnoreCase))
             {
-                existingLogin.User.Email = email.Trim();
-                existingLogin.User.NormalizedEmail = normalizedEmail!;
+                var updatedEmail = email.Trim();
+                var updatedNormalizedEmail = updatedEmail.ToUpperInvariant();
+
+                existingLogin.User.Email = updatedEmail;
+                existingLogin.User.NormalizedEmail = updatedNormalizedEmail;
                 existingLogin.User.EmailConfirmed = true;
                 existingLogin.User.UpdatedTime = DateTime.UtcNow;
                 await _dbContext.SaveChangesAsync();
