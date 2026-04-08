@@ -1,11 +1,17 @@
 [CmdletBinding()]
 param(
     [Parameter()]
-    [string]$Tag = 'latest'
+    [string]$Tag = 'latest',
+    [Parameter()]
+    [bool]$proxy = $false
 )
 
-$env:HTTP_PROXY  = "http://127.0.0.1:7890"
-$env:HTTPS_PROXY = "http://127.0.0.1:7890"
+
+if ($proxy) {
+    $env:HTTP_PROXY = "http://127.0.0.1:7890"
+    $env:HTTPS_PROXY = "http://127.0.0.1:7890"
+}
+
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
