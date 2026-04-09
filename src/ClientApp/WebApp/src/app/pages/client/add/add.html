@@ -75,7 +75,7 @@
           <mat-checkbox [formControl]="allowPasswordGrant">
             {{ i18n.client.allowPasswordGrant | translate }}
           </mat-checkbox>
-          <p class="small text-muted mb-0">{{ i18n.client.passwordGrantRiskHint | translate }}</p>
+          <p class="small secondary mb-0">{{ i18n.client.passwordGrantRiskHint | translate }}</p>
 
           @if (!allowPasswordGrant.value) {
           <mat-form-field appearance="outline" class="w-100">
@@ -87,7 +87,7 @@
             }
           </mat-form-field>
 
-          <div class="border rounded p-3 bg-light small text-muted">
+          <div class="border rounded p-3 bg-light small secondary">
             {{ i18n.client.passwordGrantMigrationHint | translate }}
           </div>
           }
@@ -97,7 +97,7 @@
       <!-- 重定向URI部分 -->
       <div class="border-top pt-1">
         <h3 class="h5 fw-500 mb-2">{{ i18n.client.redirectUris | translate }}</h3>
-        <p class="small text-muted mb-3">{{ i18n.client.redirectUrisHint | translate }}</p>
+        <p class="small secondary mb-3">{{ i18n.client.redirectUrisHint | translate }}</p>
 
         <mat-form-field appearance="outline" class="w-100" subscriptSizing="dynamic">
           <mat-label>{{ i18n.client.addRedirectUri | translate }}</mat-label>
@@ -122,10 +122,10 @@
       <!-- Scopes部分 -->
       <div class="border-top pt-1">
         <h3 class="h5 fw-500 mb-2">{{ i18n.client.scopes | translate }}</h3>
-        <p class="small text-muted mb-3">{{ i18n.client.scopesHint | translate }}</p>
+        <p class="small secondary mb-3">{{ i18n.client.scopesHint | translate }}</p>
 
         <div class="mb-3">
-          <p class="small text-muted mb-2">{{ i18n.client.availableScopes | translate }}</p>
+          <p class="small secondary mb-2">{{ i18n.client.availableScopes | translate }}</p>
           @for (scope of availableScopes; track scope.id) {
             @if (!scopeIds.includes(scope.id)) {
             <button mat-raised-button color="primary" (click)="addScope(scope)" class="me-2 mb-2">
@@ -137,7 +137,7 @@
         </div>
 
         @if (scopeIds.length > 0) {
-        <p class="small text-muted mb-2">{{ i18n.client.selectedScopes | translate }}</p>
+        <p class="small secondary mb-2">{{ i18n.client.selectedScopes | translate }}</p>
         <mat-chip-set>
           @for (scopeId of scopeIds; track $index; let i = $index) {
           <mat-chip-row [removable]="true" (removed)="removeScope(i)">
@@ -150,17 +150,17 @@
         </mat-chip-set>
         }
         @if (scopeIds.length === 0) {
-        <p class="text-muted small">{{ i18n.client.noScopesSelected | translate }}</p>
+        <p class="secondary small">{{ i18n.client.noScopesSelected | translate }}</p>
         }
       </div>
 
       <!-- Resources部分 -->
       <div class="border-top pt-1">
         <h3 class="h5 fw-500 mb-2">{{ i18n.client.resources | translate }}</h3>
-        <p class="small text-muted mb-3">{{ i18n.client.resourcesHint | translate }}</p>
+        <p class="small secondary mb-3">{{ i18n.client.resourcesHint | translate }}</p>
 
         <div class="mb-3">
-          <p class="small text-muted mb-2">{{ i18n.client.availableResources | translate }}</p>
+          <p class="small secondary mb-2">{{ i18n.client.availableResources | translate }}</p>
           @for (resource of availableResources; track resource.id) {
             @if (!resourceIds.includes(resource.id)) {
             <button mat-raised-button color="primary" (click)="addResource(resource)" class="me-2 mb-2">
@@ -172,7 +172,7 @@
         </div>
 
         @if (resourceIds.length > 0) {
-        <p class="small text-muted mb-2">{{ i18n.client.selectedResources | translate }}</p>
+        <p class="small secondary mb-2">{{ i18n.client.selectedResources | translate }}</p>
         <mat-chip-set>
           @for (resourceId of resourceIds; track $index; let i = $index) {
           <mat-chip-row [removable]="true" (removed)="removeResource(i)">
@@ -185,12 +185,12 @@
         </mat-chip-set>
         }
         @if (resourceIds.length === 0) {
-        <p class="text-muted small">{{ i18n.client.noResourcesSelected | translate }}</p>
+        <p class="secondary small">{{ i18n.client.noResourcesSelected | translate }}</p>
         }
       </div>
       <div class="border-top pt-1">
         <h3 class="h5 fw-500 mb-2">{{ i18n.client.postLogoutRedirectUris | translate }}</h3>
-        <p class="small text-muted mb-3">{{ i18n.client.postLogoutRedirectUrisHint | translate }}</p>
+        <p class="small secondary mb-3">{{ i18n.client.postLogoutRedirectUrisHint | translate }}</p>
 
         <mat-form-field appearance="outline" class="w-100" subscriptSizing="dynamic">
           <mat-label>{{ i18n.client.addPostLogoutRedirectUri | translate }}</mat-label>
@@ -245,7 +245,7 @@
       <mat-icon class="accent">warning</mat-icon>
       <div>
         <p class="fw-500 mb-1">{{ i18n.client.secretWarning | translate }}</p>
-        <p class="small text-muted mb-0">{{ i18n.client.secretWarningText | translate }}</p>
+        <p class="small secondary mb-0">{{ i18n.client.secretWarningText | translate }}</p>
       </div>
     </div>
 
@@ -260,7 +260,7 @@
       </mat-form-field>
     </div>
 
-    <p class="small text-muted">{{ i18n.client.secretNote | translate }}</p>
+    <p class="small secondary">{{ i18n.client.secretNote | translate }}</p>
   </mat-dialog-content>
 
   <mat-dialog-actions align="end">

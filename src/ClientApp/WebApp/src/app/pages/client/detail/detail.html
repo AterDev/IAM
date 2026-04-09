@@ -101,7 +101,7 @@
                     </mat-icon>
                     <div class="flex-1">
                       <div class="fw-500 mb-1">{{ i18n.client.passwordGrantPolicy | translate }}</div>
-                      <p class="mb-2 text-muted">
+                      <p class="mb-2 secondary">
                         {{ (isPasswordGrantEnabled() ? 'client.passwordGrantRiskHint' :
                         'client.passwordGrantMigrationHint') | translate }}
                       </p>
@@ -133,7 +133,7 @@
             </mat-chip-set>
             }
             @if (client()!.redirectUris.length === 0) {
-            <p class="text-center text-muted py-5">
+            <p class="text-center secondary py-5">
               {{ i18n.client.noRedirectUris | translate }}
             </p>
             }
@@ -153,7 +153,7 @@
             </mat-chip-set>
             }
             @if (client()!.postLogoutRedirectUris.length === 0) {
-            <p class="text-center text-muted py-5">
+            <p class="text-center secondary py-5">
               {{ i18n.client.noPostLogoutRedirectUris | translate }}
             </p>
             }
@@ -173,7 +173,7 @@
             </mat-chip-set>
             }
             @if (client()!.scopes.length === 0) {
-            <p class="text-center text-muted py-5">
+            <p class="text-center secondary py-5">
               {{ i18n.client.noScopes | translate }}
             </p>
             }
@@ -191,14 +191,14 @@
               <mat-chip>
                 <strong>{{ resource.displayName }}</strong>
                 @if (resource.description) {
-                <span class="ms-2 text-muted">{{ resource.description }}</span>
+                <span class="ms-2 secondary">{{ resource.description }}</span>
                 }
               </mat-chip>
               }
             </mat-chip-set>
             }
             @if (client()!.resources.length === 0) {
-            <p class="text-center text-muted py-5">
+            <p class="text-center secondary py-5">
               {{ i18n.client.noResources | translate }}
             </p>
             }
@@ -242,7 +242,7 @@
           }
 
           @if (!isLoadingAuthorizations() && authorizations().length === 0) {
-          <p class="text-center text-muted py-5">
+          <p class="text-center secondary py-5">
             {{ i18n.client.noAuthorizations | translate }}
           </p>
           }
