@@ -88,6 +88,14 @@ namespace EntityFramework.Migrations
                     RequirePkce = table.Column<bool>(type: "boolean", nullable: false),
                     ConsentType = table.Column<int>(type: "integer", nullable: true),
                     ApplicationType = table.Column<int>(type: "integer", nullable: true),
+                    RegistrationStatus = table.Column<int>(type: "integer", nullable: false),
+                    DeveloperUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    RequestedTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    ReviewedTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    ReviewedBy = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    SecretExpiresAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    AllowPasswordGrant = table.Column<bool>(type: "boolean", nullable: false),
+                    PasswordGrantRestrictionReason = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     RedirectUris = table.Column<List<string>>(type: "text[]", nullable: false),
                     PostLogoutRedirectUris = table.Column<List<string>>(type: "text[]", nullable: false),
                     CreatedTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
@@ -199,8 +207,8 @@ namespace EntityFramework.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
                     NormalizedUserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
-                    NormalizedEmail = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    NormalizedEmail = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
                     EmailConfirmed = table.Column<bool>(type: "boolean", nullable: false),
                     PasswordHash = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     PasswordSalt = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
@@ -333,13 +341,16 @@ namespace EntityFramework.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "RoleClaims",
+                name: "ClientSecrets",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    RoleId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ClaimType = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    ClaimValue = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    ClientId = table.Column<Guid>(type: "uuid", nullable: false),
+                    SecretHash = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    SecretSalt = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    LastFour = table.Column<string>(type: "character varying(16)", maxLength: 16, nullable: false),
+                    ExpiresAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    RevokedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     CreatedTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UpdatedTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
@@ -347,13 +358,47 @@ namespace EntityFramework.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_RoleClaims", x => x.Id);
+                    table.PrimaryKey("PK_ClientSecrets", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_RoleClaims_Roles_RoleId",
-                        column: x => x.RoleId,
-                        principalTable: "Roles",
+                        name: "FK_ClientSecrets_Clients_ClientId",
+                        column: x => x.ClientId,
+                        principalTable: "Clients",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Permissions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Code = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    Type = table.Column<int>(type: "integer", nullable: false),
+                    ParentId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Path = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    OwnedClientId = table.Column<Guid>(type: "uuid", nullable: true),
+                    CreatedTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    UpdatedTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Permissions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Permissions_Clients_OwnedClientId",
+                        column: x => x.OwnedClientId,
+                        principalTable: "Clients",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Permissions_Permissions_ParentId",
+                        column: x => x.ParentId,
+                        principalTable: "Permissions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -550,6 +595,64 @@ namespace EntityFramework.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "ClientPermissions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ClientId = table.Column<Guid>(type: "uuid", nullable: false),
+                    PermissionId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CreatedTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    UpdatedTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ClientPermissions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ClientPermissions_Clients_ClientId",
+                        column: x => x.ClientId,
+                        principalTable: "Clients",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ClientPermissions_Permissions_PermissionId",
+                        column: x => x.PermissionId,
+                        principalTable: "Permissions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RolePermissions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    RoleId = table.Column<Guid>(type: "uuid", nullable: false),
+                    PermissionId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CreatedTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    UpdatedTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RolePermissions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RolePermissions_Permissions_PermissionId",
+                        column: x => x.PermissionId,
+                        principalTable: "Permissions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_RolePermissions_Roles_RoleId",
+                        column: x => x.RoleId,
+                        principalTable: "Roles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_ApiResources_Name",
                 table: "ApiResources",
@@ -588,6 +691,17 @@ namespace EntityFramework.Migrations
                 column: "TenantId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ClientPermissions_ClientId_PermissionId",
+                table: "ClientPermissions",
+                columns: new[] { "ClientId", "PermissionId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ClientPermissions_PermissionId",
+                table: "ClientPermissions",
+                column: "PermissionId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ClientResources_ApiResourceId",
                 table: "ClientResources",
                 column: "ApiResourceId");
@@ -605,6 +719,16 @@ namespace EntityFramework.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Clients_DeveloperUserId",
+                table: "Clients",
+                column: "DeveloperUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Clients_RegistrationStatus",
+                table: "Clients",
+                column: "RegistrationStatus");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Clients_TenantId",
                 table: "Clients",
                 column: "TenantId");
@@ -619,6 +743,16 @@ namespace EntityFramework.Migrations
                 name: "IX_ClientScopes_ScopeId",
                 table: "ClientScopes",
                 column: "ScopeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ClientSecrets_ClientId",
+                table: "ClientSecrets",
+                column: "ClientId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ClientSecrets_ClientId_RevokedAt",
+                table: "ClientSecrets",
+                columns: new[] { "ClientId", "RevokedAt" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_LoginSessions_SessionId",
@@ -652,9 +786,41 @@ namespace EntityFramework.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RoleClaims_RoleId",
-                table: "RoleClaims",
-                column: "RoleId");
+                name: "IX_Permissions_Code",
+                table: "Permissions",
+                column: "Code",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Permissions_OwnedClientId",
+                table: "Permissions",
+                column: "OwnedClientId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Permissions_ParentId",
+                table: "Permissions",
+                column: "ParentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Permissions_TenantId",
+                table: "Permissions",
+                column: "TenantId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Permissions_Type",
+                table: "Permissions",
+                column: "Type");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RolePermissions_PermissionId",
+                table: "RolePermissions",
+                column: "PermissionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RolePermissions_RoleId_PermissionId",
+                table: "RolePermissions",
+                columns: new[] { "RoleId", "PermissionId" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Roles_NormalizedName",
@@ -739,13 +905,13 @@ namespace EntityFramework.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Users_NormalizedEmail",
                 table: "Users",
-                column: "NormalizedEmail");
+                column: "NormalizedEmail",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_NormalizedUserName",
                 table: "Users",
-                column: "NormalizedUserName",
-                unique: true);
+                column: "NormalizedUserName");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_TenantId",
@@ -766,10 +932,16 @@ namespace EntityFramework.Migrations
                 name: "AuditLogs");
 
             migrationBuilder.DropTable(
+                name: "ClientPermissions");
+
+            migrationBuilder.DropTable(
                 name: "ClientResources");
 
             migrationBuilder.DropTable(
                 name: "ClientScopes");
+
+            migrationBuilder.DropTable(
+                name: "ClientSecrets");
 
             migrationBuilder.DropTable(
                 name: "LoginSessions");
@@ -778,7 +950,7 @@ namespace EntityFramework.Migrations
                 name: "OrganizationUsers");
 
             migrationBuilder.DropTable(
-                name: "RoleClaims");
+                name: "RolePermissions");
 
             migrationBuilder.DropTable(
                 name: "ScopeClaims");
@@ -809,6 +981,9 @@ namespace EntityFramework.Migrations
 
             migrationBuilder.DropTable(
                 name: "Organizations");
+
+            migrationBuilder.DropTable(
+                name: "Permissions");
 
             migrationBuilder.DropTable(
                 name: "ApiScopes");

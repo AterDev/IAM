@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EntityFramework.Migrations
 {
     [DbContext(typeof(DefaultDbContext))]
-    [Migration("20260320083130_RemovePermissionManagedBy")]
-    partial class RemovePermissionManagedBy
+    [Migration("20260409004528_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -680,10 +680,6 @@ namespace EntityFramework.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Action")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -696,14 +692,6 @@ namespace EntityFramework.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
-                    b.Property<string>("DisplayName")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("Icon")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
@@ -711,10 +699,6 @@ namespace EntityFramework.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
-
-                    b.Property<string>("Namespace")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
 
                     b.Property<Guid?>("OwnedClientId")
                         .HasColumnType("uuid");
@@ -725,13 +709,6 @@ namespace EntityFramework.Migrations
                     b.Property<string>("Path")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
-
-                    b.Property<string>("Resource")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<int>("Sort")
-                        .HasColumnType("integer");
 
                     b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid");
@@ -1023,6 +1000,7 @@ namespace EntityFramework.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
@@ -1042,6 +1020,7 @@ namespace EntityFramework.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("NormalizedEmail")
+                        .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
@@ -1084,10 +1063,10 @@ namespace EntityFramework.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("NormalizedEmail");
-
-                    b.HasIndex("NormalizedUserName")
+                    b.HasIndex("NormalizedEmail")
                         .IsUnique();
+
+                    b.HasIndex("NormalizedUserName");
 
                     b.HasIndex("TenantId");
 
