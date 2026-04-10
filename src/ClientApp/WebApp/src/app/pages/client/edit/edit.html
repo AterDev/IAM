@@ -31,8 +31,8 @@
         <mat-form-field appearance="outline" class="col" subscriptSizing="dynamic">
           <mat-label>{{ i18n.client.consentType | translate }}</mat-label>
           <mat-select formControlName="consentType">
-            <mat-option value="explicit">{{ i18n.client.explicit | translate }}</mat-option>
-            <mat-option value="implicit">{{ i18n.client.implicit | translate }}</mat-option>
+            <mat-option [value]="consentTypeEnum.Explicit">{{ i18n.client.explicit | translate }}</mat-option>
+            <mat-option [value]="consentTypeEnum.Implicit">{{ i18n.client.implicit | translate }}</mat-option>
           </mat-select>
         </mat-form-field>
 

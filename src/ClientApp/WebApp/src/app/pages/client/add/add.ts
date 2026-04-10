@@ -16,6 +16,9 @@ import { ResourceItemDto } from 'src/app/services/api/models/iammod/resource-ite
 import { ScopeItemDto } from 'src/app/services/api/models/iammod/scope-item-dto.model';
 import { ClientAddPayload } from '../client-password-grant-policy.model';
 import { I18N_KEYS } from 'src/app/share/i18n-keys';
+import { ClientType } from 'src/app/services/api/models/entity/client-type.model';
+import { ApplicationType } from 'src/app/services/api/models/entity/application-type.model';
+import { ConsentType } from 'src/app/services/api/models/entity/consent-type.model';
 
 @Component({
   selector: 'app-add',
@@ -32,6 +35,9 @@ import { I18N_KEYS } from 'src/app/share/i18n-keys';
 })
 export class ClientAddComponent implements OnInit {
   readonly i18n = I18N_KEYS;
+  readonly clientType = ClientType;
+  readonly applicationTypeEnum = ApplicationType;
+  readonly consentTypeEnum = ConsentType;
   clientForm!: FormGroup;
   isSubmitting = false;
   clientSecret: string | null = null;
@@ -59,10 +65,10 @@ export class ClientAddComponent implements OnInit {
       clientId: ['', [Validators.required, Validators.minLength(3)]],
       displayName: ['', [Validators.required]],
       description: [''],
-      type: ['confidential', [Validators.required]],
+      type: [ClientType.Confidential, [Validators.required]],
       requirePkce: [true],
-      consentType: ['explicit'],
-      applicationType: ['web'],
+      consentType: [ConsentType.Explicit],
+      applicationType: [ApplicationType.Web],
       allowPasswordGrant: [false],
       passwordGrantRestrictionReason: ['', [Validators.maxLength(500)]],
       newRedirectUri: [''],

@@ -17,6 +17,7 @@ import { ResourceItemDto } from 'src/app/services/api/models/iammod/resource-ite
 import { ScopeItemDto } from 'src/app/services/api/models/iammod/scope-item-dto.model';
 import { ClientDetailViewModel, ClientUpdatePayload } from '../client-password-grant-policy.model';
 import { I18N_KEYS } from 'src/app/share/i18n-keys';
+import { ConsentType } from 'src/app/services/api/models/entity/consent-type.model';
 
 @Component({
   selector: 'app-edit',
@@ -34,6 +35,7 @@ import { I18N_KEYS } from 'src/app/share/i18n-keys';
 })
 export class ClientEditComponent implements OnInit {
   readonly i18n = I18N_KEYS;
+  readonly consentTypeEnum = ConsentType;
   clientForm!: FormGroup;
   isSubmitting = false;
   isLoading = signal(true);

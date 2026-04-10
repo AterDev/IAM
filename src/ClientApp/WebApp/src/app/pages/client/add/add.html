@@ -39,17 +39,17 @@
           <mat-form-field appearance="outline" class="col" subscriptSizing="dynamic">
             <mat-label>{{ i18n.client.type | translate }}</mat-label>
             <mat-select [formControl]="type">
-              <mat-option value="confidential">{{ i18n.client.confidential | translate }}</mat-option>
-              <mat-option value="public">{{ i18n.client.public | translate }}</mat-option>
+              <mat-option [value]="clientType.Confidential">{{ i18n.client.confidential | translate }}</mat-option>
+              <mat-option [value]="clientType.Public">{{ i18n.client.public | translate }}</mat-option>
             </mat-select>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="col" subscriptSizing="dynamic">
             <mat-label>{{ i18n.client.applicationType | translate }}</mat-label>
             <mat-select [formControl]="applicationType">
-              <mat-option value="web">{{ i18n.client.web | translate }}</mat-option>
-              <mat-option value="native">{{ i18n.client.native | translate }}</mat-option>
-              <mat-option value="spa">{{ i18n.client.spa | translate }}</mat-option>
+              <mat-option [value]="applicationTypeEnum.Web">{{ i18n.client.web | translate }}</mat-option>
+              <mat-option [value]="applicationTypeEnum.Native">{{ i18n.client.native | translate }}</mat-option>
+              <mat-option [value]="applicationTypeEnum.Spa">{{ i18n.client.spa | translate }}</mat-option>
             </mat-select>
           </mat-form-field>
         </div>
@@ -58,8 +58,8 @@
           <mat-form-field appearance="outline" class="col" subscriptSizing="dynamic">
             <mat-label>{{ i18n.client.consentType | translate }}</mat-label>
             <mat-select [formControl]="consentType">
-              <mat-option value="explicit">{{ i18n.client.explicit | translate }}</mat-option>
-              <mat-option value="implicit">{{ i18n.client.implicit | translate }}</mat-option>
+              <mat-option [value]="consentTypeEnum.Explicit">{{ i18n.client.explicit | translate }}</mat-option>
+              <mat-option [value]="consentTypeEnum.Implicit">{{ i18n.client.implicit | translate }}</mat-option>
             </mat-select>
           </mat-form-field>
 
