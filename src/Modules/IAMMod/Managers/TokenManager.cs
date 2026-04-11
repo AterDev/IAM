@@ -735,6 +735,11 @@ public class TokenManager(
             return null;
         }
 
+        if (client.Type == ClientType.Public)
+        {
+            return client;
+        }
+
         // If client has a secret, validate it
         if (!string.IsNullOrEmpty(client.SecretHash))
         {

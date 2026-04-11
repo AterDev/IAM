@@ -450,6 +450,21 @@ public class ClientManager(
                 }
             }
 
+            if (entity.Type == ClientType.Public)
+            {
+                entity.SecretHash = null;
+                entity.SecretSalt = null;
+                entity.SecretExpiresAt = null;
+
+                foreach (var secret in await _dbContext.ClientSecrets
+                    .Where(q => q.ClientId == id && !q.RevokedAt.HasValue)
+                    .ToListAsync())
+                {
+                    secret.RevokedAt = DateTimeOffset.UtcNow;
+                    secret.UpdatedTime = DateTime.UtcNow;
+                }
+            }
+
             NormalizePasswordGrantPolicy(entity);
             entity.UpdatedTime = DateTime.UtcNow;
             await _dbContext.SaveChangesAsync();

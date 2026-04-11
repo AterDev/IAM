@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Net.Http.Headers;
 using Share.Constants;
+using Share.Exceptions;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -218,10 +219,30 @@ public class OAuthController(
 
             return Ok(response);
         }
+        catch (BusinessException ex)
+        {
+            _logger.LogWarning(ex, "Token request rejected: {LanguageKey}", ex.LanguageKey);
+
+            var statusCode = ex.StatusCodes == StatusCodes.Status500InternalServerError
+                ? StatusCodes.Status400BadRequest
+                : ex.StatusCodes;
+
+            return StatusCode(statusCode, new
+            {
+                error = MapOAuthError(ex.LanguageKey, statusCode),
+                error_description = _localizer.Get(ex.LanguageKey) ?? ex.LanguageKey,
+                traceId = HttpContext.TraceIdentifier,
+            });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing token request");
-            return Problem();
+            return StatusCode(StatusCodes.Status500InternalServerError, new
+            {
+                error = ErrorCodes.ServerError,
+                error_description = "An error occurred processing the token request.",
+                traceId = HttpContext.TraceIdentifier,
+            });
         }
     }
 
@@ -580,5 +601,35 @@ public class OAuthController(
     private static bool IsDefaultRequiredScope(string scopeName)
     {
         return scopeName == OpenIdConnectScope.OpenId;
+    }
+
+    private static string MapOAuthError(string languageKey, int statusCode)
+    {
+        return languageKey switch
+        {
+            nameof(Localizer.OAuthInvalidClient) => ErrorCodes.InvalidClient,
+            nameof(Localizer.OAuthUnsupportedGrantType) => ErrorCodes.UnsupportedGrantType,
+            nameof(Localizer.OAuthMissingParameters) => ErrorCodes.InvalidRequest,
+            nameof(Localizer.OAuthMissingRefreshToken) => ErrorCodes.InvalidRequest,
+            nameof(Localizer.OAuthMissingCodeVerifier) => ErrorCodes.InvalidRequest,
+            nameof(Localizer.OAuthMissingUsernameOrPassword) => ErrorCodes.InvalidRequest,
+            nameof(Localizer.OAuthMissingDeviceCode) => ErrorCodes.InvalidRequest,
+            nameof(Localizer.OAuthInvalidAuthorizationCode) => ErrorCodes.InvalidGrant,
+            nameof(Localizer.OAuthAuthorizationCodeExpired) => ErrorCodes.InvalidGrant,
+            nameof(Localizer.OAuthClientMismatch) => ErrorCodes.InvalidGrant,
+            nameof(Localizer.OAuthInvalidRedirectUri) => ErrorCodes.InvalidGrant,
+            nameof(Localizer.OAuthInvalidCodeVerifier) => ErrorCodes.InvalidGrant,
+            nameof(Localizer.OAuthInvalidRefreshToken) => ErrorCodes.InvalidGrant,
+            nameof(Localizer.OAuthRefreshTokenExpired) => ErrorCodes.InvalidGrant,
+            nameof(Localizer.OAuthInvalidDeviceCode) => ErrorCodes.InvalidGrant,
+            nameof(Localizer.OAuthPasswordGrantDisabled) => ErrorCodes.InvalidClient,
+            nameof(Localizer.OAuthAuthorizationPending) => ErrorCodes.AuthorizationPending,
+            nameof(Localizer.OAuthAccessDenied) => ErrorCodes.AccessDenied,
+            nameof(Localizer.OAuthDeviceCodeExpired) => ErrorCodes.ExpiredToken,
+            nameof(Localizer.OAuthSlowDown) => ErrorCodes.InvalidRequest,
+            _ => statusCode >= StatusCodes.Status500InternalServerError
+                ? ErrorCodes.ServerError
+                : ErrorCodes.InvalidRequest,
+        };
     }
 }
