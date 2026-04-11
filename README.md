@@ -112,7 +112,7 @@ docker run -d --name iam-app \
     "Cache": "Memory"
   },
   "Authentication": {
-    "PublicOrigin": "https://auth.xxx.cn"
+    "Issuer": "https://auth.xxx.cn"
   },
   "ConnectionStrings": {
     "Default": "Host=host.docker.internal;Port=5432;Database=IAM;Username=iam;Password=iam_test_pwd;Include Error Detail=true"
@@ -130,7 +130,7 @@ docker run -d --name iam-app \
   niltor/iam:latest
 ```
 
-这样在生产环境里，`InitHostService` 初始化 `AdminWebClient` 时会优先使用 `Authentication:PublicOrigin`，例如：
+这样在生产环境里，`InitHostService` 初始化 `AdminWebClient` 时会优先使用 `Authentication:Issuer`，例如：
 
 - `https://auth.xxx.cn`
 - `https://auth.xxx.cn/auth/callback`
@@ -141,7 +141,7 @@ docker run -d --name iam-app \
 docker run -d --name iam-app \
   -p 8080:8080 \
   -e ASPNETCORE_ENVIRONMENT=Production \
-  -e Authentication__PublicOrigin="https://auth.xxx.cn" \
+  -e Authentication__Issuer="https://auth.xxx.cn" \
   -e Components__Database=PostgreSQL \
   -e Components__Cache=Memory \
   -e ConnectionStrings__Default="Host=host.docker.internal;Port=5432;Database=IAM;Username=iam;Password=iam_test_pwd;Include Error Detail=true" \

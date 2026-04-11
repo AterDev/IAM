@@ -150,6 +150,7 @@ public class DiscoveryController(
         }
 
         var requestIssuer = $"{Request.Scheme}://{Request.Host}";
+
         if (_hostEnvironment.IsProduction())
         {
             _logger.LogWarning(

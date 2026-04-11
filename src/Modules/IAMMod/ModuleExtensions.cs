@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -45,6 +46,7 @@ public static class ModuleExtensions
     {
         builder.Services.AddSwagger();
         builder.Services.Configure<RiskControlOption>(builder.Configuration.GetSection(RiskControlOption.ConfigPath));
+
         builder.Services.AddScoped<RiskControlService>();
         builder.Services.AddScoped<SessionValidationService>();
         builder.Services.AddScoped<MfaTotpService>();
@@ -271,6 +273,7 @@ public static class ModuleExtensions
 
     public static WebApplication UseIAMModServices(this WebApplication app)
     {
+        app.UseForwardedHeaders();
         app.UseSession();
         app.UseRouting();
 
