@@ -73,48 +73,12 @@
                 </span>
               </div>
               <div class="col-md-6 mb-4">
-                <label class="fw-500 d-block mb-2">{{ i18n.client.allowPasswordGrant | translate }}:</label>
-                <span>
-                  <mat-chip>
-                    <mat-icon class="me-1" [class.accent]="isPasswordGrantEnabled()"
-                      [class.primary]="!isPasswordGrantEnabled()">
-                      {{ isPasswordGrantEnabled() ? 'warning' : 'verified' }}
-                    </mat-icon>
-                    {{ (isPasswordGrantEnabled() ? 'client.passwordGrantEnabled' : 'client.passwordGrantDisabled') |
-                    translate }}
-                  </mat-chip>
-                </span>
-              </div>
-              <div class="col-md-6 mb-4">
                 <label class="fw-500 d-block mb-2">{{ i18n.common.createdTime | translate }}:</label>
                 <span>{{ client()!.createdTime | date:'yyyy-MM-dd HH:mm:ss' }}</span>
               </div>
               <div class="col-md-6 mb-4">
                 <label class="fw-500 d-block mb-2">{{ i18n.common.updatedTime | translate }}:</label>
                 <span>{{ client()!.updatedTime | date:'yyyy-MM-dd HH:mm:ss' }}</span>
-              </div>
-              <div class="col-12 mb-2">
-                <div class="border rounded p-3 bg-light">
-                  <div class="d-flex align-items-start gap-2">
-                    <mat-icon [class.accent]="isPasswordGrantEnabled()" [class.primary]="!isPasswordGrantEnabled()">
-                      {{ isPasswordGrantEnabled() ? 'gpp_maybe' : 'shield' }}
-                    </mat-icon>
-                    <div class="flex-1">
-                      <div class="fw-500 mb-1">{{ i18n.client.passwordGrantPolicy | translate }}</div>
-                      <p class="mb-2 secondary">
-                        {{ (isPasswordGrantEnabled() ? 'client.passwordGrantRiskHint' :
-                        'client.passwordGrantMigrationHint') | translate }}
-                      </p>
-                      @if (passwordGrantRestrictionReason()) {
-                      <div>
-                        <label class="fw-500 d-block mb-1">{{ i18n.client.passwordGrantRestrictionReason | translate
-                          }}:</label>
-                        <span>{{ passwordGrantRestrictionReason() }}</span>
-                      </div>
-                      }
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </mat-card-content>

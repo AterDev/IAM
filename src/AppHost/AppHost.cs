@@ -67,12 +67,19 @@ if (cache is null)
 var migration = builder.AddProject<Projects.MigrationService>("MigrationService");
 var apiService = builder.AddProject<Projects.ApiService>("ApiService")
     .WaitForCompletion(migration);
+
+apiService.WithEnvironment("Authentication__Issuer", apiService.GetEndpoint("https"));
+
 var apiSampleService = builder.AddProject<Projects.ApiSampleService>("ApiSampleService")
-    .WaitForCompletion(migration);
+    .WaitForCompletion(migration)
+    .WithReference(apiService)
+    .WithEnvironment("Authentication__OAuth__Authority", apiService.GetEndpoint("https"));
 
 builder.AddJavaScriptApp("FrontSampleService", "../Services/FrontSampleService", "start")
     .WithPnpm()
+    .WithReference(apiService)
     .WithReference(apiSampleService)
+    .WaitFor(apiService)
     .WaitFor(apiSampleService)
     .WithUrl("http://localhost:4201");
 

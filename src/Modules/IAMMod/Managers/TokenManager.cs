@@ -392,79 +392,18 @@ public class TokenManager(
             missingDescription: "Missing client credentials"
         );
 
-        if (!client.AllowPasswordGrant)
-        {
-            await WriteAuditAsync(
-                category: "Authentication",
-                eventName: "PasswordGrantRejected",
-                subjectId: client.Id.ToString(),
-                payload: JsonSerializer.Serialize(new
-                {
-                    client.ClientId,
-                    client.PasswordGrantRestrictionReason,
-                })
-            );
-
-            throw new BusinessException(Localizer.OAuthPasswordGrantDisabled, StatusCodes.Status400BadRequest);
-        }
-
-        var normalizedEmail = request.Username.Trim().ToUpperInvariant();
-
-        // Find user by email only
-        var user = await _dbContext.Users
-            .Include(u => u.UserRoles)
-            .ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail);
-
-        if (user == null || string.IsNullOrEmpty(user.PasswordHash))
-        {
-            _riskControlService.RegisterLoginFailure(normalizedEmail, user?.Id, null);
-            throw new BusinessException(Localizer.InvalidEmailOrPassword);
-        }
-
-        if (user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow)
-        {
-            throw new BusinessException(Localizer.LockAccountForManyTimes, StatusCodes.Status403Forbidden);
-        }
-
-        // Verify password
-        var passwordValid = HashCrypto.Validate(request.Password, user.PasswordSalt, user.PasswordHash);
-        if (!passwordValid)
-        {
-            _riskControlService.RegisterLoginFailure(normalizedEmail, user.Id, null);
-            user.AccessFailedCount++;
-            if (user.LockoutEnabled && user.AccessFailedCount >= _riskControlService.LoginFailureThreshold)
+        await WriteAuditAsync(
+            category: "Authentication",
+            eventName: "PasswordGrantRejected",
+            subjectId: client.Id.ToString(),
+            payload: JsonSerializer.Serialize(new
             {
-                user.LockoutEnd = DateTimeOffset.UtcNow.Add(_riskControlService.AccountLockoutDuration);
-            }
+                client.ClientId,
+                reason = "password_grant_removed",
+            })
+        );
 
-            user.UpdatedTime = DateTime.UtcNow;
-            await _dbContext.SaveChangesAsync();
-
-            await WriteAuditAsync(
-                category: "Authentication",
-                eventName: "PasswordGrantFailed",
-                subjectId: user.Id.ToString(),
-                payload: JsonSerializer.Serialize(new
-                {
-                    reason = "InvalidPassword",
-                    failedCount = user.AccessFailedCount,
-                    lockoutEnd = user.LockoutEnd,
-                })
-            );
-            throw new BusinessException(Localizer.InvalidEmailOrPassword);
-        }
-
-        _riskControlService.ResetLoginFailures(normalizedEmail, user.Id, null);
-        if (user.AccessFailedCount != 0)
-        {
-            user.AccessFailedCount = 0;
-            user.UpdatedTime = DateTime.UtcNow;
-            await _dbContext.SaveChangesAsync();
-        }
-
-        // Generate tokens
-        return await GenerateTokensAsync(user, client, request.Scope, signingKey);
+        throw new BusinessException(Localizer.OAuthPasswordGrantDisabled, StatusCodes.Status400BadRequest);
     }
 
     /// <summary>

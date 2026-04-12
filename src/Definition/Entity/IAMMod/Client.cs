@@ -84,18 +84,6 @@ public class Client : EntityBase
     public DateTimeOffset? SecretExpiresAt { get; set; }
 
     /// <summary>
-    /// Whether the password grant is still allowed for this client.
-    /// </summary>
-    public bool AllowPasswordGrant { get; set; } = true;
-
-    /// <summary>
-    /// Optional reason or migration hint when password grant is disabled.
-    /// </summary>
-    [MaxLength(500)]
-    public string? PasswordGrantRestrictionReason { get; set; }
-
-
-    /// <summary>
     /// Redirect URIs
     /// </summary>
     public List<string> RedirectUris { get; set; } = [];

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -11,13 +12,15 @@ namespace Perigon.AspNetCore.Services;
 /// <param name="sign"></param>
 /// <param name="audience"></param>
 /// <param name="issuer"></param>
-public class JwtService(IOptions<JwtOption> options)
+public class JwtService(IOptions<JwtOption> options, IConfiguration configuration)
 {
     public readonly int ExpiredSecond = options.Value.ExpiredSecond;
     public readonly int RefreshExpiredSecond = options.Value.RefreshExpiredSecond;
     private readonly string Sign = options.Value.Sign;
     private readonly string Audience = options.Value.ValidAudiences;
-    private readonly string Issuer = options.Value.ValidIssuer;
+    private readonly string Issuer = configuration["Authentication:Issuer"]
+        ?? configuration[$"{JwtOption.ConfigPath}:ValidIssuer"]
+        ?? throw new InvalidOperationException("未找到有效的Issuer配置");
     public List<Claim>? Claims { get; set; }
 
     /// <summary>

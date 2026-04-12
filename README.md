@@ -5,6 +5,7 @@
 ## 文档导航
 
 - [IAM功能清单](docs/IAM功能清单.md)
+- [第三方应用接入与示例验证](docs/第三方应用接入与示例验证.md)
 
 ## 项目作用
 
@@ -26,6 +27,9 @@
 - `src/Modules/IAMMod`：IAM 领域模块（Manager、服务、初始化种子）
 - `src/Definition/Entity` / `src/Definition/EntityFramework`：实体与持久化层
 - `tests/Tests`：测试工程
+
+> 当前可运行的示例程序以 `src/Services/FrontSampleService` 与 `src/Services/ApiSampleService` 为准。
+> `samples/` 目录中的内容不作为当前 Aspire 编排验证入口。
 
 ## 已实现的核心能力概览
 

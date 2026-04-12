@@ -7,10 +7,10 @@ namespace Tests.IAMMod.Managers;
 public class TokenManagerTests
 {
     [Fact]
-    public async Task ProcessTokenRequestAsync_WhenPasswordGrantDisabledForClient_ThrowsBusinessException()
+    public async Task ProcessTokenRequestAsync_WhenPasswordGrantRequested_ThrowsBusinessException()
     {
-        await using var dbContext = TestDbContextFactory.Create(nameof(ProcessTokenRequestAsync_WhenPasswordGrantDisabledForClient_ThrowsBusinessException));
-        var client = SeedClient(dbContext, "password-disabled-client", allowPasswordGrant: false, restrictionReason: "Use PKCE instead.");
+        await using var dbContext = TestDbContextFactory.Create(nameof(ProcessTokenRequestAsync_WhenPasswordGrantRequested_ThrowsBusinessException));
+        var client = SeedClient(dbContext, "password-disabled-client");
         dbContext.Users.Add(new User
         {
             UserName = "alice",
@@ -148,109 +148,21 @@ public class TokenManagerTests
         Assert.Equal(OAuthConst.TokenStatuses.Valid, token.Status);
     }
 
-    [Fact]
-    public async Task ProcessTokenRequestAsync_WhenRoleHasPermissionAssignments_DoesNotEmitPermissionsClaim()
-    {
-        await using var dbContext = TestDbContextFactory.Create(nameof(ProcessTokenRequestAsync_WhenRoleHasPermissionAssignments_DoesNotEmitPermissionsClaim));
-        var client = SeedClient(dbContext, "password-legacy-claims-client");
-        var permission = new Permission
-        {
-            Code = "users.read",
-            Name = "Users.Read",
-            Type = PermissionType.Business,
-        };
-        var role = new Role
-        {
-            Name = "AdminUser",
-            NormalizedName = "ADMINUSER",
-            ConcurrencyStamp = Guid.NewGuid().ToString("N"),
-            RolePermissions =
-            [
-                new RolePermission
-                {
-                    Permission = permission,
-                }
-            ],
-        };
-        var user = new User
-        {
-            UserName = "bob",
-            NormalizedUserName = "BOB",
-            Email = "bob@example.com",
-            NormalizedEmail = "BOB@EXAMPLE.COM",
-            PasswordSalt = "salt",
-            PasswordHash = HashCrypto.GeneratePwd("P@ssw0rd!", "salt"),
-            LockoutEnabled = true,
-            UserRoles =
-            [
-                new UserRole { Role = role }
-            ],
-        };
-
-        dbContext.Users.Add(user);
-        await dbContext.SaveChangesAsync();
-
-        var manager = CreateTokenManager(dbContext);
-        var signingKey = CreateSigningKey();
-        var response = await manager.ProcessTokenRequestAsync(
-            new TokenRequestDto
-            {
-                GrantType = OAuthConst.GrantTypes.Password,
-                ClientId = client.ClientId,
-                Username = "BOB@example.com",
-                Password = "P@ssw0rd!",
-                Scope = "openid profile",
-            },
-            signingKey);
-
-        var jwt = new JwtSecurityTokenHandler().ReadJwtToken(response.AccessToken!);
-
-        Assert.DoesNotContain(jwt.Claims, claim => claim.Type == "permissions");
-        Assert.Contains(jwt.Claims, claim => claim.Type == ClaimTypes.Role && claim.Value == "AdminUser");
-    }
-
-    [Fact]
-    public async Task ProcessTokenRequestAsync_WhenPasswordGrantUsesUserNameInsteadOfEmail_ThrowsBusinessException()
-    {
-        await using var dbContext = TestDbContextFactory.Create(nameof(ProcessTokenRequestAsync_WhenPasswordGrantUsesUserNameInsteadOfEmail_ThrowsBusinessException));
-        var client = SeedClient(dbContext, "password-email-only-client");
-        dbContext.Users.Add(new User
-        {
-            UserName = "charlie",
-            NormalizedUserName = "CHARLIE",
-            Email = "charlie@example.com",
-            NormalizedEmail = "CHARLIE@EXAMPLE.COM",
-            PasswordSalt = "salt",
-            PasswordHash = HashCrypto.GeneratePwd("P@ssw0rd!", "salt"),
-            LockoutEnabled = true,
-        });
-        await dbContext.SaveChangesAsync();
-
-        var manager = CreateTokenManager(dbContext);
-        var signingKey = CreateSigningKey();
-
-        var exception = await Assert.ThrowsAsync<BusinessException>(() => manager.ProcessTokenRequestAsync(
-            new TokenRequestDto
-            {
-                GrantType = OAuthConst.GrantTypes.Password,
-                ClientId = client.ClientId,
-                Username = "charlie",
-                Password = "P@ssw0rd!",
-            },
-            signingKey));
-
-        Assert.Equal(Localizer.InvalidEmailOrPassword, exception.LanguageKey);
-    }
-
     private static TokenManager CreateTokenManager(DefaultDbContext dbContext)
     {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Authentication:Issuer"] = "https://issuer.example.com",
+            })
+            .Build();
+
         var jwtOptions = Options.Create(new JwtOption
         {
             ValidAudiences = "iam-tests",
-            ValidIssuer = "https://issuer.example.com",
             Sign = "unused",
         });
-        var oauthService = new OAuthService(NullLogger<OAuthService>.Instance, jwtOptions);
+        var oauthService = new OAuthService(NullLogger<OAuthService>.Instance, jwtOptions, configuration);
         var riskControlService = new RiskControlService(
             dbContext,
             new MemoryCache(new MemoryCacheOptions()),
@@ -259,14 +171,12 @@ public class TokenManagerTests
         return new TokenManager(dbContext, NullLogger<TokenManager>.Instance, oauthService, null!, riskControlService);
     }
 
-    private static Client SeedClient(DefaultDbContext dbContext, string clientId, bool allowPasswordGrant = true, string? restrictionReason = null)
+    private static Client SeedClient(DefaultDbContext dbContext, string clientId)
     {
         var client = new Client
         {
             ClientId = clientId,
             DisplayName = clientId,
-            AllowPasswordGrant = allowPasswordGrant,
-            PasswordGrantRestrictionReason = restrictionReason,
         };
 
         dbContext.Clients.Add(client);

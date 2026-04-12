@@ -198,7 +198,11 @@ public static class ModuleExtensions
             new ConfigureNamedOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
             {
                 var jwtOption = sp.GetRequiredService<IOptions<JwtOption>>().Value;
-                if (string.IsNullOrWhiteSpace(jwtOption.ValidIssuer) || string.IsNullOrWhiteSpace(jwtOption.ValidAudiences))
+                var configuration = sp.GetRequiredService<IConfiguration>();
+                var issuer = configuration["Authentication:Issuer"]
+                    ?? configuration[$"{JwtOption.ConfigPath}:ValidIssuer"];
+
+                if (string.IsNullOrWhiteSpace(issuer) || string.IsNullOrWhiteSpace(jwtOption.ValidAudiences))
                 {
                     throw new InvalidOperationException("未找到有效的Jwt配置");
                 }
@@ -213,7 +217,7 @@ public static class ModuleExtensions
                         return resolver.Resolve(keyId);
                     },
 
-                    ValidIssuer = jwtOption.ValidIssuer,
+                    ValidIssuer = issuer,
                     ValidAudience = jwtOption.ValidAudiences,
                     ValidateIssuer = true,
                     ValidateLifetime = true,

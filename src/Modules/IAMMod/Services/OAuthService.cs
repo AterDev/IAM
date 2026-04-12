@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Perigon.AspNetCore.Options;
@@ -12,11 +13,16 @@ namespace IAMMod.Services;
 /// <summary>
 /// OAuth/OIDC 核心业务逻辑服务
 /// </summary>
-public class OAuthService(ILogger<OAuthService> logger, IOptions<JwtOption> options)
+public class OAuthService(
+    ILogger<OAuthService> logger,
+    IOptions<JwtOption> options,
+    IConfiguration configuration)
 {
     private readonly ILogger<OAuthService> _logger = logger;
     private readonly string Audience = options.Value.ValidAudiences;
-    private readonly string Issuer = options.Value.ValidIssuer;
+    private readonly string Issuer = configuration["Authentication:Issuer"]
+        ?? configuration[$"{JwtOption.ConfigPath}:ValidIssuer"]
+        ?? throw new InvalidOperationException("未找到有效的Issuer配置");
 
     /// <summary>
     /// 生成 JWT Token

@@ -91,8 +91,6 @@ public class ClientManager(
             ReviewedTime = client.ReviewedTime,
             ReviewedBy = client.ReviewedBy,
             SecretExpiresAt = client.SecretExpiresAt,
-            AllowPasswordGrant = client.AllowPasswordGrant,
-            PasswordGrantRestrictionReason = client.PasswordGrantRestrictionReason,
             RedirectUris = client.RedirectUris,
             PostLogoutRedirectUris = client.PostLogoutRedirectUris,
             Scopes = client.ClientScopes.Select(cs => new ScopeItemDto
@@ -142,7 +140,6 @@ public class ClientManager(
 
         var entity = dto.MapTo<Client>();
         entity.RegistrationStatus = ClientRegistrationStatus.Approved;
-    NormalizePasswordGrantPolicy(entity);
         var issuedSecret = IssueClientSecret(entity, DefaultSecretExpirationDays);
 
         return await ExecuteInTransactionAsync(async () =>
@@ -159,8 +156,6 @@ public class ClientManager(
                     entity.ClientId,
                     entity.DisplayName,
                     entity.RegistrationStatus,
-                    entity.AllowPasswordGrant,
-                    entity.PasswordGrantRestrictionReason,
                 })
             );
 
@@ -187,7 +182,6 @@ public class ClientManager(
         entity.RegistrationStatus = ClientRegistrationStatus.Pending;
         entity.DeveloperUserId = _userContext.UserId;
         entity.RequestedTime = DateTimeOffset.UtcNow;
-    NormalizePasswordGrantPolicy(entity);
 
         return await ExecuteInTransactionAsync(async () =>
         {
@@ -203,8 +197,6 @@ public class ClientManager(
                     entity.ClientId,
                     entity.DisplayName,
                     entity.DeveloperUserId,
-                    entity.AllowPasswordGrant,
-                    entity.PasswordGrantRestrictionReason,
                 })
             );
 
@@ -254,7 +246,6 @@ public class ClientManager(
         entity.RegistrationStatus = ClientRegistrationStatus.Approved;
         entity.ReviewedTime = DateTimeOffset.UtcNow;
         entity.ReviewedBy = _userContext.UserId == Guid.Empty ? null : _userContext.UserId.ToString();
-        NormalizePasswordGrantPolicy(entity);
         entity.UpdatedTime = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
 
@@ -268,8 +259,6 @@ public class ClientManager(
                 entity.DeveloperUserId,
                 entity.Type,
                 entity.SecretExpiresAt,
-                entity.AllowPasswordGrant,
-                entity.PasswordGrantRestrictionReason,
             })
         );
 
@@ -391,14 +380,6 @@ public class ClientManager(
             {
                 entity.ApplicationType = dto.ApplicationType;
             }
-            if (dto.AllowPasswordGrant.HasValue)
-            {
-                entity.AllowPasswordGrant = dto.AllowPasswordGrant.Value;
-            }
-            if (dto.PasswordGrantRestrictionReason != null || dto.AllowPasswordGrant == false)
-            {
-                entity.PasswordGrantRestrictionReason = dto.PasswordGrantRestrictionReason;
-            }
             if (dto.RedirectUris != null)
             {
                 entity.RedirectUris = dto.RedirectUris;
@@ -465,7 +446,6 @@ public class ClientManager(
                 }
             }
 
-            NormalizePasswordGrantPolicy(entity);
             entity.UpdatedTime = DateTime.UtcNow;
             await _dbContext.SaveChangesAsync();
 
@@ -476,8 +456,8 @@ public class ClientManager(
                 payload: JsonSerializer.Serialize(new
                 {
                     entity.ClientId,
-                    entity.AllowPasswordGrant,
-                    entity.PasswordGrantRestrictionReason,
+                    entity.Type,
+                    entity.ApplicationType,
                 })
             );
 
@@ -735,18 +715,5 @@ public class ClientManager(
             .TrimEnd('=')
             .Replace('+', '-')
             .Replace('/', '_');
-    }
-
-    private static void NormalizePasswordGrantPolicy(Client entity)
-    {
-        if (entity.AllowPasswordGrant)
-        {
-            entity.PasswordGrantRestrictionReason = null;
-            return;
-        }
-
-        entity.PasswordGrantRestrictionReason = string.IsNullOrWhiteSpace(entity.PasswordGrantRestrictionReason)
-            ? "Use authorization code with PKCE, device code, or client credentials instead."
-            : entity.PasswordGrantRestrictionReason.Trim();
     }
 }

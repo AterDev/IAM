@@ -15,9 +15,10 @@ import { ClientDetailDto } from 'src/app/services/api/models/iammod/client-detai
 import { ClientUpdateDto } from 'src/app/services/api/models/iammod/client-update-dto.model';
 import { ResourceItemDto } from 'src/app/services/api/models/iammod/resource-item-dto.model';
 import { ScopeItemDto } from 'src/app/services/api/models/iammod/scope-item-dto.model';
-import { ClientDetailViewModel, ClientUpdatePayload } from '../client-password-grant-policy.model';
 import { I18N_KEYS } from 'src/app/share/i18n-keys';
 import { ConsentType } from 'src/app/services/api/models/entity/consent-type.model';
+import { ClientType } from 'src/app/services/api/models/entity/client-type.model';
+import { ApplicationType } from 'src/app/services/api/models/entity/application-type.model';
 
 @Component({
   selector: 'app-edit',
@@ -35,14 +36,17 @@ import { ConsentType } from 'src/app/services/api/models/entity/consent-type.mod
 })
 export class ClientEditComponent implements OnInit {
   readonly i18n = I18N_KEYS;
+  readonly clientType = ClientType;
+  readonly applicationTypeEnum = ApplicationType;
   readonly consentTypeEnum = ConsentType;
   clientForm!: FormGroup;
   isSubmitting = false;
   isLoading = signal(true);
-  client?: ClientDetailViewModel;
+  client?: ClientDetailDto;
   availableResources = signal<ResourceItemDto[]>([]);
   availableScopes = signal<ScopeItemDto[]>([]);
   separatorKeysCodes = [ENTER, COMMA];
+  showRedirectUriSettings = false;
 
   redirectUris = signal<string[]>([]);
   postLogoutRedirectUris = signal<string[]>([]);
@@ -62,16 +66,13 @@ export class ClientEditComponent implements OnInit {
     this.clientForm = this.fb.group({
       displayName: ['', [Validators.required]],
       description: [''],
+      type: [ClientType.Confidential, [Validators.required]],
       consentType: [''],
+      applicationType: [ApplicationType.Web],
       requirePkce: [true],
-      allowPasswordGrant: [false],
-      passwordGrantRestrictionReason: ['', [Validators.maxLength(500)]],
       newRedirectUri: [''],
-      newPostLogoutRedirectUri: [''],
-      newScope: ['']
+      newPostLogoutRedirectUri: ['']
     });
-
-    this.allowPasswordGrantControl.valueChanges.subscribe(() => this.syncPasswordGrantRestrictionReasonState());
 
     this.loadClient();
   }
@@ -79,7 +80,7 @@ export class ClientEditComponent implements OnInit {
   loadClient(): void {
     this.api.clients.getDetail(this.data.clientId).subscribe({
       next: (client) => {
-        this.client = client as ClientDetailViewModel;
+        this.client = client;
         this.redirectUris.set(client.redirectUris || []);
 
         this.postLogoutRedirectUris.set(client.postLogoutRedirectUris || []);
@@ -100,13 +101,15 @@ export class ClientEditComponent implements OnInit {
         this.clientForm.patchValue({
           displayName: client.displayName,
           description: client.description || '',
+          type: client.type || ClientType.Confidential,
           consentType: client.consentType || '',
+          applicationType: client.applicationType || ApplicationType.Web,
           requirePkce: client.requirePkce,
-          allowPasswordGrant: this.client.allowPasswordGrant ?? false,
-          passwordGrantRestrictionReason: this.client.passwordGrantRestrictionReason || ''
         });
-
-        this.syncPasswordGrantRestrictionReasonState();
+        this.syncRedirectUriVisibility(client.applicationType || null, true);
+        this.applicationTypeControl.valueChanges.subscribe((value: ApplicationType | null) => {
+          this.syncRedirectUriVisibility(value);
+        });
 
         this.loadAvailableScopes();
         this.loadAvailableResources();
@@ -209,22 +212,20 @@ export class ClientEditComponent implements OnInit {
 
     this.isSubmitting = true;
     const formValue = this.clientForm.value;
-    const dto: ClientUpdatePayload = {
+    const dto: ClientUpdateDto = {
       displayName: formValue.displayName,
       description: formValue.description || null,
+      type: formValue.type || null,
       consentType: formValue.consentType || null,
+      applicationType: formValue.applicationType || null,
       requirePkce: formValue.requirePkce,
-      allowPasswordGrant: formValue.allowPasswordGrant,
-      passwordGrantRestrictionReason: formValue.allowPasswordGrant
-        ? null
-        : (formValue.passwordGrantRestrictionReason?.trim() || null),
       redirectUris: this.redirectUris(),
       postLogoutRedirectUris: this.postLogoutRedirectUris(),
       scopeIds: this.scopeIds(),
       resourceIds: this.resourceIds()
     };
 
-    this.api.clients.updateClient(this.data.clientId, dto as ClientUpdateDto).subscribe({
+    this.api.clients.updateClient(this.data.clientId, dto).subscribe({
       next: () => {
         this.snackBar.open(
           this.translate.instant('client.updateSuccess'),
@@ -245,14 +246,16 @@ export class ClientEditComponent implements OnInit {
     this.dialogRef.close(false);
   }
 
-  syncPasswordGrantRestrictionReasonState(): void {
-    if (this.allowPasswordGrantControl.value) {
-      this.passwordGrantRestrictionReasonControl.setValue('');
-      this.passwordGrantRestrictionReasonControl.disable({ emitEvent: false });
-      return;
-    }
+  private syncRedirectUriVisibility(applicationType: ApplicationType | null, preserveExisting = false): void {
+    this.showRedirectUriSettings = applicationType === ApplicationType.Spa
+      || this.redirectUris().length > 0
+      || this.postLogoutRedirectUris().length > 0;
 
-    this.passwordGrantRestrictionReasonControl.enable({ emitEvent: false });
+    if (!preserveExisting && applicationType !== ApplicationType.Spa) {
+      this.redirectUris.set([]);
+      this.postLogoutRedirectUris.set([]);
+      this.showRedirectUriSettings = false;
+    }
   }
 
   getErrorMessage(control: FormControl | null): string {
@@ -273,11 +276,11 @@ export class ClientEditComponent implements OnInit {
     return this.clientForm.get('displayName') as FormControl;
   }
 
-  get allowPasswordGrantControl() {
-    return this.clientForm.get('allowPasswordGrant') as FormControl;
+  get typeControl() {
+    return this.clientForm.get('type') as FormControl;
   }
 
-  get passwordGrantRestrictionReasonControl() {
-    return this.clientForm.get('passwordGrantRestrictionReason') as FormControl;
+  get applicationTypeControl() {
+    return this.clientForm.get('applicationType') as FormControl;
   }
 }

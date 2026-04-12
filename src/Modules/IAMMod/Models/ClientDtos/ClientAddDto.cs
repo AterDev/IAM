@@ -24,11 +24,6 @@ public class ClientAddDto
 
     public ApplicationType? ApplicationType { get; set; }
 
-    public bool AllowPasswordGrant { get; set; } = false;
-
-    [MaxLength(500)]
-    public string? PasswordGrantRestrictionReason { get; set; }
-
     public List<string> RedirectUris { get; set; } = [];
     public List<string> PostLogoutRedirectUris { get; set; } = [];
     public List<Guid> ScopeIds { get; set; } = [];
