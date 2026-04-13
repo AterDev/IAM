@@ -86,7 +86,7 @@ public class Client : EntityBase
     /// <summary>
     /// Whether the password grant is still allowed for this client.
     /// </summary>
-    public bool AllowPasswordGrant { get; set; } = true;
+    public bool AllowPasswordGrant { get; set; } = false;
 
     /// <summary>
     /// Optional reason or migration hint when password grant is disabled.

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
-import { from, map, Observable, switchMap } from 'rxjs';
+import { from, map, Observable, of, switchMap } from 'rxjs';
 import { inject } from '@angular/core';
 import { AuthService } from '../auth.service';
 
@@ -33,15 +33,20 @@ export class BaseService {
       switchMap((resp: HttpResponse<Blob>) => {
         const contentType = (resp.headers.get('Content-Type') || '').toLowerCase();
         const disposition = resp.headers.get('Content-Disposition') || '';
-        const blob = resp.body as Blob;
+        const blob = resp.body;
 
         const isAttachment = /attachment/i.test(disposition);
         const isBinaryType = this.isBinaryContentType(contentType);
         const treatAsFile = isAttachment || isBinaryType;
 
         if (treatAsFile) {
-          return from(Promise.resolve(blob as unknown as T));
+          return of((blob ?? new Blob()) as unknown as T);
         }
+
+        if (resp.status === 204 || resp.status === 205 || blob == null || blob.size === 0) {
+          return of(undefined as T);
+        }
+
         return from(blob.text()).pipe(
           map(text => this.parseAuto<T>(text, contentType))
         );
@@ -50,6 +55,10 @@ export class BaseService {
   }
 
   private parseAuto<T>(text: string, contentType: string): T {
+    if (text.trim().length === 0) {
+      return undefined as T;
+    }
+
     if (contentType.includes('application/json') || contentType.includes('text/json')) {
       return JSON.parse(text) as T;
     }

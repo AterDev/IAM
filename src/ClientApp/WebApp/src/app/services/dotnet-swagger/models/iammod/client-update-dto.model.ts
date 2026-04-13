@@ -18,10 +18,6 @@ export interface ClientUpdateDto {
   consentType?: ConsentType | null;
   /** OAuth 2.0 application types */
   applicationType?: ApplicationType | null;
-  /** allowPasswordGrant */
-  allowPasswordGrant?: boolean | null;
-  /** passwordGrantRestrictionReason */
-  passwordGrantRestrictionReason?: string | null;
   /** redirectUris */
   redirectUris?: string[] | null;
   /** postLogoutRedirectUris */

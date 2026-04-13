@@ -11,6 +11,7 @@ import { ApiClient } from 'src/app/services/api/api-client';
 import { ResourceItemDto } from 'src/app/services/api/models/iammod/resource-item-dto.model';
 import { PageList } from 'src/app/services/api/models/perigon/page-list.model';
 import { ResourceAddComponent } from '../add/add';
+import { ResourceEditComponent } from '../edit/edit';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
@@ -52,7 +53,7 @@ export class ResourceListComponent implements OnInit {
   }
 
   loadData(): void {
-  this.isLoading.set(true);
+    this.isLoading.set(true);
 
     this.api.resources.getResources(
       this.searchText || null,
@@ -64,7 +65,7 @@ export class ResourceListComponent implements OnInit {
       next: (res: PageList<ResourceItemDto>) => {
         this.dataSource.set(res.data);
         this.total.set(res.count);
-  this.isLoading.set(false);
+        this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Failed to load resources:', error);
@@ -73,7 +74,7 @@ export class ResourceListComponent implements OnInit {
           this.translate.instant('common.close'),
           { duration: 3000 }
         );
-  this.isLoading.set(false);
+        this.isLoading.set(false);
       }
     });
   }
@@ -102,6 +103,19 @@ export class ResourceListComponent implements OnInit {
   openAddDialog(): void {
     const dialogRef = this.dialog.open(ResourceAddComponent, {
       width: '600px'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadData();
+      }
+    });
+  }
+
+  openEditDialog(resourceId: string): void {
+    const dialogRef = this.dialog.open(ResourceEditComponent, {
+      width: '600px',
+      data: { resourceId }
     });
 
     dialogRef.afterClosed().subscribe(result => {

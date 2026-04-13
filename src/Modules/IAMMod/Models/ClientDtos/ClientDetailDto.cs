@@ -23,8 +23,6 @@ public class ClientDetailDto
     public DateTimeOffset? ReviewedTime { get; set; }
     public string? ReviewedBy { get; set; }
     public DateTimeOffset? SecretExpiresAt { get; set; }
-    public bool AllowPasswordGrant { get; set; }
-    public string? PasswordGrantRestrictionReason { get; set; }
     public List<string> RedirectUris { get; set; } = [];
     public List<string> PostLogoutRedirectUris { get; set; } = [];
     public List<ScopeItemDto> Scopes { get; set; } = [];

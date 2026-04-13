@@ -48,6 +48,9 @@
         <th mat-header-cell *matHeaderCellDef>{{ i18n.common.actions | translate }}</th>
         <td mat-cell *matCellDef="let resource">
           <div class="d-flex gap-1 flex-wrap">
+            <button mat-icon-button (click)="openEditDialog(resource.id)" [matTooltip]="i18n.common.edit | translate">
+              <mat-icon class="primary">edit</mat-icon>
+            </button>
             <button mat-icon-button (click)="deleteResource(resource.id)" [matTooltip]="i18n.common.delete | translate">
               <mat-icon class="error">delete</mat-icon>
             </button>

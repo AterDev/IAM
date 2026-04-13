@@ -7,28 +7,29 @@ namespace Tests.IAMMod.Migrations;
 public class UserEmailRequiredAndEmailOnlyLoginMigrationTests
 {
     [Fact]
-    public void Up_WhenMakingEmailRequired_BackfillsLegacyEmailsBeforeAlteringColumns()
+    public void Up_ShouldCreateCoreIamTablesAndIndexes()
     {
-        var operations = TestUserEmailRequiredAndEmailOnlyLoginMigration.BuildUpOperations();
+        var operations = TestInitMigration.BuildUpOperations();
 
-        var sqlOperations = operations.OfType<SqlOperation>().ToList();
-        Assert.Equal(2, sqlOperations.Count);
-        Assert.Contains(sqlOperations, op => op.Sql.Contains("UPDATE \"Users\"", StringComparison.Ordinal)
-            && op.Sql.Contains("SET \"Email\" = CONCAT('legacy+'", StringComparison.Ordinal)
-            && op.Sql.Contains("@default.local", StringComparison.Ordinal));
-        Assert.Contains(sqlOperations, op => op.Sql.Contains("SET \"NormalizedEmail\" = UPPER(BTRIM(\"Email\"))", StringComparison.Ordinal));
+        var createTables = operations.OfType<CreateTableOperation>().ToList();
+        Assert.Contains(createTables, operation => operation.Name == "ApiResources");
+        Assert.Contains(createTables, operation => operation.Name == "Clients");
+        Assert.Contains(createTables, operation => operation.Name == "Users");
 
-        var alterOperations = operations.OfType<AlterColumnOperation>().ToList();
-        Assert.Equal(2, alterOperations.Count);
-        Assert.All(alterOperations, operation => Assert.False(operation.IsNullable));
-        Assert.All(alterOperations, operation => Assert.Null(operation.DefaultValue));
+        var indexOperations = operations.OfType<CreateIndexOperation>().ToList();
+        Assert.Contains(indexOperations, operation => operation.Table == "ApiResources"
+            && operation.Name == "IX_ApiResources_Name"
+            && operation.IsUnique);
+        Assert.Contains(indexOperations, operation => operation.Table == "Clients"
+            && operation.Name == "IX_Clients_ClientId"
+            && operation.IsUnique);
     }
 
-    private sealed class TestUserEmailRequiredAndEmailOnlyLoginMigration : UserEmailRequiredAndEmailOnlyLogin
+    private sealed class TestInitMigration : Init
     {
         public static IReadOnlyList<MigrationOperation> BuildUpOperations()
         {
-            var migration = new TestUserEmailRequiredAndEmailOnlyLoginMigration();
+            var migration = new TestInitMigration();
             var migrationBuilder = new MigrationBuilder("Npgsql.EntityFrameworkCore.PostgreSQL");
             migration.Up(migrationBuilder);
             return migrationBuilder.Operations;

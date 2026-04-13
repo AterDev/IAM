@@ -20,10 +20,6 @@ export interface ClientRegistrationRequestDto {
   consentType: ConsentType;
   /** OAuth 2.0 application types */
   applicationType: ApplicationType;
-  /** allowPasswordGrant */
-  allowPasswordGrant: boolean;
-  /** passwordGrantRestrictionReason */
-  passwordGrantRestrictionReason?: string | null;
   /** redirectUris */
   redirectUris: string[];
   /** postLogoutRedirectUris */

@@ -5,10 +5,6 @@
     </button>
     <h2>{{ i18n.resource.resourceDetail | translate }}</h2>
     <div class="actions">
-      <button mat-raised-button class="primary" (click)="openEditDialog()">
-        <mat-icon>edit</mat-icon>
-        {{ i18n.common.edit | translate }}
-      </button>
       <button mat-button color="warn" class="error" (click)="deleteResource()">
         <mat-icon>delete</mat-icon>
         {{ i18n.common.delete | translate }}

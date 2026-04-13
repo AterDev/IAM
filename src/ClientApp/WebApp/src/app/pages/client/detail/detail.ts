@@ -1,5 +1,4 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { computed } from '@angular/core';
 import { CommonModules, BaseMatModules } from 'src/app/share/shared-modules';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -16,8 +15,8 @@ import { TranslateService } from '@ngx-translate/core';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 import { AuthorizationItemDto } from 'src/app/services/api/models/iammod/authorization-item-dto.model';
+import { ClientDetailDto } from 'src/app/services/api/models/iammod/client-detail-dto.model';
 import { EnumTextPipe } from 'src/app/pipe/api/enum-text.pipe';
-import { ClientDetailViewModel } from '../client-password-grant-policy.model';
 import { ClientPermissionsComponent } from '../permissions/permissions';
 import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
@@ -40,13 +39,11 @@ import { I18N_KEYS } from 'src/app/share/i18n-keys';
 })
 export class ClientDetailComponent implements OnInit {
   readonly i18n = I18N_KEYS;
-  client = signal<ClientDetailViewModel | null>(null);
+  client = signal<ClientDetailDto | null>(null);
   authorizations = signal<AuthorizationItemDto[]>([]);
   isLoading = signal(false);
   isLoadingAuthorizations = signal(false);
   clientId?: string;
-  readonly isPasswordGrantEnabled = computed(() => this.client()?.allowPasswordGrant ?? false);
-  readonly passwordGrantRestrictionReason = computed(() => this.client()?.passwordGrantRestrictionReason?.trim() ?? '');
 
   authDisplayedColumns: string[] = ['subjectId', 'status', 'creationDate'];
 
@@ -72,7 +69,7 @@ export class ClientDetailComponent implements OnInit {
     this.isLoading.set(true);
     this.api.clients.getDetail(this.clientId!).subscribe({
       next: (client) => {
-        this.client.set(client as ClientDetailViewModel);
+        this.client.set(client);
         this.isLoading.set(false);
       },
       error: () => {

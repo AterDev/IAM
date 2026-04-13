@@ -38,10 +38,6 @@ export interface ClientDetailDto {
   reviewedBy?: string | null;
   /** secretExpiresAt */
   secretExpiresAt?: Date | null;
-  /** allowPasswordGrant */
-  allowPasswordGrant: boolean;
-  /** passwordGrantRestrictionReason */
-  passwordGrantRestrictionReason?: string | null;
   /** redirectUris */
   redirectUris: string[];
   /** postLogoutRedirectUris */

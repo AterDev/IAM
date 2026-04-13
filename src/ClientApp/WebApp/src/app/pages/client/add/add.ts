@@ -14,7 +14,6 @@ import { MatChipInputEvent } from '@angular/material/chips';
 import { ClientAddDto } from 'src/app/services/api/models/iammod/client-add-dto.model';
 import { ResourceItemDto } from 'src/app/services/api/models/iammod/resource-item-dto.model';
 import { ScopeItemDto } from 'src/app/services/api/models/iammod/scope-item-dto.model';
-import { ClientAddPayload } from '../client-password-grant-policy.model';
 import { I18N_KEYS } from 'src/app/share/i18n-keys';
 import { ClientType } from 'src/app/services/api/models/entity/client-type.model';
 import { ApplicationType } from 'src/app/services/api/models/entity/application-type.model';
@@ -69,14 +68,9 @@ export class ClientAddComponent implements OnInit {
       requirePkce: [true],
       consentType: [ConsentType.Explicit],
       applicationType: [ApplicationType.Web],
-      allowPasswordGrant: [false],
-      passwordGrantRestrictionReason: ['', [Validators.maxLength(500)]],
       newRedirectUri: [''],
       newPostLogoutRedirectUri: ['']
     });
-
-    this.allowPasswordGrant.valueChanges.subscribe(() => this.syncPasswordGrantRestrictionReasonState());
-    this.syncPasswordGrantRestrictionReasonState();
 
     this.loadAvailableScopes();
     this.loadAvailableResources();
@@ -131,14 +125,6 @@ export class ClientAddComponent implements OnInit {
 
   get requirePkce() {
     return this.clientForm.get('requirePkce') as FormControl;
-  }
-
-  get allowPasswordGrant() {
-    return this.clientForm.get('allowPasswordGrant') as FormControl;
-  }
-
-  get passwordGrantRestrictionReason() {
-    return this.clientForm.get('passwordGrantRestrictionReason') as FormControl;
   }
 
   get newRedirectUri() {
@@ -229,7 +215,7 @@ export class ClientAddComponent implements OnInit {
 
     this.isSubmitting = true;
     const formValue = this.clientForm.value;
-    const dto: ClientAddPayload = {
+    const dto: ClientAddDto = {
       clientId: formValue.clientId,
       displayName: formValue.displayName,
       description: formValue.description || null,
@@ -237,17 +223,13 @@ export class ClientAddComponent implements OnInit {
       requirePkce: formValue.requirePkce,
       consentType: formValue.consentType || null,
       applicationType: formValue.applicationType || null,
-      allowPasswordGrant: formValue.allowPasswordGrant,
-      passwordGrantRestrictionReason: formValue.allowPasswordGrant
-        ? null
-        : (formValue.passwordGrantRestrictionReason?.trim() || null),
       redirectUris: this.redirectUris,
       postLogoutRedirectUris: this.postLogoutRedirectUris,
       scopeIds: this.scopeIds,
       resourceIds: this.resourceIds
     };
 
-    this.api.clients.createClient(dto as ClientAddDto).subscribe({
+    this.api.clients.createClient(dto).subscribe({
       next: (response) => {
         this.clientSecret = response;
         this.snackBar.open(
@@ -274,16 +256,6 @@ export class ClientAddComponent implements OnInit {
 
   onCancel(): void {
     this.dialogRef.close(false);
-  }
-
-  syncPasswordGrantRestrictionReasonState(): void {
-    if (this.allowPasswordGrant.value) {
-      this.passwordGrantRestrictionReason.setValue('');
-      this.passwordGrantRestrictionReason.disable({ emitEvent: false });
-      return;
-    }
-
-    this.passwordGrantRestrictionReason.enable({ emitEvent: false });
   }
 
   getErrorMessage(control: FormControl | null, fieldName: string): string {

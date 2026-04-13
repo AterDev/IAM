@@ -7,7 +7,6 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { ResourceDetailDto } from 'src/app/services/api/models/iammod/resource-detail-dto.model';
-import { ResourceEditComponent } from '../edit/edit';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { TranslateService } from '@ngx-translate/core';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
@@ -62,19 +61,6 @@ export class ResourceDetailComponent implements OnInit {
           { duration: 3000 }
         );
         this.router.navigate(['/resource/list']);
-      }
-    });
-  }
-
-  openEditDialog(): void {
-    const dialogRef = this.dialog.open(ResourceEditComponent, {
-      width: '600px',
-      data: { resourceId: this.resourceId }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.loadResource();
       }
     });
   }
