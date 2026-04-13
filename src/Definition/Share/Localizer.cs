@@ -9,6 +9,6 @@ public partial class Localizer(IStringLocalizer<Localizer> localizer)
 {
     public string Get(string key, params object[] arguments)
     {
-        return localizer[key, arguments];
+        return string.IsNullOrWhiteSpace(localizer[key, arguments]) ? key : localizer[key, arguments];
     }
 }

@@ -5,6 +5,7 @@
 ## 文档导航
 
 - [IAM功能清单](docs/IAM功能清单.md)
+- [第三方应用接入与示例验证](docs/第三方应用接入与示例验证.md)
 
 ## 项目作用
 
@@ -26,6 +27,9 @@
 - `src/Modules/IAMMod`：IAM 领域模块（Manager、服务、初始化种子）
 - `src/Definition/Entity` / `src/Definition/EntityFramework`：实体与持久化层
 - `tests/Tests`：测试工程
+
+> 当前可运行的示例程序以 `src/Services/FrontSampleService` 与 `src/Services/ApiSampleService` 为准。
+> `samples/` 目录中的内容不作为当前 Aspire 编排验证入口。
 
 ## 已实现的核心能力概览
 
@@ -112,7 +116,7 @@ docker run -d --name iam-app \
     "Cache": "Memory"
   },
   "Authentication": {
-    "PublicOrigin": "https://auth.xxx.cn"
+    "Issuer": "https://auth.xxx.cn"
   },
   "ConnectionStrings": {
     "Default": "Host=host.docker.internal;Port=5432;Database=IAM;Username=iam;Password=iam_test_pwd;Include Error Detail=true"
@@ -130,7 +134,7 @@ docker run -d --name iam-app \
   niltor/iam:latest
 ```
 
-这样在生产环境里，`InitHostService` 初始化 `AdminWebClient` 时会优先使用 `Authentication:PublicOrigin`，例如：
+这样在生产环境里，`InitHostService` 初始化 `AdminWebClient` 时会优先使用 `Authentication:Issuer`，例如：
 
 - `https://auth.xxx.cn`
 - `https://auth.xxx.cn/auth/callback`
@@ -141,7 +145,7 @@ docker run -d --name iam-app \
 docker run -d --name iam-app \
   -p 8080:8080 \
   -e ASPNETCORE_ENVIRONMENT=Production \
-  -e Authentication__PublicOrigin="https://auth.xxx.cn" \
+  -e Authentication__Issuer="https://auth.xxx.cn" \
   -e Components__Database=PostgreSQL \
   -e Components__Cache=Memory \
   -e ConnectionStrings__Default="Host=host.docker.internal;Port=5432;Database=IAM;Username=iam;Password=iam_test_pwd;Include Error Detail=true" \

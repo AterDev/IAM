@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -45,6 +46,7 @@ public static class ModuleExtensions
     {
         builder.Services.AddSwagger();
         builder.Services.Configure<RiskControlOption>(builder.Configuration.GetSection(RiskControlOption.ConfigPath));
+
         builder.Services.AddScoped<RiskControlService>();
         builder.Services.AddScoped<SessionValidationService>();
         builder.Services.AddScoped<MfaTotpService>();
@@ -196,7 +198,11 @@ public static class ModuleExtensions
             new ConfigureNamedOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
             {
                 var jwtOption = sp.GetRequiredService<IOptions<JwtOption>>().Value;
-                if (string.IsNullOrWhiteSpace(jwtOption.ValidIssuer) || string.IsNullOrWhiteSpace(jwtOption.ValidAudiences))
+                var configuration = sp.GetRequiredService<IConfiguration>();
+                var issuer = configuration["Authentication:Issuer"]
+                    ?? configuration[$"{JwtOption.ConfigPath}:ValidIssuer"];
+
+                if (string.IsNullOrWhiteSpace(issuer) || string.IsNullOrWhiteSpace(jwtOption.ValidAudiences))
                 {
                     throw new InvalidOperationException("未找到有效的Jwt配置");
                 }
@@ -211,7 +217,7 @@ public static class ModuleExtensions
                         return resolver.Resolve(keyId);
                     },
 
-                    ValidIssuer = jwtOption.ValidIssuer,
+                    ValidIssuer = issuer,
                     ValidAudience = jwtOption.ValidAudiences,
                     ValidateIssuer = true,
                     ValidateLifetime = true,
@@ -271,6 +277,7 @@ public static class ModuleExtensions
 
     public static WebApplication UseIAMModServices(this WebApplication app)
     {
+        app.UseForwardedHeaders();
         app.UseSession();
         app.UseRouting();
 

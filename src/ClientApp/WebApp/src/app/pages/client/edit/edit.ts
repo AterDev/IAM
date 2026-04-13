@@ -17,6 +17,8 @@ import { ResourceItemDto } from 'src/app/services/api/models/iammod/resource-ite
 import { ScopeItemDto } from 'src/app/services/api/models/iammod/scope-item-dto.model';
 import { I18N_KEYS } from 'src/app/share/i18n-keys';
 import { ConsentType } from 'src/app/services/api/models/entity/consent-type.model';
+import { ClientType } from 'src/app/services/api/models/entity/client-type.model';
+import { ApplicationType } from 'src/app/services/api/models/entity/application-type.model';
 
 @Component({
   selector: 'app-edit',
@@ -34,6 +36,8 @@ import { ConsentType } from 'src/app/services/api/models/entity/consent-type.mod
 })
 export class ClientEditComponent implements OnInit {
   readonly i18n = I18N_KEYS;
+  readonly clientType = ClientType;
+  readonly applicationTypeEnum = ApplicationType;
   readonly consentTypeEnum = ConsentType;
   clientForm!: FormGroup;
   isSubmitting = false;
@@ -42,6 +46,7 @@ export class ClientEditComponent implements OnInit {
   availableResources = signal<ResourceItemDto[]>([]);
   availableScopes = signal<ScopeItemDto[]>([]);
   separatorKeysCodes = [ENTER, COMMA];
+  showRedirectUriSettings = false;
 
   redirectUris = signal<string[]>([]);
   postLogoutRedirectUris = signal<string[]>([]);
@@ -61,11 +66,12 @@ export class ClientEditComponent implements OnInit {
     this.clientForm = this.fb.group({
       displayName: ['', [Validators.required]],
       description: [''],
+      type: [ClientType.Confidential, [Validators.required]],
       consentType: [''],
+      applicationType: [ApplicationType.Web],
       requirePkce: [true],
       newRedirectUri: [''],
-      newPostLogoutRedirectUri: [''],
-      newScope: ['']
+      newPostLogoutRedirectUri: ['']
     });
 
     this.loadClient();
@@ -95,8 +101,14 @@ export class ClientEditComponent implements OnInit {
         this.clientForm.patchValue({
           displayName: client.displayName,
           description: client.description || '',
+          type: client.type || ClientType.Confidential,
           consentType: client.consentType || '',
-          requirePkce: client.requirePkce
+          applicationType: client.applicationType || ApplicationType.Web,
+          requirePkce: client.requirePkce,
+        });
+        this.syncRedirectUriVisibility(client.applicationType || null, true);
+        this.applicationTypeControl.valueChanges.subscribe((value: ApplicationType | null) => {
+          this.syncRedirectUriVisibility(value);
         });
 
         this.loadAvailableScopes();
@@ -203,7 +215,9 @@ export class ClientEditComponent implements OnInit {
     const dto: ClientUpdateDto = {
       displayName: formValue.displayName,
       description: formValue.description || null,
+      type: formValue.type || null,
       consentType: formValue.consentType || null,
+      applicationType: formValue.applicationType || null,
       requirePkce: formValue.requirePkce,
       redirectUris: this.redirectUris(),
       postLogoutRedirectUris: this.postLogoutRedirectUris(),
@@ -232,6 +246,18 @@ export class ClientEditComponent implements OnInit {
     this.dialogRef.close(false);
   }
 
+  private syncRedirectUriVisibility(applicationType: ApplicationType | null, preserveExisting = false): void {
+    this.showRedirectUriSettings = applicationType === ApplicationType.Spa
+      || this.redirectUris().length > 0
+      || this.postLogoutRedirectUris().length > 0;
+
+    if (!preserveExisting && applicationType !== ApplicationType.Spa) {
+      this.redirectUris.set([]);
+      this.postLogoutRedirectUris.set([]);
+      this.showRedirectUriSettings = false;
+    }
+  }
+
   getErrorMessage(control: FormControl | null): string {
     if (!control) {
       return '';
@@ -248,5 +274,13 @@ export class ClientEditComponent implements OnInit {
 
   get displayNameControl() {
     return this.clientForm.get('displayName') as FormControl;
+  }
+
+  get typeControl() {
+    return this.clientForm.get('type') as FormControl;
+  }
+
+  get applicationTypeControl() {
+    return this.clientForm.get('applicationType') as FormControl;
   }
 }

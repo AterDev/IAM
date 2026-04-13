@@ -24,7 +24,7 @@ public static class FrameworkExtensions
         builder.Services.AddScoped<ITenantContext, TenantContext>();
 
         var components = builder.Configuration.GetSection(ComponentOption.ConfigPath)
-            .Get<ComponentOption>() ?? new ComponentOption(); ;
+            .Get<ComponentOption>() ?? new ComponentOption();
         builder.AddOptions();
         builder.AddCache(components);
         builder.AddDbFactory(components);

@@ -10,7 +10,7 @@
       <h3 class="h5 fw-500">{{ i18n.client.basicInfo | translate }}</h3>
       <mat-form-field appearance="outline" class="w-100 mb-3">
         <mat-label>{{ i18n.client.displayName | translate }}</mat-label>
-        <input matInput formControlName="displayName" required placeholder="e.g., My Web Application">
+        <input matInput [formControl]="displayNameControl" required>
         @if (clientForm.get('displayName')?.invalid && clientForm.get('displayName')?.touched) {
         <mat-error>
           {{ getErrorMessage(displayNameControl) }}
@@ -20,13 +20,32 @@
 
       <mat-form-field appearance="outline" class="w-100">
         <mat-label>{{ i18n.client.description | translate }}</mat-label>
-        <textarea matInput formControlName="description" rows="3" placeholder="Optional description"></textarea>
+        <textarea matInput formControlName="description" rows="3"></textarea>
       </mat-form-field>
     </div>
 
     <!-- 配置部分 -->
     <div class="border-top pt-1">
       <h3 class="h5 fw-500">{{ i18n.client.configuration | translate }}</h3>
+      <div class="d-flex gap-2 mb-2">
+        <mat-form-field appearance="outline" class="col" subscriptSizing="dynamic">
+          <mat-label>{{ i18n.client.type | translate }}</mat-label>
+          <mat-select [formControl]="typeControl">
+            <mat-option [value]="clientType.Confidential">{{ i18n.client.confidential | translate }}</mat-option>
+            <mat-option [value]="clientType.Public">{{ i18n.client.public | translate }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="col" subscriptSizing="dynamic">
+          <mat-label>{{ i18n.client.applicationType | translate }}</mat-label>
+          <mat-select [formControl]="applicationTypeControl">
+            <mat-option [value]="applicationTypeEnum.Web">{{ i18n.client.web | translate }}</mat-option>
+            <mat-option [value]="applicationTypeEnum.Native">{{ i18n.client.native | translate }}</mat-option>
+            <mat-option [value]="applicationTypeEnum.Spa">{{ i18n.client.spa | translate }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
       <div class="d-flex gap-2 align-items-center mb-2">
         <mat-form-field appearance="outline" class="col" subscriptSizing="dynamic">
           <mat-label>{{ i18n.client.consentType | translate }}</mat-label>
@@ -42,7 +61,7 @@
       </div>
     </div>
 
-    <!-- 重定向URI部分 -->
+  @if (showRedirectUriSettings) {
     <div class="border-top pt-1">
       <h3 class="h5 fw-500 mb-2">{{ i18n.client.redirectUris | translate }}</h3>
       <p class="small secondary mb-3">{{ i18n.client.redirectUrisHint | translate }}</p>
@@ -63,7 +82,7 @@
             [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
             [matChipInputAddOnBlur]="true"
             (matChipInputTokenEnd)="addRedirectUri($event)"
-            placeholder="https://example.com/callback" />
+            [placeholder]="i18n.client.uriPlaceholder | translate" />
         </mat-chip-grid>
       </mat-form-field>
     </div>
@@ -157,10 +176,11 @@
             [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
             [matChipInputAddOnBlur]="true"
             (matChipInputTokenEnd)="addPostLogoutRedirectUri($event)"
-            placeholder="https://example.com/logout" />
+            [placeholder]="i18n.client.uriPlaceholder | translate" />
         </mat-chip-grid>
       </mat-form-field>
     </div>
+    }
   </form>
   }
 </mat-dialog-content>

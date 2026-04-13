@@ -703,9 +703,8 @@ public class InitHostService(
 
     private string ResolveAdminWebClientBaseOrigin()
     {
-        var configuredOrigin = configuration["Authentication:PublicOrigin"]
-            ?? configuration["Authentication:AdminWebClientOrigin"]
-            ?? configuration["App:PublicOrigin"];
+        var configuredOrigin = configuration["Authentication:Issuer"]
+            ?? configuration["Authentication:PublicOrigin"];
 
         if (Uri.TryCreate(configuredOrigin, UriKind.Absolute, out var configuredUri))
         {

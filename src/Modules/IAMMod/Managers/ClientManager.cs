@@ -140,7 +140,6 @@ public class ClientManager(
 
         var entity = dto.MapTo<Client>();
         entity.RegistrationStatus = ClientRegistrationStatus.Approved;
-        EnsurePasswordGrantDisabled(entity);
         var issuedSecret = IssueClientSecret(entity, DefaultSecretExpirationDays);
 
         return await ExecuteInTransactionAsync(async () =>
@@ -183,7 +182,6 @@ public class ClientManager(
         entity.RegistrationStatus = ClientRegistrationStatus.Pending;
         entity.DeveloperUserId = _userContext.UserId;
         entity.RequestedTime = DateTimeOffset.UtcNow;
-        EnsurePasswordGrantDisabled(entity);
 
         return await ExecuteInTransactionAsync(async () =>
         {
@@ -248,7 +246,6 @@ public class ClientManager(
         entity.RegistrationStatus = ClientRegistrationStatus.Approved;
         entity.ReviewedTime = DateTimeOffset.UtcNow;
         entity.ReviewedBy = _userContext.UserId == Guid.Empty ? null : _userContext.UserId.ToString();
-        EnsurePasswordGrantDisabled(entity);
         entity.UpdatedTime = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
 
@@ -434,7 +431,21 @@ public class ClientManager(
                 }
             }
 
-            EnsurePasswordGrantDisabled(entity);
+            if (entity.Type == ClientType.Public)
+            {
+                entity.SecretHash = null;
+                entity.SecretSalt = null;
+                entity.SecretExpiresAt = null;
+
+                foreach (var secret in await _dbContext.ClientSecrets
+                    .Where(q => q.ClientId == id && !q.RevokedAt.HasValue)
+                    .ToListAsync())
+                {
+                    secret.RevokedAt = DateTimeOffset.UtcNow;
+                    secret.UpdatedTime = DateTime.UtcNow;
+                }
+            }
+
             entity.UpdatedTime = DateTime.UtcNow;
             await _dbContext.SaveChangesAsync();
 
@@ -445,6 +456,8 @@ public class ClientManager(
                 payload: JsonSerializer.Serialize(new
                 {
                     entity.ClientId,
+                    entity.Type,
+                    entity.ApplicationType,
                 })
             );
 
@@ -702,11 +715,5 @@ public class ClientManager(
             .TrimEnd('=')
             .Replace('+', '-')
             .Replace('/', '_');
-    }
-
-    private static void EnsurePasswordGrantDisabled(Client entity)
-    {
-        entity.AllowPasswordGrant = false;
-        entity.PasswordGrantRestrictionReason = null;
     }
 }

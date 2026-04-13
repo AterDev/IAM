@@ -42,6 +42,7 @@ export class ClientAddComponent implements OnInit {
   clientSecret: string | null = null;
   secretCopied = false;
   separatorKeysCodes = [ENTER, COMMA];
+  showRedirectUriSettings = false;
   
   redirectUris: string[] = [];
   postLogoutRedirectUris: string[] = [];
@@ -71,6 +72,11 @@ export class ClientAddComponent implements OnInit {
       newRedirectUri: [''],
       newPostLogoutRedirectUri: ['']
     });
+
+    this.applicationType.valueChanges.subscribe((value: ApplicationType | null) => {
+      this.syncRedirectUriVisibility(value);
+    });
+    this.syncRedirectUriVisibility(this.applicationType.value as ApplicationType | null);
 
     this.loadAvailableScopes();
     this.loadAvailableResources();
@@ -256,6 +262,14 @@ export class ClientAddComponent implements OnInit {
 
   onCancel(): void {
     this.dialogRef.close(false);
+  }
+
+  private syncRedirectUriVisibility(applicationType: ApplicationType | null): void {
+    this.showRedirectUriSettings = applicationType === ApplicationType.Spa;
+    if (!this.showRedirectUriSettings) {
+      this.redirectUris = [];
+      this.postLogoutRedirectUris = [];
+    }
   }
 
   getErrorMessage(control: FormControl | null, fieldName: string): string {

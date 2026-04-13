@@ -8,7 +8,7 @@
         <h3 class="h5 fw-500">{{ i18n.client.basicInfo | translate }}</h3>
         <mat-form-field appearance="outline" class="w-100 mb-3">
           <mat-label>{{ i18n.client.clientId | translate }}</mat-label>
-          <input matInput [formControl]="clientId" required placeholder="e.g., my-app">
+          <input matInput [formControl]="clientId" required>
           @if (clientId.invalid && clientId.touched) {
           <mat-error>
             {{ getErrorMessage(clientId, 'clientId') }}
@@ -18,7 +18,7 @@
 
         <mat-form-field appearance="outline" class="w-100 mb-3">
           <mat-label>{{ i18n.client.displayName | translate }}</mat-label>
-          <input matInput [formControl]="displayName" required placeholder="e.g., My Web Application">
+          <input matInput [formControl]="displayName" required>
           @if (displayName.invalid && displayName.touched) {
           <mat-error>
             {{ getErrorMessage(displayName, 'displayName') }}
@@ -28,7 +28,7 @@
 
         <mat-form-field appearance="outline" class="w-100">
           <mat-label>{{ i18n.client.description | translate }}</mat-label>
-          <textarea matInput [formControl]="description" rows="3" placeholder="Optional description"></textarea>
+          <textarea matInput [formControl]="description" rows="3"></textarea>
         </mat-form-field>
       </div>
 
@@ -69,7 +69,7 @@
         </div>
       </div>
 
-      <!-- 重定向URI部分 -->
+  @if (showRedirectUriSettings) {
       <div class="border-top pt-1">
         <h3 class="h5 fw-500 mb-2">{{ i18n.client.redirectUris | translate }}</h3>
         <p class="small secondary mb-3">{{ i18n.client.redirectUrisHint | translate }}</p>
@@ -90,7 +90,7 @@
               [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
               [matChipInputAddOnBlur]="true"
               (matChipInputTokenEnd)="addRedirectUri($event)"
-              placeholder="https://example.com/callback" />
+              [placeholder]="i18n.client.uriPlaceholder | translate" />
           </mat-chip-grid>
         </mat-form-field>
       </div>
@@ -183,10 +183,11 @@
               [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
               [matChipInputAddOnBlur]="true"
               (matChipInputTokenEnd)="addPostLogoutRedirectUri($event)"
-              placeholder="https://example.com/logout" />
+              [placeholder]="i18n.client.uriPlaceholder | translate" />
           </mat-chip-grid>
         </mat-form-field>
       </div>
+      }
     </form>
   </mat-dialog-content>
 

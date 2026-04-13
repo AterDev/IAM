@@ -260,11 +260,13 @@ public static class WebExtensions
             options.SaveToken = true;
             var jwtOption = configuration.GetSection(JwtOption.ConfigPath).Get<JwtOption>();
             var oauthOption = configuration.GetSection(OAuthOption.ConfigPath).Get<OAuthOption>();
+            var issuer = configuration["Authentication:Issuer"]
+                ?? configuration[$"{JwtOption.ConfigPath}:ValidIssuer"];
 
             if (jwtOption != null)
             {
                 var sign = jwtOption?.Sign;
-                if (string.IsNullOrEmpty(sign))
+                if (string.IsNullOrEmpty(sign) || string.IsNullOrWhiteSpace(issuer))
                 {
                     throw new Exception("未找到有效的Jwt配置");
                 }
@@ -272,7 +274,7 @@ public static class WebExtensions
                 {
 
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(sign)),
-                    ValidIssuer = jwtOption?.ValidIssuer,
+                    ValidIssuer = issuer,
                     ValidAudience = jwtOption?.ValidAudiences,
                     ValidateIssuer = true,
                     ValidateLifetime = true,
@@ -297,7 +299,7 @@ public static class WebExtensions
             {
                 OnAuthenticationFailed = context =>
                 {
-                    Console.WriteLine("Authentication failed: {0}", context.Exception);
+                    Console.WriteLine("Authentication failed: {0}" , context.Exception);
                     return Task.CompletedTask;
                 },
                 OnTokenValidated = context =>
