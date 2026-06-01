@@ -62,17 +62,21 @@ public static class WebExtensions
 
     public static WebApplication UseMiddlewareServices(this WebApplication app)
     {
+        var useHsts = app.Configuration.GetValue("Deployment:UseHsts", app.Environment.IsProduction());
+        var useHttpsRedirection = app.Configuration.GetValue("Deployment:UseHttpsRedirection", app.Environment.IsProduction());
+
         app.UseRouting();
 
-        if (app.Environment.IsProduction())
+        app.UseCors(AppConst.Default);
+
+        if (useHsts)
         {
-            app.UseCors(AppConst.Default);
             app.UseHsts();
-            app.UseHttpsRedirection();
         }
-        else
+
+        if (useHttpsRedirection)
         {
-            app.UseCors(AppConst.Default);
+            app.UseHttpsRedirection();
         }
 
         app.UseRateLimiter();
@@ -412,3 +416,5 @@ public static class WebExtensions
         return services;
     }
 }
+
+

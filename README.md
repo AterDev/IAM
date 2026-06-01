@@ -188,6 +188,51 @@ docker logs -f iam-app
 - `Running startup database migrations...`
 - `Application initialization completed successfully`
 
+## Docker Compose 部署
+
+项目通过 Aspire 的 Docker Hosting 集成提供 Docker Compose 发布支持，而不是维护手写的 `docker-compose.yml`。
+
+当前 `src/AppHost/AppHost.csproj` 已启用 Docker Compose 环境资源，因此可以直接通过 Aspire CLI 生成和部署 Compose 工件。
+
+### 生成与部署
+
+在仓库根目录执行：
+
+```powershell
+aspire deploy
+```
+
+如果你只想先查看部署管线步骤，可执行：
+
+```powershell
+aspire deploy --list-steps --non-interactive
+```
+
+如果你只想生成发布工件而不实际启动部署，可执行：
+
+```powershell
+aspire publish
+```
+
+### 当前发布模型
+
+- `ApiService` 作为对外主服务参与 Docker Compose 发布
+- `AdminApp` 在发布期作为前端构建资源，产物注入到 `ApiService` 容器中
+- `MigrationService` 作为独立发布资源参与部署
+- 本地示例资源 `ApiSampleService` 与 `FrontSampleService` 仅在 run mode 下参与编排，不进入发布输出
+
+### 说明
+
+- 发布时 Aspire 会生成 Compose 文件、环境变量模板和对应镜像构建步骤
+- `Authentication:Issuer` 在发布模式下通过 `public-origin` 参数注入，便于在生成的部署环境中填写真实对外地址
+- 如果你后续需要自定义生成的 Compose 服务名、dashboard 或 compose 文件内容，可在 `AppHost` 中继续配置 `DockerComposeEnvironment`
+
+Compose 默认暴露的是 HTTP `8080` 端口，因此编排里显式关闭了应用内部的 `UseHttpsRedirection` 和 `HSTS`。如果你在线上使用 Nginx、Traefik 或云负载均衡终止 TLS，建议：
+
+- 对外暴露 HTTPS 域名
+- 将 `IAM_PUBLIC_ORIGIN` 设置为最终 HTTPS 地址
+- 根据实际部署决定是否重新开启 `Deployment__UseHttpsRedirection=true`
+
 ## 初始化数据
 
 应用首次启动并在数据库可用时，会在 `InitHostService` 中自动初始化以下数据：

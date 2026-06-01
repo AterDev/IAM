@@ -4,6 +4,10 @@ using Perigon.AspNetCore.Constants;
 
 var builder = DistributedApplication.CreateBuilder(args);
 var aspireSetting = AppSettingsHelper.LoadAspireSettings(builder.Configuration);
+var publicOrigin = builder.AddParameter("public-origin");
+
+builder.AddDockerComposeEnvironment("compose")
+    .WithDashboard(enabled: false);
 
 IResourceBuilder<IResourceWithConnectionString>? database = null;
 IResourceBuilder<IResourceWithConnectionString>? cache = null;
@@ -66,34 +70,52 @@ if (cache is null)
 
 var migration = builder.AddProject<Projects.MigrationService>("MigrationService");
 var apiService = builder.AddProject<Projects.ApiService>("ApiService")
-    .WaitForCompletion(migration);
-
-apiService.WithEnvironment("Authentication__Issuer", apiService.GetEndpoint("https"));
-
-var apiSampleService = builder.AddProject<Projects.ApiSampleService>("ApiSampleService")
     .WaitForCompletion(migration)
-    .WithReference(apiService)
-    .WithEnvironment("Authentication__OAuth__Authority", apiService.GetEndpoint("https"));
+    .WithExternalHttpEndpoints();
 
-builder.AddJavaScriptApp("FrontSampleService", "../Services/FrontSampleService", "start")
+if (builder.ExecutionContext.IsRunMode)
+{
+    apiService.WithEnvironment("Authentication__Issuer", apiService.GetEndpoint("https"));
+}
+else
+{
+    apiService.WithEnvironment("Authentication__Issuer", publicOrigin);
+}
+
+var adminApp = builder.AddJavaScriptApp("AdminApp", "../ClientApp/WebApp", "start")
     .WithPnpm()
     .WithReference(apiService)
-    .WithReference(apiSampleService)
-    .WaitFor(apiService)
-    .WaitFor(apiSampleService)
-    .WithUrl("http://localhost:4201");
+    .WaitFor(apiService);
 
-builder.AddJavaScriptApp("AdminApp", "../ClientApp/WebApp", "start")
-    .WithPnpm()
-    .WithReference(apiService)
-    .WaitFor(apiService)
-    .WithUrl("http://localhost:4200");
+apiService.PublishWithContainerFiles(adminApp, "./wwwroot");
+
+if (builder.ExecutionContext.IsRunMode)
+{
+    var apiSampleService = builder.AddProject<Projects.ApiSampleService>("ApiSampleService")
+        .WaitForCompletion(migration)
+        .WithReference(apiService)
+        .WithEnvironment("Authentication__OAuth__Authority", apiService.GetEndpoint("https"));
+
+    builder.AddJavaScriptApp("FrontSampleService", "../Services/FrontSampleService", "start")
+        .WithPnpm()
+        .WithReference(apiService)
+        .WithReference(apiSampleService)
+        .WaitFor(apiService)
+        .WaitFor(apiSampleService)
+        .WithUrl("http://localhost:4201");
+
+    adminApp.WithUrl("http://localhost:4200");
+
+    if (database != null)
+    {
+        apiSampleService.WithReference(database);
+    }
+}
 
 if (database != null)
 {
     migration.WithReference(database).WaitFor(database);
     apiService.WithReference(database);
-    apiSampleService.WithReference(database);
 }
 if (cache != null)
 {

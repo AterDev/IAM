@@ -1,0 +1,78 @@
+services:
+  compose-dashboard:
+    image: "mcr.microsoft.com/dotnet/nightly/aspire-dashboard:latest"
+    ports:
+      - "18888"
+    expose:
+      - "18889"
+      - "18890"
+    networks:
+      - "aspire"
+    restart: "always"
+  db:
+    image: "docker.io/library/postgres:18.1-alpine"
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: "scram-sha-256"
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "${SQL_PASSWORD}"
+    expose:
+      - "5432"
+    volumes:
+      - type: "volume"
+        target: "/var/lib/postgresql"
+        source: "apphost-feed4158f1-db-data"
+        read_only: false
+    networks:
+      - "aspire"
+  migrationservice:
+    image: "${MIGRATIONSERVICE_IMAGE}"
+    environment:
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
+      ConnectionStrings__Default: "Host=db;Port=5432;Username=postgres;Password=${SQL_PASSWORD};Database=IAM_dev"
+      DEFAULT_HOST: "db"
+      DEFAULT_PORT: "5432"
+      DEFAULT_USERNAME: "postgres"
+      DEFAULT_PASSWORD: "${SQL_PASSWORD}"
+      DEFAULT_URI: "postgresql://postgres:${SQL_PASSWORD}@db:5432/IAM_dev"
+      DEFAULT_JDBCCONNECTIONSTRING: "jdbc:postgresql://db:5432/IAM_dev"
+      DEFAULT_DATABASENAME: "IAM_dev"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://compose-dashboard:18889"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_SERVICE_NAME: "MigrationService"
+    depends_on:
+      db:
+        condition: "service_started"
+    networks:
+      - "aspire"
+  apiservice:
+    image: "${APISERVICE_IMAGE}"
+    environment:
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      HTTP_PORTS: "${APISERVICE_PORT}"
+      Authentication__Issuer: "${PUBLIC_ORIGIN}"
+      ConnectionStrings__Default: "Host=db;Port=5432;Username=postgres;Password=${SQL_PASSWORD};Database=IAM_dev"
+      DEFAULT_HOST: "db"
+      DEFAULT_PORT: "5432"
+      DEFAULT_USERNAME: "postgres"
+      DEFAULT_PASSWORD: "${SQL_PASSWORD}"
+      DEFAULT_URI: "postgresql://postgres:${SQL_PASSWORD}@db:5432/IAM_dev"
+      DEFAULT_JDBCCONNECTIONSTRING: "jdbc:postgresql://db:5432/IAM_dev"
+      DEFAULT_DATABASENAME: "IAM_dev"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://compose-dashboard:18889"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_SERVICE_NAME: "ApiService"
+    ports:
+      - "${APISERVICE_PORT}"
+    depends_on:
+      migrationservice:
+        condition: "service_completed_successfully"
+    networks:
+      - "aspire"
+networks:
+  aspire:
+    driver: "bridge"
+volumes:
+  apphost-feed4158f1-db-data:
+    driver: "local"

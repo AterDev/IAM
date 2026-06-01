@@ -67,7 +67,7 @@ export class ClientEditComponent implements OnInit {
       displayName: ['', [Validators.required]],
       description: [''],
       type: [ClientType.Confidential, [Validators.required]],
-      consentType: [''],
+      consentType: [ConsentType.Explicit],
       applicationType: [ApplicationType.Web],
       requirePkce: [true],
       newRedirectUri: [''],
@@ -101,12 +101,12 @@ export class ClientEditComponent implements OnInit {
         this.clientForm.patchValue({
           displayName: client.displayName,
           description: client.description || '',
-          type: client.type || ClientType.Confidential,
-          consentType: client.consentType || '',
-          applicationType: client.applicationType || ApplicationType.Web,
+          type: client.type ?? ClientType.Confidential,
+          consentType: client.consentType ?? ConsentType.Explicit,
+          applicationType: client.applicationType ?? ApplicationType.Web,
           requirePkce: client.requirePkce,
         });
-        this.syncRedirectUriVisibility(client.applicationType || null, true);
+        this.syncRedirectUriVisibility(client.applicationType ?? null, true);
         this.applicationTypeControl.valueChanges.subscribe((value: ApplicationType | null) => {
           this.syncRedirectUriVisibility(value);
         });
@@ -215,9 +215,9 @@ export class ClientEditComponent implements OnInit {
     const dto: ClientUpdateDto = {
       displayName: formValue.displayName,
       description: formValue.description || null,
-      type: formValue.type || null,
-      consentType: formValue.consentType || null,
-      applicationType: formValue.applicationType || null,
+      type: formValue.type ?? null,
+      consentType: formValue.consentType ?? null,
+      applicationType: formValue.applicationType ?? null,
       requirePkce: formValue.requirePkce,
       redirectUris: this.redirectUris(),
       postLogoutRedirectUris: this.postLogoutRedirectUris(),
