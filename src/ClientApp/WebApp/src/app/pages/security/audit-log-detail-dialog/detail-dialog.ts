@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { CommonModules, BaseMatModules } from 'src/app/share/shared-modules';
-import { AuditLogDetailDto } from 'src/app/services/api/models/common-mod/audit-log-detail-dto.model';
+import { AuditLogDetailDto } from 'src/app/services/api/models/iammod/audit-log-detail-dto.model';
 
 @Component({
   selector: 'app-detail-dialog',

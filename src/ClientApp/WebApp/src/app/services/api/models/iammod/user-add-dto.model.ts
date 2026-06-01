@@ -5,7 +5,7 @@ export interface UserAddDto {
   /** userName */
   userName: string;
   /** email */
-  email?: string | null;
+  email: string;
   /** phoneNumber */
   phoneNumber?: string | null;
   /** password */

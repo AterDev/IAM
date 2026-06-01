@@ -24,4 +24,11 @@ export class AdminAuthService extends BaseService {
     const _url = `/api/admin/me`;
     return this.request<AdminUserInfo>('get', _url);
   }
+  /**
+   * Logout current admin user and revoke server-side session artifacts.
+   */
+  logout(): Observable<any> {
+    const _url = `/api/admin/logout`;
+    return this.request<any>('post', _url);
+  }
 }

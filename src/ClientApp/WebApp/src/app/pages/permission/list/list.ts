@@ -8,11 +8,11 @@ import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
 import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
 import { TranslateService } from '@ngx-translate/core';
-import { DotnetSwaggerClient } from 'src/app/services/dotnet-swagger/dotnet-swagger-client';
-import { PermissionType } from 'src/app/services/dotnet-swagger/models/entity/permission-type.model';
-import { ClientItemDto } from 'src/app/services/dotnet-swagger/models/iammod/client-item-dto.model';
-import { PermissionDetailDto } from 'src/app/services/dotnet-swagger/models/iammod/permission-detail-dto.model';
-import { PermissionTreeNodeDto } from 'src/app/services/dotnet-swagger/models/iammod/permission-tree-node-dto.model';
+import { ApiClient } from 'src/app/services/api/api-client';
+import { PermissionType } from 'src/app/services/api/models/entity/permission-type.model';
+import { ClientItemDto } from 'src/app/services/api/models/iammod/client-item-dto.model';
+import { PermissionDetailDto } from 'src/app/services/api/models/iammod/permission-detail-dto.model';
+import { PermissionTreeNodeDto } from 'src/app/services/api/models/iammod/permission-tree-node-dto.model';
 import { CommonModules, BaseMatModules, CommonFormModules } from 'src/app/share/shared-modules';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
@@ -55,7 +55,7 @@ export class PermissionListComponent implements OnInit {
   activeTabIndex = 0;
 
   constructor(
-    private readonly api: DotnetSwaggerClient,
+    private readonly api: ApiClient,
     private readonly dialog: MatDialog,
     private readonly snackBar: MatSnackBar,
     private readonly translate: TranslateService,

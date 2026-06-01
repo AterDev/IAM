@@ -1,5 +1,5 @@
-import { AuditLogDetailDto } from 'src/app/services/api/models/common-mod/audit-log-detail-dto.model';
-import { AuditLogItemDto } from 'src/app/services/api/models/common-mod/audit-log-item-dto.model';
+import { AuditLogDetailDto } from 'src/app/services/api/models/iammod/audit-log-detail-dto.model';
+import { AuditLogItemDto } from 'src/app/services/api/models/iammod/audit-log-item-dto.model';
 
 export type PasswordGrantEventFilter = 'all' | 'PasswordGrantRejected' | 'PasswordGrantFailed';
 

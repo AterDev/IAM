@@ -13,19 +13,19 @@ import { DeviceAuthorizationDecisionDto } from '../models/iammod/device-authoriz
 export class OAuthInteractionService extends BaseService {
   /**
    * Get interaction context for the SPA authorize page.
-   * @param response_type Response type. Currently only authorization code flow is supported.
-   * @param client_id Client identifier
-   * @param redirect_uri Redirect URI
+   * @param responseType Response type. Currently only authorization code flow is supported.
+   * @param clientId Client identifier
+   * @param redirectUri Redirect URI
    * @param scope Requested scopes (space-separated)
    * @param state State parameter for CSRF protection
-   * @param code_challenge PKCE code challenge
-   * @param code_challenge_method PKCE code challenge method (plain, S256)
-   * @param response_mode Response mode. Currently only query mode is supported.
+   * @param codeChallenge PKCE code challenge
+   * @param codeChallengeMethod PKCE code challenge method (plain, S256)
+   * @param responseMode Response mode. Currently only query mode is supported.
    * @param nonce Nonce for OIDC
    * @param prompt Prompt parameter (none, login, consent, select_account)
    */
-  getAuthorizeInteraction(response_type: string, client_id: string, redirect_uri: string, scope: string | null, state: string | null, code_challenge: string | null, code_challenge_method: string | null, response_mode: string | null, nonce: string | null, prompt: string | null): Observable<AuthorizeInteractionContextDto> {
-    const _url = `/connect/interaction/authorize?response_type=${response_type ?? ''}&client_id=${client_id ?? ''}&redirect_uri=${redirect_uri ?? ''}&scope=${scope ?? ''}&state=${state ?? ''}&code_challenge=${code_challenge ?? ''}&code_challenge_method=${code_challenge_method ?? ''}&response_mode=${response_mode ?? ''}&nonce=${nonce ?? ''}&prompt=${prompt ?? ''}`;
+  getAuthorizeInteraction(responseType: string, clientId: string, redirectUri: string, scope: string | null, state: string | null, codeChallenge: string | null, codeChallengeMethod: string | null, responseMode: string | null, nonce: string | null, prompt: string | null): Observable<AuthorizeInteractionContextDto> {
+    const _url = `/connect/interaction/authorize?response_type=${responseType ?? ''}&client_id=${clientId ?? ''}&redirect_uri=${redirectUri ?? ''}&scope=${scope ?? ''}&state=${state ?? ''}&code_challenge=${codeChallenge ?? ''}&code_challenge_method=${codeChallengeMethod ?? ''}&response_mode=${responseMode ?? ''}&nonce=${nonce ?? ''}&prompt=${prompt ?? ''}`;
     return this.request<AuthorizeInteractionContextDto>('get', _url);
   }
   /**

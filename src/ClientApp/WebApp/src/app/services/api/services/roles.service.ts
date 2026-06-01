@@ -7,7 +7,8 @@ import { RoleAddDto } from '../models/iammod/role-add-dto.model';
 import { RoleDetailDto } from '../models/iammod/role-detail-dto.model';
 import { RoleUpdateDto } from '../models/iammod/role-update-dto.model';
 import { RoleGrantPermissionDto } from '../models/iammod/role-grant-permission-dto.model';
-import { PermissionClaim } from '../models/iammod/permission-claim.model';
+import { PermissionTreeNodeDto } from '../models/iammod/permission-tree-node-dto.model';
+import { PermissionType } from '../models/entity/permission-type.model';
 /**
  * Role management controller
  */
@@ -85,11 +86,28 @@ export class RolesService extends BaseService {
     return this.request<any>('post', _url, data);
   }
   /**
-   * Get role permissions
+   * Get role permission codes.
    * @param id Role id
    */
-  getPermissions(id: string): Observable<PermissionClaim[]> {
+  getPermissions(id: string): Observable<string[]> {
     const _url = `/api/Roles/${id}/permissions`;
-    return this.request<PermissionClaim[]>('get', _url);
+    return this.request<string[]>('get', _url);
+  }
+  /**
+   * Get role permission tree with selected nodes.
+   * @param id string
+   * @param clientId Filter by database client id.
+   * @param clientCode Filter by public client identifier.
+   * @param type Filter by permission type.
+   * @param parentId Filter by parent permission id.
+   * @param keyword Filter by keyword.
+   * @param onlyNonBusiness Whether to include only menu and button permissions.
+   * @param pageIndex number
+   * @param pageSize number
+   * @param orderBy Record<string, boolean>
+   */
+  getPermissionTree(id: string, clientId: string | null, clientCode: string | null, type: PermissionType | null, parentId: string | null, keyword: string | null, onlyNonBusiness: boolean | null, pageIndex: number | null, pageSize: number | null, orderBy: Record<string, boolean> | null): Observable<PermissionTreeNodeDto[]> {
+    const _url = `/api/Roles/${id}/permission-tree?clientId=${clientId ?? ''}&clientCode=${clientCode ?? ''}&type=${type ?? ''}&parentId=${parentId ?? ''}&keyword=${keyword ?? ''}&onlyNonBusiness=${onlyNonBusiness ?? ''}&pageIndex=${pageIndex ?? ''}&pageSize=${pageSize ?? ''}&orderBy=${orderBy ?? ''}`;
+    return this.request<PermissionTreeNodeDto[]>('get', _url);
   }
 }

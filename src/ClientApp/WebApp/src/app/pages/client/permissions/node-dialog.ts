@@ -2,8 +2,8 @@ import { Component, Inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { CommonModules, BaseMatModules, CommonFormModules } from 'src/app/share/shared-modules';
-import { PermissionType } from 'src/app/services/dotnet-swagger/models/entity/permission-type.model';
-import { PermissionSyncNodeDto } from 'src/app/services/dotnet-swagger/models/iammod/permission-sync-node-dto.model';
+import { PermissionType } from 'src/app/services/api/models/entity/permission-type.model';
+import { PermissionSyncNodeDto } from 'src/app/services/api/models/iammod/permission-sync-node-dto.model';
 
 export interface ClientPermissionNodeDialogData {
   node?: PermissionSyncNodeDto | null;

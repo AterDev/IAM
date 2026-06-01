@@ -6,8 +6,8 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatListModule } from '@angular/material/list';
 import { AuthService } from '../../services/auth.service';
-import { DotnetSwaggerClient } from '../../services/dotnet-swagger/dotnet-swagger-client';
-import { PermissionType } from '../../services/dotnet-swagger/models/entity/permission-type.model';
+import { ApiClient } from 'src/app/services/api/api-client';
+import { PermissionType } from 'src/app/services/api/models/entity/permission-type.model';
 
 @Component({
   selector: 'app-navigation',
@@ -22,7 +22,7 @@ export class NavigationComponent {
   menus = signal<Menu[]>([]);
   constructor(
     private readonly authService: AuthService,
-    private readonly api: DotnetSwaggerClient,
+    private readonly api: ApiClient,
   ) {
   }
   ngOnInit(): void {

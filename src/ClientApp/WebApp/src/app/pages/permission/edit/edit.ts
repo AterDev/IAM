@@ -3,11 +3,11 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslateService } from '@ngx-translate/core';
-import { DotnetSwaggerClient } from 'src/app/services/dotnet-swagger/dotnet-swagger-client';
-import { PermissionType } from 'src/app/services/dotnet-swagger/models/entity/permission-type.model';
-import { ClientItemDto } from 'src/app/services/dotnet-swagger/models/iammod/client-item-dto.model';
-import { PermissionDetailDto } from 'src/app/services/dotnet-swagger/models/iammod/permission-detail-dto.model';
-import { PermissionUpsertDto } from 'src/app/services/dotnet-swagger/models/iammod/permission-upsert-dto.model';
+import { ApiClient } from 'src/app/services/api/api-client';
+import { PermissionType } from 'src/app/services/api/models/entity/permission-type.model';
+import { ClientItemDto } from 'src/app/services/api/models/iammod/client-item-dto.model';
+import { PermissionDetailDto } from 'src/app/services/api/models/iammod/permission-detail-dto.model';
+import { PermissionUpsertDto } from 'src/app/services/api/models/iammod/permission-upsert-dto.model';
 import { CommonModules, BaseMatModules, CommonFormModules } from 'src/app/share/shared-modules';
 import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
@@ -56,7 +56,7 @@ export class PermissionEditComponent implements OnInit {
   });
 
   constructor(
-    private readonly api: DotnetSwaggerClient,
+    private readonly api: ApiClient,
     private readonly dialogRef: MatDialogRef<PermissionEditComponent>,
     private readonly snackBar: MatSnackBar,
     private readonly translate: TranslateService,

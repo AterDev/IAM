@@ -4,9 +4,9 @@ import { Observable } from 'rxjs';
 import { PageList } from '../models/perigon/page-list.model';
 import { LoginSessionItemDto } from '../models/iammod/login-session-item-dto.model';
 import { LoginSessionDetailDto } from '../models/iammod/login-session-detail-dto.model';
-import { AuditLogFilterDto } from '../models/common-mod/audit-log-filter-dto.model';
-import { AuditLogItemDto } from '../models/common-mod/audit-log-item-dto.model';
-import { AuditLogDetailDto } from '../models/common-mod/audit-log-detail-dto.model';
+import { AuditLogFilterDto } from '../models/iammod/audit-log-filter-dto.model';
+import { AuditLogItemDto } from '../models/iammod/audit-log-item-dto.model';
+import { AuditLogDetailDto } from '../models/iammod/audit-log-detail-dto.model';
 /**
  * Security controller for session and audit log management
  */

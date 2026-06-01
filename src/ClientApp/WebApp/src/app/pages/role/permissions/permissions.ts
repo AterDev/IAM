@@ -10,11 +10,11 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
 import { TranslateService } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
-import { DotnetSwaggerClient } from 'src/app/services/dotnet-swagger/dotnet-swagger-client';
-import { PermissionType } from 'src/app/services/dotnet-swagger/models/entity/permission-type.model';
-import { ClientItemDto } from 'src/app/services/dotnet-swagger/models/iammod/client-item-dto.model';
-import { PermissionTreeNodeDto } from 'src/app/services/dotnet-swagger/models/iammod/permission-tree-node-dto.model';
-import { RoleDetailDto } from 'src/app/services/dotnet-swagger/models/iammod/role-detail-dto.model';
+import { ApiClient } from 'src/app/services/api/api-client';
+import { PermissionType } from 'src/app/services/api/models/entity/permission-type.model';
+import { ClientItemDto } from 'src/app/services/api/models/iammod/client-item-dto.model';
+import { PermissionTreeNodeDto } from 'src/app/services/api/models/iammod/permission-tree-node-dto.model';
+import { RoleDetailDto } from 'src/app/services/api/models/iammod/role-detail-dto.model';
 import { CommonModules, CommonFormModules, BaseMatModules } from 'src/app/share/shared-modules';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 import { I18N_KEYS } from 'src/app/share/i18n-keys';
@@ -64,7 +64,7 @@ export class RolePermissionsComponent implements OnInit {
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
-    private readonly api: DotnetSwaggerClient,
+    private readonly api: ApiClient,
     private readonly snackBar: MatSnackBar,
     private readonly translate: TranslateService,
   ) {}

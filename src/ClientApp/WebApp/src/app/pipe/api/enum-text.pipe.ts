@@ -18,6 +18,16 @@ export class EnumTextPipe implements PipeTransform {
         }
         break;
 
+      case 'ClientRegistrationStatus':
+        switch (value) {
+          case 0: result = 'Pending'; break;
+          case 1: result = 'Approved'; break;
+          case 2: result = 'Rejected'; break;
+          case 3: result = 'Disabled'; break;
+          default: result = '默认'; break;
+        }
+        break;
+
       case 'ClientType':
         switch (value) {
           case 0: result = 'Confidential'; break;
@@ -31,6 +41,15 @@ export class EnumTextPipe implements PipeTransform {
           case 0: result = 'Explicit'; break;
           case 1: result = 'Implicit'; break;
           case 2: result = 'Systematic'; break;
+          default: result = '默认'; break;
+        }
+        break;
+
+      case 'PermissionType':
+        switch (value) {
+          case 1: result = 'Menu'; break;
+          case 2: result = 'Button'; break;
+          case 3: result = 'Business'; break;
           default: result = '默认'; break;
         }
         break;

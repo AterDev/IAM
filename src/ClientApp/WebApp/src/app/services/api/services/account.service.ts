@@ -5,6 +5,7 @@ import { RegisterRequestDto } from '../models/iammod/register-request-dto.model'
 import { UserDetailDto } from '../models/iammod/user-detail-dto.model';
 import { ForgotPasswordRequestDto } from '../models/iammod/forgot-password-request-dto.model';
 import { ResetPasswordRequestDto } from '../models/iammod/reset-password-request-dto.model';
+import { ChangePasswordRequestDto } from '../models/iammod/change-password-request-dto.model';
 import { MfaStatusDto } from '../models/iammod/mfa-status-dto.model';
 import { MfaSetupResponseDto } from '../models/iammod/mfa-setup-response-dto.model';
 import { EnableMfaRequestDto } from '../models/iammod/enable-mfa-request-dto.model';
@@ -38,6 +39,14 @@ export class AccountService extends BaseService {
    */
   resetPassword(data: ResetPasswordRequestDto): Observable<any> {
     const _url = `/api/Account/reset-password`;
+    return this.request<any>('post', _url, data);
+  }
+  /**
+   * changePassword
+   * @param data ChangePasswordRequestDto
+   */
+  changePassword(data: ChangePasswordRequestDto): Observable<any> {
+    const _url = `/api/Account/change-password`;
     return this.request<any>('post', _url, data);
   }
   /**
