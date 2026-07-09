@@ -34,7 +34,7 @@
 		<!-- Keep the Roslyn compiler package aligned with the SDK-hosted compiler in this repo's current .NET 10 toolchain.
 		     Using the centrally managed 5.3.0 package causes the source generator to load against a newer compiler than
 		     the host provides, which breaks generated Localizer members during build. -->
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" VersionOverride="5.0.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" VersionOverride="5.6.0" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="..\logo.jpg">

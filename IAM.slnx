@@ -25,6 +25,7 @@
   </Folder>
   <Folder Name="/src/Modules/">
     <Project Path="src/Modules/IAMMod/IAMMod.csproj" />
+    <Project Path="src/Modules/UserCenterMod/UserCenterMod.csproj" />
   </Folder>
   <Folder Name="/src/Perigon/">
     <Project Path="src/Perigon/Perigon.AspNetCore.SourceGeneration/Perigon.AspNetCore.SourceGeneration.csproj" />
@@ -35,6 +36,7 @@
     <Project Path="src/Services/ApiService/ApiService.csproj" />
     <Project Path="src/Services/ApiSampleService/ApiSampleService.csproj" />
     <Project Path="src/Services/MigrationService/MigrationService.csproj" />
+    <Project Path="src/Services/UserCenterService/UserCenterService.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Tests/Tests.csproj" />

@@ -1,0 +1,10 @@
+global using UserCenterService.Extension;
+global using Perigon.AspNetCore.Utils;
+global using Perigon.AspNetCore.Abstraction;
+global using Perigon.AspNetCore.Models;
+global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.EntityFrameworkCore;
+global using ServiceDefaults;
+global using Share;
+global using Share.Constants;
+global using Share.Implement;

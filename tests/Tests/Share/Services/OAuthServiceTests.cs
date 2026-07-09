@@ -5,16 +5,23 @@ namespace Tests.IAMMod.Services;
 /// </summary>
 public class OAuthServiceTests
 {
+    private static readonly IConfiguration Configuration = new ConfigurationBuilder()
+        .AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Authentication:Issuer"] = "https://issuer.example.com",
+        })
+        .Build();
+
     private readonly OAuthService _service = new(
         NullLogger<OAuthService>.Instance,
         Options.Create(
             new JwtOption
             {
                 ValidAudiences = "iam-tests",
-                ValidIssuer = "https://issuer.example.com",
                 Sign = "unused",
             }
-        )
+        ),
+        Configuration
     );
 
     [Fact]
@@ -27,7 +34,6 @@ public class OAuthServiceTests
     public void GenerateToken_WithNullClaims_ThrowsArgumentNullException()
     {
         var signingKey = CreateSigningKey();
-
         Assert.Throws<ArgumentNullException>(() => _service.GenerateToken(null!, signingKey));
     }
 

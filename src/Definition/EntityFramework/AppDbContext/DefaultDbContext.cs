@@ -10,6 +10,7 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
     // Common entities
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<SigningKey> SigningKeys { get; set; }
+    public DbSet<ProxyUsage> ProxyUsages { get; set; }
 
     // Identity entities
     public DbSet<User> Users { get; set; }
@@ -52,6 +53,14 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
             entity.HasIndex(e => e.KeyId).IsUnique();
             entity.HasIndex(e => e.IsActive);
             entity.HasIndex(e => e.TenantId);
+        });
+
+        // ProxyUsage configuration
+        builder.Entity<ProxyUsage>(entity =>
+        {
+            entity.HasIndex(e => new { e.UserId, e.Date }).IsUnique();
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.Date);
         });
     }
 

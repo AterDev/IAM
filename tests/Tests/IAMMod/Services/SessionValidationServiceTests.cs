@@ -119,7 +119,6 @@ public class SessionValidationServiceTests
             Options.Create(new JwtOption
             {
                 ValidAudiences = "tests",
-                ValidIssuer = "tests",
                 Sign = "tests-sign",
                 ExpiredSecond = 7200,
             }));

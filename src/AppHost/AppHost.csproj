@@ -18,5 +18,6 @@
         <ProjectReference Include="..\Services\ApiService\ApiService.csproj" />
         <ProjectReference Include="..\Services\ApiSampleService\ApiSampleService.csproj" />
         <ProjectReference Include="..\Services\MigrationService\MigrationService.csproj" />
+        <ProjectReference Include="..\Services\UserCenterService\UserCenterService.csproj" />
     </ItemGroup>
 </Project>
