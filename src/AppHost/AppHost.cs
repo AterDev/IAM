@@ -4,6 +4,7 @@ using Perigon.AspNetCore.Constants;
 
 var builder = DistributedApplication.CreateBuilder(args);
 var aspireSetting = AppSettingsHelper.LoadAspireSettings(builder.Configuration);
+var isTesting = builder.Configuration["ASPIRE_ENVIRONMENT"]?.ToLowerInvariant() == "testing";
 var publicOrigin = builder.AddParameter("public-origin");
 
 builder.AddDockerComposeEnvironment("compose")
@@ -28,7 +29,7 @@ if (!string.IsNullOrWhiteSpace(externalCache))
 
 #region containers
 // 未提供外部连接串时，回退到本地容器资源，便于开发环境开箱即用。
-var defaultName = "IAM_dev";
+var defaultName = isTesting ? "IAM_test" : "IAM_dev";
 var devPassword = builder.AddParameter(
     "sql-password",
     value: aspireSetting.DevPassword,

@@ -8,7 +8,10 @@ namespace Tests.IAMMod.Managers;
 
 internal static class ManagerTestFactory
 {
-    public static TManager Create<TManager, TEntity>(DefaultDbContext dbContext)
+    public static TManager Create<TManager, TEntity>(
+        DefaultDbContext dbContext,
+        IReadOnlyDictionary<string, object?>? managerFields = null
+    )
         where TManager : ManagerBase<DefaultDbContext, TEntity>
         where TEntity : class, IEntityBase
     {
@@ -23,6 +26,14 @@ internal static class ManagerTestFactory
 
         var queryableProperty = baseType.GetProperty("Queryable", BindingFlags.Instance | BindingFlags.NonPublic);
         queryableProperty?.SetValue(manager, dbContext.Set<TEntity>().AsNoTracking().AsQueryable());
+
+        if (managerFields is not null)
+        {
+            foreach (var (fieldName, value) in managerFields)
+            {
+                SetField(typeof(TManager), manager, fieldName, value);
+            }
+        }
 
         return manager;
     }

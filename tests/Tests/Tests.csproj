@@ -25,6 +25,7 @@
     <ProjectReference Include="..\..\src\Definition\Share\Share.csproj" />
     <ProjectReference Include="..\..\src\Perigon\Perigon.AspNetCore\Perigon.AspNetCore.csproj" />
     <ProjectReference Include="..\..\src\Modules\IAMMod\IAMMod.csproj" />
+    <ProjectReference Include="..\..\src\Modules\UserCenterMod\UserCenterMod.csproj" />
   </ItemGroup>
 
 </Project>
