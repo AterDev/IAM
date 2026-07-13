@@ -94,6 +94,14 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/resource/detail/detail').then(m => m.ResourceDetailComponent)
       },
       {
+        path: 'entitlement-definitions',
+        loadComponent: () => import('./pages/entitlement-definitions/list').then(m => m.EntitlementDefinitionListComponent)
+      },
+      {
+        path: 'user-entitlements',
+        loadComponent: () => import('./pages/user-entitlements/list').then(m => m.UserEntitlementListComponent)
+      },
+      {
         path: 'security/session-list',
         loadComponent: () => import('./pages/security/session-list/list').then(m => m.SessionListComponent)
       },

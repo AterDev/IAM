@@ -140,7 +140,10 @@
     "scope": "Scope",
     "mfa": "Multi-factor authentication",
     "sessions": "Sessions",
-    "auditLogs": "Audit Logs"
+    "auditLogs": "Audit Logs",
+    "entitlements": "User entitlements",
+    "entitlementDefinitions": "Entitlement definitions",
+    "userEntitlements": "Entitlement configuration"
   },
   "common": {
     "add": "Add",
@@ -528,5 +531,10 @@
       "rejected": "Password grant rejected",
       "failed": "Password grant failed"
     }
+  },
+  "entitlement": {
+    "definitionTitle": "Entitlement definitions", "configurationTitle": "User entitlement configuration",
+    "code": "Code", "displayName": "Display name", "description": "Description", "unit": "Unit", "type": "Type", "proxyUsage": "Proxy usage",
+    "userSearch": "Search users", "selectUser": "Select user", "valueLimit": "Value limit", "currentValue": "Current value", "startDate": "Start date", "expirationDate": "Expiration date"
   }
 }

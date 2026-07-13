@@ -172,7 +172,10 @@
     "scope": "作用域管理",
     "mfa": "多因素认证",
     "sessions": "会话管理",
-    "auditLogs": "审计日志"
+    "auditLogs": "审计日志",
+    "entitlements": "用户权益",
+    "entitlementDefinitions": "权益定义",
+    "userEntitlements": "权益配置"
   },
   "common": {
     "add": "添加",
@@ -560,5 +563,10 @@
       "rejected": "Password Grant 被拒绝",
       "failed": "Password Grant 失败"
     }
+  },
+  "entitlement": {
+    "definitionTitle": "权益定义", "configurationTitle": "权益配置",
+    "code": "权益代码", "displayName": "显示名称", "description": "描述", "unit": "单位", "type": "权益类型", "proxyUsage": "代理流量",
+    "userSearch": "搜索用户", "selectUser": "选择用户", "valueLimit": "权益额度", "currentValue": "当前用量", "startDate": "开始时间", "expirationDate": "过期时间"
   }
 }

@@ -175,7 +175,10 @@ export const I18N_KEYS = {
     "scope": "menu.scope",
     "mfa": "menu.mfa",
     "sessions": "menu.sessions",
-    "auditLogs": "menu.auditLogs"
+    "auditLogs": "menu.auditLogs",
+    "entitlements": "menu.entitlements",
+    "entitlementDefinitions": "menu.entitlementDefinitions",
+    "userEntitlements": "menu.userEntitlements"
   },
   "common": {
     "add": "common.add",
@@ -563,5 +566,21 @@ export const I18N_KEYS = {
       "rejected": "passwordGrantAudit.events.rejected",
       "failed": "passwordGrantAudit.events.failed"
     }
+  },
+  "entitlement": {
+    "definitionTitle": "entitlement.definitionTitle",
+    "configurationTitle": "entitlement.configurationTitle",
+    "code": "entitlement.code",
+    "displayName": "entitlement.displayName",
+    "description": "entitlement.description",
+    "unit": "entitlement.unit",
+    "type": "entitlement.type",
+    "proxyUsage": "entitlement.proxyUsage",
+    "userSearch": "entitlement.userSearch",
+    "selectUser": "entitlement.selectUser",
+    "valueLimit": "entitlement.valueLimit",
+    "currentValue": "entitlement.currentValue",
+    "startDate": "entitlement.startDate",
+    "expirationDate": "entitlement.expirationDate"
   }
 };

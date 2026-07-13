@@ -19,7 +19,7 @@ public class UserCenterManagerTests
     {
         await using var dbContext = TestDbContextFactory.Create(nameof(LoginAsync_WithValidCredentials_ReturnsUserId));
         var user = SeedUser(dbContext, "login@example.com", "P@ssw0rd!");
-        var manager = CreateManager(dbContext);
+        var manager = CreateUserCenterManager(dbContext);
 
         var userId = await manager.LoginAsync(new UserCenterLoginDto
         {
@@ -35,7 +35,7 @@ public class UserCenterManagerTests
     {
         await using var dbContext = TestDbContextFactory.Create(nameof(LoginAsync_WithInvalidPassword_ThrowsUnauthorizedBusinessException));
         SeedUser(dbContext, "login@example.com", "P@ssw0rd!");
-        var manager = CreateManager(dbContext);
+        var manager = CreateUserCenterManager(dbContext);
 
         var exception = await Assert.ThrowsAsync<BusinessException>(() => manager.LoginAsync(new UserCenterLoginDto
         {
@@ -52,7 +52,7 @@ public class UserCenterManagerTests
     {
         await using var dbContext = TestDbContextFactory.Create(nameof(ValidateTokenAsync_WithCurrentUserToken_ReturnsTokenUser));
         var user = SeedUser(dbContext, "token@example.com", "P@ssw0rd!");
-        var manager = CreateManager(dbContext);
+        var manager = CreateUserCenterManager(dbContext);
 
         var result = await manager.ValidateTokenAsync($"Bearer {CreateToken(user, DateTimeOffset.UtcNow)}");
 
@@ -66,7 +66,7 @@ public class UserCenterManagerTests
     {
         await using var dbContext = TestDbContextFactory.Create(nameof(ValidateTokenAsync_WithExpiredToken_ReturnsNull));
         var user = SeedUser(dbContext, "expired@example.com", "P@ssw0rd!");
-        var manager = CreateManager(dbContext);
+        var manager = CreateUserCenterManager(dbContext);
 
         var result = await manager.ValidateTokenAsync(CreateToken(user, DateTimeOffset.UtcNow.AddSeconds(-6)));
 
@@ -77,7 +77,7 @@ public class UserCenterManagerTests
     public async Task AddProxyUsageAsync_OnSameDate_AccumulatesIntoOneRecord()
     {
         await using var dbContext = TestDbContextFactory.Create(nameof(AddProxyUsageAsync_OnSameDate_AccumulatesIntoOneRecord));
-        var manager = CreateManager(dbContext);
+        var manager = CreateProxyUsageManager(dbContext);
         var userId = Guid.CreateVersion7();
 
         var firstUsage = await manager.AddProxyUsageAsync(userId, 128);
@@ -95,7 +95,7 @@ public class UserCenterManagerTests
     public async Task GetProxyUsagePageAsync_ReturnsOnlyCurrentUserUsage()
     {
         await using var dbContext = TestDbContextFactory.Create(nameof(GetProxyUsagePageAsync_ReturnsOnlyCurrentUserUsage));
-        var manager = CreateManager(dbContext);
+        var manager = CreateProxyUsageManager(dbContext);
         var userId = Guid.CreateVersion7();
         var otherUserId = Guid.CreateVersion7();
 
@@ -117,9 +117,9 @@ public class UserCenterManagerTests
         Assert.Equal(256, usage.Usage);
     }
 
-    private static UserCenterManager CreateManager(DefaultDbContext dbContext)
+    private static UserCenterManager CreateUserCenterManager(DefaultDbContext dbContext)
     {
-        return ManagerTestFactory.Create<UserCenterManager, ProxyUsage>(
+        return ManagerTestFactory.Create<UserCenterManager, User>(
             dbContext,
             new Dictionary<string, object?>
             {
@@ -127,6 +127,9 @@ public class UserCenterManagerTests
             }
         );
     }
+
+    private static ProxyUsageManager CreateProxyUsageManager(DefaultDbContext dbContext) =>
+        ManagerTestFactory.Create<ProxyUsageManager, ProxyUsage>(dbContext);
 
     private static CacheService CreateCacheService()
     {

@@ -1,0 +1,3 @@
+.entitlement-page { display: grid; gap: 1rem; }
+.user-picker, .add-form { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
+.user-picker mat-form-field, .add-form mat-form-field { min-width: 14rem; }

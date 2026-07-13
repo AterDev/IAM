@@ -90,5 +90,31 @@
                 "menuType": 0
             }
         ]
+    },
+    {
+        "name": "menu.entitlements",
+        "path": null,
+        "accessCode": "entitlements",
+        "icon": "workspace_premium",
+        "sort": 2,
+        "menuType": 0,
+        "children": [
+            {
+                "name": "menu.entitlementDefinitions",
+                "path": "/entitlement-definitions",
+                "accessCode": "entitlement-definitions",
+                "icon": "fact_check",
+                "sort": 0,
+                "menuType": 0
+            },
+            {
+                "name": "menu.userEntitlements",
+                "path": "/user-entitlements",
+                "accessCode": "user-entitlements",
+                "icon": "card_membership",
+                "sort": 1,
+                "menuType": 0
+            }
+        ]
     }
 ]

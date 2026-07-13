@@ -54,6 +54,13 @@ export class EnumTextPipe implements PipeTransform {
         }
         break;
 
+      case 'UserEntitlementType':
+        switch (value) {
+          case 1: result = 'ProxyUsage'; break;
+          default: result = '默认'; break;
+        }
+        break;
+
 
       default:
         break;

@@ -50,6 +50,21 @@ src/
 | Angular frontend development | [references/angular.md](references/angular.md) |
 | Backend architecture and service patterns | [references/backend.md](references/backend.md) |
 
+
+## Project scripts
+
+Run project scripts when needed ,Use PowerShell 7 (`pwsh`) when available.
+
+Treat these scripts as part of the template workflow; do not reimplement their behavior manually.
+
+| Script | Purpose and when to run | Command |
+|---|---|---|
+| `scripts/EFMigrations.ps1` | Build and create an EF Core migration for `DefaultDbContext`, using the database and multi-tenant settings from `src/AppHost/appsettings.Development.json`. Run after a persisted entity, EF mapping, or database schema changes, before committing the migration. Supply a descriptive migration name; omit it only when a timestamp name is acceptable. Use `Remove` only to remove the latest un-applied migration. Migrations are applied by the application at startup. | `pwsh ./scripts/EFMigrations.ps1 -Name AddOrderStatus`<br>`pwsh ./scripts/EFMigrations.ps1 -Name Remove` |
+| `scripts/GenSwagger.ps1` | Build one service and export its OpenAPI document to `src/Services/{ServiceName}/swagger.json`; it also normalizes the document title. Run after changing a service's public endpoints, request/response contracts, or OpenAPI configuration, and before generating or refreshing clients that consume that service's OpenAPI file. | `pwsh ./scripts/GenSwagger.ps1 -ServiceName ApiService`<br>`pwsh ./scripts/GenSwagger.ps1 -ServiceName AdminService -DocumentName v1` |
+
+
+`EFMigrations.ps1` restores the local tool manifest automatically. Before running `GenSwagger.ps1`, run `dotnet tool restore` from `ApiStandard` if the local `swagger` command is unavailable. The manifest provides `dotnet-ef` and the `swagger` CLI. Review generated migration and `swagger.json` diffs before committing.
+
 ## Important rules
 
 - **Use Perigon for scaffolding and code generation**, not for build/test/run.

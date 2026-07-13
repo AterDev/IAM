@@ -1,0 +1,162 @@
+- generic [ref=f2e1]:
+  - generic [ref=f2e5]:
+    - generic [ref=f2e6]:
+      - button [ref=f2e302]:
+        - generic [ref=f2e9]: 首页
+      - generic [ref=f2e12]:
+        - radiogroup [ref=f2e303]:
+          - radio [checked] [ref=f2e304] [cursor=pointer]:
+            - generic [ref=f2e17]: 中
+          - radio [ref=f2e305] [cursor=pointer]:
+            - generic [ref=f2e20]: En
+        - button [ref=f2e306]:
+          - img [ref=f2e22]: arrow_drop_down
+          - generic [ref=f2e23]: admin
+    - generic [ref=f2e27]:
+      - generic [ref=f2e30]:
+        - button [ref=f2e32] [cursor=pointer]:
+          - img [ref=f2e33]: keyboard_double_arrow_left
+        - generic [ref=f2e36]:
+          - generic [ref=f2e37]:
+            - button [expanded] [ref=f2e307] [cursor=pointer]:
+              - generic [ref=f2e41]:
+                - img [ref=f2e42]: people
+                - text: 权限配置
+            - region [ref=f2e308]:
+              - generic [ref=f2e45]:
+                - navigation [ref=f2e46]:
+                  - link [ref=f2e309] [cursor=pointer]:
+                    - /url: /user/list
+                    - generic [ref=f2e49]:
+                      - img [ref=f2e50]: manage_accounts
+                      - text: 用户管理
+                - navigation [ref=f2e51]:
+                  - link [ref=f2e310] [cursor=pointer]:
+                    - /url: /role/list
+                    - generic [ref=f2e54]:
+                      - img [ref=f2e55]: groups
+                      - text: 角色管理
+                - navigation [ref=f2e56]:
+                  - link [ref=f2e311] [cursor=pointer]:
+                    - /url: /permission/list
+                    - generic [ref=f2e59]:
+                      - img [ref=f2e60]: account_tree
+                      - text: 权限管理
+                - navigation [ref=f2e61]:
+                  - link [ref=f2e312] [cursor=pointer]:
+                    - /url: /organization/list
+                    - generic [ref=f2e64]:
+                      - img [ref=f2e65]: corporate_fare
+                      - text: 组织管理
+                - navigation [ref=f2e66]:
+                  - link [ref=f2e313] [cursor=pointer]:
+                    - /url: /security/audit-log-list
+                    - generic [ref=f2e69]:
+                      - img [ref=f2e70]: history
+                      - text: 审计日志
+          - generic [ref=f2e71]:
+            - button [expanded] [ref=f2e314] [cursor=pointer]:
+              - generic [ref=f2e75]:
+                - img [ref=f2e76]: security
+                - text: OAuth配置
+            - region [ref=f2e315]:
+              - generic [ref=f2e79]:
+                - navigation [ref=f2e80]:
+                  - link [ref=f2e316] [cursor=pointer]:
+                    - /url: /client/list
+                    - generic [ref=f2e83]:
+                      - img [ref=f2e84]: apps
+                      - text: 应用管理
+                - navigation [ref=f2e85]:
+                  - link [ref=f2e317] [cursor=pointer]:
+                    - /url: /resource/list
+                    - generic [ref=f2e88]:
+                      - img [ref=f2e89]: api
+                      - text: 资源管理
+                - navigation [ref=f2e90]:
+                  - link [ref=f2e318] [cursor=pointer]:
+                    - /url: /scope/list
+                    - generic [ref=f2e93]:
+                      - img [ref=f2e94]: vpn_key
+                      - text: 作用域管理
+                - navigation [ref=f2e95]:
+                  - link [ref=f2e319] [cursor=pointer]:
+                    - /url: /security/session-list
+                    - generic [ref=f2e98]:
+                      - img [ref=f2e99]: devices
+                      - text: 会话管理
+          - generic [ref=f2e100]:
+            - button [expanded] [ref=f2e320] [cursor=pointer]:
+              - generic [ref=f2e104]:
+                - img [ref=f2e105]: workspace_premium
+                - text: 用户权益
+            - region [ref=f2e321]:
+              - generic [ref=f2e108]:
+                - navigation [ref=f2e109]:
+                  - link [ref=f2e322] [cursor=pointer]:
+                    - /url: /entitlement-definitions
+                    - generic [ref=f2e112]:
+                      - img [ref=f2e113]: fact_check
+                      - text: 权益定义
+                - navigation [ref=f2e114]:
+                  - link [ref=f2e323] [cursor=pointer]:
+                    - /url: /user-entitlements
+                    - generic [ref=f2e117]:
+                      - img [ref=f2e118]: card_membership
+                      - text: 权益配置
+      - generic [ref=f2e247]:
+        - generic [ref=f2e248]:
+          - generic [ref=f2e251]:
+            - generic: 搜索
+            - textbox [ref=f2e324]
+            - button [ref=f2e256] [cursor=pointer]:
+              - img [ref=f2e257]: search
+          - button [ref=f2e325]:
+            - img [ref=f2e261]: add
+            - generic [ref=f2e262]: 添加
+        - table [ref=f2e265]:
+          - rowgroup [ref=f2e266]:
+            - row [ref=f2e326]:
+              - columnheader [ref=f2e327]: 权益代码
+              - columnheader [ref=f2e328]: 显示名称
+              - columnheader [ref=f2e329]: 单位
+              - columnheader [ref=f2e330]: 操作
+        - group [ref=f2e272]:
+          - generic [ref=f2e274]:
+            - generic [ref=f2e275]:
+              - generic [ref=f2e276]: "Items per page:"
+              - combobox [ref=f2e331] [cursor=pointer]:
+                - generic [ref=f2e282]: "10"
+            - generic [ref=f2e290]:
+              - generic [ref=f2e291]: 0 of 0
+              - button [disabled] [ref=f2e332]
+              - button [disabled] [ref=f2e333]
+  - dialog [ref=f2e337]:
+    - generic [ref=f2e340]:
+      - heading "添加" [level=2] [ref=f2e341]
+      - generic [ref=f2e343]:
+        - generic [ref=f2e347]:
+          - generic [ref=f2e348]:
+            - text: 权益代码
+            - generic [ref=f2e349]: "*"
+          - textbox "权益代码" [active] [ref=f2e350]
+        - generic [ref=f2e355]:
+          - generic [ref=f2e356]:
+            - text: 显示名称
+            - generic [ref=f2e357]: "*"
+          - textbox "显示名称" [ref=f2e358]
+        - generic [ref=f2e363]:
+          - generic [ref=f2e364]:
+            - text: 单位
+            - generic [ref=f2e365]: "*"
+          - textbox "单位" [ref=f2e366]
+        - generic [ref=f2e371]:
+          - generic [ref=f2e372]: 描述
+          - textbox "描述" [ref=f2e373]
+        - generic [ref=f2e378] [cursor=pointer]:
+          - generic [ref=f2e379]: 权益类型
+          - combobox "权益类型" [ref=f2e380]:
+            - generic [ref=f2e381]: 代理流量
+      - generic [ref=f2e389]:
+        - button "取消" [ref=f2e390]
+        - button "保存" [ref=f2e394]

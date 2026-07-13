@@ -11,6 +11,8 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<SigningKey> SigningKeys { get; set; }
     public DbSet<ProxyUsage> ProxyUsages { get; set; }
+    public DbSet<UserEntitlementDefinition> UserEntitlementDefinitions { get; set; }
+    public DbSet<UserEntitlement> UserEntitlements { get; set; }
 
     // Identity entities
     public DbSet<User> Users { get; set; }
@@ -61,6 +63,22 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
             entity.HasIndex(e => new { e.UserId, e.Date }).IsUnique();
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.Date);
+        });
+
+        builder.Entity<UserEntitlementDefinition>(entity =>
+        {
+            entity.HasIndex(e => e.EntitlementCode).IsUnique();
+        });
+
+        builder.Entity<UserEntitlement>(entity =>
+        {
+            entity.HasIndex(e => new { e.UserId, e.EntitlementDefinitionId }).IsUnique();
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.EntitlementDefinitionId);
+            entity.HasOne(e => e.EntitlementDefinition)
+                .WithMany(e => e.UserEntitlements)
+                .HasForeignKey(e => e.EntitlementDefinitionId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 

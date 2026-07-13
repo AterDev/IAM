@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using UserCenterMod.Managers;
 using UserCenterMod.Models;
 
@@ -6,9 +7,12 @@ namespace UserCenterService.Controllers;
 /// <summary>
 /// User center APIs for password login and proxy traffic usage.
 /// </summary>
+[AllowAnonymous]
 public class UserCenterController(
     Localizer localizer,
-    UserCenterManager manager
+    UserCenterManager manager,
+    ProxyUsageManager proxyUsageManager,
+    UserEntitlementManager userEntitlementManager
 ) : RestControllerBase(localizer)
 {
     /// <summary>
@@ -38,7 +42,7 @@ public class UserCenterController(
             return Unauthorized();
         }
 
-        var usage = await manager.AddProxyUsageAsync(
+        var usage = await proxyUsageManager.AddProxyUsageAsync(
             tokenUser.UserId,
             dto.Usage,
             cancellationToken
@@ -61,7 +65,24 @@ public class UserCenterController(
             return Unauthorized();
         }
 
-        return Ok(await manager.GetProxyUsagePageAsync(tokenUser.UserId, filter, cancellationToken));
+        return Ok(await proxyUsageManager.GetProxyUsagePageAsync(tokenUser.UserId, filter, cancellationToken));
+    }
+
+    /// <summary>
+    /// Get an active entitlement for the current user.
+    /// </summary>
+    [HttpGet("GetEntitlement")]
+    public async Task<ActionResult<UserEntitlementDetailDto>> GetEntitlement(
+        [FromQuery] string entitlementCode,
+        CancellationToken cancellationToken)
+    {
+        var tokenUser = await GetTokenUserAsync(cancellationToken);
+        if (tokenUser is null) return Unauthorized();
+        if (string.IsNullOrWhiteSpace(entitlementCode)) return BadRequest(Localizer.BadRequest);
+
+        var entitlement = await userEntitlementManager.GetActiveEntitlementAsync(
+            tokenUser.UserId, entitlementCode, cancellationToken);
+        return entitlement is null ? Forbid("Entitlement is unavailable.") : Ok(entitlement);
     }
 
     private Task<UserCenterTokenUser?> GetTokenUserAsync(CancellationToken cancellationToken)

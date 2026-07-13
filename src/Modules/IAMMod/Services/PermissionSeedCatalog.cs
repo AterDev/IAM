@@ -26,6 +26,11 @@ public static class PermissionSeedCatalog
             new("scope", "Scope", PermissionType.Menu, path: "/scope/list"),
             new("security-sessions", "Sessions", PermissionType.Menu, path: "/security/session-list"),
         ]),
+        new("entitlements", "User Entitlements", PermissionType.Menu, children:
+        [
+            new("entitlement-definitions", "Entitlement Definitions", PermissionType.Menu, path: "/entitlement-definitions"),
+            new("user-entitlements", "Entitlement Configuration", PermissionType.Menu, path: "/user-entitlements"),
+        ]),
     ];
 
     public static IReadOnlyList<PermissionSeedDefinition> DefaultBusinessPermissions { get; } =

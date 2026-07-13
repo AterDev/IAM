@@ -14,6 +14,8 @@ import { ResourcesService } from './services/resources.service';
 import { RolesService } from './services/roles.service';
 import { ScopesService } from './services/scopes.service';
 import { SecurityService } from './services/security.service';
+import { UserEntitlementDefinitionsService } from './services/user-entitlement-definitions.service';
+import { UserEntitlementsService } from './services/user-entitlements.service';
 import { UsersService } from './services/users.service';
 @Injectable({
   providedIn: 'root'
@@ -49,6 +51,10 @@ export class ApiClient {
   public scopes = inject(ScopesService);
   /** Security controller for session and audit log management */
   public security = inject(SecurityService);
+  /** Administrator API for entitlement definitions. */
+  public userEntitlementDefinitions = inject(UserEntitlementDefinitionsService);
+  /** Administrator API for a user's entitlement assignments. */
+  public userEntitlements = inject(UserEntitlementsService);
   /** User management controller */
   public users = inject(UsersService);
 }

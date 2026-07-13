@@ -15,6 +15,7 @@
         <ProjectReference Include="..\..\Perigon\Perigon.AspNetCore.SourceGeneration\Perigon.AspNetCore.SourceGeneration.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
         <ProjectReference Include="..\..\Definition\ServiceDefaults\ServiceDefaults.csproj" />
         <ProjectReference Include="..\..\Modules\IAMMod\IAMMod.csproj" />
+        <ProjectReference Include="..\..\Modules\UserCenterMod\UserCenterMod.csproj" />
     </ItemGroup>
     <ItemGroup>
         <Folder Include="Services\" />

@@ -8,8 +8,9 @@ param (
 
 dotnet tool restore
 $location = Get-Location
+$migrationServicePath = Join-Path $PSScriptRoot "..\src\Services\MigrationService"
 
-Set-Location ../src/Services/MigrationService
+Set-Location $migrationServicePath
 if ([string]::IsNullOrWhiteSpace($Name)) {
     $Name = [DateTime]::Now.ToString("yyyyMMdd-HHmmss")
 }
