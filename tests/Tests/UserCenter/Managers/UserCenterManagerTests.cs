@@ -92,6 +92,36 @@ public class UserCenterManagerTests
     }
 
     [Fact]
+    public async Task AddProxyUsageAsync_IncrementsActiveHttpProxyEntitlement()
+    {
+        await using var dbContext = TestDbContextFactory.Create(nameof(AddProxyUsageAsync_IncrementsActiveHttpProxyEntitlement));
+        var userId = Guid.CreateVersion7();
+        var definition = new UserEntitlementDefinition
+        {
+            DisplayName = "HTTP Proxy",
+            EntitlementCode = "HttpProxy",
+            EntitlementType = UserEntitlementType.ProxyUsage,
+            Unit = "bytes",
+        };
+        var entitlement = new UserEntitlement
+        {
+            UserId = userId,
+            EntitlementDefinition = definition,
+            ValueLimit = 1024,
+            StartDate = DateTimeOffset.UtcNow.AddMinutes(-1),
+        };
+        dbContext.UserEntitlements.Add(entitlement);
+        await dbContext.SaveChangesAsync();
+
+        var manager = CreateProxyUsageManager(dbContext);
+
+        await manager.AddProxyUsageAsync(userId, 128);
+
+        Assert.Equal(128, entitlement.CurrentValue);
+        Assert.Equal(128, (await dbContext.ProxyUsages.SingleAsync()).Usage);
+    }
+
+    [Fact]
     public async Task GetProxyUsagePageAsync_ReturnsOnlyCurrentUserUsage()
     {
         await using var dbContext = TestDbContextFactory.Create(nameof(GetProxyUsagePageAsync_ReturnsOnlyCurrentUserUsage));
@@ -129,7 +159,9 @@ public class UserCenterManagerTests
     }
 
     private static ProxyUsageManager CreateProxyUsageManager(DefaultDbContext dbContext) =>
-        ManagerTestFactory.Create<ProxyUsageManager, ProxyUsage>(dbContext);
+        ManagerTestFactory.Create<ProxyUsageManager, ProxyUsage>(
+            dbContext,
+            new Dictionary<string, object?> { ["_cacheService"] = CacheService });
 
     private static CacheService CreateCacheService()
     {
