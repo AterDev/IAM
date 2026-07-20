@@ -142,17 +142,19 @@ docker run -d --name iam-app \
 如果不想挂载配置文件，也可以继续通过环境变量传入同样的值：
 
 ```bash
-docker run -d --name iam-app \
-  -p 8080:8080 \
+docker run -d --name iam \
+  --add-host=host.docker.internal:host-gateway \
+  -p 9000:8080 \
   -e ASPNETCORE_ENVIRONMENT=Production \
-  -e Authentication__Issuer="https://auth.xxx.cn" \
+  -e Authentication__Issuer="https://auth.typinglearn.cn" \
+  -e Authentication__DisplayName="TypingLearn" \
   -e Components__Database=PostgreSQL \
   -e Components__Cache=Memory \
-  -e ConnectionStrings__Default="Host=host.docker.internal;Port=5432;Database=IAM;Username=iam;Password=iam_test_pwd;Include Error Detail=true" \
+  -e ConnectionStrings__Default="Server=host.docker.internal;Port=5432;Database=IAM;User Id=niltor;Password=n0th1ngisNULL;" \
   niltor/iam:latest
 ```
 
-> 数据库在宿主机上时，使用 `host.docker.internal` 作为对应的主机名，并添加 `--add-host=host.docker.internal:host-gateway` 参数。
+> 数据库在宿主机上时，使用 `host.docker.internal` 作为对应的主机名，linux下可能要并添加 `--add-host=host.docker.internal:host-gateway` 参数。
 
 如果使用 Redis，可追加：
 

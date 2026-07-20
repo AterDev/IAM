@@ -57,11 +57,11 @@ public class InitHostService(
                 await dbContext.SaveChangesAsync(stoppingToken);
 
                 logger.LogInformation("Initial signing key generated: {KeyId}", signingKey.KeyId);
-            }
 
-            await SeedOAuthDataAsync(dbContext, stoppingToken);
-            await SeedInitialDataAsync(dbContext, stoppingToken);
-            await SeedPermissionDataAsync(dbContext, stoppingToken);
+                await SeedOAuthDataAsync(dbContext, stoppingToken);
+                await SeedInitialDataAsync(dbContext, stoppingToken);
+                await SeedPermissionDataAsync(dbContext, stoppingToken);
+            }
 
             var cacheService = scope.ServiceProvider.GetRequiredService<CacheService>();
             await cacheService.RemoveAsync(OAuthConst.SigningActiveKeyCacheKey);
