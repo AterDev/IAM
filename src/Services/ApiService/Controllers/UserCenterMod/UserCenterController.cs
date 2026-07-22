@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using UserCenterMod.Managers;
 using UserCenterMod.Models;
 
-namespace UserCenterService.Controllers;
+namespace ApiService.Controllers.UserCenterMod;
 
 /// <summary>
 /// User center APIs for password login and proxy traffic usage.

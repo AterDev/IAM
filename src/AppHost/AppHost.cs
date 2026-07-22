@@ -73,9 +73,6 @@ var migration = builder.AddProject<Projects.MigrationService>("MigrationService"
 var apiService = builder.AddProject<Projects.ApiService>("ApiService")
     .WaitForCompletion(migration)
     .WithExternalHttpEndpoints();
-var userCenterService = builder.AddProject<Projects.UserCenterService>("UserCenterService")
-    .WaitForCompletion(migration)
-    .WithExternalHttpEndpoints();
 
 if (builder.ExecutionContext.IsRunMode)
 {
@@ -120,13 +117,11 @@ if (database != null)
 {
     migration.WithReference(database).WaitFor(database);
     apiService.WithReference(database);
-    userCenterService.WithReference(database);
 }
 if (cache != null)
 {
     migration.WithReference(cache).WaitFor(cache);
     apiService.WithReference(cache);
-    userCenterService.WithReference(cache);
 }
 
 builder.Build().Run();
