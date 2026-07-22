@@ -1,17 +1,18 @@
 <section class="entitlement-page">
   <h1>{{ 'entitlement.configurationTitle' | translate }}</h1>
-  <div class="user-picker" [formGroup]="userForm">
-    <mat-form-field><mat-label>{{ 'entitlement.userSearch' | translate }}</mat-label><input matInput [formControl]="userForm.controls.keyword" (keyup.enter)="searchUsers()"></mat-form-field><button matButton="tonal" (click)="searchUsers()">{{ 'common.search' | translate }}</button>
-    <mat-form-field><mat-label>{{ 'entitlement.selectUser' | translate }}</mat-label><mat-select [formControl]="userForm.controls.userId" (selectionChange)="selectUser($event.value)"><mat-option *ngFor="let user of users()" [value]="user.id">{{ user.userName }} · {{ user.email }}</mat-option></mat-select></mat-form-field>
+  <div class="user-picker">
+    <mat-form-field subscriptSizing="dynamic">
+      <mat-label>{{ 'entitlement.selectUser' | translate }}</mat-label>
+      <input matInput [formControl]="userControl" [matAutocomplete]="userAutocomplete">
+      <mat-autocomplete #userAutocomplete="matAutocomplete" [displayWith]="displayUser" (optionSelected)="selectUser($event.option.value)">
+        @for (user of users(); track user.id) {
+          <mat-option [value]="user">{{ user.userName }} · {{ user.email }}</mat-option>
+        }
+      </mat-autocomplete>
+    </mat-form-field>
   </div>
-  @if (userForm.controls.userId.value) {
-    <form class="add-form" [formGroup]="form" (ngSubmit)="add()">
-      <mat-form-field><mat-label>{{ 'entitlement.definitionTitle' | translate }}</mat-label><mat-select [formControl]="form.controls.entitlementDefinitionId"><mat-option *ngFor="let item of availableDefinitions()" [value]="item.id">{{ item.displayName }} ({{ item.entitlementCode }})</mat-option></mat-select></mat-form-field>
-      <mat-form-field><mat-label>{{ 'entitlement.valueLimit' | translate }}</mat-label><input matInput type="number" [formControl]="form.controls.valueLimit"></mat-form-field>
-      <mat-form-field><mat-label>{{ 'entitlement.startDate' | translate }}</mat-label><input matInput type="datetime-local" [formControl]="form.controls.startDate"></mat-form-field>
-      <mat-form-field><mat-label>{{ 'entitlement.expirationDate' | translate }}</mat-label><input matInput type="datetime-local" [formControl]="form.controls.expirationDate"></mat-form-field>
-      <button matButton="filled" type="submit">{{ 'common.add' | translate }}</button>
-    </form>
+  @if (selectedUser()) {
+    <div class="actions"><button matButton="filled" (click)="add()"><mat-icon>add</mat-icon>{{ 'common.add' | translate }}</button></div>
     <table mat-table [dataSource]="entitlements()"><ng-container matColumnDef="code"><th mat-header-cell *matHeaderCellDef>{{ 'entitlement.code' | translate }}</th><td mat-cell *matCellDef="let item">{{ item.entitlementCode }}</td></ng-container><ng-container matColumnDef="limit"><th mat-header-cell *matHeaderCellDef>{{ 'entitlement.valueLimit' | translate }}</th><td mat-cell *matCellDef="let item">{{ item.valueLimit }} {{ item.unit }}</td></ng-container><ng-container matColumnDef="used"><th mat-header-cell *matHeaderCellDef>{{ 'entitlement.currentValue' | translate }}</th><td mat-cell *matCellDef="let item">{{ item.currentValue }}</td></ng-container><ng-container matColumnDef="expiration"><th mat-header-cell *matHeaderCellDef>{{ 'entitlement.expirationDate' | translate }}</th><td mat-cell *matCellDef="let item">{{ item.expirationDate | date:'yyyy-MM-dd HH:mm' }}</td></ng-container><ng-container matColumnDef="actions"><th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th><td mat-cell *matCellDef="let item"><button mat-icon-button (click)="delete(item.id)"><mat-icon>delete</mat-icon></button></td></ng-container><tr mat-header-row *matHeaderRowDef="columns"></tr><tr mat-row *matRowDef="let row; columns: columns"></tr></table>
   }
 </section>

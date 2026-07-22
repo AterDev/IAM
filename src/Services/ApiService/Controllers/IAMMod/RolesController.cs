@@ -156,7 +156,6 @@ public class RolesController(
     /// 
     /// </remarks>
     [HttpPost("{id}/permissions")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -171,7 +170,7 @@ public class RolesController(
         var success = await _permissionManager.GrantRolePermissionsAsync(id, dto, ipAddress, userAgent);
         return !success
             ? Problem("Failed to grant permissions to role", statusCode: StatusCodes.Status400BadRequest)
-            : NoContent();
+            : Ok();
     }
 
     /// <summary>

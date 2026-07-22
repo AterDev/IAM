@@ -21,16 +21,16 @@ param (
 )
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 
-$location = Get-Location
-cd ./src
+$root = Join-Path $PSScriptRoot ../
+$menusPath = Join-Path $root src ClientApp WebApp src assets menus.json
 # 定义前端menus.json路径
-$content = Get-Content .\json\menus.json  -Encoding UTF8
+$content = Get-Content $menusPath  -Encoding UTF8
 $url = 'http://localhost:5002'
 
 try {
   if ($Environment.ToLower() -eq 'production') {
     # 定义生产环境地址
-    $url = 'https://production.com'
+    $url = 'https://auth.typinglearn.cn'
     Write-Host "production"
   }
   
