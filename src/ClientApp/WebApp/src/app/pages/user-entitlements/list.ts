@@ -49,6 +49,14 @@ export class UserEntitlementListComponent implements OnInit {
     return typeof user === 'object' && user ? user.userName : user ?? '';
   }
 
+  formatNumber(value: number | null | undefined): string {
+    if (value === null || value === undefined || Number.isNaN(value)) {
+      return '';
+    }
+
+    return value.toLocaleString();
+  }
+
   selectUser(user: UserItemDto): void {
     this.selectedUser.set(user);
     this.load();
