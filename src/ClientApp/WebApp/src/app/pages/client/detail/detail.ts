@@ -75,8 +75,8 @@ export class ClientDetailComponent implements OnInit {
       error: () => {
         this.isLoading.set(false);
         this.snackBar.open(
-          this.translate.instant('error.loadClientFailed'),
-          this.translate.instant('common.close'),
+          this.translate.instant(this.i18n.error.loadClientFailed),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );
         this.router.navigate(['/client/list']);
@@ -94,8 +94,8 @@ export class ClientDetailComponent implements OnInit {
       error: () => {
         this.isLoadingAuthorizations.set(false);
         this.snackBar.open(
-          this.translate.instant('error.loadAuthorizationsFailed'),
-          this.translate.instant('common.close'),
+          this.translate.instant(this.i18n.error.loadAuthorizationsFailed),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );
       }
@@ -119,8 +119,8 @@ export class ClientDetailComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
-        title: this.translate.instant('client.rotateSecretTitle'),
-        message: this.translate.instant('client.rotateSecretMessage')
+        title: this.translate.instant(this.i18n.client.rotateSecretTitle),
+        message: this.translate.instant(this.i18n.client.rotateSecretMessage)
       }
     });
 
@@ -131,17 +131,17 @@ export class ClientDetailComponent implements OnInit {
             const secret = response.secret;
             this.clipboard.copy(secret!);
             this.snackBar.open(
-              this.translate.instant('client.secretRotatedAndCopied'),
-              this.translate.instant('common.close'),
+              this.translate.instant(this.i18n.client.secretRotatedAndCopied),
+              this.translate.instant(this.i18n.common.close),
               { duration: 5000 }
             );
 
-            alert(`${this.translate.instant('client.newSecret')}: ${secret}\n\n${this.translate.instant('client.secretWarning')}`);
+            alert(`${this.translate.instant(this.i18n.client.newSecret)}: ${secret}\n\n${this.translate.instant(this.i18n.client.secretWarning)}`);
           },
           error: () => {
             this.snackBar.open(
-              this.translate.instant('error.rotateSecretFailed'),
-              this.translate.instant('common.close'),
+              this.translate.instant(this.i18n.error.rotateSecretFailed),
+              this.translate.instant(this.i18n.common.close),
               { duration: 3000 }
             );
           }
@@ -155,8 +155,8 @@ export class ClientDetailComponent implements OnInit {
     if (client) {
       this.clipboard.copy(client.clientId);
       this.snackBar.open(
-        this.translate.instant('client.clientIdCopied'),
-        this.translate.instant('common.close'),
+        this.translate.instant(this.i18n.client.clientIdCopied),
+        this.translate.instant(this.i18n.common.close),
         { duration: 2000 }
       );
     }
@@ -171,8 +171,8 @@ export class ClientDetailComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
-        title: this.translate.instant('client.deleteConfirmTitle'),
-        message: this.translate.instant('client.deleteConfirmDetailMessage', { name: client.displayName })
+        title: this.translate.instant(this.i18n.client.deleteConfirmTitle),
+        message: this.translate.instant(this.i18n.client.deleteConfirmDetailMessage, { name: client.displayName })
       }
     });
 
@@ -181,16 +181,16 @@ export class ClientDetailComponent implements OnInit {
         this.api.clients.deleteClient(this.clientId!).subscribe({
           next: () => {
             this.snackBar.open(
-              this.translate.instant('client.deleteSuccess'),
-              this.translate.instant('common.close'),
+              this.translate.instant(this.i18n.client.deleteSuccess),
+              this.translate.instant(this.i18n.common.close),
               { duration: 3000 }
             );
             this.router.navigate(['/client/list']);
           },
           error: () => {
             this.snackBar.open(
-              this.translate.instant('error.deleteClientFailed'),
-              this.translate.instant('common.close'),
+              this.translate.instant(this.i18n.error.deleteClientFailed),
+              this.translate.instant(this.i18n.common.close),
               { duration: 3000 }
             );
           }

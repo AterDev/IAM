@@ -82,8 +82,8 @@ export class ScopeEditComponent implements OnInit {
       },
       error: () => {
         this.snackBar.open(
-          this.translate.instant('error.loadScopeFailed'),
-          this.translate.instant('common.close'),
+          this.translate.instant(this.i18n.error.loadScopeFailed),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );
         this.dialogRef.close(false);
@@ -125,16 +125,16 @@ export class ScopeEditComponent implements OnInit {
     this.api.scopes.updateScope(this.data.scopeId, dto).subscribe({
       next: () => {
         this.snackBar.open(
-          this.translate.instant('scope.updateSuccess'),
-          this.translate.instant('common.close'),
+          this.translate.instant(this.i18n.scope.updateSuccess),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );
         this.dialogRef.close(true);
       },
       error: (error) => {
         this.isSubmitting = false;
-        const errorMsg = error?.error?.message || this.translate.instant('error.updateScopeFailed');
-        this.snackBar.open(errorMsg, this.translate.instant('common.close'), { duration: 3000 });
+        const errorMsg = error?.error?.message || this.translate.instant(this.i18n.error.updateScopeFailed);
+        this.snackBar.open(errorMsg, this.translate.instant(this.i18n.common.close), { duration: 3000 });
       }
     });
   }
@@ -148,7 +148,7 @@ export class ScopeEditComponent implements OnInit {
       return '';
     }
     if (control.hasError('required')) {
-      return this.translate.instant('error.required');
+      return this.translate.instant(this.i18n.error.required);
     }
     return '';
   }

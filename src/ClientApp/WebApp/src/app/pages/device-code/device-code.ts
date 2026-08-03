@@ -140,8 +140,8 @@ export class DeviceCode implements OnInit {
           this.interaction.set(null);
           this.errorMessage.set(
             error.status === 400
-              ? this.translate.instant('deviceCode.invalidCode')
-              : this.translate.instant('deviceCode.loadError')
+              ? this.translate.instant(this.i18n.deviceCode.invalidCode)
+              : this.translate.instant(this.i18n.deviceCode.loadError)
           );
         }
       });
@@ -169,7 +169,7 @@ export class DeviceCode implements OnInit {
         },
         error: () => {
           this.isLoading.set(false);
-          this.errorMessage.set(this.translate.instant('deviceCode.decisionError'));
+          this.errorMessage.set(this.translate.instant(this.i18n.deviceCode.decisionError));
         }
       });
   }
@@ -180,20 +180,20 @@ export class DeviceCode implements OnInit {
 
     switch (interaction.status) {
       case 'approved':
-        this.successMessage.set(this.translate.instant('deviceCode.success'));
+        this.successMessage.set(this.translate.instant(this.i18n.deviceCode.success));
         this.errorMessage.set('');
         break;
       case 'denied':
         this.successMessage.set('');
-        this.errorMessage.set(this.translate.instant('deviceCode.denied'));
+        this.errorMessage.set(this.translate.instant(this.i18n.deviceCode.denied));
         break;
       case 'expired':
         this.successMessage.set('');
-        this.errorMessage.set(this.translate.instant('deviceCode.expired'));
+        this.errorMessage.set(this.translate.instant(this.i18n.deviceCode.expired));
         break;
       case 'invalid':
         this.successMessage.set('');
-        this.errorMessage.set(this.translate.instant('deviceCode.invalidCode'));
+        this.errorMessage.set(this.translate.instant(this.i18n.deviceCode.invalidCode));
         break;
       default:
         this.successMessage.set('');

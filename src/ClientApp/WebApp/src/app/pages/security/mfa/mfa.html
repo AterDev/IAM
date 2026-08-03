@@ -69,7 +69,7 @@
                       <p class="mb-2">{{ i18n.mfa.secretLabel | translate }}</p>
                       <code class="d-block w-100 p-3 border rounded-3 text-break">{{ currentSetup.secret }}</code>
                     </div>
-                    <button mat-stroked-button type="button" (click)="copy(currentSetup.secret, 'mfa.secretCopied')">
+                    <button mat-stroked-button type="button" (click)="copy(currentSetup.secret, i18n.mfa.secretCopied)">
                       {{ i18n.common.copy | translate }}
                     </button>
                   </div>
@@ -79,7 +79,7 @@
                       <p class="mb-2">{{ i18n.mfa.otpauthUriLabel | translate }}</p>
                       <code class="d-block w-100 p-3 border rounded-3 text-break small">{{ currentSetup.otpAuthUri }}</code>
                     </div>
-                    <button mat-stroked-button type="button" (click)="copy(currentSetup.otpAuthUri, 'mfa.uriCopied')">
+                    <button mat-stroked-button type="button" (click)="copy(currentSetup.otpAuthUri, i18n.mfa.uriCopied)">
                       {{ i18n.common.copy | translate }}
                     </button>
                   </div>

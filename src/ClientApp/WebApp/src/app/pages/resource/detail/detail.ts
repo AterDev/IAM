@@ -56,8 +56,8 @@ export class ResourceDetailComponent implements OnInit {
       error: () => {
         this.isLoading.set(false);
         this.snackBar.open(
-          this.translate.instant('error.loadResourceFailed'),
-          this.translate.instant('common.close'),
+          this.translate.instant(this.i18n.error.loadResourceFailed),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );
         this.router.navigate(['/resource/list']);
@@ -74,8 +74,8 @@ export class ResourceDetailComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
-        title: this.translate.instant('resource.deleteConfirmTitle'),
-        message: this.translate.instant('resource.deleteConfirmDetailMessage', { name: resource.displayName })
+        title: this.translate.instant(this.i18n.resource.deleteConfirmTitle),
+        message: this.translate.instant(this.i18n.resource.deleteConfirmDetailMessage, { name: resource.displayName })
       }
     });
 
@@ -84,16 +84,16 @@ export class ResourceDetailComponent implements OnInit {
         this.api.resources.deleteResource(this.resourceId!).subscribe({
           next: () => {
             this.snackBar.open(
-              this.translate.instant('resource.deleteSuccess'),
-              this.translate.instant('common.close'),
+              this.translate.instant(this.i18n.resource.deleteSuccess),
+              this.translate.instant(this.i18n.common.close),
               { duration: 3000 }
             );
             this.router.navigate(['/resource/list']);
           },
           error: () => {
             this.snackBar.open(
-              this.translate.instant('error.deleteResourceFailed'),
-              this.translate.instant('common.close'),
+              this.translate.instant(this.i18n.error.deleteResourceFailed),
+              this.translate.instant(this.i18n.common.close),
               { duration: 3000 }
             );
           }

@@ -139,7 +139,7 @@ export class Register implements OnInit {
 
   getFormError(): string {
     if (this.registerForm.errors?.['passwordMismatch']) {
-      return this.translate.instant('validation.passwordmismatch');
+      return this.translate.instant(this.i18n.validation.passwordmismatch);
     }
     return '';
   }
@@ -163,13 +163,13 @@ export class Register implements OnInit {
 
     try {
       await firstValueFrom(this.accountService.register(userData));
-      this.successMessage = this.translate.instant('register.success');
+      this.successMessage = this.translate.instant(this.i18n.register.success);
 
       setTimeout(() => {
         this.router.navigate(['/login']);
       }, 2000);
     } catch (error: any) {
-      this.errorMessage = error?.detail || this.translate.instant('register.failed');
+      this.errorMessage = error?.detail || this.translate.instant(this.i18n.register.failed);
     } finally {
       this.isLoading = false;
     }

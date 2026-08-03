@@ -68,7 +68,7 @@ export class ClientPermissionsComponent implements OnInit {
       },
       error: () => {
         this.isLoading.set(false);
-        this.snackBar.open(this.translate.instant('client.loadPermissionsFailed'), this.translate.instant('common.close'), { duration: 3000 });
+        this.snackBar.open(this.translate.instant(this.i18n.client.loadPermissionsFailed), this.translate.instant(this.i18n.common.close), { duration: 3000 });
       },
     });
   }
@@ -96,8 +96,8 @@ export class ClientPermissionsComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '420px',
       data: {
-        title: this.translate.instant('common.delete'),
-        message: this.translate.instant('client.deletePermissionNodeConfirm'),
+        title: this.translate.instant(this.i18n.common.delete),
+        message: this.translate.instant(this.i18n.client.deletePermissionNodeConfirm),
       },
     });
 
@@ -122,12 +122,12 @@ export class ClientPermissionsComponent implements OnInit {
     }).subscribe({
       next: () => {
         this.isSaving.set(false);
-        this.snackBar.open(this.translate.instant('client.syncPermissionsSuccess'), this.translate.instant('common.close'), { duration: 3000 });
+        this.snackBar.open(this.translate.instant(this.i18n.client.syncPermissionsSuccess), this.translate.instant(this.i18n.common.close), { duration: 3000 });
         this.loadTree();
       },
       error: () => {
         this.isSaving.set(false);
-        this.snackBar.open(this.translate.instant('client.syncPermissionsFailed'), this.translate.instant('common.close'), { duration: 3000 });
+        this.snackBar.open(this.translate.instant(this.i18n.client.syncPermissionsFailed), this.translate.instant(this.i18n.common.close), { duration: 3000 });
       },
     });
   }

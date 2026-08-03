@@ -123,8 +123,8 @@ export class AuditLogListComponent implements OnInit {
       error: (error) => {
         console.error('Failed to load audit logs:', error);
         this.snackBar.open(
-          this.translate.instant('error.loadAuditLogsFailed'),
-          this.translate.instant('common.close'),
+          this.translate.instant(this.i18n.error.loadAuditLogsFailed),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );
         this.isLoading.set(false);
@@ -181,8 +181,8 @@ export class AuditLogListComponent implements OnInit {
       error: (error) => {
         console.error('Failed to load audit log detail:', error);
         this.snackBar.open(
-          this.translate.instant('error.loadAuditLogDetailFailed'),
-          this.translate.instant('common.close'),
+          this.translate.instant(this.i18n.error.loadAuditLogDetailFailed),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );
       }
@@ -226,8 +226,8 @@ export class AuditLogListComponent implements OnInit {
   exportLogs(): void {
     // TODO: Implement export functionality
     this.snackBar.open(
-      this.translate.instant('auditLog.exportNotImplemented'),
-      this.translate.instant('common.close'),
+      this.translate.instant(this.i18n.auditLog.exportNotImplemented),
+      this.translate.instant(this.i18n.common.close),
       { duration: 3000 }
     );
   }

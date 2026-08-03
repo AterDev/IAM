@@ -129,8 +129,8 @@ export class PasswordGrantAuditComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('[PasswordGrantAudit] Failed to load report:', error);
         this.snackBar.open(
-          this.translate.instant('error.loadAuditLogsFailed'),
-          this.translate.instant('common.close'),
+          this.translate.instant(this.i18n.error.loadAuditLogsFailed),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );
         this.isLoading.set(false);
@@ -176,8 +176,8 @@ export class PasswordGrantAuditComponent implements OnInit, OnDestroy {
     const clientId = row.clientId?.trim();
     if (!clientId) {
       this.snackBar.open(
-        this.translate.instant('passwordGrantAudit.clientLookupMissing'),
-        this.translate.instant('common.close'),
+        this.translate.instant(this.i18n.passwordGrantAudit.clientLookupMissing),
+        this.translate.instant(this.i18n.common.close),
         { duration: 2500 }
       );
       return;
@@ -188,8 +188,8 @@ export class PasswordGrantAuditComponent implements OnInit, OnDestroy {
         const target = result.data.find(client => client.clientId === clientId);
         if (!target) {
           this.snackBar.open(
-            this.translate.instant('passwordGrantAudit.clientLookupNotFound', { clientId }),
-            this.translate.instant('common.close'),
+            this.translate.instant(this.i18n.passwordGrantAudit.clientLookupNotFound, { clientId }),
+            this.translate.instant(this.i18n.common.close),
             { duration: 3000 }
           );
           return;
@@ -200,8 +200,8 @@ export class PasswordGrantAuditComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('[PasswordGrantAudit] Failed to resolve client detail route:', error);
         this.snackBar.open(
-          this.translate.instant('error.loadClientsFailed'),
-          this.translate.instant('common.close'),
+          this.translate.instant(this.i18n.error.loadClientsFailed),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );
       }
@@ -315,7 +315,7 @@ export class PasswordGrantAuditComponent implements OnInit, OnDestroy {
         detail,
         clientId,
         restrictionReason,
-        summary: restrictionReason || this.translate.instant('passwordGrantAudit.defaultRejectedSummary'),
+        summary: restrictionReason || this.translate.instant(this.i18n.passwordGrantAudit.defaultRejectedSummary),
       };
     }
 
@@ -324,17 +324,17 @@ export class PasswordGrantAuditComponent implements OnInit, OnDestroy {
     const lockoutEnd = this.getPayloadValue(payload, 'lockoutEnd');
     const summaryParts = [reason];
     if (failedCount) {
-      summaryParts.push(this.translate.instant('passwordGrantAudit.failedCountSummary', { count: failedCount }));
+      summaryParts.push(this.translate.instant(this.i18n.passwordGrantAudit.failedCountSummary, { count: failedCount }));
     }
     if (lockoutEnd) {
-      summaryParts.push(this.translate.instant('passwordGrantAudit.lockoutSummary', { time: lockoutEnd }));
+      summaryParts.push(this.translate.instant(this.i18n.passwordGrantAudit.lockoutSummary, { time: lockoutEnd }));
     }
 
     return {
       log,
       detail,
       clientId,
-      summary: summaryParts.filter(Boolean).join(' · ') || this.translate.instant('passwordGrantAudit.defaultFailedSummary'),
+      summary: summaryParts.filter(Boolean).join(' · ') || this.translate.instant(this.i18n.passwordGrantAudit.defaultFailedSummary),
     };
   }
 

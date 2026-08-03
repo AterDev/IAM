@@ -6,6 +6,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { UserAddDto } from 'src/app/services/api/models/iammod/user-add-dto.model';
 import { I18N_KEYS } from 'src/app/share/i18n-keys';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-add',
@@ -28,7 +29,8 @@ export class UserAddComponent implements OnInit {
     private fb: FormBuilder,
     private api: ApiClient,
     private dialogRef: MatDialogRef<UserAddComponent>,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -89,13 +91,13 @@ export class UserAddComponent implements OnInit {
 
     this.api.users.createUser(dto).subscribe({
       next: () => {
-        this.snackBar.open('User created successfully', 'Close', { duration: 3000 });
+        this.snackBar.open(this.translate.instant(this.i18n.user.createdSuccess), this.translate.instant(this.i18n.common.close), { duration: 3000 });
         this.dialogRef.close(true);
       },
       error: (error) => {
         this.isSubmitting = false;
-        const errorMsg = error?.error?.message || 'Failed to create user';
-        this.snackBar.open(errorMsg, 'Close', { duration: 3000 });
+        const errorMsg = error?.error?.message || this.translate.instant(this.i18n.user.createFailed);
+        this.snackBar.open(errorMsg, this.translate.instant(this.i18n.common.close), { duration: 3000 });
       }
     });
   }
@@ -106,17 +108,17 @@ export class UserAddComponent implements OnInit {
 
   getErrorMessage(control: FormControl, fieldName: string): string {
     if (control?.hasError('required')) {
-      return 'This field is required';
+      return this.translate.instant(this.i18n.validation.required);
     }
     if (control?.hasError('email')) {
-      return 'Please enter a valid email';
+      return this.translate.instant(this.i18n.user.invalidEmail);
     }
     if (control?.hasError('minlength')) {
       const minLength = control.errors?.['minlength'].requiredLength;
-      return `Minimum length is ${minLength}`;
+      return this.translate.instant(this.i18n.validation.minlength, { requiredLength: minLength });
     }
     if (fieldName === 'confirmPassword' && this.userForm.hasError('passwordMismatch')) {
-      return 'Passwords do not match';
+      return this.translate.instant(this.i18n.user.passwordMismatch);
     }
     return '';
   }

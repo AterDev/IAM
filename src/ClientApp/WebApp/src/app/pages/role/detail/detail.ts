@@ -54,8 +54,8 @@ export class RoleDetailComponent implements OnInit {
       error: (error) => {
         console.error('Failed to load role:', error);
         this.snackBar.open(
-          this.translate.instant('error.loadRoleDetailFailed'),
-          this.translate.instant('common.close'),
+          this.translate.instant(this.i18n.error.loadRoleDetailFailed),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );
   this.isLoading.set(false);
@@ -99,8 +99,8 @@ export class RoleDetailComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
-        title: this.translate.instant('dialog.confirmDelete.title'),
-        message: this.translate.instant('dialog.confirmDelete.message')
+        title: this.translate.instant(this.i18n.dialog.confirmDelete.title),
+        message: this.translate.instant(this.i18n.dialog.confirmDelete.message)
       }
     });
 
@@ -109,8 +109,8 @@ export class RoleDetailComponent implements OnInit {
         this.api.roles.deleteRole(currentRole.id, false).subscribe({
           next: () => {
             this.snackBar.open(
-              this.translate.instant('success.roleDeleted'),
-              this.translate.instant('common.close'),
+              this.translate.instant(this.i18n.success.roleDeleted),
+              this.translate.instant(this.i18n.common.close),
               { duration: 3000 }
             );
             this.router.navigate(['/role/list']);
@@ -118,8 +118,8 @@ export class RoleDetailComponent implements OnInit {
           error: (error) => {
             console.error('Failed to delete role:', error);
             this.snackBar.open(
-              this.translate.instant('error.deleteRoleFailed'),
-              this.translate.instant('common.close'),
+              this.translate.instant(this.i18n.error.deleteRoleFailed),
+              this.translate.instant(this.i18n.common.close),
               { duration: 3000 }
             );
           }

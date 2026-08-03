@@ -12,6 +12,7 @@ import { UserEditComponent } from '../edit/edit';
 import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/confirm-dialog.component';
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 import { I18N_KEYS } from 'src/app/share/i18n-keys';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-detail',
@@ -39,7 +40,8 @@ export class UserDetailComponent implements OnInit {
     private router: Router,
     private api: ApiClient,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -58,7 +60,7 @@ export class UserDetailComponent implements OnInit {
       },
       error: () => {
   this.isLoading.set(false);
-        this.snackBar.open('Failed to load user', 'Close', { duration: 3000 });
+        this.snackBar.open(this.translate.instant(this.i18n.user.loadFailed), this.translate.instant(this.i18n.common.close), { duration: 3000 });
         this.router.navigate(['/user/list']);
       }
     });
@@ -88,14 +90,14 @@ export class UserDetailComponent implements OnInit {
     this.api.users.updateStatus(this.userId!, lockoutEnd as any).subscribe({
       next: () => {
         this.snackBar.open(
-          user.lockoutEnabled ? 'User unlocked successfully' : 'User locked successfully',
-          'Close',
+          user.lockoutEnabled ? this.translate.instant(this.i18n.user.statusUnlocked) : this.translate.instant(this.i18n.user.statusLocked),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );
         this.loadUser();
       },
       error: () => {
-        this.snackBar.open('Failed to update user status', 'Close', { duration: 3000 });
+        this.snackBar.open(this.translate.instant(this.i18n.user.statusUpdateFailed), this.translate.instant(this.i18n.common.close), { duration: 3000 });
       }
     });
   }
@@ -109,8 +111,8 @@ export class UserDetailComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
-        title: 'Delete User',
-        message: `Are you sure you want to delete user "${user.userName}"?`
+        title: this.translate.instant(this.i18n.user.deleteConfirmTitle),
+        message: this.translate.instant(this.i18n.user.deleteConfirmMessage, { userName: user.userName })
       }
     });
 
@@ -118,11 +120,11 @@ export class UserDetailComponent implements OnInit {
       if (result) {
         this.api.users.deleteUser(this.userId!, false).subscribe({
           next: () => {
-            this.snackBar.open('User deleted successfully', 'Close', { duration: 3000 });
+            this.snackBar.open(this.translate.instant(this.i18n.user.deletedSuccess), this.translate.instant(this.i18n.common.close), { duration: 3000 });
             this.router.navigate(['/user/list']);
           },
           error: () => {
-            this.snackBar.open('Failed to delete user', 'Close', { duration: 3000 });
+            this.snackBar.open(this.translate.instant(this.i18n.user.deleteFailed), this.translate.instant(this.i18n.common.close), { duration: 3000 });
           }
         });
       }

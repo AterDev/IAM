@@ -70,8 +70,8 @@ export class ResourceListComponent implements OnInit {
       error: (error) => {
         console.error('Failed to load resources:', error);
         this.snackBar.open(
-          this.translate.instant('error.loadResourcesFailed'),
-          this.translate.instant('common.close'),
+          this.translate.instant(this.i18n.error.loadResourcesFailed),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );
         this.isLoading.set(false);
@@ -129,8 +129,8 @@ export class ResourceListComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
-        title: this.translate.instant('resource.deleteConfirmTitle'),
-        message: this.translate.instant('resource.deleteConfirmMessage')
+        title: this.translate.instant(this.i18n.resource.deleteConfirmTitle),
+        message: this.translate.instant(this.i18n.resource.deleteConfirmMessage)
       }
     });
 
@@ -139,8 +139,8 @@ export class ResourceListComponent implements OnInit {
         this.api.resources.deleteResource(id).subscribe({
           next: () => {
             this.snackBar.open(
-              this.translate.instant('resource.deleteSuccess'),
-              this.translate.instant('common.close'),
+              this.translate.instant(this.i18n.resource.deleteSuccess),
+              this.translate.instant(this.i18n.common.close),
               { duration: 3000 }
             );
             this.loadData();
@@ -148,8 +148,8 @@ export class ResourceListComponent implements OnInit {
           error: (error) => {
             console.error('Failed to delete resource:', error);
             this.snackBar.open(
-              this.translate.instant('error.deleteResourceFailed'),
-              this.translate.instant('common.close'),
+              this.translate.instant(this.i18n.error.deleteResourceFailed),
+              this.translate.instant(this.i18n.common.close),
               { duration: 3000 }
             );
           }

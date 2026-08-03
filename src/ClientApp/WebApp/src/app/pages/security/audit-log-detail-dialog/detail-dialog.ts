@@ -2,6 +2,7 @@ import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { CommonModules, BaseMatModules } from 'src/app/share/shared-modules';
 import { AuditLogDetailDto } from 'src/app/services/api/models/iammod/audit-log-detail-dto.model';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-detail-dialog',
@@ -14,6 +15,7 @@ import { AuditLogDetailDto } from 'src/app/services/api/models/iammod/audit-log-
   styleUrls: ['./detail-dialog.scss']
 })
 export class AuditLogDetailDialogComponent {
+  readonly i18n = I18N_KEYS;
   constructor(
     public dialogRef: MatDialogRef<AuditLogDetailDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: AuditLogDetailDto

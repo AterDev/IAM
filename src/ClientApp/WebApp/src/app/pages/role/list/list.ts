@@ -94,8 +94,8 @@ export class RoleListComponent implements OnInit {
       error: (error) => {
         console.error('Failed to load roles:', error);
         this.snackBar.open(
-          this.translate.instant('error.loadRolesFailed'),
-          this.translate.instant('common.close'),
+          this.translate.instant(this.i18n.error.loadRolesFailed),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );
   this.isLoading.set(false);
@@ -178,8 +178,8 @@ export class RoleListComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
-        title: this.translate.instant('dialog.confirmDelete.title'),
-        message: this.translate.instant('dialog.confirmDelete.message')
+        title: this.translate.instant(this.i18n.dialog.confirmDelete.title),
+        message: this.translate.instant(this.i18n.dialog.confirmDelete.message)
       }
     });
 
@@ -188,8 +188,8 @@ export class RoleListComponent implements OnInit {
         this.api.roles.deleteRole(id, false).subscribe({
           next: () => {
             this.snackBar.open(
-              this.translate.instant('success.roleDeleted'),
-              this.translate.instant('common.close'),
+              this.translate.instant(this.i18n.success.roleDeleted),
+              this.translate.instant(this.i18n.common.close),
               { duration: 3000 }
             );
             this.loadData();
@@ -197,8 +197,8 @@ export class RoleListComponent implements OnInit {
           error: (error) => {
             console.error('Failed to delete role:', error);
             this.snackBar.open(
-              this.translate.instant('error.deleteRoleFailed'),
-              this.translate.instant('common.close'),
+              this.translate.instant(this.i18n.error.deleteRoleFailed),
+              this.translate.instant(this.i18n.common.close),
               { duration: 3000 }
             );
           }
@@ -216,8 +216,8 @@ export class RoleListComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
-        title: this.translate.instant('dialog.confirmBatchDelete.title'),
-        message: this.translate.instant('dialog.confirmBatchDelete.message', { count: selected.size })
+        title: this.translate.instant(this.i18n.dialog.confirmBatchDelete.title),
+        message: this.translate.instant(this.i18n.dialog.confirmBatchDelete.message, { count: selected.size })
       }
     });
 
@@ -232,8 +232,8 @@ export class RoleListComponent implements OnInit {
               deletedCount++;
               if (deletedCount === totalCount) {
                 this.snackBar.open(
-                  this.translate.instant('success.rolesBatchDeleted', { count: deletedCount }),
-                  this.translate.instant('common.close'),
+                  this.translate.instant(this.i18n.success.rolesBatchDeleted, { count: deletedCount }),
+                  this.translate.instant(this.i18n.common.close),
                   { duration: 3000 }
                 );
                 this.selectedIds.set(new Set());
@@ -245,8 +245,8 @@ export class RoleListComponent implements OnInit {
               deletedCount++;
               if (deletedCount === totalCount) {
                 this.snackBar.open(
-                  this.translate.instant('error.batchDeletePartialFailed'),
-                  this.translate.instant('common.close'),
+                  this.translate.instant(this.i18n.error.batchDeletePartialFailed),
+                  this.translate.instant(this.i18n.common.close),
                   { duration: 3000 }
                 );
                 this.selectedIds.set(new Set());

@@ -12,7 +12,7 @@
             <button mat-raised-button [color]="autoRefreshEnabled ? 'accent' : 'basic'" (click)="toggleAutoRefresh()" type="button">
               <mat-icon [class.accent]="autoRefreshEnabled"
                 [class.secondary]="!autoRefreshEnabled">{{ autoRefreshEnabled ? 'pause' : 'autorenew' }}</mat-icon>
-              {{ (autoRefreshEnabled ? 'auditLog.stopAutoRefresh' : 'auditLog.startAutoRefresh') | translate }}
+              {{ (autoRefreshEnabled ? i18n.auditLog.stopAutoRefresh : i18n.auditLog.startAutoRefresh) | translate }}
             </button>
             <button mat-raised-button (click)="exportLogs()" type="button">
               <mat-icon class="primary">download</mat-icon>

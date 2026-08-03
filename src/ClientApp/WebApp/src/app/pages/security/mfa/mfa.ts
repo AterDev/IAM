@@ -83,7 +83,7 @@ export class MfaSettingsComponent {
         },
         error: () => {
           this.isLoading.set(false);
-          this.errorMessage.set(this.translate.instant('mfa.loadFailed'));
+          this.errorMessage.set(this.translate.instant(this.i18n.mfa.loadFailed));
         },
       });
   }
@@ -100,12 +100,12 @@ export class MfaSettingsComponent {
           this.setup.set(response);
           void this.renderQrCode(response.otpAuthUri);
           this.isSaving.set(false);
-          this.snackBar.open(this.translate.instant('mfa.setupReady'), undefined, { duration: 3000 });
+          this.snackBar.open(this.translate.instant(this.i18n.mfa.setupReady), undefined, { duration: 3000 });
           this.loadStatus();
         },
         error: () => {
           this.isSaving.set(false);
-          this.errorMessage.set(this.translate.instant('mfa.setupFailed'));
+          this.errorMessage.set(this.translate.instant(this.i18n.mfa.setupFailed));
         },
       });
   }
@@ -128,12 +128,12 @@ export class MfaSettingsComponent {
           this.qrCodeDataUrl.set(null);
           this.setupForm.reset({ code: '' });
           this.isSaving.set(false);
-          this.snackBar.open(this.translate.instant('mfa.enabled'), undefined, { duration: 3000 });
+          this.snackBar.open(this.translate.instant(this.i18n.mfa.enabled), undefined, { duration: 3000 });
           this.loadStatus();
         },
         error: () => {
           this.isSaving.set(false);
-          this.errorMessage.set(this.translate.instant('mfa.enableFailed'));
+          this.errorMessage.set(this.translate.instant(this.i18n.mfa.enableFailed));
         },
       });
   }
@@ -156,12 +156,12 @@ export class MfaSettingsComponent {
           this.qrCodeDataUrl.set(null);
           this.manageForm.reset({ code: '' });
           this.isSaving.set(false);
-          this.snackBar.open(this.translate.instant('mfa.disabled'), undefined, { duration: 3000 });
+          this.snackBar.open(this.translate.instant(this.i18n.mfa.disabled), undefined, { duration: 3000 });
           this.loadStatus();
         },
         error: () => {
           this.isSaving.set(false);
-          this.errorMessage.set(this.translate.instant('mfa.disableFailed'));
+          this.errorMessage.set(this.translate.instant(this.i18n.mfa.disableFailed));
         },
       });
   }
@@ -182,12 +182,12 @@ export class MfaSettingsComponent {
           this.recoveryCodes.set(response.recoveryCodes);
           this.manageForm.reset({ code: '' });
           this.isSaving.set(false);
-          this.snackBar.open(this.translate.instant('mfa.recoveryCodesRegenerated'), undefined, { duration: 3000 });
+          this.snackBar.open(this.translate.instant(this.i18n.mfa.recoveryCodesRegenerated), undefined, { duration: 3000 });
           this.loadStatus();
         },
         error: () => {
           this.isSaving.set(false);
-          this.errorMessage.set(this.translate.instant('mfa.regenerateFailed'));
+          this.errorMessage.set(this.translate.instant(this.i18n.mfa.regenerateFailed));
         },
       });
   }

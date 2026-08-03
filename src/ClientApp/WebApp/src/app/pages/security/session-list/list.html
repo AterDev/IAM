@@ -4,7 +4,7 @@
       type="button">
       <mat-icon [class.accent]="autoRefreshEnabled"
         [class.secondary]="!autoRefreshEnabled">{{ autoRefreshEnabled ? 'pause' : 'autorenew' }}</mat-icon>
-      {{ (autoRefreshEnabled ? 'session.stopAutoRefresh' : 'session.startAutoRefresh') | translate }}
+      {{ (autoRefreshEnabled ? i18n.session.stopAutoRefresh : i18n.session.startAutoRefresh) | translate }}
     </button>
     <button mat-raised-button (click)="loadData()" type="button">
       <mat-icon class="secondary">refresh</mat-icon>
@@ -144,7 +144,7 @@
         </th>
         <td mat-cell *matCellDef="let session">
           <mat-chip>
-            {{ (session.isActive ? 'session.active' : 'session.inactive') |
+            {{ (session.isActive ? i18n.session.active : i18n.session.inactive) |
             translate }}
           </mat-chip>
         </td>

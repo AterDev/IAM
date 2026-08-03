@@ -1,8 +1,39 @@
 <div class="d-flex flex-column gap-3">
   <div class="d-flex justify-content-between align-items-center">
-    <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>{{ 'common.search' | translate }}</mat-label><input matInput [(ngModel)]="keyword" (keyup.enter)="search()"><button mat-icon-button matSuffix (click)="search()"><mat-icon>search</mat-icon></button></mat-form-field>
-    <button matButton="filled" (click)="add()"><mat-icon>add</mat-icon>{{ 'common.add' | translate }}</button>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>{{ i18n.common.search | translate}}</mat-label>
+      <input matInput [(ngModel)]="keyword" (keyup.enter)="search()">
+      <button mat-icon-button matSuffix (click)="search()">
+        <mat-icon>search</mat-icon>
+      </button>
+    </mat-form-field>
+    <button matButton="filled" (click)="add()">
+      <mat-icon>add</mat-icon>{{ i18n.common.add | translate }}
+    </button>
   </div>
-  <table mat-table [dataSource]="data()"><ng-container matColumnDef="entitlementCode"><th mat-header-cell *matHeaderCellDef>{{ 'entitlement.code' | translate }}</th><td mat-cell *matCellDef="let item">{{ item.entitlementCode }}</td></ng-container><ng-container matColumnDef="displayName"><th mat-header-cell *matHeaderCellDef>{{ 'entitlement.displayName' | translate }}</th><td mat-cell *matCellDef="let item">{{ item.displayName }}</td></ng-container><ng-container matColumnDef="unit"><th mat-header-cell *matHeaderCellDef>{{ 'entitlement.unit' | translate }}</th><td mat-cell *matCellDef="let item">{{ item.unit }}</td></ng-container><ng-container matColumnDef="actions"><th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th><td mat-cell *matCellDef="let item"><button mat-icon-button (click)="edit(item)"><mat-icon>edit</mat-icon></button><button mat-icon-button (click)="remove(item)"><mat-icon class="error">delete</mat-icon></button></td></ng-container><tr mat-header-row *matHeaderRowDef="columns"></tr><tr mat-row *matRowDef="let row; columns: columns"></tr></table>
-  <mat-paginator [length]="total()" [pageIndex]="pageIndex" [pageSize]="pageSize" [pageSizeOptions]="[10,20,50]" (page)="page($event)"></mat-paginator>
+  <table mat-table [dataSource]="data()"><ng-container matColumnDef="entitlementCode">
+      <th mat-header-cell *matHeaderCellDef>{{ i18n.entitlement.code | translate }}</th>
+      <td mat-cell *matCellDef="let item">{{ item.entitlementCode }}</td>
+    </ng-container><ng-container matColumnDef="displayName">
+      <th mat-header-cell *matHeaderCellDef>{{ i18n.entitlement.displayName | translate }}</th>
+      <td mat-cell *matCellDef="let item">{{ item.displayName }}</td>
+    </ng-container><ng-container matColumnDef="unit">
+      <th mat-header-cell *matHeaderCellDef>{{ i18n.entitlement.unit | translate }}</th>
+      <td mat-cell *matCellDef="let item">{{ item.unit }}</td>
+    </ng-container><ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef>{{ i18n.common.actions | translate }}</th>
+      <td mat-cell *matCellDef="let item">
+        <button mat-icon-button (click)="edit(item)" >
+          <mat-icon class="primary">edit</mat-icon>
+        </button>
+        <button mat-icon-button (click)="remove(item)">
+          <mat-icon class="error">delete</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="columns"></tr>
+    <tr mat-row *matRowDef="let row; columns: columns"></tr>
+  </table>
+  <mat-paginator [length]="total()" [pageIndex]="pageIndex" [pageSize]="pageSize" [pageSizeOptions]="[10,20,50]"
+    (page)="page($event)"></mat-paginator>
 </div>

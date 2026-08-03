@@ -58,8 +58,8 @@ export class RoleAddComponent implements OnInit {
       this.api.roles.createRole(data).subscribe({
         next: () => {
           this.snackBar.open(
-            this.translate.instant('success.roleCreated'),
-            this.translate.instant('common.close'),
+            this.translate.instant(this.i18n.success.roleCreated),
+            this.translate.instant(this.i18n.common.close),
             { duration: 3000 }
           );
           this.dialogRef.close(true);
@@ -67,8 +67,8 @@ export class RoleAddComponent implements OnInit {
         error: (error) => {
           console.error('Failed to create role:', error);
           this.snackBar.open(
-            this.translate.instant('error.createRoleFailed'),
-            this.translate.instant('common.close'),
+            this.translate.instant(this.i18n.error.createRoleFailed),
+            this.translate.instant(this.i18n.common.close),
             { duration: 3000 }
           );
           this.isSubmitting = false;

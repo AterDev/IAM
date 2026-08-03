@@ -41,6 +41,7 @@
     "decisionError": "Failed to submit the device authorization decision. Please try again.",
     "helpText": "If you don't see a user code on your device, go back and restart the authorization flow",
     "requestedPermissions": "Requested permissions",
+    "user": "User",
     "accountInfo": "You will approve device access as {{username}}",
     "approve": "Allow device access",
     "deny": "Deny"
@@ -185,7 +186,25 @@
     "basicInfo": "Basic Information",
     "emailConfirmed": "Email Confirmed",
     "phoneNumberConfirmed": "Phone Number Confirmed",
-    "twoFactorEnabled": "Two-Factor Authentication"
+    "twoFactorEnabled": "Two-Factor Authentication",
+    "createdSuccess": "User created successfully",
+    "createFailed": "Failed to create user",
+    "loadFailed": "Failed to load user",
+    "updatedSuccess": "User updated successfully",
+    "updateFailed": "Failed to update user",
+    "statusLocked": "User locked successfully",
+    "statusUnlocked": "User unlocked successfully",
+    "statusUpdateFailed": "Failed to update user status",
+    "deleteConfirmTitle": "Delete User",
+    "deleteConfirmMessage": "Are you sure you want to delete user \"{{userName}}\"?",
+    "deletedSuccess": "User deleted successfully",
+    "deleteFailed": "Failed to delete user",
+    "selectLock": "Please select users to lock",
+    "selectUnlock": "Please select users to unlock",
+    "batchLocked": "{{count}} users locked successfully",
+    "batchUnlocked": "{{count}} users unlocked successfully",
+    "invalidEmail": "Please enter a valid email",
+    "passwordMismatch": "Passwords do not match"
   },
   "organization": {
     "name": "Organization Name",
@@ -204,7 +223,24 @@
     "addMember": "Add Member",
     "removeMember": "Remove Member",
     "selectUser": "Select User",
-    "noData": "No organization data, please add a root organization first"
+    "noData": "No organization data, please add a root organization first",
+    "createdSuccess": "Organization created successfully",
+    "createFailed": "Failed to create organization",
+    "loadFailed": "Failed to load organization",
+    "updatedSuccess": "Organization updated successfully",
+    "updateFailed": "Failed to update organization",
+    "deleteWithChildren": "Cannot delete organization with children",
+    "deleteConfirmTitle": "Delete Organization",
+    "deleteConfirmMessage": "Are you sure you want to delete organization \"{{name}}\"?",
+    "deletedSuccess": "Organization deleted successfully",
+    "deleteFailed": "Failed to delete organization",
+    "memberLoadFailed": "Failed to load users",
+    "selectMember": "Please select a user",
+    "memberAdded": "Member added successfully",
+    "memberAddFailed": "Failed to add member",
+    "memberRemoved": "Member removed successfully",
+    "memberRemoveFailed": "Failed to remove member",
+    "minValue": "Value must be greater than or equal to 0"
   },
   "role": {
     "name": "Role Name",
@@ -533,8 +569,20 @@
     }
   },
   "entitlement": {
-    "definitionTitle": "Entitlement definitions", "configurationTitle": "User entitlement configuration",
-    "code": "Code", "displayName": "Display name", "description": "Description", "unit": "Unit", "type": "Type", "proxyUsage": "Proxy usage",
-    "userSearch": "Search users", "selectUser": "Select user", "valueLimit": "Value limit", "currentValue": "Current value", "startDate": "Start date", "expirationDate": "Expiration date"
+    "definitionTitle": "Entitlement definitions",
+    "configurationTitle": "User entitlement configuration",
+    "code": "Code",
+    "displayName": "Display name",
+    "description": "Description",
+    "unit": "Unit",
+    "type": "Type",
+    "proxyUsage": "Proxy usage",
+    "userSearch": "Search users",
+    "selectUser": "Select user",
+    "valueLimit": "Value limit",
+    "saveFailed": "Failed to save entitlement",
+    "currentValue": "Current value",
+    "startDate": "Start date",
+    "expirationDate": "Expiration date"
   }
 }

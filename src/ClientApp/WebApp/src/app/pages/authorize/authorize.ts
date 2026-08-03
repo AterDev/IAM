@@ -8,7 +8,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { Router, ActivatedRoute } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from 'src/app/services/auth.service';
 import { AuthorizeInteractionContext, OauthInteractionService } from 'src/app/services/oauth-interaction.service';
 import { I18N_KEYS } from 'src/app/share/i18n-keys';
@@ -35,6 +35,7 @@ export class Authorize implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private translate = inject(TranslateService);
 
   clientName = signal('');
   clientDescription = signal('');
@@ -70,7 +71,7 @@ export class Authorize implements OnInit {
 
     // Set username
     const user = this.authService.user();
-    this.username.set(user?.preferred_username || user?.name || 'User');
+    this.username.set(user?.preferred_username || user?.name || this.translate.instant(this.i18n.deviceCode.user));
   }
 
   private loadAuthorizationRequest(): void {
@@ -102,7 +103,7 @@ export class Authorize implements OnInit {
             return;
           }
 
-          this.errorMessage.set('authorize.error');
+          this.errorMessage.set(this.translate.instant(this.i18n.authorize.error));
         }
       });
   }
@@ -148,7 +149,7 @@ export class Authorize implements OnInit {
         },
         error: () => {
           this.isLoading.set(false);
-          this.errorMessage.set('authorize.error');
+          this.errorMessage.set(this.translate.instant(this.i18n.authorize.error));
         }
       });
   }

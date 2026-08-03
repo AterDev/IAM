@@ -116,8 +116,8 @@ export class PermissionEditComponent implements OnInit {
     request$.subscribe({
       next: (result) => {
         this.snackBar.open(
-          this.translate.instant('permission.saveSuccess'),
-          this.translate.instant('common.close'),
+          this.translate.instant(this.i18n.permission.saveSuccess),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 },
         );
         this.dialogRef.close(result);
@@ -125,8 +125,8 @@ export class PermissionEditComponent implements OnInit {
       error: () => {
         this.isSaving.set(false);
         this.snackBar.open(
-          this.translate.instant('permission.saveFailed'),
-          this.translate.instant('common.close'),
+          this.translate.instant(this.i18n.permission.saveFailed),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 },
         );
       },

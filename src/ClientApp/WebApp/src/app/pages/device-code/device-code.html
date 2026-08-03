@@ -81,7 +81,7 @@
           <div class="user-info">
             <p class="info-text surface-subtle">
               <mat-icon class="secondary">info</mat-icon>
-              {{ i18n.deviceCode.accountInfo | translate: { username: authService.user()?.preferred_username || authService.user()?.name || 'User' } }}
+              {{ i18n.deviceCode.accountInfo | translate: { username: authService.user()?.preferred_username || authService.user()?.name || (i18n.deviceCode.user | translate) } }}
             </p>
           </div>
 

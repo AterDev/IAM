@@ -73,8 +73,8 @@ export class ScopeListComponent implements OnInit {
       error: (error) => {
         console.error('Failed to load scopes:', error);
         this.snackBar.open(
-          this.translate.instant('error.loadScopesFailed'),
-          this.translate.instant('common.close'),
+          this.translate.instant(this.i18n.error.loadScopesFailed),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );
         this.isLoading.set(false);
@@ -126,8 +126,8 @@ export class ScopeListComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
-        title: this.translate.instant('scope.deleteConfirmTitle'),
-        message: this.translate.instant('scope.deleteConfirmMessage')
+        title: this.translate.instant(this.i18n.scope.deleteConfirmTitle),
+        message: this.translate.instant(this.i18n.scope.deleteConfirmMessage)
       }
     });
 
@@ -136,8 +136,8 @@ export class ScopeListComponent implements OnInit {
         this.api.scopes.deleteScope(id).subscribe({
           next: () => {
             this.snackBar.open(
-              this.translate.instant('scope.deleteSuccess'),
-              this.translate.instant('common.close'),
+              this.translate.instant(this.i18n.scope.deleteSuccess),
+              this.translate.instant(this.i18n.common.close),
               { duration: 3000 }
             );
             this.loadData();
@@ -145,8 +145,8 @@ export class ScopeListComponent implements OnInit {
           error: (error) => {
             console.error('Failed to delete scope:', error);
             this.snackBar.open(
-              this.translate.instant('error.deleteScopeFailed'),
-              this.translate.instant('common.close'),
+              this.translate.instant(this.i18n.error.deleteScopeFailed),
+              this.translate.instant(this.i18n.common.close),
               { duration: 3000 }
             );
           }

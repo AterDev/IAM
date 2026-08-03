@@ -113,8 +113,8 @@ export class SessionListComponent implements OnInit {
       error: (error) => {
         console.error('Failed to load sessions:', error);
         this.snackBar.open(
-          this.translate.instant('error.loadSessionsFailed'),
-          this.translate.instant('common.close'),
+          this.translate.instant(this.i18n.error.loadSessionsFailed),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );
         this.isLoading.set(false);
@@ -175,8 +175,8 @@ export class SessionListComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
-        title: this.translate.instant('session.revokeConfirmTitle'),
-        message: this.translate.instant('session.revokeConfirmMessage')
+        title: this.translate.instant(this.i18n.session.revokeConfirmTitle),
+        message: this.translate.instant(this.i18n.session.revokeConfirmMessage)
       }
     });
 
@@ -185,8 +185,8 @@ export class SessionListComponent implements OnInit {
         this.api.security.revokeSession(id).subscribe({
           next: () => {
             this.snackBar.open(
-              this.translate.instant('session.revokeSuccess'),
-              this.translate.instant('common.close'),
+              this.translate.instant(this.i18n.session.revokeSuccess),
+              this.translate.instant(this.i18n.common.close),
               { duration: 3000 }
             );
             this.loadData();
@@ -194,8 +194,8 @@ export class SessionListComponent implements OnInit {
           error: (error) => {
             console.error('Failed to revoke session:', error);
             this.snackBar.open(
-              this.translate.instant('error.revokeSessionFailed'),
-              this.translate.instant('common.close'),
+              this.translate.instant(this.i18n.error.revokeSessionFailed),
+              this.translate.instant(this.i18n.common.close),
               { duration: 3000 }
             );
           }
@@ -213,8 +213,8 @@ export class SessionListComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
-        title: this.translate.instant('session.revokeBatchConfirmTitle'),
-        message: this.translate.instant('session.revokeBatchConfirmMessage', { count: selected.size })
+        title: this.translate.instant(this.i18n.session.revokeBatchConfirmTitle),
+        message: this.translate.instant(this.i18n.session.revokeBatchConfirmMessage, { count: selected.size })
       }
     });
 
@@ -248,10 +248,10 @@ export class SessionListComponent implements OnInit {
     this.loadData();
 
     const message = failed === 0
-      ? this.translate.instant('session.revokeBatchSuccess', { count: completed })
-      : this.translate.instant('session.revokeBatchPartial', { success: completed, failed });
+      ? this.translate.instant(this.i18n.session.revokeBatchSuccess, { count: completed })
+      : this.translate.instant(this.i18n.session.revokeBatchPartial, { success: completed, failed });
 
-    this.snackBar.open(message, this.translate.instant('common.close'), { duration: 3000 });
+    this.snackBar.open(message, this.translate.instant(this.i18n.common.close), { duration: 3000 });
   }
 
   viewDetail(session: LoginSessionItemDto): void {

@@ -113,16 +113,16 @@ export class ScopeAddComponent implements OnInit {
     this.api.scopes.createScope(dto).subscribe({
       next: () => {
         this.snackBar.open(
-          this.translate.instant('scope.createSuccess'),
-          this.translate.instant('common.close'),
+          this.translate.instant(this.i18n.scope.createSuccess),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );
         this.dialogRef.close(true);
       },
       error: (error) => {
         this.isSubmitting = false;
-        const errorMsg = error?.error?.message || this.translate.instant('error.createScopeFailed');
-        this.snackBar.open(errorMsg, this.translate.instant('common.close'), { duration: 3000 });
+        const errorMsg = error?.error?.message || this.translate.instant(this.i18n.error.createScopeFailed);
+        this.snackBar.open(errorMsg, this.translate.instant(this.i18n.common.close), { duration: 3000 });
       }
     });
   }
@@ -136,11 +136,11 @@ export class ScopeAddComponent implements OnInit {
       return '';
     }
     if (control.hasError('required')) {
-      return this.translate.instant('error.required');
+      return this.translate.instant(this.i18n.error.required);
     }
     if (control.hasError('minlength')) {
       const minLength = control.errors?.['minlength'].requiredLength;
-      return this.translate.instant('error.minLength', { length: minLength });
+      return this.translate.instant(this.i18n.error.minLength, { length: minLength });
     }
     return '';
   }

@@ -15,6 +15,7 @@ import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/
 import { UserEditComponent } from '../edit/edit';
 import { UserAddComponent } from '../add/add';
 import { I18N_KEYS } from 'src/app/share/i18n-keys';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-list',
@@ -65,7 +66,8 @@ export class UserListComponent implements OnInit {
     private api: ApiClient,
     private router: Router,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private translate: TranslateService
   ) { }
 
   ngOnInit(): void {
@@ -161,14 +163,14 @@ export class UserListComponent implements OnInit {
     this.api.users.updateStatus(user.id, lockoutEnd as any).subscribe({
       next: () => {
         this.snackBar.open(
-          user.lockoutEnabled ? 'User unlocked successfully' : 'User locked successfully',
-          'Close',
+          user.lockoutEnabled ? this.translate.instant(this.i18n.user.statusUnlocked) : this.translate.instant(this.i18n.user.statusLocked),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );
         this.loadData();
       },
       error: () => {
-        this.snackBar.open('Failed to update user status', 'Close', { duration: 3000 });
+        this.snackBar.open(this.translate.instant(this.i18n.user.statusUpdateFailed), this.translate.instant(this.i18n.common.close), { duration: 3000 });
       }
     });
   }
@@ -177,8 +179,8 @@ export class UserListComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
-        title: 'Delete User',
-        message: `Are you sure you want to delete user "${user.userName}"?`
+        title: this.translate.instant(this.i18n.user.deleteConfirmTitle),
+        message: this.translate.instant(this.i18n.user.deleteConfirmMessage, { userName: user.userName })
       }
     });
 
@@ -186,11 +188,11 @@ export class UserListComponent implements OnInit {
       if (result) {
         this.api.users.deleteUser(user.id, false).subscribe({
           next: () => {
-            this.snackBar.open('User deleted successfully', 'Close', { duration: 3000 });
+            this.snackBar.open(this.translate.instant(this.i18n.user.deletedSuccess), this.translate.instant(this.i18n.common.close), { duration: 3000 });
             this.loadData();
           },
           error: () => {
-            this.snackBar.open('Failed to delete user', 'Close', { duration: 3000 });
+            this.snackBar.open(this.translate.instant(this.i18n.user.deleteFailed), this.translate.instant(this.i18n.common.close), { duration: 3000 });
           }
         });
       }
@@ -200,7 +202,7 @@ export class UserListComponent implements OnInit {
   batchLock(): void {
     const selectedIds = Array.from(this.selectedIds());
     if (selectedIds.length === 0) {
-      this.snackBar.open('Please select users to lock', 'Close', { duration: 3000 });
+      this.snackBar.open(this.translate.instant(this.i18n.user.selectLock), this.translate.instant(this.i18n.common.close), { duration: 3000 });
       return;
     }
 
@@ -212,7 +214,7 @@ export class UserListComponent implements OnInit {
         next: () => {
           completed++;
           if (completed === selectedIds.length) {
-            this.snackBar.open(`${selectedIds.length} users locked successfully`, 'Close', { duration: 3000 });
+            this.snackBar.open(this.translate.instant(this.i18n.user.batchLocked, { count: selectedIds.length }), this.translate.instant(this.i18n.common.close), { duration: 3000 });
             this.selectedIds.set(new Set());
             this.loadData();
           }
@@ -230,7 +232,7 @@ export class UserListComponent implements OnInit {
   batchUnlock(): void {
     const selectedIds = Array.from(this.selectedIds());
     if (selectedIds.length === 0) {
-      this.snackBar.open('Please select users to unlock', 'Close', { duration: 3000 });
+      this.snackBar.open(this.translate.instant(this.i18n.user.selectUnlock), this.translate.instant(this.i18n.common.close), { duration: 3000 });
       return;
     }
 
@@ -241,7 +243,7 @@ export class UserListComponent implements OnInit {
         next: () => {
           completed++;
           if (completed === selectedIds.length) {
-            this.snackBar.open(`${selectedIds.length} users unlocked successfully`, 'Close', { duration: 3000 });
+            this.snackBar.open(this.translate.instant(this.i18n.user.batchUnlocked, { count: selectedIds.length }), this.translate.instant(this.i18n.common.close), { duration: 3000 });
             this.selectedIds.set(new Set());
             this.loadData();
           }

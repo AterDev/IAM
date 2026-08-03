@@ -118,8 +118,8 @@ export class ClientEditComponent implements OnInit {
       error: (error) => {
         console.error('[ClientEdit] Failed to load client:', error);
         this.snackBar.open(
-          this.translate.instant('error.loadClientFailed'),
-          this.translate.instant('common.close'),
+          this.translate.instant(this.i18n.error.loadClientFailed),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );
         this.dialogRef.close(false);
@@ -228,16 +228,16 @@ export class ClientEditComponent implements OnInit {
     this.api.clients.updateClient(this.data.clientId, dto).subscribe({
       next: () => {
         this.snackBar.open(
-          this.translate.instant('client.updateSuccess'),
-          this.translate.instant('common.close'),
+          this.translate.instant(this.i18n.client.updateSuccess),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );
         this.dialogRef.close(true);
       },
       error: (error) => {
         this.isSubmitting = false;
-        const errorMsg = error?.error?.message || this.translate.instant('error.updateClientFailed');
-        this.snackBar.open(errorMsg, this.translate.instant('common.close'), { duration: 3000 });
+        const errorMsg = error?.error?.message || this.translate.instant(this.i18n.error.updateClientFailed);
+        this.snackBar.open(errorMsg, this.translate.instant(this.i18n.common.close), { duration: 3000 });
       }
     });
   }
@@ -263,11 +263,11 @@ export class ClientEditComponent implements OnInit {
       return '';
     }
     if (control.hasError('required')) {
-      return this.translate.instant('error.required');
+      return this.translate.instant(this.i18n.error.required);
     }
     if (control.hasError('maxlength')) {
       const maxLength = control.errors?.['maxlength'].requiredLength;
-      return this.translate.instant('error.maxLength', { length: maxLength });
+      return this.translate.instant(this.i18n.error.maxLength, { length: maxLength });
     }
     return '';
   }

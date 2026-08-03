@@ -14,6 +14,7 @@ import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/
 import { OrganizationMembersComponent } from '../members/members';
 import { OrganizationTreeDto } from 'src/app/services/api/models/iammod/organization-tree-dto.model';
 import { I18N_KEYS } from 'src/app/share/i18n-keys';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-list',
@@ -40,7 +41,8 @@ export class OrganizationListComponent implements OnInit {
   constructor(
     private api: ApiClient,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private translate: TranslateService
   ) { }
 
   ngOnInit(): void {
@@ -58,7 +60,7 @@ export class OrganizationListComponent implements OnInit {
       },
       error: () => {
         this.isLoading.set(false);
-        this.snackBar.open('Failed to load organization tree', 'Close', { duration: 3000 });
+        this.snackBar.open(this.translate.instant(this.i18n.organization.loadFailed), this.translate.instant(this.i18n.common.close), { duration: 3000 });
       }
     });
   }
@@ -101,15 +103,15 @@ export class OrganizationListComponent implements OnInit {
     event.stopPropagation();
 
     if (node.children && node.children.length > 0) {
-      this.snackBar.open('Cannot delete organization with children', 'Close', { duration: 3000 });
+      this.snackBar.open(this.translate.instant(this.i18n.organization.deleteWithChildren), this.translate.instant(this.i18n.common.close), { duration: 3000 });
       return;
     }
 
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
-        title: 'Delete Organization',
-        message: `Are you sure you want to delete organization "${node.name}"?`
+        title: this.translate.instant(this.i18n.organization.deleteConfirmTitle),
+        message: this.translate.instant(this.i18n.organization.deleteConfirmMessage, { name: node.name })
       }
     });
 
@@ -117,14 +119,14 @@ export class OrganizationListComponent implements OnInit {
       if (result) {
         this.api.organizations.deleteOrganization(node.id, false).subscribe({
           next: () => {
-            this.snackBar.open('Organization deleted successfully', 'Close', { duration: 3000 });
+            this.snackBar.open(this.translate.instant(this.i18n.organization.deletedSuccess), this.translate.instant(this.i18n.common.close), { duration: 3000 });
             this.loadTree();
             if (this.selectedNode()?.id === node.id) {
               this.selectedNode.set(null);
             }
           },
           error: () => {
-            this.snackBar.open('Failed to delete organization', 'Close', { duration: 3000 });
+            this.snackBar.open(this.translate.instant(this.i18n.organization.deleteFailed), this.translate.instant(this.i18n.common.close), { duration: 3000 });
           }
         });
       }

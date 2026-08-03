@@ -100,8 +100,8 @@ export class ClientListComponent implements OnInit {
       error: (error) => {
         console.error('Failed to load clients:', error);
         this.snackBar.open(
-          this.translate.instant('error.loadClientsFailed'),
-          this.translate.instant('common.close'),
+          this.translate.instant(this.i18n.error.loadClientsFailed),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );
         this.isLoading.set(false);
@@ -172,8 +172,8 @@ export class ClientListComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
-        title: this.translate.instant('client.deleteConfirmTitle'),
-        message: this.translate.instant('client.deleteConfirmMessage')
+        title: this.translate.instant(this.i18n.client.deleteConfirmTitle),
+        message: this.translate.instant(this.i18n.client.deleteConfirmMessage)
       }
     });
 
@@ -182,8 +182,8 @@ export class ClientListComponent implements OnInit {
         this.api.clients.deleteClient(id).subscribe({
           next: () => {
             this.snackBar.open(
-              this.translate.instant('client.deleteSuccess'),
-              this.translate.instant('common.close'),
+              this.translate.instant(this.i18n.client.deleteSuccess),
+              this.translate.instant(this.i18n.common.close),
               { duration: 3000 }
             );
             this.loadData();
@@ -191,8 +191,8 @@ export class ClientListComponent implements OnInit {
           error: (error) => {
             console.error('Failed to delete client:', error);
             this.snackBar.open(
-              this.translate.instant('error.deleteClientFailed'),
-              this.translate.instant('common.close'),
+              this.translate.instant(this.i18n.error.deleteClientFailed),
+              this.translate.instant(this.i18n.common.close),
               { duration: 3000 }
             );
           }
@@ -210,8 +210,8 @@ export class ClientListComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
-        title: this.translate.instant('client.deleteConfirmTitle'),
-        message: this.translate.instant('client.deleteMultipleConfirmMessage', { count: selectedCount })
+        title: this.translate.instant(this.i18n.client.deleteConfirmTitle),
+        message: this.translate.instant(this.i18n.client.deleteMultipleConfirmMessage, { count: selectedCount })
       }
     });
 
@@ -248,14 +248,14 @@ export class ClientListComponent implements OnInit {
 
     if (errorCount === 0) {
       this.snackBar.open(
-        this.translate.instant('client.deleteMultipleSuccess', { count: successCount }),
-        this.translate.instant('common.close'),
+        this.translate.instant(this.i18n.client.deleteMultipleSuccess, { count: successCount }),
+        this.translate.instant(this.i18n.common.close),
         { duration: 3000 }
       );
     } else {
       this.snackBar.open(
-        this.translate.instant('client.deleteMultiplePartial', { success: successCount, error: errorCount }),
-        this.translate.instant('common.close'),
+        this.translate.instant(this.i18n.client.deleteMultiplePartial, { success: successCount, error: errorCount }),
+        this.translate.instant(this.i18n.common.close),
         { duration: 5000 }
       );
     }

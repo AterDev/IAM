@@ -3,6 +3,7 @@ import { CommonModules } from 'src/app/share/shared-modules';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslateModule } from '@ngx-translate/core';
 
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 @Component({
   selector: 'app-loading',
   imports: [
@@ -13,7 +14,7 @@ import { TranslateModule } from '@ngx-translate/core';
   template: `
     <div class="app-loading" role="status" aria-live="polite">
       <mat-spinner [diameter]="diameter()"></mat-spinner>
-      <p class="loading-text">{{ 'common.loading' | translate }}</p>
+      <p class="loading-text">{{ i18n.common.loading | translate }}</p>
     </div>
   `,
   styles: [
@@ -36,5 +37,6 @@ import { TranslateModule } from '@ngx-translate/core';
   ]
 })
 export class AppLoadingComponent {
+  readonly i18n = I18N_KEYS;
   diameter = input<number>(40);
 }

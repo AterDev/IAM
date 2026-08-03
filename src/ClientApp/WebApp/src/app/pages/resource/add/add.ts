@@ -70,16 +70,16 @@ export class ResourceAddComponent implements OnInit {
     this.api.resources.createResource(dto).subscribe({
       next: () => {
         this.snackBar.open(
-          this.translate.instant('resource.createSuccess'),
-          this.translate.instant('common.close'),
+          this.translate.instant(this.i18n.resource.createSuccess),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );
         this.dialogRef.close(true);
       },
       error: (error) => {
         this.isSubmitting = false;
-        const errorMsg = error?.error?.message || this.translate.instant('error.createResourceFailed');
-        this.snackBar.open(errorMsg, this.translate.instant('common.close'), { duration: 3000 });
+        const errorMsg = error?.error?.message || this.translate.instant(this.i18n.error.createResourceFailed);
+        this.snackBar.open(errorMsg, this.translate.instant(this.i18n.common.close), { duration: 3000 });
       }
     });
   }
@@ -93,11 +93,11 @@ export class ResourceAddComponent implements OnInit {
       return '';
     }
     if (control.hasError('required')) {
-      return this.translate.instant('error.required');
+      return this.translate.instant(this.i18n.error.required);
     }
     if (control.hasError('minlength')) {
       const minLength = control.errors?.['minlength'].requiredLength;
-      return this.translate.instant('error.minLength', { length: minLength });
+      return this.translate.instant(this.i18n.error.minLength, { length: minLength });
     }
     return '';
   }

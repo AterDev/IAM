@@ -60,8 +60,8 @@ export class ScopeDetailComponent implements OnInit {
       error: () => {
   this.isLoading.set(false);
         this.snackBar.open(
-          this.translate.instant('error.loadScopeFailed'),
-          this.translate.instant('common.close'),
+          this.translate.instant(this.i18n.error.loadScopeFailed),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );
         this.router.navigate(['/scope/list']);
@@ -91,8 +91,8 @@ export class ScopeDetailComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
-        title: this.translate.instant('scope.deleteConfirmTitle'),
-        message: this.translate.instant('scope.deleteConfirmDetailMessage', { name: scope.displayName })
+        title: this.translate.instant(this.i18n.scope.deleteConfirmTitle),
+        message: this.translate.instant(this.i18n.scope.deleteConfirmDetailMessage, { name: scope.displayName })
       }
     });
 
@@ -101,16 +101,16 @@ export class ScopeDetailComponent implements OnInit {
         this.api.scopes.deleteScope(this.scopeId!).subscribe({
           next: () => {
             this.snackBar.open(
-              this.translate.instant('scope.deleteSuccess'),
-              this.translate.instant('common.close'),
+              this.translate.instant(this.i18n.scope.deleteSuccess),
+              this.translate.instant(this.i18n.common.close),
               { duration: 3000 }
             );
             this.router.navigate(['/scope/list']);
           },
           error: () => {
             this.snackBar.open(
-              this.translate.instant('error.deleteScopeFailed'),
-              this.translate.instant('common.close'),
+              this.translate.instant(this.i18n.error.deleteScopeFailed),
+              this.translate.instant(this.i18n.common.close),
               { duration: 3000 }
             );
           }

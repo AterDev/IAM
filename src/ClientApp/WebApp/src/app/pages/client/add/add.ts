@@ -200,8 +200,8 @@ export class ClientAddComponent implements OnInit {
       this.clipboard.copy(this.clientSecret);
       this.secretCopied = true;
       this.snackBar.open(
-        this.translate.instant('client.secretCopied'),
-        this.translate.instant('common.close'),
+        this.translate.instant(this.i18n.client.secretCopied),
+        this.translate.instant(this.i18n.common.close),
         { duration: 2000 }
       );
       // 复制成功后3秒自动关闭
@@ -239,8 +239,8 @@ export class ClientAddComponent implements OnInit {
       next: (response) => {
         this.clientSecret = response;
         this.snackBar.open(
-          this.translate.instant('client.createSuccess'),
-          this.translate.instant('common.close'),
+          this.translate.instant(this.i18n.client.createSuccess),
+          this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );
         // 在显示secret后，2秒后自动关闭dialog
@@ -250,8 +250,8 @@ export class ClientAddComponent implements OnInit {
       },
       error: (error) => {
         this.isSubmitting = false;
-        const errorMsg = error?.error?.message || this.translate.instant('error.createClientFailed');
-        this.snackBar.open(errorMsg, this.translate.instant('common.close'), { duration: 3000 });
+        const errorMsg = error?.error?.message || this.translate.instant(this.i18n.error.createClientFailed);
+        this.snackBar.open(errorMsg, this.translate.instant(this.i18n.common.close), { duration: 3000 });
       }
     });
   }
@@ -277,15 +277,15 @@ export class ClientAddComponent implements OnInit {
       return '';
     }
     if (control.hasError('required')) {
-      return this.translate.instant('error.required');
+      return this.translate.instant(this.i18n.error.required);
     }
     if (control.hasError('minlength')) {
       const minLength = control.errors?.['minlength'].requiredLength;
-      return this.translate.instant('error.minLength', { length: minLength });
+      return this.translate.instant(this.i18n.error.minLength, { length: minLength });
     }
     if (control.hasError('maxlength')) {
       const maxLength = control.errors?.['maxlength'].requiredLength;
-      return this.translate.instant('error.maxLength', { length: maxLength });
+      return this.translate.instant(this.i18n.error.maxLength, { length: maxLength });
     }
     return '';
   }

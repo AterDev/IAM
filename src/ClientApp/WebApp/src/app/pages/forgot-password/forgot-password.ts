@@ -85,11 +85,11 @@ export class ForgotPassword implements OnInit {
     try {
       await firstValueFrom(this.accountService.requestPasswordReset({ email: this.email.value }));
       this.isLoading.set(false);
-      this.successMessage.set(this.translate.instant('forgotPassword.codeSent'));
+      this.successMessage.set(this.translate.instant(this.i18n.forgotPassword.codeSent));
       this.currentStep.set(1);
     } catch (error: any) {
       this.isLoading.set(false);
-      this.errorMessage.set(error?.detail || this.translate.instant('login.error'));
+      this.errorMessage.set(error?.detail || this.translate.instant(this.i18n.login.error));
     }
   }
 
@@ -100,7 +100,7 @@ export class ForgotPassword implements OnInit {
 
     const { newPassword, confirmPassword } = this.resetForm.value;
     if (newPassword !== confirmPassword) {
-      this.errorMessage.set(this.translate.instant('validation.passwordmismatch'));
+      this.errorMessage.set(this.translate.instant(this.i18n.validation.passwordmismatch));
       return;
     }
 
@@ -116,13 +116,13 @@ export class ForgotPassword implements OnInit {
         })
       );
       this.isLoading.set(false);
-      this.successMessage.set(this.translate.instant('forgotPassword.resetSuccess'));
+      this.successMessage.set(this.translate.instant(this.i18n.forgotPassword.resetSuccess));
       setTimeout(() => {
         this.router.navigate(['/login']);
       }, 2000);
     } catch (error: any) {
       this.isLoading.set(false);
-      this.errorMessage.set(error?.detail || this.translate.instant('login.error'));
+      this.errorMessage.set(error?.detail || this.translate.instant(this.i18n.login.error));
     }
   }
 

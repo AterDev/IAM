@@ -8,6 +8,7 @@ import { ApiClient } from 'src/app/services/api/api-client';
 import { UserUpdateDto } from 'src/app/services/api/models/iammod/user-update-dto.model';
 import { UserDetailDto } from 'src/app/services/api/models/iammod/user-detail-dto.model';
 import { I18N_KEYS } from 'src/app/share/i18n-keys';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-edit',
@@ -32,6 +33,7 @@ export class UserEditComponent implements OnInit {
     private api: ApiClient,
     private dialogRef: MatDialogRef<UserEditComponent>,
     private snackBar: MatSnackBar,
+    private translate: TranslateService,
     @Inject(MAT_DIALOG_DATA) public data: { userId: string }
   ) {}
 
@@ -63,7 +65,7 @@ export class UserEditComponent implements OnInit {
   this.isLoading.set(false);
       },
       error: () => {
-        this.snackBar.open('Failed to load user', 'Close', { duration: 3000 });
+        this.snackBar.open(this.translate.instant(this.i18n.user.loadFailed), this.translate.instant(this.i18n.common.close), { duration: 3000 });
         this.dialogRef.close(false);
       }
     });
@@ -86,13 +88,13 @@ export class UserEditComponent implements OnInit {
 
     this.api.users.updateUser(this.data.userId, dto).subscribe({
       next: () => {
-        this.snackBar.open('User updated successfully', 'Close', { duration: 3000 });
+        this.snackBar.open(this.translate.instant(this.i18n.user.updatedSuccess), this.translate.instant(this.i18n.common.close), { duration: 3000 });
         this.dialogRef.close(true);
       },
       error: (error) => {
         this.isSubmitting = false;
-        const errorMsg = error?.error?.message || 'Failed to update user';
-        this.snackBar.open(errorMsg, 'Close', { duration: 3000 });
+        const errorMsg = error?.error?.message || this.translate.instant(this.i18n.user.updateFailed);
+        this.snackBar.open(errorMsg, this.translate.instant(this.i18n.common.close), { duration: 3000 });
       }
     });
   }
@@ -103,14 +105,14 @@ export class UserEditComponent implements OnInit {
 
   getErrorMessage(control: FormControl): string {
     if (control?.hasError('required')) {
-      return 'This field is required';
+      return this.translate.instant(this.i18n.validation.required);
     }
     if (control?.hasError('email')) {
-      return 'Please enter a valid email';
+      return this.translate.instant(this.i18n.user.invalidEmail);
     }
     if (control?.hasError('minlength')) {
       const minLength = control.errors?.['minlength'].requiredLength;
-      return `Minimum length is ${minLength}`;
+      return this.translate.instant(this.i18n.validation.minlength, { requiredLength: minLength });
     }
     return '';
   }

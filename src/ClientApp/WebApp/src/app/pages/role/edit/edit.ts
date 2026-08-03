@@ -60,8 +60,8 @@ export class RoleEditComponent implements OnInit {
       this.api.roles.updateRole(this.data.id, updateData).subscribe({
         next: () => {
           this.snackBar.open(
-            this.translate.instant('success.roleUpdated'),
-            this.translate.instant('common.close'),
+            this.translate.instant(this.i18n.success.roleUpdated),
+            this.translate.instant(this.i18n.common.close),
             { duration: 3000 }
           );
           this.dialogRef.close(true);
@@ -69,8 +69,8 @@ export class RoleEditComponent implements OnInit {
         error: (error) => {
           console.error('Failed to update role:', error);
           this.snackBar.open(
-            this.translate.instant('error.updateRoleFailed'),
-            this.translate.instant('common.close'),
+            this.translate.instant(this.i18n.error.updateRoleFailed),
+            this.translate.instant(this.i18n.common.close),
             { duration: 3000 }
           );
           this.isSubmitting = false;

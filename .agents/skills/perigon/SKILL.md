@@ -50,7 +50,6 @@ src/
 | Angular frontend development | [references/angular.md](references/angular.md) |
 | Backend architecture and service patterns | [references/backend.md](references/backend.md) |
 
-
 ## Project scripts
 
 Run project scripts when needed ,Use PowerShell 7 (`pwsh`) when available.
@@ -59,6 +58,7 @@ Treat these scripts as part of the template workflow; do not reimplement their b
 
 | Script | Purpose and when to run | Command |
 |---|---|---|
+| `scripts/UpdateMenus.ps1` | Synchronize `src/ClientApp/WebApp/src/assets/menus.json` into the Admin service database. Run after changing frontend menu items, hierarchy, access codes, or menu types; ensure the target Admin service is running first. The default target is `http://localhost:5002`; pass `production` only after confirming the script's production URL is correct. | `pwsh ./scripts/UpdateMenus.ps1`<br>`pwsh ./scripts/UpdateMenus.ps1 production` |
 | `scripts/EFMigrations.ps1` | Build and create an EF Core migration for `DefaultDbContext`, using the database and multi-tenant settings from `src/AppHost/appsettings.Development.json`. Run after a persisted entity, EF mapping, or database schema changes, before committing the migration. Supply a descriptive migration name; omit it only when a timestamp name is acceptable. Use `Remove` only to remove the latest un-applied migration. Migrations are applied by the application at startup. | `pwsh ./scripts/EFMigrations.ps1 -Name AddOrderStatus`<br>`pwsh ./scripts/EFMigrations.ps1 -Name Remove` |
 | `scripts/GenSwagger.ps1` | Build one service and export its OpenAPI document to `src/Services/{ServiceName}/swagger.json`; it also normalizes the document title. Run after changing a service's public endpoints, request/response contracts, or OpenAPI configuration, and before generating or refreshing clients that consume that service's OpenAPI file. | `pwsh ./scripts/GenSwagger.ps1 -ServiceName ApiService`<br>`pwsh ./scripts/GenSwagger.ps1 -ServiceName AdminService -DocumentName v1` |
 
@@ -73,3 +73,4 @@ Treat these scripts as part of the template workflow; do not reimplement their b
 - **Do not manually edit generated request contracts unless necessary**; regenerate when the backend changes.
 - **Check help before guessing options** with `perigon -h` or `perigon <command> -h`.
 - **Prefer the current subcommand form** (`perigon module ...`) over older shorthand aliases when the help output is ambiguous.
+- **Enforce the DTO layout and naming rule**: module DTOs belong under `Models/{Entity}Dtos`, one type per file, and every data-transfer type ends in `Dto`; use `{Entity}AddDto`, `{Entity}UpdateDto`, `{Entity}FilterDto`, `{Entity}DetailDto`, and `{Entity}ItemDto` where applicable. Do not introduce `Input`, `Request`, or `Response` DTO names.

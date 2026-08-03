@@ -74,7 +74,7 @@ export class ChangePasswordComponent {
     }
 
     if (this.newPassword.value !== this.confirmPassword.value) {
-      this.errorMessage.set(this.translate.instant('validation.passwordmismatch'));
+      this.errorMessage.set(this.translate.instant(this.i18n.validation.passwordmismatch));
       return;
     }
 
@@ -88,7 +88,7 @@ export class ChangePasswordComponent {
         newPassword: this.newPassword.value,
       }));
 
-      this.successMessage.set(this.translate.instant('changePassword.success'));
+      this.successMessage.set(this.translate.instant(this.i18n.changePassword.success));
       this.form.reset({ currentPassword: '', newPassword: '', confirmPassword: '' });
       this.isSaving.set(false);
 
@@ -98,7 +98,7 @@ export class ChangePasswordComponent {
     } catch (error: unknown) {
       const errorResult = error as { detail?: string } | null;
       this.isSaving.set(false);
-      this.errorMessage.set(errorResult?.detail || this.translate.instant('changePassword.failed'));
+      this.errorMessage.set(errorResult?.detail || this.translate.instant(this.i18n.changePassword.failed));
     }
   }
 

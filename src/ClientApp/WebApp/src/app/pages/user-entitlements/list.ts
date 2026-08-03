@@ -7,11 +7,12 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { ApiClient } from 'src/app/services/api/api-client';
 import { UserItemDto } from 'src/app/services/api/models/iammod/user-item-dto.model';
-import { UserEntitlementDefinitionItemDto } from 'src/app/services/api/models/user-center-mod/user-entitlement-definition-item-dto.model';
 import { UserEntitlementDetailDto } from 'src/app/services/api/models/user-center-mod/user-entitlement-detail-dto.model';
 import { BaseMatModules, CommonModules } from 'src/app/share/shared-modules';
 import { debounceTime, distinctUntilChanged, startWith, switchMap, tap } from 'rxjs';
 import { UserEntitlementAddComponent } from './add/add';
+import { UserEntitlementEditComponent } from './edit/edit';
+import { I18N_KEYS } from 'src/app/share/i18n-keys';
 
 @Component({
   selector: 'app-user-entitlement-list',
@@ -20,17 +21,16 @@ import { UserEntitlementAddComponent } from './add/add';
   styleUrl: './list.scss'
 })
 export class UserEntitlementListComponent implements OnInit {
+  readonly i18n = I18N_KEYS;
   private readonly api = inject(ApiClient);
   private readonly dialog = inject(MatDialog);
   readonly users = signal<UserItemDto[]>([]);
-  readonly definitions = signal<UserEntitlementDefinitionItemDto[]>([]);
   readonly entitlements = signal<UserEntitlementDetailDto[]>([]);
   readonly selectedUser = signal<UserItemDto | null>(null);
   readonly columns = ['code', 'limit', 'used', 'expiration', 'actions'];
   readonly userControl = new FormControl<string | UserItemDto>('');
 
   ngOnInit(): void {
-    this.loadDefinitions();
     this.userControl.valueChanges.pipe(
       startWith(''),
       tap(value => {
@@ -46,7 +46,7 @@ export class UserEntitlementListComponent implements OnInit {
   }
 
   displayUser(user: UserItemDto | string | null): string {
-    return typeof user === 'object' && user ? `${user.userName} · ${user.email ?? ''}` : user ?? '';
+    return typeof user === 'object' && user ? user.userName : user ?? '';
   }
 
   selectUser(user: UserItemDto): void {
@@ -61,16 +61,25 @@ export class UserEntitlementListComponent implements OnInit {
     }
   }
 
-  loadDefinitions(): void { this.api.userEntitlementDefinitions.getPage(null, 1, 100, null).subscribe(page => this.definitions.set(page.data)); }
-  availableDefinitions(): UserEntitlementDefinitionItemDto[] { const assigned = new Set(this.entitlements().map(item => item.entitlementDefinitionId)); return this.definitions().filter(item => !assigned.has(item.id)); }
-
   add(): void {
     const user = this.selectedUser();
     if (!user) return;
 
     this.dialog.open(UserEntitlementAddComponent, {
       width: '600px',
-      data: { userId: user.id, definitions: this.availableDefinitions() },
+      data: {
+        userId: user.id,
+        assignedDefinitionIds: this.entitlements().map(item => item.entitlementDefinitionId),
+      },
+    }).afterClosed().subscribe(saved => {
+      if (saved) this.load();
+    });
+  }
+
+  edit(item: UserEntitlementDetailDto): void {
+    this.dialog.open(UserEntitlementEditComponent, {
+      width: '600px',
+      data: item,
     }).afterClosed().subscribe(saved => {
       if (saved) this.load();
     });

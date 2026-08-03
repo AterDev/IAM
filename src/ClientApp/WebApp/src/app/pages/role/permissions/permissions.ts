@@ -102,7 +102,7 @@ export class RolePermissionsComponent implements OnInit {
       },
       error: () => {
         this.isLoading.set(false);
-        this.snackBar.open(this.translate.instant('error.loadPermissionsFailed'), this.translate.instant('common.close'), { duration: 3000 });
+        this.snackBar.open(this.translate.instant(this.i18n.error.loadPermissionsFailed), this.translate.instant(this.i18n.common.close), { duration: 3000 });
       },
     });
   }
@@ -169,12 +169,12 @@ export class RolePermissionsComponent implements OnInit {
       next: () => {
         this.baselineRoleCodes.set(mergedCodes);
         this.isSaving.set(false);
-        this.snackBar.open(this.translate.instant('success.permissionsSaved'), this.translate.instant('common.close'), { duration: 3000 });
+        this.snackBar.open(this.translate.instant(this.i18n.success.permissionsSaved), this.translate.instant(this.i18n.common.close), { duration: 3000 });
         this.loadTree();
       },
       error: () => {
         this.isSaving.set(false);
-        this.snackBar.open(this.translate.instant('error.savePermissionsFailed'), this.translate.instant('common.close'), { duration: 3000 });
+        this.snackBar.open(this.translate.instant(this.i18n.error.savePermissionsFailed), this.translate.instant(this.i18n.common.close), { duration: 3000 });
       },
     });
   }
@@ -239,7 +239,7 @@ export class RolePermissionsComponent implements OnInit {
       },
       error: () => {
         this.isLoading.set(false);
-        this.snackBar.open(this.translate.instant('error.loadPermissionsFailed'), this.translate.instant('common.close'), { duration: 3000 });
+        this.snackBar.open(this.translate.instant(this.i18n.error.loadPermissionsFailed), this.translate.instant(this.i18n.common.close), { duration: 3000 });
       },
     });
   }
