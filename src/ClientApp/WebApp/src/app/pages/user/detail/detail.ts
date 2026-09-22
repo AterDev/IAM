@@ -13,6 +13,7 @@ import { ConfirmDialogComponent } from 'src/app/share/components/confirm-dialog/
 import { AppLoadingComponent } from 'src/app/share/components/loading/loading';
 import { I18N_KEYS } from 'src/app/share/i18n-keys';
 import { TranslateService } from '@ngx-translate/core';
+import { isLockoutActive } from '../lockout';
 
 @Component({
   selector: 'app-detail',
@@ -29,6 +30,7 @@ import { TranslateService } from '@ngx-translate/core';
 })
 export class UserDetailComponent implements OnInit {
   readonly i18n = I18N_KEYS;
+  readonly isUserLocked = isLockoutActive;
   // Keep signals only for template-reactive values
   user = signal<UserDetailDto | null>(null);
 
@@ -85,12 +87,13 @@ export class UserDetailComponent implements OnInit {
       return;
     }
 
-    const lockoutEnd = user.lockoutEnabled ? null : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+    const isLocked = isLockoutActive(user.lockoutEnd);
+    const lockoutEnd = isLocked ? null : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
 
     this.api.users.updateStatus(this.userId!, lockoutEnd as any).subscribe({
       next: () => {
         this.snackBar.open(
-          user.lockoutEnabled ? this.translate.instant(this.i18n.user.statusUnlocked) : this.translate.instant(this.i18n.user.statusLocked),
+          isLocked ? this.translate.instant(this.i18n.user.statusUnlocked) : this.translate.instant(this.i18n.user.statusLocked),
           this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );

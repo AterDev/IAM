@@ -414,10 +414,21 @@ public class TokenManager(
         SigningKey signingKey
     )
     {
-        if (string.IsNullOrEmpty(request.DeviceCode))
+        if (string.IsNullOrWhiteSpace(request.DeviceCode))
         {
             throw new BusinessException(Localizer.OAuthMissingDeviceCode);
         }
+
+        if (string.IsNullOrWhiteSpace(request.ClientId))
+        {
+            throw new BusinessException(Localizer.OAuthMissingParameters);
+        }
+
+        var client = await GetValidatedClientAsync(
+            request.ClientId,
+            request.ClientSecret,
+            missingDescription: "Missing client credentials"
+        );
 
         var devicePollingAssessment = _riskControlService.RegisterDeviceCodePoll(request.ClientId, request.DeviceCode);
         if (devicePollingAssessment.IsBlocked)
@@ -450,6 +461,22 @@ public class TokenManager(
             throw new BusinessException(Localizer.OAuthInvalidDeviceCode);
         }
 
+        if (tokenEntity.Authorization.ClientId != client.Id)
+        {
+            throw new BusinessException(Localizer.OAuthClientMismatch);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+
+        // An expired device code must not continue polling as pending.
+        if (!tokenEntity.ExpirationDate.HasValue
+            || tokenEntity.ExpirationDate <= now
+            || !tokenEntity.Authorization.ExpirationDate.HasValue
+            || tokenEntity.Authorization.ExpirationDate <= now)
+        {
+            throw new BusinessException(Localizer.OAuthDeviceCodeExpired);
+        }
+
         // Check if pending
         if (tokenEntity.Status == TokenStatuses.Pending)
         {
@@ -462,10 +489,15 @@ public class TokenManager(
             throw new BusinessException(Localizer.OAuthAccessDenied);
         }
 
-        // Check expiration
-        if (tokenEntity.ExpirationDate < DateTimeOffset.UtcNow)
+        if (tokenEntity.Status != TokenStatuses.Valid
+            || tokenEntity.Authorization.Status != AuthorizationStatuses.Authorized)
         {
-            throw new BusinessException(Localizer.OAuthDeviceCodeExpired);
+            throw new BusinessException(Localizer.OAuthInvalidDeviceCode);
+        }
+
+        if (!string.Equals(tokenEntity.SubjectId, tokenEntity.Authorization.SubjectId, StringComparison.Ordinal))
+        {
+            throw new BusinessException(Localizer.OAuthInvalidDeviceCode);
         }
 
         // Get user
@@ -475,10 +507,16 @@ public class TokenManager(
             throw new BusinessException(Localizer.UserNotFound);
         }
 
-        // Mark as redeemed
-        tokenEntity.Status = TokenStatuses.Redeemed;
-        tokenEntity.RedemptionDate = DateTimeOffset.UtcNow;
-        await _dbContext.SaveChangesAsync();
+        if (user.LockoutEnd.HasValue && user.LockoutEnd > now)
+        {
+            throw new BusinessException(Localizer.LockAccountForManyTimes, StatusCodes.Status403Forbidden);
+        }
+
+        // Redeem atomically on relational stores so concurrent polls cannot both issue tokens.
+        if (!await TryRedeemDeviceCodeAsync(tokenEntity, now))
+        {
+            throw new BusinessException(Localizer.OAuthInvalidDeviceCode);
+        }
 
         // Generate tokens
         return await GenerateTokensAsync(
@@ -924,6 +962,44 @@ public class TokenManager(
         }
 
         return JsonSerializer.Deserialize<Dictionary<string, string>>(token.Properties) ?? [];
+    }
+
+    private async Task<bool> TryRedeemDeviceCodeAsync(Token token, DateTimeOffset redeemedAt)
+    {
+        if (_dbContext.Database.IsRelational())
+        {
+            var updated = await _dbContext.Tokens
+                .Where(t =>
+                    t.Id == token.Id
+                    && t.Type == TokenTypes.DeviceCode
+                    && t.Status == TokenStatuses.Valid)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(t => t.Status, TokenStatuses.Redeemed)
+                    .SetProperty(t => t.RedemptionDate, redeemedAt));
+
+            if (updated != 1)
+            {
+                return false;
+            }
+
+            // ExecuteUpdate bypasses the change tracker; keep the tracked instance aligned
+            // before GenerateTokensAsync persists the newly issued tokens.
+            token.Status = TokenStatuses.Redeemed;
+            token.RedemptionDate = redeemedAt;
+            _dbContext.Entry(token).State = EntityState.Unchanged;
+            return true;
+        }
+
+        // The in-memory provider does not offer a database-side conditional update.
+        if (token.Status != TokenStatuses.Valid)
+        {
+            return false;
+        }
+
+        token.Status = TokenStatuses.Redeemed;
+        token.RedemptionDate = redeemedAt;
+        await _dbContext.SaveChangesAsync();
+        return true;
     }
 
     private static string SerializeTokenProperties(Dictionary<string, string> properties)

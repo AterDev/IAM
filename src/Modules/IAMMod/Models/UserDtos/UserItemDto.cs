@@ -10,5 +10,9 @@ public class UserItemDto
     public string? Email { get; set; }
     public string? PhoneNumber { get; set; }
     public bool LockoutEnabled { get; set; }
+    /// <summary>
+    /// Account is currently locked when this timestamp is in the future.
+    /// </summary>
+    public DateTimeOffset? LockoutEnd { get; set; }
     public DateTimeOffset CreatedTime { get; set; }
 }

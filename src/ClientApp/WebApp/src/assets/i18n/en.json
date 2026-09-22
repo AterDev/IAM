@@ -534,7 +534,8 @@
     "startDate": "Start Date",
     "endDate": "End Date",
     "export": "Export",
-    "exportNotImplemented": "Export feature not yet implemented",
+    "exportCurrentPage": "Export current page",
+    "exportSuccess": "Exported {{count}} audit log(s) from the current page",
     "startAutoRefresh": "Auto Refresh",
     "stopAutoRefresh": "Stop Refresh"
   },

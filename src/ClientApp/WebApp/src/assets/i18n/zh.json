@@ -566,7 +566,8 @@
     "startDate": "开始日期",
     "endDate": "结束日期",
     "export": "导出",
-    "exportNotImplemented": "导出功能尚未实现",
+    "exportCurrentPage": "导出当前页",
+    "exportSuccess": "已导出当前页 {{count}} 条审计日志",
     "startAutoRefresh": "自动刷新",
     "stopAutoRefresh": "停止刷新"
   },

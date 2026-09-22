@@ -16,6 +16,7 @@ import { UserEditComponent } from '../edit/edit';
 import { UserAddComponent } from '../add/add';
 import { I18N_KEYS } from 'src/app/share/i18n-keys';
 import { TranslateService } from '@ngx-translate/core';
+import { isLockoutActive } from '../lockout';
 
 @Component({
   selector: 'app-list',
@@ -35,6 +36,7 @@ import { TranslateService } from '@ngx-translate/core';
 })
 export class UserListComponent implements OnInit {
   readonly i18n = I18N_KEYS;
+  readonly isUserLocked = isLockoutActive;
   displayedColumns: string[] = ['select', 'userName', 'email', 'phoneNumber', 'lockoutEnabled', 'createdTime', 'actions'];
 
   // Use signals only for reactive template values
@@ -158,12 +160,13 @@ export class UserListComponent implements OnInit {
   }
 
   toggleUserStatus(user: UserItemDto): void {
-    const lockoutEnd = user.lockoutEnabled ? null : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+    const isLocked = isLockoutActive(user.lockoutEnd);
+    const lockoutEnd = isLocked ? null : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
 
     this.api.users.updateStatus(user.id, lockoutEnd as any).subscribe({
       next: () => {
         this.snackBar.open(
-          user.lockoutEnabled ? this.translate.instant(this.i18n.user.statusUnlocked) : this.translate.instant(this.i18n.user.statusLocked),
+          isLocked ? this.translate.instant(this.i18n.user.statusUnlocked) : this.translate.instant(this.i18n.user.statusLocked),
           this.translate.instant(this.i18n.common.close),
           { duration: 3000 }
         );

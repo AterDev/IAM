@@ -10,9 +10,9 @@
         {{ i18n.common.edit | translate }}
       </button>
       <button mat-button (click)="toggleUserStatus()" *ngIf="user()">
-        <mat-icon [class.accent]="user()!.lockoutEnabled"
-          [class.secondary]="!user()!.lockoutEnabled">{{ user()!.lockoutEnabled ? 'lock_open' : 'lock' }}</mat-icon>
-        {{ user()!.lockoutEnabled ? (i18n.user.unlock | translate) : (i18n.user.lock | translate) }}
+        <mat-icon [class.accent]="isUserLocked(user()!.lockoutEnd)"
+          [class.secondary]="!isUserLocked(user()!.lockoutEnd)">{{ isUserLocked(user()!.lockoutEnd) ? 'lock_open' : 'lock' }}</mat-icon>
+        {{ isUserLocked(user()!.lockoutEnd) ? (i18n.user.unlock | translate) : (i18n.user.lock | translate) }}
       </button>
       <button mat-button color="warn" class="error" (click)="deleteUser()">
         <mat-icon class="error">delete</mat-icon>
@@ -44,8 +44,8 @@
         <div class="info-item">
           <label>{{ i18n.user.status | translate }}:</label>
           <span>
-            <mat-chip [class.locked]="user()!.lockoutEnabled" [class.active]="!user()!.lockoutEnabled">
-              {{ user()!.lockoutEnabled ? (i18n.user.locked | translate) : (i18n.user.active | translate) }}
+            <mat-chip [class.locked]="isUserLocked(user()!.lockoutEnd)" [class.active]="!isUserLocked(user()!.lockoutEnd)">
+              {{ isUserLocked(user()!.lockoutEnd) ? (i18n.user.locked | translate) : (i18n.user.active | translate) }}
             </mat-chip>
           </span>
         </div>

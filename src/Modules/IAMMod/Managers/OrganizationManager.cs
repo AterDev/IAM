@@ -111,14 +111,21 @@ public class OrganizationManager(
             throw new BusinessException("OrganizationNotFound", StatusCodes.Status404NotFound);
         }
 
-        // Check if name already exists under same parent (if changing)
-        if (!string.IsNullOrWhiteSpace(dto.Name) && dto.Name != entity.Name)
+        // Check the effective target sibling scope before changing any entity values.
+        var targetParentId = dto.ParentId ?? entity.ParentId;
+        var targetName = string.IsNullOrWhiteSpace(dto.Name) ? entity.Name : dto.Name;
+        var nameChanged = !string.IsNullOrWhiteSpace(dto.Name) && dto.Name != entity.Name;
+        var parentChanged = dto.ParentId.HasValue && dto.ParentId != entity.ParentId;
+
+        if ((nameChanged || parentChanged)
+            && await _dbSet.AnyAsync(q => q.Name == targetName && q.ParentId == targetParentId && q.Id != id))
         {
-            if (await _dbSet.AnyAsync(q => q.Name == dto.Name && q.ParentId == entity.ParentId && q.Id != id))
-            {
-                throw new BusinessException("OrganizationNameExists", StatusCodes.Status400BadRequest);
-            }
-            entity.Name = dto.Name;
+            throw new BusinessException("OrganizationNameExists", StatusCodes.Status400BadRequest);
+        }
+
+        if (nameChanged)
+        {
+            entity.Name = targetName;
         }
 
         // Handle parent change

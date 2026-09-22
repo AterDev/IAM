@@ -12,6 +12,8 @@ export interface UserItemDto {
   phoneNumber?: string | null;
   /** lockoutEnabled */
   lockoutEnabled: boolean;
+  /** Account is currently locked when this timestamp is in the future. */
+  lockoutEnd?: Date | null;
   /** createdTime */
   createdTime: Date;
 }

@@ -569,7 +569,8 @@ export const I18N_KEYS = {
     "startDate": "auditLog.startDate",
     "endDate": "auditLog.endDate",
     "export": "auditLog.export",
-    "exportNotImplemented": "auditLog.exportNotImplemented",
+    "exportCurrentPage": "auditLog.exportCurrentPage",
+    "exportSuccess": "auditLog.exportSuccess",
     "startAutoRefresh": "auditLog.startAutoRefresh",
     "stopAutoRefresh": "auditLog.stopAutoRefresh"
   },

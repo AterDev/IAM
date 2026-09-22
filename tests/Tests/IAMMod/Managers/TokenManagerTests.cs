@@ -1,6 +1,8 @@
 using System.Text;
 using System.Text.Json;
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Data.Sqlite;
 
 namespace Tests.IAMMod.Managers;
 
@@ -37,6 +39,209 @@ public class TokenManagerTests
             signingKey));
 
         Assert.Equal(Localizer.OAuthPasswordGrantDisabled, exception.LanguageKey);
+    }
+
+    [Fact]
+    public async Task ProcessTokenRequestAsync_WhenDeviceCodeClientSecretIsInvalid_ThrowsInvalidClient()
+    {
+        await using var dbContext = TestDbContextFactory.Create(nameof(ProcessTokenRequestAsync_WhenDeviceCodeClientSecretIsInvalid_ThrowsInvalidClient));
+        var (client, _, token, _) = SeedDeviceGrant(
+            dbContext,
+            "device-confidential-client",
+            clientType: ClientType.Confidential,
+            clientSecret: "correct-secret");
+        var manager = CreateTokenManager(dbContext);
+
+        var exception = await Assert.ThrowsAsync<BusinessException>(() => manager.ProcessTokenRequestAsync(
+            new TokenRequestDto
+            {
+                GrantType = OAuthConst.GrantTypes.DeviceCode,
+                ClientId = client.ClientId,
+                ClientSecret = "wrong-secret",
+                DeviceCode = token.ReferenceId,
+            },
+            CreateSigningKey()));
+
+        Assert.Equal(Localizer.OAuthInvalidClient, exception.LanguageKey);
+    }
+
+    [Fact]
+    public async Task ProcessTokenRequestAsync_WhenDeviceCodeBelongsToAnotherClient_ThrowsClientMismatch()
+    {
+        await using var dbContext = TestDbContextFactory.Create(nameof(ProcessTokenRequestAsync_WhenDeviceCodeBelongsToAnotherClient_ThrowsClientMismatch));
+        var (ownerClient, _, token, _) = SeedDeviceGrant(dbContext, "device-owner-client");
+        var requestingClient = SeedClient(dbContext, "device-requesting-client");
+        var manager = CreateTokenManager(dbContext);
+
+        var exception = await Assert.ThrowsAsync<BusinessException>(() => manager.ProcessTokenRequestAsync(
+            new TokenRequestDto
+            {
+                GrantType = OAuthConst.GrantTypes.DeviceCode,
+                ClientId = requestingClient.ClientId,
+                DeviceCode = token.ReferenceId,
+            },
+            CreateSigningKey()));
+
+        Assert.Equal(Localizer.OAuthClientMismatch, exception.LanguageKey);
+        Assert.Equal(ownerClient.Id, token.Authorization!.ClientId);
+    }
+
+    [Fact]
+    public async Task ProcessTokenRequestAsync_WhenDeviceCodeIsExpiredWhilePending_ThrowsExpiredToken()
+    {
+        await using var dbContext = TestDbContextFactory.Create(nameof(ProcessTokenRequestAsync_WhenDeviceCodeIsExpiredWhilePending_ThrowsExpiredToken));
+        var (client, _, token, _) = SeedDeviceGrant(
+            dbContext,
+            "device-expired-client",
+            tokenStatus: OAuthConst.TokenStatuses.Pending,
+            authorizationStatus: OAuthConst.AuthorizationStatuses.Pending,
+            tokenExpiration: DateTimeOffset.UtcNow.AddMinutes(-1));
+        var manager = CreateTokenManager(dbContext);
+
+        var exception = await Assert.ThrowsAsync<BusinessException>(() => manager.ProcessTokenRequestAsync(
+            new TokenRequestDto
+            {
+                GrantType = OAuthConst.GrantTypes.DeviceCode,
+                ClientId = client.ClientId,
+                DeviceCode = token.ReferenceId,
+            },
+            CreateSigningKey()));
+
+        Assert.Equal(Localizer.OAuthDeviceCodeExpired, exception.LanguageKey);
+    }
+
+    [Fact]
+    public async Task ProcessTokenRequestAsync_WhenDeviceCodeExpirationIsMissing_ThrowsExpiredToken()
+    {
+        await using var dbContext = TestDbContextFactory.Create(nameof(ProcessTokenRequestAsync_WhenDeviceCodeExpirationIsMissing_ThrowsExpiredToken));
+        var (client, _, token, _) = SeedDeviceGrant(dbContext, "device-missing-expiration-client");
+        token.ExpirationDate = null;
+        await dbContext.SaveChangesAsync();
+        var manager = CreateTokenManager(dbContext);
+
+        var exception = await Assert.ThrowsAsync<BusinessException>(() => manager.ProcessTokenRequestAsync(
+            new TokenRequestDto
+            {
+                GrantType = OAuthConst.GrantTypes.DeviceCode,
+                ClientId = client.ClientId,
+                DeviceCode = token.ReferenceId,
+            },
+            CreateSigningKey()));
+
+        Assert.Equal(Localizer.OAuthDeviceCodeExpired, exception.LanguageKey);
+    }
+
+    [Fact]
+    public async Task ProcessTokenRequestAsync_WhenDeviceCodeWasRedeemed_ThrowsInvalidDeviceCode()
+    {
+        await using var dbContext = TestDbContextFactory.Create(nameof(ProcessTokenRequestAsync_WhenDeviceCodeWasRedeemed_ThrowsInvalidDeviceCode));
+        var (client, _, token, _) = SeedDeviceGrant(
+            dbContext,
+            "device-redeemed-client",
+            tokenStatus: OAuthConst.TokenStatuses.Redeemed);
+        var manager = CreateTokenManager(dbContext);
+
+        var exception = await Assert.ThrowsAsync<BusinessException>(() => manager.ProcessTokenRequestAsync(
+            new TokenRequestDto
+            {
+                GrantType = OAuthConst.GrantTypes.DeviceCode,
+                ClientId = client.ClientId,
+                DeviceCode = token.ReferenceId,
+            },
+            CreateSigningKey()));
+
+        Assert.Equal(Localizer.OAuthInvalidDeviceCode, exception.LanguageKey);
+    }
+
+    [Fact]
+    public async Task ProcessTokenRequestAsync_WhenAuthorizationIsNotAuthorized_ThrowsInvalidDeviceCode()
+    {
+        await using var dbContext = TestDbContextFactory.Create(nameof(ProcessTokenRequestAsync_WhenAuthorizationIsNotAuthorized_ThrowsInvalidDeviceCode));
+        var (client, authorization, token, _) = SeedDeviceGrant(
+            dbContext,
+            "device-revoked-authorization-client",
+            authorizationStatus: OAuthConst.AuthorizationStatuses.Revoked);
+        var manager = CreateTokenManager(dbContext);
+
+        var exception = await Assert.ThrowsAsync<BusinessException>(() => manager.ProcessTokenRequestAsync(
+            new TokenRequestDto
+            {
+                GrantType = OAuthConst.GrantTypes.DeviceCode,
+                ClientId = client.ClientId,
+                DeviceCode = token.ReferenceId,
+            },
+            CreateSigningKey()));
+
+        Assert.Equal(Localizer.OAuthInvalidDeviceCode, exception.LanguageKey);
+        Assert.Equal(OAuthConst.AuthorizationStatuses.Revoked, authorization.Status);
+    }
+
+    [Fact]
+    public async Task ProcessTokenRequestAsync_WhenUserIsLockedOut_RejectsDeviceCodeGrant()
+    {
+        await using var dbContext = TestDbContextFactory.Create(nameof(ProcessTokenRequestAsync_WhenUserIsLockedOut_RejectsDeviceCodeGrant));
+        var (client, _, token, user) = SeedDeviceGrant(
+            dbContext,
+            "device-locked-user-client",
+            lockoutEnd: DateTimeOffset.UtcNow.AddMinutes(10));
+        var manager = CreateTokenManager(dbContext);
+
+        var exception = await Assert.ThrowsAsync<BusinessException>(() => manager.ProcessTokenRequestAsync(
+            new TokenRequestDto
+            {
+                GrantType = OAuthConst.GrantTypes.DeviceCode,
+                ClientId = client.ClientId,
+                DeviceCode = token.ReferenceId,
+            },
+            CreateSigningKey()));
+
+        Assert.Equal(Localizer.LockAccountForManyTimes, exception.LanguageKey);
+        Assert.Equal(StatusCodes.Status403Forbidden, exception.StatusCodes);
+        Assert.Equal(user.Id.ToString(), token.SubjectId);
+        Assert.Equal(OAuthConst.TokenStatuses.Valid, token.Status);
+    }
+
+    [Fact]
+    public async Task ProcessTokenRequestAsync_WhenDeviceCodeIsValid_ExchangesOnceAndRedeemsCode()
+    {
+        await using var dbContext = TestDbContextFactory.Create(nameof(ProcessTokenRequestAsync_WhenDeviceCodeIsValid_ExchangesOnceAndRedeemsCode));
+        var (client, _, token, _) = SeedDeviceGrant(dbContext, "device-valid-client");
+        var manager = CreateTokenManager(dbContext);
+
+        var response = await manager.ProcessTokenRequestAsync(
+            new TokenRequestDto
+            {
+                GrantType = OAuthConst.GrantTypes.DeviceCode,
+                ClientId = client.ClientId,
+                DeviceCode = token.ReferenceId,
+            },
+            CreateSigningKey());
+
+        Assert.False(string.IsNullOrWhiteSpace(response.AccessToken));
+        Assert.False(string.IsNullOrWhiteSpace(response.RefreshToken));
+        Assert.Equal(OAuthConst.TokenStatuses.Redeemed, token.Status);
+        Assert.NotNull(token.RedemptionDate);
+    }
+
+    [Fact]
+    public async Task ProcessTokenRequestAsync_OnRelationalStore_AllowsOnlyOneDeviceCodeRedemption()
+    {
+        await using var connection = await CreateSqliteConnectionAsync();
+        await using var dbContext = CreateSqliteDbContext(connection);
+        var (client, _, token, _) = SeedDeviceGrant(dbContext, "device-sqlite-client");
+        var manager = CreateTokenManager(dbContext);
+        var request = new TokenRequestDto
+        {
+            GrantType = OAuthConst.GrantTypes.DeviceCode,
+            ClientId = client.ClientId,
+            DeviceCode = token.ReferenceId,
+        };
+
+        var response = await manager.ProcessTokenRequestAsync(request, CreateSigningKey());
+        var exception = await Assert.ThrowsAsync<BusinessException>(() => manager.ProcessTokenRequestAsync(request, CreateSigningKey()));
+
+        Assert.False(string.IsNullOrWhiteSpace(response.AccessToken));
+        Assert.Equal(Localizer.OAuthInvalidDeviceCode, exception.LanguageKey);
     }
 
     [Fact]
@@ -184,6 +389,78 @@ public class TokenManagerTests
         return client;
     }
 
+    private static (Client Client, Authorization Authorization, Token Token, User User) SeedDeviceGrant(
+        DefaultDbContext dbContext,
+        string clientId,
+        string tokenStatus = OAuthConst.TokenStatuses.Valid,
+        string authorizationStatus = OAuthConst.AuthorizationStatuses.Authorized,
+        DateTimeOffset? tokenExpiration = null,
+        DateTimeOffset? authorizationExpiration = null,
+        DateTimeOffset? lockoutEnd = null,
+        ClientType? clientType = null,
+        string? clientSecret = null)
+    {
+        var client = new Client
+        {
+            ClientId = clientId,
+            DisplayName = clientId,
+            Type = clientType,
+            RegistrationStatus = ClientRegistrationStatus.Approved,
+        };
+
+        if (!string.IsNullOrWhiteSpace(clientSecret))
+        {
+            client.SecretSalt = HashCrypto.BuildSalt();
+            client.SecretHash = HashCrypto.GeneratePwd(clientSecret, client.SecretSalt);
+            client.SecretExpiresAt = DateTimeOffset.UtcNow.AddDays(1);
+        }
+
+        var user = new User
+        {
+            UserName = $"{clientId}-user",
+            NormalizedUserName = $"{clientId}-user".ToUpperInvariant(),
+            Email = $"{clientId}@example.com",
+            NormalizedEmail = $"{clientId}@example.com".ToUpperInvariant(),
+            PasswordSalt = "salt",
+            PasswordHash = "hash",
+            LockoutEnd = lockoutEnd,
+        };
+
+        dbContext.Clients.Add(client);
+        dbContext.Users.Add(user);
+        dbContext.SaveChanges();
+
+        var authorization = new Authorization
+        {
+            SubjectId = user.Id.ToString(),
+            ClientId = client.Id,
+            Client = client,
+            Type = OAuthConst.AuthorizationTypes.DeviceCode,
+            Status = authorizationStatus,
+            Scopes = "openid profile",
+            CreationDate = DateTimeOffset.UtcNow,
+            ExpirationDate = authorizationExpiration ?? DateTimeOffset.UtcNow.AddMinutes(10),
+        };
+
+        var token = new Token
+        {
+            AuthorizationId = authorization.Id,
+            Authorization = authorization,
+            ReferenceId = $"device-{clientId}",
+            Type = OAuthConst.TokenTypes.DeviceCode,
+            Status = tokenStatus,
+            SubjectId = user.Id.ToString(),
+            CreationDate = DateTimeOffset.UtcNow,
+            ExpirationDate = tokenExpiration ?? DateTimeOffset.UtcNow.AddMinutes(5),
+        };
+
+        dbContext.Authorizations.Add(authorization);
+        dbContext.Tokens.Add(token);
+        dbContext.SaveChanges();
+
+        return (client, authorization, token, user);
+    }
+
     private static Authorization SeedAuthorization(DefaultDbContext dbContext, Client client, string subjectId)
     {
         var authorization = new Authorization
@@ -219,6 +496,25 @@ public class TokenManagerTests
             ExpirationDate = DateTimeOffset.UtcNow.AddDays(1),
             IsActive = true,
         };
+    }
+
+    private static async Task<SqliteConnection> CreateSqliteConnectionAsync()
+    {
+        var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        return connection;
+    }
+
+    private static DefaultDbContext CreateSqliteDbContext(SqliteConnection connection)
+    {
+        var options = new DbContextOptionsBuilder<DefaultDbContext>()
+            .UseSqlite(connection)
+            .EnableSensitiveDataLogging()
+            .Options;
+
+        var dbContext = new DefaultDbContext(options);
+        dbContext.Database.EnsureCreated();
+        return dbContext;
     }
 
 }

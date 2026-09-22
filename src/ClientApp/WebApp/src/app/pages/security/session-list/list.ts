@@ -255,7 +255,8 @@ export class SessionListComponent implements OnInit {
   }
 
   viewDetail(session: LoginSessionItemDto): void {
-    this.router.navigate(['/security/session-list', session.id]);
+    // This route reloads the list using the API's sessionId filter, not the entity id.
+    this.router.navigate(['/security/session-list', session.sessionId]);
   }
 
   toggleAutoRefresh(): void {

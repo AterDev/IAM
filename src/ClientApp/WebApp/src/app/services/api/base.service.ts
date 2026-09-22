@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
-import { from, map, Observable, switchMap } from 'rxjs';
+import { from, map, Observable, of, switchMap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -27,6 +27,11 @@ export class BaseService {
       observe: 'response'
     }).pipe(
       switchMap((resp: HttpResponse<Blob>) => {
+        // Successful mutations can return 204 without a response body.
+        if (resp.body === null) {
+          return of(undefined as T);
+        }
+
         const contentType = (resp.headers.get('Content-Type') || '').toLowerCase();
         const disposition = resp.headers.get('Content-Disposition') || '';
         const blob = resp.body as Blob;
@@ -46,6 +51,10 @@ export class BaseService {
   }
 
   private parseAuto<T>(text: string, contentType: string): T {
+    if (text.length === 0) {
+      return undefined as T;
+    }
+
     if (contentType.includes('application/json') || contentType.includes('text/json')) {
       return JSON.parse(text) as T;
     }

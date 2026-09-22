@@ -19,6 +19,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { AuditLogDetailDialogComponent } from '../audit-log-detail-dialog/detail-dialog';
 import { PasswordGrantAuditComponent } from '../password-grant-audit/password-grant-audit';
 import { I18N_KEYS } from 'src/app/share/i18n-keys';
+import { toCsv } from './csv';
 
 @Component({
   selector: 'app-list',
@@ -224,9 +225,29 @@ export class AuditLogListComponent implements OnInit {
   }
 
   exportLogs(): void {
-    // TODO: Implement export functionality
+    const logs = this.dataSource();
+    if (this.isLoading() || logs.length === 0) {
+      return;
+    }
+
+    const csv = toCsv(logs, [
+      { header: this.translate.instant(this.i18n.auditLog.category), value: log => log.category },
+      { header: this.translate.instant(this.i18n.auditLog.event), value: log => log.event },
+      { header: this.translate.instant(this.i18n.auditLog.subjectId), value: log => log.subjectId },
+      { header: this.translate.instant(this.i18n.auditLog.ipAddress), value: log => log.ipAddress },
+      { header: this.translate.instant(this.i18n.auditLog.createdTime), value: log => log.createdTime },
+    ]);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `audit-logs-${new Date().toISOString().replace(/[:.]/g, '-')}.csv`;
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+
     this.snackBar.open(
-      this.translate.instant(this.i18n.auditLog.exportNotImplemented),
+      this.translate.instant(this.i18n.auditLog.exportSuccess, { count: logs.length }),
       this.translate.instant(this.i18n.common.close),
       { duration: 3000 }
     );

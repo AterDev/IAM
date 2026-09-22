@@ -1,6 +1,5 @@
 using IAMMod.Models.UserDtos;
 using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
 using Share.Exceptions;
 using System.Text.RegularExpressions;
 using System.Text.Json;
@@ -16,14 +15,12 @@ public class UserManager(
     ILogger<UserManager> logger,
     AuditLogManager auditLogManager,
     RiskControlService riskControlService,
-    SessionValidationService sessionValidationService,
-    IHttpContextAccessor httpContextAccessor
+    SessionValidationService sessionValidationService
 ) : ManagerBase<DefaultDbContext, User>(dbContextFactory, userContext, logger)
 {
     private readonly AuditLogManager _auditLogManager = auditLogManager;
     private readonly RiskControlService _riskControlService = riskControlService;
     private readonly SessionValidationService _sessionValidationService = sessionValidationService;
-    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
     private const string SelfServiceProvider = "SelfService";
     private const string PasswordResetTokenName = "PasswordReset";
     private const string ExternalLoginEventCategory = "ExternalAuthentication";
@@ -460,7 +457,14 @@ public class UserManager(
 
         entity.LockoutEnd = lockoutEnd;
         entity.UpdatedTime = DateTime.UtcNow;
-        await _dbContext.SaveChangesAsync();
+        if (lockoutEnd > DateTimeOffset.UtcNow)
+        {
+            await InvalidateUserCredentialsAsync(id);
+        }
+        else
+        {
+            await _dbContext.SaveChangesAsync();
+        }
         return true;
     }
 
@@ -485,8 +489,7 @@ public class UserManager(
         entity.ConcurrencyStamp = Guid.NewGuid().ToString();
         entity.UpdatedTime = DateTime.UtcNow;
 
-        await _dbContext.SaveChangesAsync();
-        await InvalidateSessionsAfterPasswordChangeAsync(entity.Id);
+        await InvalidateUserCredentialsAsync(entity.Id);
         return true;
     }
 
@@ -998,21 +1001,20 @@ public class UserManager(
         return AddAuditLogAsync(eventName, subjectId, payload, ipAddress, userAgent);
     }
 
-    private async Task InvalidateSessionsAfterPasswordChangeAsync(Guid userId)
+    private async Task InvalidateUserCredentialsAsync(Guid userId)
     {
-        var currentSessionId = _httpContextAccessor.HttpContext?.User?.FindFirstValue("sid");
-        var revokeCurrentSessionOnly = _userContext.UserId == userId && !string.IsNullOrWhiteSpace(currentSessionId);
         var now = DateTime.UtcNow;
+        var subjectId = userId.ToString();
 
         var sessions = await _dbContext.LoginSessions
             .Where(q => q.UserId == userId && q.IsActive)
-            .Where(q => !revokeCurrentSessionOnly || q.SessionId == currentSessionId)
             .ToListAsync();
 
-        if (sessions.Count == 0)
-        {
-            return;
-        }
+        // Revoke credentials even for device flows and legacy tokens without a session.
+        var tokens = await _dbContext.Tokens
+            .Where(q => q.SubjectId == subjectId
+                && (q.Status == TokenStatuses.Valid || q.Status == TokenStatuses.Pending))
+            .ToListAsync();
 
         foreach (var session in sessions)
         {
@@ -1020,6 +1022,13 @@ public class UserManager(
             session.UpdatedTime = now;
         }
 
+        foreach (var token in tokens)
+        {
+            token.Status = TokenStatuses.Revoked;
+            token.UpdatedTime = now;
+        }
+
+        // Persist the account change and credential revocation together.
         await _dbContext.SaveChangesAsync();
 
         foreach (var session in sessions)
