@@ -34,7 +34,6 @@ public class OrganizationManagerTests
         Assert.Equal("OrganizationNameExists", exception.LanguageKey);
         Assert.Equal(StatusCodes.Status400BadRequest, exception.StatusCodes);
 
-        dbContext.ChangeTracker.Clear();
         var persisted = await dbContext.Organizations.SingleAsync(item => item.Id == organization.Id);
         Assert.Equal(oldParent.Id, persisted.ParentId);
         Assert.Equal("Engineering", persisted.Name);
@@ -73,7 +72,6 @@ public class OrganizationManagerTests
         Assert.Equal("OrganizationNameExists", exception.LanguageKey);
         Assert.Equal(StatusCodes.Status400BadRequest, exception.StatusCodes);
 
-        dbContext.ChangeTracker.Clear();
         var persisted = await dbContext.Organizations.SingleAsync(item => item.Id == organization.Id);
         Assert.Equal(oldParent.Id, persisted.ParentId);
         Assert.Equal("Legacy Engineering", persisted.Name);
@@ -113,7 +111,6 @@ public class OrganizationManagerTests
         Assert.Equal("Engineering", result!.Name);
         Assert.Equal(newParent.Id, result.ParentId);
 
-        dbContext.ChangeTracker.Clear();
         var persisted = await dbContext.Organizations.SingleAsync(item => item.Id == organization.Id);
         Assert.Equal(newParent.Id, persisted.ParentId);
         Assert.Equal("Engineering", persisted.Name);

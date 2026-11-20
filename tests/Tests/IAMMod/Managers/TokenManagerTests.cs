@@ -2,7 +2,6 @@ using System.Text;
 using System.Text.Json;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Data.Sqlite;
 
 namespace Tests.IAMMod.Managers;
 
@@ -115,8 +114,9 @@ public class TokenManagerTests
     {
         await using var dbContext = TestDbContextFactory.Create(nameof(ProcessTokenRequestAsync_WhenDeviceCodeExpirationIsMissing_ThrowsExpiredToken));
         var (client, _, token, _) = SeedDeviceGrant(dbContext, "device-missing-expiration-client");
-        token.ExpirationDate = null;
-        await dbContext.SaveChangesAsync();
+        await dbContext.Tokens
+            .Where(item => item.Id == token.Id)
+            .ExecuteUpdateAsync(update => update.Set(item => item.ExpirationDate, null));
         var manager = CreateTokenManager(dbContext);
 
         var exception = await Assert.ThrowsAsync<BusinessException>(() => manager.ProcessTokenRequestAsync(
@@ -219,15 +219,18 @@ public class TokenManagerTests
 
         Assert.False(string.IsNullOrWhiteSpace(response.AccessToken));
         Assert.False(string.IsNullOrWhiteSpace(response.RefreshToken));
-        Assert.Equal(OAuthConst.TokenStatuses.Redeemed, token.Status);
-        Assert.NotNull(token.RedemptionDate);
+        var storedToken = await dbContext.Tokens
+            .Where(item => item.Id == token.Id)
+            .FirstOrDefaultAsync();
+        Assert.NotNull(storedToken);
+        Assert.Equal(OAuthConst.TokenStatuses.Redeemed, storedToken.Status);
+        Assert.NotNull(storedToken.RedemptionDate);
     }
 
     [Fact]
     public async Task ProcessTokenRequestAsync_OnRelationalStore_AllowsOnlyOneDeviceCodeRedemption()
     {
-        await using var connection = await CreateSqliteConnectionAsync();
-        await using var dbContext = CreateSqliteDbContext(connection);
+        await using var dbContext = TestDbContextFactory.Create(nameof(ProcessTokenRequestAsync_OnRelationalStore_AllowsOnlyOneDeviceCodeRedemption));
         var (client, _, token, _) = SeedDeviceGrant(dbContext, "device-sqlite-client");
         var manager = CreateTokenManager(dbContext);
         var request = new TokenRequestDto
@@ -322,7 +325,11 @@ public class TokenManagerTests
         var result = await manager.RevokeTokenAsync("refresh-token-1", OAuthConst.TokenTypes.RefreshToken, client.Id);
 
         Assert.True(result);
-        Assert.Equal(OAuthConst.TokenStatuses.Revoked, token.Status);
+        var storedToken = await dbContext.Tokens
+            .Where(item => item.Id == token.Id)
+            .FirstOrDefaultAsync();
+        Assert.NotNull(storedToken);
+        Assert.Equal(OAuthConst.TokenStatuses.Revoked, storedToken.Status);
     }
 
     [Fact]
@@ -496,25 +503,6 @@ public class TokenManagerTests
             ExpirationDate = DateTimeOffset.UtcNow.AddDays(1),
             IsActive = true,
         };
-    }
-
-    private static async Task<SqliteConnection> CreateSqliteConnectionAsync()
-    {
-        var connection = new SqliteConnection("Data Source=:memory:");
-        await connection.OpenAsync();
-        return connection;
-    }
-
-    private static DefaultDbContext CreateSqliteDbContext(SqliteConnection connection)
-    {
-        var options = new DbContextOptionsBuilder<DefaultDbContext>()
-            .UseSqlite(connection)
-            .EnableSensitiveDataLogging()
-            .Options;
-
-        var dbContext = new DefaultDbContext(options);
-        dbContext.Database.EnsureCreated();
-        return dbContext;
     }
 
 }

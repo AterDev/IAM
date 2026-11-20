@@ -9,28 +9,28 @@ import { PermissionDetailDto } from '../models/iammod/permission-detail-dto.mode
 import { PermissionTreeNodeDto } from '../models/iammod/permission-tree-node-dto.model';
 import { UserPermissionDto } from '../models/iammod/user-permission-dto.model';
 /**
- * Unified permission management controller.
+ *
  */
 @Injectable({ providedIn: 'root' })
 export class PermissionsService extends BaseService {
   /**
-   * Get paged permissions.
+   * getPermissions
    * @param clientId Filter by database client id.
    * @param clientCode Filter by public client identifier.
    * @param type Filter by permission type.
    * @param parentId Filter by parent permission id.
    * @param keyword Filter by keyword.
    * @param onlyNonBusiness Whether to include only menu and button permissions.
-   * @param pageIndex number
-   * @param pageSize number
-   * @param orderBy Record<string, boolean>
+   * @param pageIndex any
+   * @param pageSize any
+   * @param orderBy string
    */
-  getPermissions(clientId: string | null, clientCode: string | null, type: PermissionType | null, parentId: string | null, keyword: string | null, onlyNonBusiness: boolean | null, pageIndex: number | null, pageSize: number | null, orderBy: Record<string, boolean> | null): Observable<PageList<PermissionItemDto>> {
-    const _url = `/api/Permissions?clientId=${clientId ?? ''}&clientCode=${clientCode ?? ''}&type=${type ?? ''}&parentId=${parentId ?? ''}&keyword=${keyword ?? ''}&onlyNonBusiness=${onlyNonBusiness ?? ''}&pageIndex=${pageIndex ?? ''}&pageSize=${pageSize ?? ''}&orderBy=${orderBy ?? ''}`;
+  getPermissions(clientId: string | null, clientCode: string | null, type: PermissionType | null, parentId: string | null, keyword: string | null, onlyNonBusiness: boolean | null, pageIndex: any | null, pageSize: any | null, orderBy: string | null): Observable<PageList<PermissionItemDto>> {
+    const _url = `/api/Permissions?ClientId=${clientId ?? ''}&ClientCode=${clientCode ?? ''}&Type=${type ?? ''}&ParentId=${parentId ?? ''}&Keyword=${keyword ?? ''}&OnlyNonBusiness=${onlyNonBusiness ?? ''}&pageIndex=${pageIndex ?? ''}&pageSize=${pageSize ?? ''}&orderBy=${orderBy ?? ''}`;
     return this.request<PageList<PermissionItemDto>>('get', _url);
   }
   /**
-   * Create permission.
+   * create
    * @param data PermissionUpsertDto
    */
   create(data: PermissionUpsertDto): Observable<PermissionDetailDto> {
@@ -38,30 +38,30 @@ export class PermissionsService extends BaseService {
     return this.request<PermissionDetailDto>('post', _url, data);
   }
   /**
-   * Get permission tree.
+   * getPermissionTree
    * @param clientId Filter by database client id.
    * @param clientCode Filter by public client identifier.
    * @param type Filter by permission type.
    * @param parentId Filter by parent permission id.
    * @param keyword Filter by keyword.
    * @param onlyNonBusiness Whether to include only menu and button permissions.
-   * @param pageIndex number
-   * @param pageSize number
-   * @param orderBy Record<string, boolean>
+   * @param pageIndex any
+   * @param pageSize any
+   * @param orderBy string
    */
-  getPermissionTree(clientId: string | null, clientCode: string | null, type: PermissionType | null, parentId: string | null, keyword: string | null, onlyNonBusiness: boolean | null, pageIndex: number | null, pageSize: number | null, orderBy: Record<string, boolean> | null): Observable<PermissionTreeNodeDto[]> {
-    const _url = `/api/Permissions/tree?clientId=${clientId ?? ''}&clientCode=${clientCode ?? ''}&type=${type ?? ''}&parentId=${parentId ?? ''}&keyword=${keyword ?? ''}&onlyNonBusiness=${onlyNonBusiness ?? ''}&pageIndex=${pageIndex ?? ''}&pageSize=${pageSize ?? ''}&orderBy=${orderBy ?? ''}`;
+  getPermissionTree(clientId: string | null, clientCode: string | null, type: PermissionType | null, parentId: string | null, keyword: string | null, onlyNonBusiness: boolean | null, pageIndex: any | null, pageSize: any | null, orderBy: string | null): Observable<PermissionTreeNodeDto[]> {
+    const _url = `/api/Permissions/tree?ClientId=${clientId ?? ''}&ClientCode=${clientCode ?? ''}&Type=${type ?? ''}&ParentId=${parentId ?? ''}&Keyword=${keyword ?? ''}&OnlyNonBusiness=${onlyNonBusiness ?? ''}&pageIndex=${pageIndex ?? ''}&pageSize=${pageSize ?? ''}&orderBy=${orderBy ?? ''}`;
     return this.request<PermissionTreeNodeDto[]>('get', _url);
   }
   /**
-   * Get current user's effective permissions.
+   * getUserPermissions
    */
   getUserPermissions(): Observable<UserPermissionDto[]> {
     const _url = `/api/Permissions/user-permissions`;
     return this.request<UserPermissionDto[]>('get', _url);
   }
   /**
-   * Get permission detail.
+   * getDetail
    * @param id string
    */
   getDetail(id: string): Observable<PermissionDetailDto> {
@@ -69,7 +69,7 @@ export class PermissionsService extends BaseService {
     return this.request<PermissionDetailDto>('get', _url);
   }
   /**
-   * Update permission.
+   * update
    * @param id string
    * @param data PermissionUpsertDto
    */
@@ -78,11 +78,11 @@ export class PermissionsService extends BaseService {
     return this.request<PermissionDetailDto>('put', _url, data);
   }
   /**
-   * Delete permission.
+   * delete
    * @param id string
    */
-  delete(id: string): Observable<any> {
+  delete(id: string): Observable<boolean> {
     const _url = `/api/Permissions/${id}`;
-    return this.request<any>('delete', _url);
+    return this.request<boolean>('delete', _url);
   }
 }

@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+using Perigon.PostgreSQL.RawSql;
 using Microsoft.Extensions.Hosting;
 using Perigon.AspNetCore.Services;
 using Share.Constants;
@@ -7,88 +7,56 @@ using Share.Constants;
 namespace IAMMod.Services;
 
 /// <summary>
-/// Application initialization hosted service that runs data seeding and setup
+/// Initializes IAM data after the PostgreSQL schema is ready.
 /// </summary>
 public class InitHostService(
-    IServiceProvider serviceProvider,
     IConfiguration configuration,
     IHostEnvironment hostEnvironment,
     ILogger<InitHostService> logger
-) : BackgroundService
+)
 {
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    /// <summary>
+    /// Applies the initial IAM signing key and seed catalog after migrations.
+    /// This is also called by MigrationService so the API does not race schema setup.
+    /// </summary>
+    public Task SeedAsync(DefaultDbContext dbContext, CancellationToken cancellationToken = default) =>
+        dbContext.TransactionAsync(ct => SeedInTransactionAsync(dbContext, ct), cancellationToken);
+
+    private async Task SeedInTransactionAsync(DefaultDbContext dbContext, CancellationToken cancellationToken)
     {
-        using var scope = serviceProvider.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<DefaultDbContext>();
-
-        try
+        // Serialize first-time initialization and roll back the signing key if any seed fails.
+        await dbContext.SqlCommand($"SELECT pg_advisory_xact_lock(hashtextextended({"iam-seed-v1"}, 0))")
+            .ExecuteAsync(cancellationToken);
+        var now = DateTimeOffset.UtcNow;
+        var hasActiveKey = await dbContext.SigningKeys
+            .Where(k => k.IsActive && k.ActivationDate <= now && (k.ExpirationDate == null || k.ExpirationDate > now))
+            .AnyAsync(cancellationToken);
+        if (hasActiveKey)
         {
-            logger.LogInformation("Starting application initialization...");
-
-            if (hostEnvironment.IsProduction())
-            {
-                logger.LogInformation("Running startup database migrations...");
-                await RunMigrationAsync(dbContext, stoppingToken);
-            }
-
-            var now = DateTimeOffset.UtcNow;
-            var hasActiveKey = await dbContext.SigningKeys
-                .AnyAsync(k => k.IsActive && k.ActivationDate <= now && (k.ExpirationDate == null || k.ExpirationDate > now), stoppingToken);
-
-            if (!hasActiveKey)
-            {
-                logger.LogInformation("No active signing key found, generating initial key...");
-                var (publicKey, privateKey) = HashCrypto.GenerateRsaKeyPair(2048);
-                var signingKey = new SigningKey
-                {
-                    KeyId = Guid.CreateVersion7().ToString(),
-                    Algorithm = "RS256",
-                    KeyType = "RSA",
-                    PrivateKey = privateKey,
-                    PublicKey = publicKey,
-                    Usage = "signing",
-                    ActivationDate = DateTimeOffset.UtcNow,
-                    ExpirationDate = DateTimeOffset.UtcNow.AddDays(365),
-                    IsActive = true,
-                    IsDeleted = false
-                };
-
-                dbContext.SigningKeys.Add(signingKey);
-                await dbContext.SaveChangesAsync(stoppingToken);
-
-                logger.LogInformation("Initial signing key generated: {KeyId}", signingKey.KeyId);
-
-                await SeedOAuthDataAsync(dbContext, stoppingToken);
-                await SeedInitialDataAsync(dbContext, stoppingToken);
-                await SeedPermissionDataAsync(dbContext, stoppingToken);
-            }
-
-            var cacheService = scope.ServiceProvider.GetRequiredService<CacheService>();
-            await cacheService.RemoveAsync(OAuthConst.SigningActiveKeyCacheKey);
-            await cacheService.RemoveAsync(OAuthConst.SigningKeyCacheKey);
-
-            // Preload signing keys into cache for JWT validation
-            var signingKeyResolver = scope.ServiceProvider.GetRequiredService<SigningKeyResolver>();
-            await signingKeyResolver.PreloadSigningKeysAsync();
-
-            logger.LogInformation("Application initialization completed successfully");
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Application initialization failed");
             return;
         }
-    }
 
-    private static async Task RunMigrationAsync(
-        DefaultDbContext dbContext,
-        CancellationToken cancellationToken)
-    {
-        var strategy = dbContext.Database.CreateExecutionStrategy();
-        await strategy.ExecuteAsync(async () =>
+        logger.LogInformation("No active signing key found, generating initial key...");
+        var (publicKey, privateKey) = HashCrypto.GenerateRsaKeyPair(2048);
+        var signingKey = new SigningKey
         {
-            await dbContext.Database.MigrateAsync(cancellationToken);
-        });
+            KeyId = Guid.CreateVersion7().ToString(),
+            Algorithm = "RS256",
+            KeyType = "RSA",
+            PrivateKey = privateKey,
+            PublicKey = publicKey,
+            Usage = "signing",
+            ActivationDate = now,
+            ExpirationDate = now.AddDays(365),
+            IsActive = true,
+            IsDeleted = false
+        };
+
+        await dbContext.SigningKeys.InsertAsync(signingKey, returning: false, cancellationToken: cancellationToken);
+        logger.LogInformation("Initial signing key generated: {KeyId}", signingKey.KeyId);
+        await SeedOAuthDataAsync(dbContext, cancellationToken);
+        await SeedInitialDataAsync(dbContext, cancellationToken);
+        await SeedPermissionDataAsync(dbContext, cancellationToken);
     }
 
     /// <summary>
@@ -143,8 +111,7 @@ public class InitHostService(
                 AccessFailedCount = 0,
             };
 
-            dbContext.Users.Add(adminUser);
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.Users.InsertAsync(adminUser, returning: false, cancellationToken: cancellationToken);
         }
         else
         {
@@ -171,7 +138,14 @@ public class InitHostService(
             if (requiresUpdate)
             {
                 adminUser.UpdatedTime = DateTimeOffset.UtcNow;
-                await dbContext.SaveChangesAsync(cancellationToken);
+                await dbContext.Users
+                    .Where(item => item.Id == adminUser.Id)
+                    .ExecuteUpdateAsync(update => update
+                        .Set(item => item.Email, adminUser.Email)
+                        .Set(item => item.NormalizedEmail, adminUser.NormalizedEmail)
+                        .Set(item => item.EmailConfirmed, adminUser.EmailConfirmed)
+                        .Set(item => item.UpdatedTime, adminUser.UpdatedTime),
+                        cancellationToken: cancellationToken);
             }
         }
 
@@ -181,8 +155,10 @@ public class InitHostService(
 
         if (!hasSuperAdminRole)
         {
-            dbContext.UserRoles.Add(new UserRole { UserId = adminUser.Id, RoleId = superAdminRole.Id });
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.UserRoles.InsertAsync(
+                new UserRole { UserId = adminUser.Id, RoleId = superAdminRole.Id },
+                returning: false,
+                cancellationToken: cancellationToken);
         }
     }
 
@@ -275,7 +251,7 @@ public class InitHostService(
                     Emphasize = required
                 };
 
-                dbContext.ApiScopes.Add(scope);
+                await dbContext.ApiScopes.InsertAsync(scope, returning: false, cancellationToken: cancellationToken);
             }
         }
 
@@ -292,10 +268,8 @@ public class InitHostService(
                 DisplayName = "SampleAPI",
                 Description = "示例API资源",
             };
-            dbContext.ApiResources.Add(defaultResource);
+            await dbContext.ApiResources.InsertAsync(defaultResource, returning: false, cancellationToken: cancellationToken);
         }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
 
         // Get all scopes for client assignment
         var openidScope = await dbContext.ApiScopes.FirstAsync(s => s.Name == "openid", cancellationToken);
@@ -309,7 +283,7 @@ public class InitHostService(
         var adminWebClientRedirectUris = GetAdminWebClientRedirectUris();
         var adminWebClientPostLogoutRedirectUris = GetAdminWebClientPostLogoutRedirectUris();
         var adminWebClientExists = await dbContext.Clients.AnyAsync(
-            c => c.ClientId == adminWebClientId,
+            c => c.ClientIdentifier == adminWebClientId,
             cancellationToken
         );
 
@@ -328,8 +302,7 @@ public class InitHostService(
                 PostLogoutRedirectUris = [.. adminWebClientPostLogoutRedirectUris],
             };
 
-            dbContext.Clients.Add(adminWebClient);
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.Clients.InsertAsync(adminWebClient, returning: false, cancellationToken: cancellationToken);
 
             var adminWebClientScopes = new[]
             {
@@ -338,18 +311,18 @@ public class InitHostService(
                 new ClientScope { ClientId = adminWebClient.Id, ScopeId = emailScope.Id },
                 new ClientScope { ClientId = adminWebClient.Id, ScopeId = offlineAccessScope.Id }
             };
-            dbContext.ClientScopes.AddRange(adminWebClientScopes);
+            await dbContext.ClientScopes.BulkInsertAsync(adminWebClientScopes, cancellationToken: cancellationToken);
         }
         else
         {
-            var adminWebClient = await dbContext.Clients.FirstAsync(c => c.ClientId == adminWebClientId, cancellationToken);
+            var adminWebClient = await dbContext.Clients.FirstAsync(c => c.ClientIdentifier == adminWebClientId, cancellationToken);
             var updated = false;
 
             foreach (var redirectUri in adminWebClientRedirectUris)
             {
                 if (!adminWebClient.RedirectUris.Contains(redirectUri, StringComparer.OrdinalIgnoreCase))
                 {
-                    adminWebClient.RedirectUris.Add(redirectUri);
+                    adminWebClient.RedirectUriValues = [.. adminWebClient.RedirectUriValues, redirectUri];
                     updated = true;
                 }
             }
@@ -358,20 +331,25 @@ public class InitHostService(
             {
                 if (!adminWebClient.PostLogoutRedirectUris.Contains(redirectUri, StringComparer.OrdinalIgnoreCase))
                 {
-                    adminWebClient.PostLogoutRedirectUris.Add(redirectUri);
+                    adminWebClient.PostLogoutRedirectUriValues = [.. adminWebClient.PostLogoutRedirectUriValues, redirectUri];
                     updated = true;
                 }
             }
 
             if (updated)
             {
-                await dbContext.SaveChangesAsync(cancellationToken);
+                await dbContext.Clients
+                    .Where(item => item.Id == adminWebClient.Id)
+                    .ExecuteUpdateAsync(update => update
+                        .Set(item => item.RedirectUriValues, adminWebClient.RedirectUriValues)
+                        .Set(item => item.PostLogoutRedirectUriValues, adminWebClient.PostLogoutRedirectUriValues),
+                        cancellationToken: cancellationToken);
             }
 
             var existingAdminWebScopeIds = await dbContext.ClientScopes
                 .Where(cs => cs.ClientId == adminWebClient.Id)
                 .Select(cs => cs.ScopeId)
-                .ToListAsync(cancellationToken);
+                .ToScalarListAsync(cancellationToken);
 
             var requiredAdminWebScopeIds = new[]
             {
@@ -388,8 +366,7 @@ public class InitHostService(
 
             if (missingAdminWebScopes.Count > 0)
             {
-                dbContext.ClientScopes.AddRange(missingAdminWebScopes);
-                await dbContext.SaveChangesAsync(cancellationToken);
+                await dbContext.ClientScopes.BulkInsertAsync(missingAdminWebScopes, cancellationToken: cancellationToken);
             }
         }
 
@@ -408,7 +385,7 @@ public class InitHostService(
             "https://localhost:4201"
         };
         var frontSampleClientExists = await dbContext.Clients.AnyAsync(
-            c => c.ClientId == frontSampleClientId,
+            c => c.ClientIdentifier == frontSampleClientId,
             cancellationToken
         );
 
@@ -427,8 +404,7 @@ public class InitHostService(
                 PostLogoutRedirectUris = [.. frontSampleClientPostLogoutRedirectUris],
             };
 
-            dbContext.Clients.Add(frontSampleClient);
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.Clients.InsertAsync(frontSampleClient, returning: false, cancellationToken: cancellationToken);
 
             var frontSampleClientScopes = new[]
             {
@@ -442,19 +418,19 @@ public class InitHostService(
             {
                 new ClientResource { ClientId = frontSampleClient.Id, ApiResourceId = defaultResource.Id }
             };
-            dbContext.ClientResources.AddRange(frontSampleClientResources);
-            dbContext.ClientScopes.AddRange(frontSampleClientScopes);
+            await dbContext.ClientResources.BulkInsertAsync(frontSampleClientResources, cancellationToken: cancellationToken);
+            await dbContext.ClientScopes.BulkInsertAsync(frontSampleClientScopes, cancellationToken: cancellationToken);
         }
         else
         {
-            var frontSampleClient = await dbContext.Clients.FirstAsync(c => c.ClientId == frontSampleClientId, cancellationToken);
+            var frontSampleClient = await dbContext.Clients.FirstAsync(c => c.ClientIdentifier == frontSampleClientId, cancellationToken);
             var updated = false;
 
             foreach (var redirectUri in frontSampleClientRedirectUris)
             {
                 if (!frontSampleClient.RedirectUris.Contains(redirectUri, StringComparer.OrdinalIgnoreCase))
                 {
-                    frontSampleClient.RedirectUris.Add(redirectUri);
+                    frontSampleClient.RedirectUriValues = [.. frontSampleClient.RedirectUriValues, redirectUri];
                     updated = true;
                 }
             }
@@ -463,20 +439,25 @@ public class InitHostService(
             {
                 if (!frontSampleClient.PostLogoutRedirectUris.Contains(redirectUri, StringComparer.OrdinalIgnoreCase))
                 {
-                    frontSampleClient.PostLogoutRedirectUris.Add(redirectUri);
+                    frontSampleClient.PostLogoutRedirectUriValues = [.. frontSampleClient.PostLogoutRedirectUriValues, redirectUri];
                     updated = true;
                 }
             }
 
             if (updated)
             {
-                await dbContext.SaveChangesAsync(cancellationToken);
+                await dbContext.Clients
+                    .Where(item => item.Id == frontSampleClient.Id)
+                    .ExecuteUpdateAsync(update => update
+                        .Set(item => item.RedirectUriValues, frontSampleClient.RedirectUriValues)
+                        .Set(item => item.PostLogoutRedirectUriValues, frontSampleClient.PostLogoutRedirectUriValues),
+                        cancellationToken: cancellationToken);
             }
 
             var existingFrontSampleScopeIds = await dbContext.ClientScopes
                 .Where(cs => cs.ClientId == frontSampleClient.Id)
                 .Select(cs => cs.ScopeId)
-                .ToListAsync(cancellationToken);
+                .ToScalarListAsync(cancellationToken);
 
             var requiredFrontSampleScopeIds = new[]
             {
@@ -494,7 +475,7 @@ public class InitHostService(
 
             if (missingFrontSampleScopes.Count > 0)
             {
-                dbContext.ClientScopes.AddRange(missingFrontSampleScopes);
+                await dbContext.ClientScopes.BulkInsertAsync(missingFrontSampleScopes, cancellationToken: cancellationToken);
                 updated = true;
             }
 
@@ -504,24 +485,24 @@ public class InitHostService(
 
             if (!hasDefaultResource)
             {
-                dbContext.ClientResources.Add(new ClientResource
+                await dbContext.ClientResources.InsertAsync(new ClientResource
                 {
                     ClientId = frontSampleClient.Id,
                     ApiResourceId = defaultResource.Id,
-                });
+                }, returning: false, cancellationToken: cancellationToken);
                 updated = true;
             }
 
             if (updated)
             {
-                await dbContext.SaveChangesAsync(cancellationToken);
+                // Perigon commands execute immediately.
             }
         }
 
         // Create ApiClient for backend API services
         var apiClientId = "ApiService";
         var apiClientExists = await dbContext.Set<Client>().AnyAsync(
-            c => c.ClientId == apiClientId,
+            c => c.ClientIdentifier == apiClientId,
             cancellationToken
         );
 
@@ -542,8 +523,7 @@ public class InitHostService(
                 ConsentType = ConsentType.Implicit,
             };
 
-            dbContext.Clients.Add(apiClient);
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.Clients.InsertAsync(apiClient, returning: false, cancellationToken: cancellationToken);
 
             // Assign scopes to ApiClient
             var apiClientScopes = new[]
@@ -557,16 +537,16 @@ public class InitHostService(
                 new ClientResource { ClientId = apiClient.Id, ApiResourceId = defaultResource.Id }
             };
 
-            dbContext.ClientScopes.AddRange(apiClientScopes);
-            dbContext.ClientResources.AddRange(apiClientResources);
+            await dbContext.ClientScopes.BulkInsertAsync(apiClientScopes, cancellationToken: cancellationToken);
+            await dbContext.ClientResources.BulkInsertAsync(apiClientResources, cancellationToken: cancellationToken);
         }
         else
         {
-            var apiClient = await dbContext.Clients.FirstAsync(c => c.ClientId == apiClientId, cancellationToken);
+            var apiClient = await dbContext.Clients.FirstAsync(c => c.ClientIdentifier == apiClientId, cancellationToken);
             var existingApiClientScopeIds = await dbContext.ClientScopes
                 .Where(cs => cs.ClientId == apiClient.Id)
                 .Select(cs => cs.ScopeId)
-                .ToListAsync(cancellationToken);
+                .ToScalarListAsync(cancellationToken);
 
             var requiredApiClientScopeIds = new[]
             {
@@ -581,7 +561,7 @@ public class InitHostService(
 
             if (missingApiClientScopes.Count > 0)
             {
-                dbContext.ClientScopes.AddRange(missingApiClientScopes);
+                await dbContext.ClientScopes.BulkInsertAsync(missingApiClientScopes, cancellationToken: cancellationToken);
             }
 
             var hasDefaultResource = await dbContext.ClientResources.AnyAsync(
@@ -590,15 +570,14 @@ public class InitHostService(
 
             if (!hasDefaultResource)
             {
-                dbContext.ClientResources.Add(new ClientResource
+                await dbContext.ClientResources.InsertAsync(new ClientResource
                 {
                     ClientId = apiClient.Id,
                     ApiResourceId = defaultResource.Id,
-                });
+                }, returning: false, cancellationToken: cancellationToken);
             }
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     /// <summary>
@@ -607,7 +586,7 @@ public class InitHostService(
     private async Task SeedPermissionDataAsync(DefaultDbContext dbContext, CancellationToken cancellationToken)
     {
         var adminClient = await dbContext.Clients
-            .FirstAsync(item => item.ClientId == PermissionSeedCatalog.AdminWebClientCode, cancellationToken);
+            .FirstAsync(item => item.ClientIdentifier == PermissionSeedCatalog.AdminWebClientCode, cancellationToken);
 
         var seededPermissions = new Dictionary<string, Permission>(StringComparer.Ordinal);
 
@@ -635,34 +614,32 @@ public class InitHostService(
                 cancellationToken: cancellationToken);
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
 
         var adminRoleIds = await dbContext.Roles
             .Where(item => item.Name == WebConst.SuperAdmin || item.Name == WebConst.AdminUser)
             .Select(item => item.Id)
-            .ToListAsync(cancellationToken);
+            .ToScalarListAsync(cancellationToken);
 
         var allPermissionIds = await dbContext.Permissions
             .Select(item => item.Id)
-            .ToListAsync(cancellationToken);
+            .ToScalarListAsync(cancellationToken);
 
         foreach (var roleId in adminRoleIds)
         {
             await dbContext.RolePermissions
                 .Where(item => item.RoleId == roleId)
-                .ExecuteDeleteAsync(cancellationToken);
+                .ExecuteDeleteAsync(cancellationToken: cancellationToken);
 
             if (allPermissionIds.Count > 0)
             {
-                dbContext.RolePermissions.AddRange(allPermissionIds.Select(permissionId => new RolePermission
+                await dbContext.RolePermissions.BulkInsertAsync(allPermissionIds.Select(permissionId => new RolePermission
                 {
                     RoleId = roleId,
                     PermissionId = permissionId,
-                }));
+                }), cancellationToken: cancellationToken);
             }
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private IReadOnlyList<string> GetAdminWebClientRedirectUris()
@@ -765,8 +742,7 @@ public class InitHostService(
             ConcurrencyStamp = Guid.NewGuid().ToString(),
         };
 
-        dbContext.Roles.Add(role);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.Roles.InsertAsync(role, returning: false, cancellationToken: cancellationToken);
         return role;
     }
 
@@ -779,22 +755,20 @@ public class InitHostService(
         Dictionary<string, Permission> lookup,
         CancellationToken cancellationToken)
     {
+        var isNewPermission = false;
         if (!lookup.TryGetValue(seed.Code, out var permission))
         {
-            permission = await dbContext.Permissions
-                .Include(item => item.ClientPermissions)
+            var existingPermission = await dbContext.Permissions
                 .FirstOrDefaultAsync(item => item.Code == seed.Code, cancellationToken)
-                ?? new Permission { Code = seed.Code, Name = seed.Name };
+                ;
+            permission = existingPermission ?? new Permission { Code = seed.Code, Name = seed.Name };
+            isNewPermission = existingPermission is null;
 
             lookup[seed.Code] = permission;
-            if (permission.Id == Guid.Empty)
+            if (isNewPermission)
             {
                 permission.Id = Guid.CreateVersion7();
-            }
-
-            if (dbContext.Entry(permission).State == EntityState.Detached)
-            {
-                dbContext.Permissions.Add(permission);
+                await dbContext.Permissions.InsertAsync(permission, returning: false, cancellationToken);
             }
         }
 
@@ -806,14 +780,30 @@ public class InitHostService(
         permission.OwnedClientId = ownerClientId;
         permission.UpdatedTime = DateTimeOffset.UtcNow;
         permission.IsDeleted = false;
-
-        if (attachToClientId.HasValue && !permission.ClientPermissions.Any(item => item.ClientId == attachToClientId.Value))
+        if (!isNewPermission)
         {
-            permission.ClientPermissions.Add(new ClientPermission
+            await dbContext.Permissions
+                .Where(item => item.Id == permission.Id)
+                .ExecuteUpdateAsync(update => update
+                    .Set(item => item.Name, permission.Name)
+                    .Set(item => item.Type, permission.Type)
+                    .Set(item => item.Path, permission.Path)
+                    .Set(item => item.ParentId, permission.ParentId)
+                    .Set(item => item.OwnedClientId, permission.OwnedClientId)
+                    .Set(item => item.IsDeleted, false)
+                    .Set(item => item.UpdatedTime, permission.UpdatedTime),
+                    cancellationToken: cancellationToken);
+        }
+
+        if (attachToClientId.HasValue && !await dbContext.ClientPermissions
+            .Where(item => item.ClientId == attachToClientId && item.PermissionId == permission.Id)
+            .AnyAsync(cancellationToken))
+        {
+            await dbContext.ClientPermissions.InsertAsync(new ClientPermission
             {
                 ClientId = attachToClientId.Value,
-                Permission = permission,
-            });
+                PermissionId = permission.Id,
+            }, returning: false, cancellationToken);
         }
 
         foreach (var child in seed.Children)

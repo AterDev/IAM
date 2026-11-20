@@ -5,13 +5,13 @@ namespace IAMMod.Models.AccountDtos;
 /// </summary>
 public class ResetPasswordRequestDto
 {
-    [MaxLength(256)]
+    [StringLength(256)]
     [EmailAddress]
     public required string Email { get; set; }
 
-    [MaxLength(32)]
+    [StringLength(32)]
     public required string Code { get; set; }
 
-    [MaxLength(100)]
+    [StringLength(100)]
     public required string NewPassword { get; set; }
 }

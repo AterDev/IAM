@@ -11,7 +11,7 @@
     <File Path="README.md" />
   </Folder>
   <Folder Name="/scripts/">
-    <File Path="scripts/EFMigrations.ps1" />
+    <File Path="scripts/Migrations.ps1" />
     <File Path="scripts/UpdateMenus.ps1" />
   </Folder>
   <Folder Name="/src/">
@@ -29,6 +29,7 @@
   </Folder>
   <Folder Name="/src/Perigon/">
     <Project Path="src/Perigon/Perigon.AspNetCore.SourceGeneration/Perigon.AspNetCore.SourceGeneration.csproj" />
+    <Project Path="src/Perigon/Perigon.OpenApi.SourceGeneration/Perigon.OpenApi.SourceGeneration.csproj" />
     <Project Path="src/Perigon/Perigon.AspNetCore.Toolkit/Perigon.AspNetCore.Toolkit.csproj" />
     <Project Path="src/Perigon/Perigon.AspNetCore/Perigon.AspNetCore.csproj" />
   </Folder>

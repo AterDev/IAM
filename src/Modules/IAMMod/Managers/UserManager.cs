@@ -1,8 +1,8 @@
 using IAMMod.Models.UserDtos;
+using IAMMod.Serialization;
 using Microsoft.AspNetCore.Http;
 using Share.Exceptions;
 using System.Text.RegularExpressions;
-using System.Text.Json;
 
 namespace IAMMod.Managers;
 
@@ -10,7 +10,7 @@ namespace IAMMod.Managers;
 /// Manager for user operations
 /// </summary>
 public class UserManager(
-    TenantDbFactory dbContextFactory,
+    AppDbFactory dbContextFactory,
     IUserContext userContext,
     ILogger<UserManager> logger,
     AuditLogManager auditLogManager,
@@ -32,7 +32,7 @@ public class UserManager(
     /// <returns>Paged list of users</returns>
     public async Task<PageList<UserItemDto>> GetPageAsync(UserFilterDto filter)
     {
-        Queryable = Queryable
+        var query = _dbSet
             .WhereNotNull(filter.UserName, q => q.UserName.Contains(filter.UserName!))
             .WhereNotNull(
                 filter.Email,
@@ -49,7 +49,15 @@ public class UserManager(
             .WhereNotNull(filter.StartDate, q => q.CreatedTime >= filter.StartDate)
             .WhereNotNull(filter.EndDate, q => q.CreatedTime <= filter.EndDate);
 
-        return await PageListAsync<UserFilterDto, UserItemDto>(filter);
+        var count = await query.CountAsync();
+        var users = await query.OrderByDescending(item => item.CreatedTime)
+            .Skip((filter.PageIndex - 1) * filter.PageSize).Take(filter.PageSize).ToListAsync();
+        return new PageList<UserItemDto>
+        {
+            Count = count,
+            PageIndex = filter.PageIndex,
+            Data = users.Select(UserItemDto.FromEntity).ToList(),
+        };
     }
 
     /// <summary>
@@ -69,7 +77,8 @@ public class UserManager(
     /// <returns>User detail or null</returns>
     public async Task<UserDetailDto?> GetDetailAsync(Guid id)
     {
-        return await FindAsync<UserDetailDto>(q => q.Id == id);
+        var user = await FindAsync(id);
+        return user is null ? null : UserDetailDto.FromEntity(user);
     }
 
     /// <summary>
@@ -81,13 +90,11 @@ public class UserManager(
     {
         var normalizedUserName = userName.Trim().ToUpperInvariant();
 
-        return await _dbSet
-            .Where(q => q.UserName == userName || q.NormalizedUserName == normalizedUserName)
-            .OrderBy(q => q.UserName == userName ? 0 : 1)
-            .ThenBy(q => q.CreatedTime)
-            .ThenBy(q => q.Id)
-            .ProjectToType<UserDetailDto>()
-            .FirstOrDefaultAsync();
+        var matchingNames = _dbSet.Where(item => item.NormalizedUserName == normalizedUserName);
+        var user = await matchingNames.Where(item => item.UserName == userName)
+            .OrderBy(item => item.CreatedTime).ThenBy(item => item.Id).FirstOrDefaultAsync();
+        user ??= await matchingNames.OrderBy(item => item.CreatedTime).ThenBy(item => item.Id).FirstOrDefaultAsync();
+        return user is null ? null : UserDetailDto.FromEntity(user);
     }
 
     /// <summary>
@@ -108,12 +115,22 @@ public class UserManager(
         var normalizedEmail = email.ToUpperInvariant();
 
         // Check if email already exists
-        if (await _dbSet.AnyAsync(q => q.NormalizedEmail == normalizedEmail))
+        if (await _dbSet.Where(q => q.NormalizedEmail == normalizedEmail).AnyAsync())
         {
             throw new BusinessException("EmailExists", StatusCodes.Status400BadRequest);
         }
 
-        var entity = dto.MapTo<User>();
+        var entity = new User
+        {
+            UserName = userName,
+            NormalizedUserName = normalizedUserName,
+            Email = email,
+            NormalizedEmail = normalizedEmail,
+            PhoneNumber = dto.PhoneNumber,
+            EmailConfirmed = dto.EmailConfirmed,
+            PhoneNumberConfirmed = dto.PhoneNumberConfirmed,
+            LockoutEnabled = dto.LockoutEnabled,
+        };
         entity.UserName = userName;
         entity.NormalizedUserName = normalizedUserName;
         entity.Email = email;
@@ -150,9 +167,12 @@ public class UserManager(
                 category: "Authentication",
                 eventName: "SelfServiceRegister",
                 subjectId: createdUser.Id.ToString(),
-                payload: JsonSerializer.Serialize(
-                    new { createdUser.UserName, createdUser.Email, createdUser.PhoneNumber }
-                ),
+                payload: IamJson.Serialize(new IamAuditPayload
+                {
+                    UserName = createdUser.UserName,
+                    Email = createdUser.Email,
+                    PhoneNumber = createdUser.PhoneNumber,
+                }),
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );
@@ -188,18 +208,20 @@ public class UserManager(
         }
 
         var existingLogin = await _dbContext.UserLogins
-            .Include(q => q.User)
-            .FirstOrDefaultAsync(q =>
-                q.LoginProvider == normalizedProvider && q.ProviderKey == normalizedProviderKey);
+            .Where(q => q.LoginProvider == normalizedProvider && q.ProviderKey == normalizedProviderKey)
+            .FirstOrDefaultAsync();
+        var existingLoginUser = existingLogin is null
+            ? null
+            : await _dbContext.Users.Where(q => q.Id == existingLogin.UserId).FirstOrDefaultAsync();
 
-        if (existingLogin?.User != null)
+        if (existingLogin is not null && existingLoginUser is not null)
         {
-            if (IsUserLocked(existingLogin.User))
+            if (IsUserLocked(existingLoginUser))
             {
                 await WriteExternalAuditAsync(
                     "ExternalLoginRejected",
-                    existingLogin.User.Id.ToString(),
-                    new { provider = normalizedProvider, reason = "AccountLocked" },
+                    existingLoginUser.Id.ToString(),
+                    new IamAuditPayload { Provider = normalizedProvider, Reason = "AccountLocked" },
                     ipAddress,
                     userAgent);
 
@@ -208,30 +230,31 @@ public class UserManager(
                     Status = "locked",
                     Provider = normalizedProvider,
                     UserId = existingLogin.UserId,
-                    UserName = existingLogin.User.UserName,
-                    Email = existingLogin.User.Email,
+                    UserName = existingLoginUser.UserName,
+                    Email = existingLoginUser.Email,
                     Message = "The local account is locked.",
                 };
             }
 
-            if (!string.IsNullOrWhiteSpace(email) && !string.Equals(existingLogin.User.Email, email, StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrWhiteSpace(email) && !string.Equals(existingLoginUser.Email, email, StringComparison.OrdinalIgnoreCase))
             {
                 var updatedEmail = email.Trim();
                 var updatedNormalizedEmail = updatedEmail.ToUpperInvariant();
 
-                var emailOwner = await _dbSet.FirstOrDefaultAsync(q =>
-                    q.NormalizedEmail == updatedNormalizedEmail && q.Id != existingLogin.UserId);
+                var emailOwner = await _dbSet
+                    .Where(q => q.NormalizedEmail == updatedNormalizedEmail && q.Id != existingLogin.UserId)
+                    .FirstOrDefaultAsync();
 
                 if (emailOwner != null)
                 {
                     await WriteExternalAuditAsync(
                         "ExternalLoginConflict",
                         existingLogin.UserId.ToString(),
-                        new
+                        new IamAuditPayload
                         {
-                            provider = normalizedProvider,
-                            email = updatedEmail,
-                            conflictingUserId = emailOwner.Id,
+                            Provider = normalizedProvider,
+                            Email = updatedEmail,
+                            ConflictingUserId = emailOwner.Id,
                         },
                         ipAddress,
                         userAgent);
@@ -247,17 +270,23 @@ public class UserManager(
                     };
                 }
 
-                existingLogin.User.Email = updatedEmail;
-                existingLogin.User.NormalizedEmail = updatedNormalizedEmail;
-                existingLogin.User.EmailConfirmed = true;
-                existingLogin.User.UpdatedTime = DateTime.UtcNow;
-                await _dbContext.SaveChangesAsync();
+                var updatedAt = DateTimeOffset.UtcNow;
+                await _dbContext.Users
+                    .Where(q => q.Id == existingLogin.UserId)
+                    .ExecuteUpdateAsync(update => update
+                        .Set(q => q.Email, updatedEmail)
+                        .Set(q => q.NormalizedEmail, updatedNormalizedEmail)
+                        .Set(q => q.EmailConfirmed, true)
+                        .Set(q => q.UpdatedTime, updatedAt));
+                existingLoginUser.Email = updatedEmail;
+                existingLoginUser.NormalizedEmail = updatedNormalizedEmail;
+                existingLoginUser.EmailConfirmed = true;
             }
 
             await WriteExternalAuditAsync(
                 "ExternalLoginSucceeded",
                 existingLogin.UserId.ToString(),
-                new { provider = normalizedProvider, created = false },
+                new IamAuditPayload { Provider = normalizedProvider, Created = false },
                 ipAddress,
                 userAgent);
 
@@ -266,21 +295,21 @@ public class UserManager(
                 Status = "success",
                 Provider = normalizedProvider,
                 UserId = existingLogin.UserId,
-                UserName = existingLogin.User.UserName,
-                Email = existingLogin.User.Email,
+                UserName = existingLoginUser.UserName,
+                Email = existingLoginUser.Email,
                 IsNewUser = false,
             };
         }
 
         if (!string.IsNullOrWhiteSpace(normalizedEmail))
         {
-            var existingUser = await _dbSet.FirstOrDefaultAsync(q => q.NormalizedEmail == normalizedEmail);
+            var existingUser = await _dbSet.Where(q => q.NormalizedEmail == normalizedEmail).FirstOrDefaultAsync();
             if (existingUser != null)
             {
                 await WriteExternalAuditAsync(
                     "ExternalLoginConflict",
                     existingUser.Id.ToString(),
-                    new { provider = normalizedProvider, email = existingUser.Email },
+                    new IamAuditPayload { Provider = normalizedProvider, Email = existingUser.Email },
                     ipAddress,
                     userAgent);
 
@@ -335,16 +364,16 @@ public class UserManager(
 
         await ExecuteInTransactionAsync(async () =>
         {
-            await _dbContext.Users.AddAsync(user);
-            await _dbContext.UserLogins.AddAsync(userLogin);
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.Users.InsertAsync(user, returning: false);
+            userLogin.UserId = user.Id;
+            await _dbContext.UserLogins.InsertAsync(userLogin, returning: false);
             return true;
         });
 
         await WriteExternalAuditAsync(
             "ExternalLoginSucceeded",
             user.Id.ToString(),
-            new { provider = normalizedProvider, created = true },
+            new IamAuditPayload { Provider = normalizedProvider, Created = true },
             ipAddress,
             userAgent);
 
@@ -374,6 +403,8 @@ public class UserManager(
         }
 
         // Check if email already exists (if changing)
+        var email = entity.Email;
+        var normalizedEmail = entity.NormalizedEmail;
         if (dto.Email != null)
         {
             if (string.IsNullOrWhiteSpace(dto.Email))
@@ -381,16 +412,16 @@ public class UserManager(
                 throw new BusinessException(Localizer.BadRequest, StatusCodes.Status400BadRequest);
             }
 
-            var email = dto.Email.Trim();
-            var normalizedEmail = email.ToUpperInvariant();
-            if (!string.Equals(normalizedEmail, entity.NormalizedEmail, StringComparison.Ordinal)
-                && await _dbSet.AnyAsync(q => q.NormalizedEmail == normalizedEmail && q.Id != id))
+            var updatedEmail = dto.Email.Trim();
+            var updatedNormalizedEmail = updatedEmail.ToUpperInvariant();
+            if (!string.Equals(updatedNormalizedEmail, entity.NormalizedEmail, StringComparison.Ordinal)
+                && await _dbSet.Where(q => q.NormalizedEmail == updatedNormalizedEmail && q.Id != id).AnyAsync())
             {
                 throw new BusinessException("EmailExists", StatusCodes.Status400BadRequest);
             }
 
-            entity.Email = email;
-            entity.NormalizedEmail = normalizedEmail;
+            email = updatedEmail;
+            normalizedEmail = updatedNormalizedEmail;
         }
 
         if (dto.PhoneNumber != null)
@@ -421,7 +452,18 @@ public class UserManager(
         entity.ConcurrencyStamp = Guid.NewGuid().ToString();
         entity.UpdatedTime = DateTime.UtcNow;
 
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.Users
+            .Where(item => item.Id == id)
+            .ExecuteUpdateAsync(update => update
+                .Set(item => item.Email, email)
+                .Set(item => item.NormalizedEmail, normalizedEmail)
+                .Set(item => item.PhoneNumber, entity.PhoneNumber)
+                .Set(item => item.EmailConfirmed, entity.EmailConfirmed)
+                .Set(item => item.PhoneNumberConfirmed, entity.PhoneNumberConfirmed)
+                .Set(item => item.IsTwoFactorEnabled, entity.IsTwoFactorEnabled)
+                .Set(item => item.LockoutEnabled, entity.LockoutEnabled)
+                .Set(item => item.ConcurrencyStamp, entity.ConcurrencyStamp)
+                .Set(item => item.UpdatedTime, entity.UpdatedTime));
         return await GetDetailAsync(id);
     }
 
@@ -459,11 +501,20 @@ public class UserManager(
         entity.UpdatedTime = DateTime.UtcNow;
         if (lockoutEnd > DateTimeOffset.UtcNow)
         {
+            await _dbContext.Users
+                .Where(item => item.Id == id)
+                .ExecuteUpdateAsync(update => update
+                    .Set(item => item.LockoutEnd, entity.LockoutEnd)
+                    .Set(item => item.UpdatedTime, entity.UpdatedTime));
             await InvalidateUserCredentialsAsync(id);
         }
         else
         {
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.Users
+                .Where(item => item.Id == id)
+                .ExecuteUpdateAsync(update => update
+                    .Set(item => item.LockoutEnd, entity.LockoutEnd)
+                    .Set(item => item.UpdatedTime, entity.UpdatedTime));
         }
         return true;
     }
@@ -489,6 +540,14 @@ public class UserManager(
         entity.ConcurrencyStamp = Guid.NewGuid().ToString();
         entity.UpdatedTime = DateTime.UtcNow;
 
+        await _dbContext.Users
+            .Where(item => item.Id == id)
+            .ExecuteUpdateAsync(update => update
+                .Set(item => item.PasswordSalt, entity.PasswordSalt)
+                .Set(item => item.PasswordHash, entity.PasswordHash)
+                .Set(item => item.SecurityStamp, entity.SecurityStamp)
+                .Set(item => item.ConcurrencyStamp, entity.ConcurrencyStamp)
+                .Set(item => item.UpdatedTime, entity.UpdatedTime));
         await InvalidateUserCredentialsAsync(entity.Id);
         return true;
     }
@@ -514,7 +573,7 @@ public class UserManager(
                 category: "Authentication",
                 eventName: "PasswordChangeFailed",
                 subjectId: entity.Id.ToString(),
-                payload: JsonSerializer.Serialize(new { reason = "InvalidCurrentPassword" }),
+                payload: IamJson.Serialize(new IamAuditPayload { Reason = "InvalidCurrentPassword" }),
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );
@@ -527,7 +586,7 @@ public class UserManager(
             category: "Authentication",
             eventName: "PasswordChanged",
             subjectId: entity.Id.ToString(),
-            payload: JsonSerializer.Serialize(new { changedAt = DateTimeOffset.UtcNow }),
+            payload: IamJson.Serialize(new IamAuditPayload { ChangedAt = DateTimeOffset.UtcNow }),
             ipAddress: ipAddress,
             userAgent: userAgent
         );
@@ -542,13 +601,13 @@ public class UserManager(
     )
     {
         var normalizedEmail = email.Trim().ToUpperInvariant();
-        var user = await _dbSet.FirstOrDefaultAsync(q => q.NormalizedEmail == normalizedEmail);
+        var user = await _dbSet.Where(q => q.NormalizedEmail == normalizedEmail).FirstOrDefaultAsync();
 
         await _auditLogManager.AddAuditLogAsync(
             category: "Authentication",
             eventName: "PasswordResetRequested",
             subjectId: user?.Id.ToString() ?? normalizedEmail,
-            payload: JsonSerializer.Serialize(new { email = user?.Email ?? email }),
+            payload: IamJson.Serialize(new IamAuditPayload { Email = user?.Email ?? email }),
             ipAddress: ipAddress,
             userAgent: userAgent
         );
@@ -563,13 +622,13 @@ public class UserManager(
         var hash = HashCrypto.GeneratePwd(token, salt);
         var expiresAt = DateTimeOffset.UtcNow.AddMinutes(15);
 
-        var entity = await _dbContext.UserTokens.FirstOrDefaultAsync(q =>
-            q.UserId == user.Id
-            && q.LoginProvider == SelfServiceProvider
-            && q.Name == PasswordResetTokenName
-        );
+        var entity = await _dbContext.UserTokens
+            .Where(q => q.UserId == user.Id
+                && q.LoginProvider == SelfServiceProvider
+                && q.Name == PasswordResetTokenName)
+            .FirstOrDefaultAsync();
 
-        var payload = JsonSerializer.Serialize(
+        var payload = IamJson.Serialize(
             new PasswordResetTokenPayload(hash, salt, expiresAt, null, user.SecurityStamp)
         );
 
@@ -583,15 +642,16 @@ public class UserManager(
                 Value = payload,
             };
 
-            await _dbContext.UserTokens.AddAsync(entity);
+            await _dbContext.UserTokens.InsertAsync(entity, returning: false);
         }
         else
         {
-            entity.Value = payload;
-            entity.UpdatedTime = DateTime.UtcNow;
+            await _dbContext.UserTokens
+                .Where(item => item.Id == entity.Id)
+                .ExecuteUpdateAsync(update => update
+                    .Set(item => item.Value, payload)
+                    .Set(item => item.UpdatedTime, DateTimeOffset.UtcNow));
         }
-
-        await _dbContext.SaveChangesAsync();
         _logger.LogInformation(
             "Generated password reset code for {Email}. Development code: {Token}",
             user.Email,
@@ -610,24 +670,24 @@ public class UserManager(
     )
     {
         var normalizedEmail = email.Trim().ToUpperInvariant();
-        var user = await _dbSet.FirstOrDefaultAsync(q => q.NormalizedEmail == normalizedEmail);
+        var user = await _dbSet.Where(q => q.NormalizedEmail == normalizedEmail).FirstOrDefaultAsync();
         if (user == null)
         {
             throw new BusinessException(Localizer.UserNotFound, StatusCodes.Status404NotFound);
         }
 
-        var entity = await _dbContext.UserTokens.FirstOrDefaultAsync(q =>
-            q.UserId == user.Id
-            && q.LoginProvider == SelfServiceProvider
-            && q.Name == PasswordResetTokenName
-        );
+        var entity = await _dbContext.UserTokens
+            .Where(q => q.UserId == user.Id
+                && q.LoginProvider == SelfServiceProvider
+                && q.Name == PasswordResetTokenName)
+            .FirstOrDefaultAsync();
 
         if (entity?.Value == null)
         {
             throw new BusinessException(Localizer.BadRequest, StatusCodes.Status400BadRequest);
         }
 
-        var payload = JsonSerializer.Deserialize<PasswordResetTokenPayload>(entity.Value);
+        var payload = IamJson.DeserializePasswordReset(entity.Value);
         if (payload == null)
         {
             throw new BusinessException(Localizer.BadRequest, StatusCodes.Status400BadRequest);
@@ -650,7 +710,7 @@ public class UserManager(
                 category: "Authentication",
                 eventName: "PasswordResetFailed",
                 subjectId: user.Id.ToString(),
-                payload: JsonSerializer.Serialize(new { reason = "InvalidCode" }),
+                payload: IamJson.Serialize(new IamAuditPayload { Reason = "InvalidCode" }),
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );
@@ -658,15 +718,19 @@ public class UserManager(
         }
 
         await ChangePasswordAsync(user.Id, newPassword);
-        entity.Value = JsonSerializer.Serialize(payload with { ConsumedAt = DateTimeOffset.UtcNow });
-        entity.UpdatedTime = DateTime.UtcNow;
-        await _dbContext.SaveChangesAsync();
+        var consumedPayload = IamJson.Serialize(
+            payload with { ConsumedAt = DateTimeOffset.UtcNow });
+        await _dbContext.UserTokens
+            .Where(item => item.Id == entity.Id)
+            .ExecuteUpdateAsync(update => update
+                .Set(item => item.Value, consumedPayload)
+                .Set(item => item.UpdatedTime, DateTimeOffset.UtcNow));
 
         await _auditLogManager.AddAuditLogAsync(
             category: "Authentication",
             eventName: "PasswordResetCompleted",
             subjectId: user.Id.ToString(),
-            payload: JsonSerializer.Serialize(new { email = user.Email }),
+            payload: IamJson.Serialize(new IamAuditPayload { Email = user.Email }),
             ipAddress: ipAddress,
             userAgent: userAgent
         );
@@ -697,28 +761,26 @@ public class UserManager(
 
         return await ExecuteInTransactionAsync(async () =>
         {
-            // Load current roles
-            await LoadManyAsync(user, u => u.UserRoles);
-
-            // Track changes for audit
-            var oldRoleIds = user.UserRoles.Select(ur => ur.RoleId).ToList();
-
-            // Remove old roles not in the new list
-            var toRemove = user.UserRoles.Where(ur => !roleIds.Contains(ur.RoleId)).ToList();
-            foreach (var userRole in toRemove)
+            var oldRoleIds = await _dbContext.UserRoles
+                .Where(item => item.UserId == userId)
+                .Select(item => item.RoleId)
+                .ToScalarListAsync();
+            var desiredRoleIds = roleIds.Distinct().ToArray();
+            var toRemove = oldRoleIds.Except(desiredRoleIds).ToArray();
+            var toAdd = desiredRoleIds.Except(oldRoleIds).ToArray();
+            if (toRemove.Length > 0)
             {
-                _dbContext.Set<UserRole>().Remove(userRole);
+                await _dbContext.UserRoles
+                    .Where(item => item.UserId == userId && Enumerable.Contains(toRemove, item.RoleId))
+                    .ExecuteDeleteAsync();
+            }
+            if (toAdd.Length > 0)
+            {
+                await _dbContext.UserRoles.BulkInsertAsync(
+                    toAdd.Select(roleId => new UserRole { UserId = userId, RoleId = roleId }));
             }
 
-            // Add new roles
-            var existingRoleIds = user.UserRoles.Select(ur => ur.RoleId).ToList();
-            var toAdd = roleIds.Where(rid => !existingRoleIds.Contains(rid)).ToList();
-            foreach (var roleId in toAdd)
-            {
-                user.UserRoles.Add(new UserRole { UserId = userId, RoleId = roleId });
-            }
-
-            var result = await _dbContext.SaveChangesAsync() > 0;
+            var result = toRemove.Length > 0 || toAdd.Length > 0;
 
             if (result)
             {
@@ -732,7 +794,7 @@ public class UserManager(
                         category: "Authorization",
                         eventName: "UserRolesChanged",
                         subjectId: userId.ToString(),
-                        payload: JsonSerializer.Serialize(new { added, removed }),
+                        payload: IamJson.Serialize(new IamAuditPayload { Added = added, Removed = removed }),
                         ipAddress: ipAddress,
                         userAgent: userAgent
                     );
@@ -774,10 +836,10 @@ public class UserManager(
                 category: "Authentication",
                 eventName: "LoginFailed",
                 subjectId: loginId,
-                payload: JsonSerializer.Serialize(new
+                payload: IamJson.Serialize(new IamAuditPayload
                 {
-                    reason = "DuplicateEmail",
-                    ipFailureCount = failureWindow.IpFailureCount,
+                    Reason = "DuplicateEmail",
+                    IpFailureCount = failureWindow.IpFailureCount,
                 }),
                 ipAddress: ipAddress,
                 userAgent: userAgent
@@ -795,10 +857,10 @@ public class UserManager(
                 category: "Authentication",
                 eventName: "LoginFailed",
                 subjectId: loginId,
-                payload: JsonSerializer.Serialize(new
+                payload: IamJson.Serialize(new IamAuditPayload
                 {
-                    reason = "UserNotFound",
-                    ipFailureCount = failureWindow.IpFailureCount,
+                    Reason = "UserNotFound",
+                    IpFailureCount = failureWindow.IpFailureCount,
                 }),
                 ipAddress: ipAddress,
                 userAgent: userAgent
@@ -813,13 +875,11 @@ public class UserManager(
                 category: "Authentication",
                 eventName: "LoginFailed",
                 subjectId: user.Id.ToString(),
-                payload: JsonSerializer.Serialize(
-                    new
-                    {
-                        reason = "AccountLocked",
-                        lockoutEnd = user.LockoutEnd.Value.ToString("O"),
-                    }
-                ),
+                payload: IamJson.Serialize(new IamAuditPayload
+                {
+                    Reason = "AccountLocked",
+                    LockoutEnd = user.LockoutEnd.Value.ToString("O"),
+                }),
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );
@@ -845,25 +905,28 @@ public class UserManager(
             }
 
             user.UpdatedTime = DateTime.UtcNow;
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.Users
+                .Where(item => item.Id == user.Id)
+                .ExecuteUpdateAsync(update => update
+                    .Set(item => item.AccessFailedCount, user.AccessFailedCount)
+                    .Set(item => item.LockoutEnd, user.LockoutEnd)
+                    .Set(item => item.UpdatedTime, user.UpdatedTime));
 
             await _auditLogManager.AddAuditLogAsync(
                 category: "Authentication",
                 eventName: "LoginFailed",
                 subjectId: user.Id.ToString(),
-                payload: JsonSerializer.Serialize(
-                    new
-                    {
-                        reason = "InvalidPassword",
-                        failedCount = user.AccessFailedCount,
-                        ipFailureCount = failureWindow.IpFailureCount,
-                        loginRisk.HasKnownIp,
-                        loginRisk.HasKnownUserAgent,
-                        loginRisk.RequiresStepUp,
-                        loginRisk.LastKnownIpAddress,
-                        loginRisk.LastKnownUserAgent,
-                    }
-                ),
+                payload: IamJson.Serialize(new IamAuditPayload
+                {
+                    Reason = "InvalidPassword",
+                    FailedCount = user.AccessFailedCount,
+                    IpFailureCount = failureWindow.IpFailureCount,
+                    HasKnownIp = loginRisk.HasKnownIp,
+                    HasKnownUserAgent = loginRisk.HasKnownUserAgent,
+                    RequiresStepUp = loginRisk.RequiresStepUp,
+                    LastKnownIpAddress = loginRisk.LastKnownIpAddress,
+                    LastKnownUserAgent = loginRisk.LastKnownUserAgent,
+                }),
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );
@@ -875,21 +938,25 @@ public class UserManager(
     _riskControlService.ResetLoginFailures(normalizedLoginId, user.Id, ipAddress);
         user.AccessFailedCount = 0;
         user.UpdatedTime = DateTime.UtcNow;
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.Users
+            .Where(item => item.Id == user.Id)
+            .ExecuteUpdateAsync(update => update
+                .Set(item => item.AccessFailedCount, 0)
+                .Set(item => item.UpdatedTime, user.UpdatedTime));
 
         // Write audit log for successful login
         await _auditLogManager.AddAuditLogAsync(
             category: "Authentication",
             eventName: "LoginSuccess",
             subjectId: user.Id.ToString(),
-            payload: JsonSerializer.Serialize(new
+            payload: IamJson.Serialize(new IamAuditPayload
             {
-                userName = user.UserName,
-                successRisk.HasKnownIp,
-                successRisk.HasKnownUserAgent,
-                successRisk.RequiresStepUp,
-                successRisk.LastKnownIpAddress,
-                successRisk.LastKnownUserAgent,
+                UserName = user.UserName,
+                HasKnownIp = successRisk.HasKnownIp,
+                HasKnownUserAgent = successRisk.HasKnownUserAgent,
+                RequiresStepUp = successRisk.RequiresStepUp,
+                LastKnownIpAddress = successRisk.LastKnownIpAddress,
+                LastKnownUserAgent = successRisk.LastKnownUserAgent,
             }),
             ipAddress: ipAddress,
             userAgent: userAgent
@@ -901,13 +968,13 @@ public class UserManager(
                 category: "Authentication",
                 eventName: "LoginStepUpRecommended",
                 subjectId: user.Id.ToString(),
-                payload: JsonSerializer.Serialize(new
+                payload: IamJson.Serialize(new IamAuditPayload
                 {
-                    userName = user.UserName,
-                    successRisk.HasKnownIp,
-                    successRisk.HasKnownUserAgent,
-                    successRisk.LastKnownIpAddress,
-                    successRisk.LastKnownUserAgent,
+                    UserName = user.UserName,
+                    HasKnownIp = successRisk.HasKnownIp,
+                    HasKnownUserAgent = successRisk.HasKnownUserAgent,
+                    LastKnownIpAddress = successRisk.LastKnownIpAddress,
+                    LastKnownUserAgent = successRisk.LastKnownUserAgent,
                 }),
                 ipAddress: ipAddress,
                 userAgent: userAgent
@@ -916,14 +983,6 @@ public class UserManager(
 
         return await GetDetailAsync(user.Id);
     }
-
-    private sealed record PasswordResetTokenPayload(
-        string Hash,
-        string Salt,
-        DateTimeOffset ExpiresAt,
-        DateTimeOffset? ConsumedAt,
-        string? SecurityStamp
-    );
 
     private static bool IsUserLocked(User user)
     {
@@ -940,7 +999,7 @@ public class UserManager(
         var candidate = baseName;
         var suffix = 1;
 
-        while (await _dbSet.AnyAsync(q => q.NormalizedUserName == candidate.ToUpperInvariant()))
+        while (await _dbSet.Where(q => q.NormalizedUserName == candidate.ToUpperInvariant()).AnyAsync())
         {
             candidate = $"{baseName}{suffix++}";
         }
@@ -978,7 +1037,7 @@ public class UserManager(
     private Task AddAuditLogAsync(
         string eventName,
         string subjectId,
-        object payload,
+        IamAuditPayload payload,
         string? ipAddress,
         string? userAgent)
     {
@@ -986,7 +1045,7 @@ public class UserManager(
             category: ExternalLoginEventCategory,
             eventName: eventName,
             subjectId: subjectId,
-            payload: JsonSerializer.Serialize(payload),
+            payload: IamJson.Serialize(payload),
             ipAddress: ipAddress,
             userAgent: userAgent);
     }
@@ -994,7 +1053,7 @@ public class UserManager(
     private Task WriteExternalAuditAsync(
         string eventName,
         string subjectId,
-        object payload,
+        IamAuditPayload payload,
         string? ipAddress,
         string? userAgent)
     {
@@ -1011,28 +1070,23 @@ public class UserManager(
             .ToListAsync();
 
         // Revoke credentials even for device flows and legacy tokens without a session.
-        var tokens = await _dbContext.Tokens
+        await _dbContext.Tokens
             .Where(q => q.SubjectId == subjectId
                 && (q.Status == TokenStatuses.Valid || q.Status == TokenStatuses.Pending))
-            .ToListAsync();
+            .ExecuteUpdateAsync(update => update
+                .Set(item => item.Status, TokenStatuses.Revoked)
+                .Set(item => item.UpdatedTime, now));
+
+        await _dbContext.LoginSessions
+            .Where(q => q.UserId == userId && q.IsActive)
+            .ExecuteUpdateAsync(update => update
+                .Set(item => item.IsActive, false)
+                .Set(item => item.UpdatedTime, now));
 
         foreach (var session in sessions)
         {
             session.IsActive = false;
             session.UpdatedTime = now;
-        }
-
-        foreach (var token in tokens)
-        {
-            token.Status = TokenStatuses.Revoked;
-            token.UpdatedTime = now;
-        }
-
-        // Persist the account change and credential revocation together.
-        await _dbContext.SaveChangesAsync();
-
-        foreach (var session in sessions)
-        {
             await _sessionValidationService.SetStateAsync(session);
         }
     }

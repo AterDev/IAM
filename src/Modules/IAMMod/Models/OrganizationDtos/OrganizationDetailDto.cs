@@ -14,4 +14,17 @@ public class OrganizationDetailDto
     public string? Description { get; set; }
     public DateTimeOffset CreatedTime { get; set; }
     public DateTimeOffset UpdatedTime { get; set; }
+
+    public static OrganizationDetailDto FromEntity(Organization entity) => new()
+    {
+        Id = entity.Id,
+        Name = entity.Name,
+        ParentId = entity.ParentId,
+        Path = entity.Path,
+        Level = entity.Level,
+        DisplayOrder = entity.DisplayOrder,
+        Description = entity.Description,
+        CreatedTime = entity.CreatedTime,
+        UpdatedTime = entity.UpdatedTime,
+    };
 }

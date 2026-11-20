@@ -8,8 +8,8 @@ public class Organization : EntityBase
     /// <summary>
     /// Organization name
     /// </summary>
-    [MaxLength(256)]
-    public required string Name { get; set; }
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(256)")]
+    public string Name { get; set; }
 
     /// <summary>
     /// Parent organization ID
@@ -19,7 +19,7 @@ public class Organization : EntityBase
     /// <summary>
     /// Hierarchical path (e.g., /1/2/3/)
     /// </summary>
-    [MaxLength(1000)]
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(1000)")]
     public string? Path { get; set; }
 
     /// <summary>
@@ -35,7 +35,7 @@ public class Organization : EntityBase
     /// <summary>
     /// Description
     /// </summary>
-    [MaxLength(500)]
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(500)")]
     public string? Description { get; set; }
 
     /// <summary>

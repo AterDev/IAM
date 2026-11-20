@@ -7,25 +7,25 @@ import { ScopeAddDto } from '../models/iammod/scope-add-dto.model';
 import { ScopeDetailDto } from '../models/iammod/scope-detail-dto.model';
 import { ScopeUpdateDto } from '../models/iammod/scope-update-dto.model';
 /**
- * API scope management controller
+ *
  */
 @Injectable({ providedIn: 'root' })
 export class ScopesService extends BaseService {
   /**
-   * Get paged scopes
+   * getScopes
    * @param name Filter by scope name
    * @param displayName Filter by display name
    * @param required Filter by required flag
-   * @param pageIndex number
-   * @param pageSize number
-   * @param orderBy Record<string, boolean>
+   * @param pageIndex any
+   * @param pageSize any
+   * @param orderBy string
    */
-  getScopes(name: string | null, displayName: string | null, required: boolean | null, pageIndex: number | null, pageSize: number | null, orderBy: Record<string, boolean> | null): Observable<PageList<ScopeItemDto>> {
-    const _url = `/api/Scopes?name=${name ?? ''}&displayName=${displayName ?? ''}&required=${required ?? ''}&pageIndex=${pageIndex ?? ''}&pageSize=${pageSize ?? ''}&orderBy=${orderBy ?? ''}`;
+  getScopes(name: string | null, displayName: string | null, required: boolean | null, pageIndex: any | null, pageSize: any | null, orderBy: string | null): Observable<PageList<ScopeItemDto>> {
+    const _url = `/api/Scopes?Name=${name ?? ''}&DisplayName=${displayName ?? ''}&Required=${required ?? ''}&pageIndex=${pageIndex ?? ''}&pageSize=${pageSize ?? ''}&orderBy=${orderBy ?? ''}`;
     return this.request<PageList<ScopeItemDto>>('get', _url);
   }
   /**
-   * Create new scope
+   * createScope
    * @param data ScopeAddDto
    */
   createScope(data: ScopeAddDto): Observable<ScopeDetailDto> {
@@ -33,16 +33,16 @@ export class ScopesService extends BaseService {
     return this.request<ScopeDetailDto>('post', _url, data);
   }
   /**
-   * Get scope detail by id
-   * @param id Scope id
+   * getDetail
+   * @param id string
    */
   getDetail(id: string): Observable<ScopeDetailDto> {
     const _url = `/api/Scopes/${id}`;
     return this.request<ScopeDetailDto>('get', _url);
   }
   /**
-   * Update scope
-   * @param id Scope id
+   * updateScope
+   * @param id string
    * @param data ScopeUpdateDto
    */
   updateScope(id: string, data: ScopeUpdateDto): Observable<ScopeDetailDto> {
@@ -50,11 +50,11 @@ export class ScopesService extends BaseService {
     return this.request<ScopeDetailDto>('put', _url, data);
   }
   /**
-   * Delete scope
-   * @param id Scope id
+   * deleteScope
+   * @param id string
    */
-  deleteScope(id: string): Observable<any> {
+  deleteScope(id: string): Observable<boolean> {
     const _url = `/api/Scopes/${id}`;
-    return this.request<any>('delete', _url);
+    return this.request<boolean>('delete', _url);
   }
 }

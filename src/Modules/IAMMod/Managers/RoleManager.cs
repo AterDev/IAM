@@ -1,3 +1,4 @@
+using Perigon.PostgreSQL;
 using IAMMod.Models.RoleDtos;
 using Microsoft.AspNetCore.Http;
 using Share.Exceptions;
@@ -8,7 +9,7 @@ namespace IAMMod.Managers;
 /// Manager for role operations
 /// </summary>
 public class RoleManager(
-    TenantDbFactory dbContextFactory,
+    AppDbFactory dbContextFactory,
     IUserContext userContext,
     ILogger<RoleManager> logger)
     : ManagerBase<DefaultDbContext, Role>(dbContextFactory, userContext, logger)
@@ -20,12 +21,15 @@ public class RoleManager(
     /// <returns>Paged list of roles</returns>
     public async Task<PageList<RoleItemDto>> GetPageAsync(RoleFilterDto filter)
     {
-        Queryable = Queryable
+        var query = _dbSet
             .WhereNotNull(filter.Name, q => q.Name.Contains(filter.Name!))
             .WhereNotNull(filter.StartDate, q => q.CreatedTime >= filter.StartDate)
             .WhereNotNull(filter.EndDate, q => q.CreatedTime <= filter.EndDate);
 
-        return await PageListAsync<RoleFilterDto, RoleItemDto>(filter);
+        var count = await query.CountAsync();
+        var rows = await query.OrderByDescending(item => item.CreatedTime)
+            .Skip((filter.PageIndex - 1) * filter.PageSize).Take(filter.PageSize).ToListAsync();
+        return new PageList<RoleItemDto> { Count = count, PageIndex = filter.PageIndex, Data = rows.Select(RoleItemDto.FromEntity).ToList() };
     }
 
     /// <summary>
@@ -45,7 +49,8 @@ public class RoleManager(
     /// <returns>Role detail or null</returns>
     public async Task<RoleDetailDto?> GetDetailAsync(Guid id)
     {
-        return await FindAsync<RoleDetailDto>(q => q.Id == id);
+        var entity = await _dbSet.Where(q => q.Id == id).FirstOrDefaultAsync();
+        return entity is null ? null : RoleDetailDto.FromEntity(entity);
     }
 
     /// <summary>
@@ -56,7 +61,8 @@ public class RoleManager(
     public async Task<RoleDetailDto?> GetByNameAsync(string name)
     {
         var normalizedName = name.ToUpperInvariant();
-        return await FindAsync<RoleDetailDto>(q => q.NormalizedName == normalizedName);
+        var entity = await _dbSet.Where(q => q.NormalizedName == normalizedName).FirstOrDefaultAsync();
+        return entity is null ? null : RoleDetailDto.FromEntity(entity);
     }
 
     /// <summary>
@@ -69,12 +75,12 @@ public class RoleManager(
         var normalizedName = dto.Name.ToUpperInvariant();
 
         // Check if role name already exists
-        if (await _dbSet.AnyAsync(q => q.NormalizedName == normalizedName))
+        if (await _dbSet.Where(q => q.NormalizedName == normalizedName).AnyAsync())
         {
             throw new BusinessException("RoleNameExists", StatusCodes.Status400BadRequest);
         }
 
-        var entity = dto.MapTo<Role>();
+        var entity = new Role { Name = dto.Name, Description = dto.Description };
         entity.NormalizedName = normalizedName;
         entity.ConcurrencyStamp = Guid.NewGuid().ToString();
 
@@ -100,7 +106,7 @@ public class RoleManager(
         if (!string.IsNullOrWhiteSpace(dto.Name) && dto.Name != entity.Name)
         {
             var normalizedName = dto.Name.ToUpperInvariant();
-            if (await _dbSet.AnyAsync(q => q.NormalizedName == normalizedName && q.Id != id))
+            if (await _dbSet.Where(q => q.NormalizedName == normalizedName && q.Id != id).AnyAsync())
             {
                 throw new BusinessException("RoleNameExists", StatusCodes.Status400BadRequest);
             }
@@ -113,10 +119,21 @@ public class RoleManager(
             entity.Description = dto.Description;
         }
 
+        var priorStamp = entity.ConcurrencyStamp;
         entity.ConcurrencyStamp = Guid.NewGuid().ToString();
         entity.UpdatedTime = DateTime.UtcNow;
 
-        await _dbContext.SaveChangesAsync();
+        var updated = await _dbSet.Where(item => item.Id == id && item.ConcurrencyStamp == priorStamp)
+            .ExecuteUpdateAsync(update => update
+                .Set(item => item.Name, entity.Name)
+                .Set(item => item.NormalizedName, entity.NormalizedName)
+                .Set(item => item.Description, entity.Description)
+                .Set(item => item.ConcurrencyStamp, entity.ConcurrencyStamp)
+                .Set(item => item.UpdatedTime, entity.UpdatedTime));
+        if (updated == 0)
+        {
+            throw new BusinessException(Localizer.AlreadyUpdated, StatusCodes.Status409Conflict);
+        }
         return await GetDetailAsync(id);
     }
 
@@ -135,8 +152,7 @@ public class RoleManager(
         }
 
         // Check if role has users
-        await LoadManyAsync(entity, r => r.UserRoles);
-        if (entity.UserRoles.Count > 0)
+        if (await _dbContext.UserRoles.Where(item => item.RoleId == id).AnyAsync())
         {
             throw new BusinessException("RoleHasUsers", StatusCodes.Status400BadRequest);
         }
@@ -151,7 +167,7 @@ public class RoleManager(
     /// <returns>List of all roles</returns>
     public async Task<List<RoleItemDto>> GetAllAsync()
     {
-        return await ListAsync<RoleItemDto>();
+        return (await _dbSet.ToListAsync()).Select(RoleItemDto.FromEntity).ToList();
     }
 
     /// <summary>
@@ -162,8 +178,8 @@ public class RoleManager(
     public async Task<List<string>> GetRoleNamesByIdsAsync(List<Guid> roleIds)
     {
         return await Queryable
-            .Where(r => roleIds.Contains(r.Id))
+            .Where(r => Enumerable.Contains(roleIds, r.Id))
             .Select(r => r.Name)
-            .ToListAsync();
+            .ToScalarListAsync();
     }
 }

@@ -2,7 +2,7 @@ export interface UserEntitlementAddDto {
   /** entitlementDefinitionId */
   entitlementDefinitionId: string;
   /** valueLimit */
-  valueLimit: number;
+  valueLimit: any;
   /** expirationDate */
   expirationDate?: Date | null;
   /** startDate */

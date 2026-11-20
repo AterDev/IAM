@@ -1,78 +1,85 @@
 using Entity.IAMMod;
+using EntityFramework.AppDbFactory;
+using IAMMod.Serialization;
 using IAMMod.Services;
+using Perigon.PostgreSQL;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace IAMMod.Managers;
 
-/// <summary>
-/// Manager for OAuth/OIDC authorization operations
-/// </summary>
-public class AuthorizationManager(DefaultDbContext dbContext, ILogger<AuthorizationManager> logger)
-    : ManagerBase<DefaultDbContext>(dbContext, logger)
+/// <summary>Manager for OAuth/OIDC authorization operations.</summary>
+public class AuthorizationManager(
+    AppDbFactory dbContextFactory,
+    IUserContext userContext,
+    ILogger<AuthorizationManager> logger
+) : ManagerBase<DefaultDbContext, Authorization>(dbContextFactory, userContext, logger)
 {
-    /// <summary>
-    /// Validate authorization request
-    /// </summary>
-    public async Task<(
-        bool isValid,
-        string? error,
-        Client? client
-    )> ValidateAuthorizationRequestAsync(AuthorizeRequestDto request)
-    {
-        // Validate client
-        var client = await _dbContext
-            .Clients.Include(c => c.ClientScopes)
-            .ThenInclude(cs => cs.Scope)
-            .FirstOrDefaultAsync(c => c.ClientId == request.ClientId);
+    public override Task<bool> HasPermissionAsync(Guid id) => Task.FromResult(_userContext.IsAdmin);
 
+    /// <summary>Validate authorization request.</summary>
+    public async Task<(bool isValid, string? error, Client? client)> ValidateAuthorizationRequestAsync(
+        AuthorizeRequestDto request)
+    {
+        var client = await _dbContext.Clients
+            .Where(c => c.ClientIdentifier == request.ClientId)
+            .FirstOrDefaultAsync();
         if (client == null)
         {
             return (false, ErrorCodes.InvalidClient, null);
         }
 
-        // Validate redirect URI
+        var clientScopes = await _dbContext.ClientScopes
+            .Where(scope => scope.ClientId == client.Id)
+            .ToListAsync();
+        var scopeIds = clientScopes.Select(scope => scope.ScopeId).Distinct().ToArray();
+        var scopes = scopeIds.Length == 0
+            ? []
+            : await _dbContext.ApiScopes.Where(scope => Enumerable.Contains(scopeIds, scope.Id)).ToListAsync();
+        var scopesById = scopes.ToDictionary(scope => scope.Id);
+        foreach (var clientScope in clientScopes)
+        {
+            if (scopesById.TryGetValue(clientScope.ScopeId, out var scope))
+            {
+                clientScope.Scope = scope;
+            }
+        }
+        client.ClientScopes = clientScopes;
+
         if (!client.RedirectUris.Contains(request.RedirectUri))
         {
             return (false, ErrorCodes.InvalidRequest, client);
         }
-
-        // Validate response type
         if (!string.Equals(request.ResponseType, OpenIdConnectResponseType.Code, StringComparison.Ordinal))
         {
             return (false, ErrorCodes.UnsupportedResponseType, client);
         }
-
-        // Validate response mode. Only query is currently implemented for the authorization code flow.
         if (!string.IsNullOrEmpty(request.ResponseMode)
             && !string.Equals(request.ResponseMode, ResponseModes.Query, StringComparison.Ordinal))
         {
             return (false, ErrorCodes.InvalidRequest, client);
         }
 
-        // Validate PKCE if required
         if (client.RequirePkce)
         {
             if (string.IsNullOrEmpty(request.CodeChallenge))
             {
                 return (false, ErrorCodes.InvalidRequest, client);
             }
-
             var supportedMethods = new[] { CodeChallengeMethods.Plain, CodeChallengeMethods.S256 };
-            if (
-                !string.IsNullOrEmpty(request.CodeChallengeMethod)
-                && !supportedMethods.Contains(request.CodeChallengeMethod)
-            )
+            if (!string.IsNullOrEmpty(request.CodeChallengeMethod)
+                && !supportedMethods.Contains(request.CodeChallengeMethod))
             {
                 return (false, ErrorCodes.InvalidRequest, client);
             }
         }
 
-        // Validate scopes
         if (!string.IsNullOrEmpty(request.Scope))
         {
             var requestedScopes = request.Scope.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            var clientScopeNames = client.ClientScopes.Select(cs => cs.Scope.Name).ToList();
-
+            var clientScopeNames = client.ClientScopes
+                .Where(scope => scope.Scope is not null)
+                .Select(scope => scope.Scope.Name)
+                .ToHashSet(StringComparer.Ordinal);
             foreach (var scope in requestedScopes)
             {
                 if (!clientScopeNames.Contains(scope))
@@ -85,9 +92,7 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
         return (true, null, client);
     }
 
-    /// <summary>
-    /// Create authorization code
-    /// </summary>
+    /// <summary>Create an authorization code and its one-time token atomically.</summary>
     public async Task<string> CreateAuthorizationCodeAsync(
         string subjectId,
         Guid clientId,
@@ -96,12 +101,11 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
         string? codeChallenge,
         string? codeChallengeMethod,
         string? nonce,
-        string? sessionId = null
-    )
+        string? sessionId = null)
     {
         var code = OAuthService.GenerateAuthorizationCode();
-
-        // Create authorization record
+        var now = DateTimeOffset.UtcNow;
+        var expiration = now.AddMinutes(10);
         var authorization = new Authorization
         {
             SubjectId = subjectId,
@@ -109,23 +113,12 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
             Type = AuthorizationTypes.Code,
             Status = AuthorizationStatuses.Valid,
             Scopes = scope,
-            CreationDate = DateTimeOffset.UtcNow,
-            ExpirationDate = DateTimeOffset.UtcNow.AddMinutes(10),
+            CreationDate = now,
+            ExpirationDate = expiration,
             Properties = System.Text.Json.JsonSerializer.Serialize(
-                new
-                {
-                    redirect_uri = redirectUri,
-                    code_challenge = codeChallenge,
-                    code_challenge_method = codeChallengeMethod,
-                    nonce,
-                    sid = sessionId,
-                }
-            ),
+                new AuthorizationCodeProperties(redirectUri, codeChallenge, codeChallengeMethod, nonce, sessionId),
+                IamModJsonSerializerContext.Default.AuthorizationCodeProperties),
         };
-
-        await _dbContext.Authorizations.AddAsync(authorization);
-
-        // Create token record for the code
         var token = new Token
         {
             AuthorizationId = authorization.Id,
@@ -134,90 +127,89 @@ public class AuthorizationManager(DefaultDbContext dbContext, ILogger<Authorizat
             Status = TokenStatuses.Valid,
             SubjectId = subjectId,
             Payload = System.Text.Json.JsonSerializer.Serialize(
-                new { authorization_id = authorization.Id }
-            ),
-            CreationDate = DateTimeOffset.UtcNow,
-            ExpirationDate = DateTimeOffset.UtcNow.AddMinutes(10),
+                new AuthorizationCodeTokenPayload(authorization.Id),
+                IamModJsonSerializerContext.Default.AuthorizationCodeTokenPayload),
+            CreationDate = now,
+            ExpirationDate = expiration,
         };
 
-        await _dbContext.Tokens.AddAsync(token);
-        await _dbContext.SaveChangesAsync();
-
+        await _dbContext.TransactionAsync(async ct =>
+        {
+            await _dbContext.Authorizations.InsertAsync(authorization, ct);
+            await _dbContext.Tokens.InsertAsync(token, ct);
+        });
         return code;
     }
 
-    /// <summary>
-    /// Validate authorization code and PKCE
-    /// </summary>
+    /// <summary>Validate and atomically redeem an authorization code.</summary>
     public async Task<(bool isValid, Authorization? authorization)> ValidateAuthorizationCodeAsync(
         string code,
         string clientId,
         string redirectUri,
-        string? codeVerifier
-    )
+        string? codeVerifier)
     {
-        var token = await _dbContext
-            .Tokens.Include(t => t.Authorization)
-            .ThenInclude(a => a!.Client)
-            .FirstOrDefaultAsync(t =>
-                t.ReferenceId == code
-                && t.Type == TokenTypes.AuthorizationCode
-                && t.Status == TokenStatuses.Valid
-            );
-
-        if (token == null || token.Authorization == null)
+        var token = await _dbContext.Tokens
+            .Where(item => item.ReferenceId == code
+                && item.Type == TokenTypes.AuthorizationCode
+                && item.Status == TokenStatuses.Valid)
+            .FirstOrDefaultAsync();
+        if (token?.AuthorizationId is not Guid authorizationId)
         {
             return (false, null);
         }
 
-        // Check expiration
-        if (token.ExpirationDate < DateTimeOffset.UtcNow)
+        var authorization = await _dbContext.Authorizations
+            .Where(item => item.Id == authorizationId)
+            .FirstOrDefaultAsync();
+        if (authorization is null)
+        {
+            return (false, null);
+        }
+        var client = await _dbContext.Clients
+            .Where(item => item.Id == authorization.ClientId)
+            .FirstOrDefaultAsync();
+        if (client is null)
+        {
+            return (false, null);
+        }
+        if (token.ExpirationDate < DateTimeOffset.UtcNow
+            || !string.Equals(client.ClientId, clientId, StringComparison.Ordinal))
         {
             return (false, null);
         }
 
-        // Validate client
-        if (token.Authorization.Client.ClientId != clientId)
+        var properties = string.IsNullOrWhiteSpace(authorization.Properties)
+            ? null
+            : System.Text.Json.JsonSerializer.Deserialize(
+                authorization.Properties,
+                IamModJsonSerializerContext.Default.AuthorizationCodeProperties);
+        if (properties is null || !string.Equals(properties.RedirectUri, redirectUri, StringComparison.Ordinal))
+        {
+            return (false, null);
+        }
+        if (!string.IsNullOrEmpty(properties.CodeChallenge)
+            && (string.IsNullOrEmpty(codeVerifier)
+                || !OAuthService.ValidatePkce(
+                    codeVerifier,
+                    properties.CodeChallenge,
+                    properties.CodeChallengeMethod ?? CodeChallengeMethods.Plain)))
         {
             return (false, null);
         }
 
-        // Validate redirect URI
-        var properties = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(
-            token.Authorization.Properties ?? "{}"
-        );
-        if (properties?.GetValueOrDefault("redirect_uri") != redirectUri)
+        var redeemedAt = DateTimeOffset.UtcNow;
+        var redeemed = await _dbContext.Tokens
+            .Where(item => item.Id == token.Id && item.Status == TokenStatuses.Valid)
+            .ExecuteUpdateAsync(update => update
+                .Set(item => item.Status, TokenStatuses.Redeemed)
+                .Set(item => item.RedemptionDate, redeemedAt)
+                .Set(item => item.UpdatedTime, redeemedAt));
+        if (redeemed == 0)
         {
             return (false, null);
         }
 
-        // Validate PKCE if present
-        var codeChallenge = properties?.GetValueOrDefault("code_challenge");
-        var codeChallengeMethod = properties?.GetValueOrDefault("code_challenge_method");
-
-        if (!string.IsNullOrEmpty(codeChallenge))
-        {
-            if (string.IsNullOrEmpty(codeVerifier))
-            {
-                return (false, null);
-            }
-
-            var isValidPkce = OAuthService.ValidatePkce(
-                codeVerifier,
-                codeChallenge,
-                codeChallengeMethod ?? CodeChallengeMethods.Plain
-            );
-            if (!isValidPkce)
-            {
-                return (false, null);
-            }
-        }
-
-        // Mark code as redeemed
-        token.Status = TokenStatuses.Redeemed;
-        token.RedemptionDate = DateTimeOffset.UtcNow;
-        await _dbContext.SaveChangesAsync();
-
-        return (true, token.Authorization);
+        authorization.Client = client;
+        return (true, authorization);
     }
 }

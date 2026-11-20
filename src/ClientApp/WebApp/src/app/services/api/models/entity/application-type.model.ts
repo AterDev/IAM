@@ -1,6 +1,3 @@
-/**
- * OAuth 2.0 application types
- */
 export enum ApplicationType {
   /** Web */
   Web = 0,

@@ -4,13 +4,14 @@ import { Observable } from 'rxjs';
 import { AdminLoginDto } from '../models/iammod/admin-login-dto.model';
 import { AdminLoginResponseDto } from '../models/iammod/admin-login-response-dto.model';
 import { AdminUserInfo } from '../models/iammod/admin-user-info.model';
+import { ApiMessageDto } from '../models/api-service/api-message-dto.model';
 /**
- * Admin authentication controller for management portal login
+ *
  */
 @Injectable({ providedIn: 'root' })
 export class AdminAuthService extends BaseService {
   /**
-   * Admin login endpoint
+   * login
    * @param data AdminLoginDto
    */
   login(data: AdminLoginDto): Observable<AdminLoginResponseDto> {
@@ -18,17 +19,17 @@ export class AdminAuthService extends BaseService {
     return this.request<AdminLoginResponseDto>('post', _url, data);
   }
   /**
-   * Get current admin user information
+   * getCurrentUser
    */
   getCurrentUser(): Observable<AdminUserInfo> {
     const _url = `/api/admin/me`;
     return this.request<AdminUserInfo>('get', _url);
   }
   /**
-   * Logout current admin user and revoke server-side session artifacts.
+   * logout
    */
-  logout(): Observable<any> {
+  logout(): Observable<ApiMessageDto> {
     const _url = `/api/admin/logout`;
-    return this.request<any>('post', _url);
+    return this.request<ApiMessageDto>('post', _url);
   }
 }

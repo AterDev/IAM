@@ -1,74 +1,38 @@
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 using Perigon.AspNetCore.Models;
 using Share.Exceptions;
 
 namespace ServiceDefaults.Middleware;
 
-public class GlobalExceptionMiddleware(RequestDelegate next, Localizer localizer)
+public class GlobalExceptionMiddleware(RequestDelegate next, Localizer localizer, ILogger<GlobalExceptionMiddleware> logger)
 {
-    public async Task InvokeAsync(HttpContext ctx)
+    public async Task InvokeAsync(HttpContext context)
     {
         try
         {
-            await next(ctx);
+            await next(context);
         }
-        catch (DbUpdateConcurrencyException)
+        catch (PostgresException ex) when (!context.Response.HasStarted && ex.SqlState == PostgresErrorCodes.UniqueViolation)
         {
-            // 并发冲突提示
-            ctx.Response.StatusCode = StatusCodes.Status409Conflict;
-            await ctx.Response.WriteAsJsonAsync(
-                new ErrorResult(localizer.Get(Localizer.AlreadyUpdated), ctx.TraceIdentifier)
-            );
+            await WriteErrorAsync(context, StatusCodes.Status409Conflict, localizer.Get(Localizer.ConflictResource));
         }
-        catch (DbUpdateException ex) when (EfCoreErrorHelper.IsUniqueConstraintViolation(ex))
+        catch (BusinessException ex) when (!context.Response.HasStarted)
         {
-            // 唯一约束冲突提示
-            ctx.Response.StatusCode = StatusCodes.Status409Conflict;
-
-            await ctx.Response.WriteAsJsonAsync(
-                new ErrorResult(localizer.Get(Localizer.ConflictResource), ctx.TraceIdentifier)
-            );
+            await WriteErrorAsync(context, ex.StatusCodes, localizer.Get(ex.LanguageKey));
         }
-        catch (DbUpdateException ex)
+        catch (Exception ex) when (!context.Response.HasStarted && !context.RequestAborted.IsCancellationRequested)
         {
-            // 其他数据库错误
-            ctx.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            await ctx.Response.WriteAsJsonAsync(
-                new ErrorResult(ex.Message, ctx.TraceIdentifier, "database error!")
-            );
-        }
-        catch (BusinessException ex)
-        {
-            ctx.Response.StatusCode = ex.StatusCodes;
-            await ctx.Response.WriteAsJsonAsync(
-                new ErrorResult(localizer.Get(ex.LanguageKey), ctx.TraceIdentifier, status: ex.StatusCodes)
-            );
-        }
-        catch (Exception ex)
-        {
-            // 非数据库类异常
-            ctx.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            await ctx.Response.WriteAsJsonAsync(new ErrorResult(ex.Message, ctx.TraceIdentifier));
+            logger.LogError(ex, "Unhandled request failure. Trace identifier: {TraceIdentifier}", context.TraceIdentifier);
+            await WriteErrorAsync(context, StatusCodes.Status500InternalServerError, "Internal server error.");
         }
     }
-}
 
-public static class EfCoreErrorHelper
-{
-    public static bool IsUniqueConstraintViolation(DbUpdateException ex)
+    private static Task WriteErrorAsync(HttpContext context, int status, string detail)
     {
-        if (ex.InnerException is SqlException sqlEx)
-        {
-            // SQL Server: 2627=主键冲突, 2601=唯一约束冲突
-            return sqlEx.Number is 2627 or 2601;
-        }
-        if (ex.InnerException is PostgresException pgEx)
-        {
-            // PostgreSQL: 23505=unique_violation
-            return pgEx.SqlState == "23505";
-        }
-        return false;
+        context.Response.StatusCode = status;
+        return context.Response.WriteAsJsonAsync(
+            new ErrorResult(detail, context.TraceIdentifier, status: status),
+            MiddlewareJsonContext.Default.ErrorResult);
     }
 }

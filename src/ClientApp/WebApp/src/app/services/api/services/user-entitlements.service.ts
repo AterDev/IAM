@@ -6,19 +6,19 @@ import { UserEntitlementDetailDto } from '../models/user-center-mod/user-entitle
 import { UserEntitlementUpdateDto } from '../models/user-center-mod/user-entitlement-update-dto.model';
 import { UserEntitlementAddDto } from '../models/user-center-mod/user-entitlement-add-dto.model';
 /**
- * Administrator API for a user's entitlement assignments.
+ *
  */
 @Injectable({ providedIn: 'root' })
 export class UserEntitlementsService extends BaseService {
   /**
    * getPage
    * @param userId string
-   * @param pageIndex number
-   * @param pageSize number
-   * @param orderBy Record<string, boolean>
+   * @param pageIndex any
+   * @param pageSize any
+   * @param orderBy string
    */
-  getPage(userId: string | null, pageIndex: number | null, pageSize: number | null, orderBy: Record<string, boolean> | null): Observable<PageList<UserEntitlementDetailDto>> {
-    const _url = `/api/UserEntitlements?userId=${userId ?? ''}&pageIndex=${pageIndex ?? ''}&pageSize=${pageSize ?? ''}&orderBy=${orderBy ?? ''}`;
+  getPage(userId: string, pageIndex: any | null, pageSize: any | null, orderBy: string | null): Observable<PageList<UserEntitlementDetailDto>> {
+    const _url = `/api/UserEntitlements?UserId=${userId ?? ''}&pageIndex=${pageIndex ?? ''}&pageSize=${pageSize ?? ''}&orderBy=${orderBy ?? ''}`;
     return this.request<PageList<UserEntitlementDetailDto>>('get', _url);
   }
   /**
@@ -42,9 +42,9 @@ export class UserEntitlementsService extends BaseService {
    * delete
    * @param id string
    */
-  delete(id: string): Observable<any> {
+  delete(id: string): Observable<boolean> {
     const _url = `/api/UserEntitlements/${id}`;
-    return this.request<any>('delete', _url);
+    return this.request<boolean>('delete', _url);
   }
   /**
    * create

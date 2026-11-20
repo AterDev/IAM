@@ -1,4 +1,4 @@
-﻿namespace Perigon.AspNetCore.Abstraction;
+namespace Perigon.AspNetCore.Abstraction;
 
 /// <summary>
 /// entity base interface
@@ -14,7 +14,3 @@ public interface IEntityBase
 /// <summary>
 /// entity base interface with tenant support
 /// </summary>
-public interface ITenantEntityBase : IEntityBase
-{
-    Guid TenantId { get; set; }
-}

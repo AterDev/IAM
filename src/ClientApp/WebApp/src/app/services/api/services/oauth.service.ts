@@ -1,79 +1,78 @@
 import { BaseService } from '../base.service';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { TokenResponseDto } from '../models/iammod/token-response-dto.model';
-import { DeviceAuthorizationResponseDto } from '../models/iammod/device-authorization-response-dto.model';
-import { IntrospectResponseDto } from '../models/iammod/introspect-response-dto.model';
-import { UserInfoDto } from '../models/iammod/user-info-dto.model';
+import { TokenRequestDto } from '../models/iammod/token-request-dto.model';
+import { DeviceAuthorizationRequestDto } from '../models/iammod/device-authorization-request-dto.model';
+import { IntrospectRequestDto } from '../models/iammod/introspect-request-dto.model';
+import { RevokeRequestDto } from '../models/iammod/revoke-request-dto.model';
+import { LogoutRequestDto } from '../models/iammod/logout-request-dto.model';
 /**
- * OAuth 2.0 / OpenID Connect endpoint controller
+ *
  */
 @Injectable({ providedIn: 'root' })
 export class OAuthService extends BaseService {
   /**
-   * Authorization endpoint (OAuth 2.0 / OIDC)
-   * @param responseType Response type. Currently only authorization code flow is supported.
-   * @param clientId Client identifier
-   * @param redirectUri Redirect URI
-   * @param scope Requested scopes (space-separated)
-   * @param state State parameter for CSRF protection
-   * @param codeChallenge PKCE code challenge
-   * @param codeChallengeMethod PKCE code challenge method (plain, S256)
-   * @param responseMode Response mode. Currently only query mode is supported.
-   * @param nonce Nonce for OIDC
-   * @param prompt Prompt parameter (none, login, consent, select_account)
+   * authorize
+   * @param responseType string
+   * @param clientId string
+   * @param redirectUri string
+   * @param scope string
+   * @param state string
+   * @param codeChallenge string
+   * @param codeChallengeMethod string
+   * @param responseMode string
+   * @param nonce string
+   * @param prompt string
    */
-  authorize(responseType: string, clientId: string, redirectUri: string, scope: string | null, state: string | null, codeChallenge: string | null, codeChallengeMethod: string | null, responseMode: string | null, nonce: string | null, prompt: string | null): Observable<any> {
-    const _url = `/connect/authorize?response_type=${responseType ?? ''}&client_id=${clientId ?? ''}&redirect_uri=${redirectUri ?? ''}&scope=${scope ?? ''}&state=${state ?? ''}&code_challenge=${codeChallenge ?? ''}&code_challenge_method=${codeChallengeMethod ?? ''}&response_mode=${responseMode ?? ''}&nonce=${nonce ?? ''}&prompt=${prompt ?? ''}`;
-    return this.request<any>('get', _url);
+  authorize(responseType: string, clientId: string, redirectUri: string, scope: string | null, state: string | null, codeChallenge: string | null, codeChallengeMethod: string | null, responseMode: string | null, nonce: string | null, prompt: string | null): Observable<void> {
+    const _url = `/connect/authorize?ResponseType=${responseType ?? ''}&ClientId=${clientId ?? ''}&RedirectUri=${redirectUri ?? ''}&Scope=${scope ?? ''}&State=${state ?? ''}&CodeChallenge=${codeChallenge ?? ''}&CodeChallengeMethod=${codeChallengeMethod ?? ''}&ResponseMode=${responseMode ?? ''}&Nonce=${nonce ?? ''}&Prompt=${prompt ?? ''}`;
+    return this.request<void>('get', _url);
   }
   /**
-   * Token endpoint (OAuth 2.0 / OIDC)
-   * @param data any
+   * token
+   * @param data TokenRequestDto
    */
-  token(data: any): Observable<TokenResponseDto> {
+  token(data: TokenRequestDto): Observable<void> {
     const _url = `/connect/token`;
-    return this.request<TokenResponseDto>('post', _url, data);
+    return this.request<void>('post', _url, data);
   }
   /**
-   * Device authorization endpoint (RFC 8628)
-   * @param data any
+   * deviceAuthorization
+   * @param data DeviceAuthorizationRequestDto
    */
-  deviceAuthorization(data: any): Observable<DeviceAuthorizationResponseDto> {
+  deviceAuthorization(data: DeviceAuthorizationRequestDto): Observable<void> {
     const _url = `/connect/device`;
-    return this.request<DeviceAuthorizationResponseDto>('post', _url, data);
+    return this.request<void>('post', _url, data);
   }
   /**
-   * Token introspection endpoint (RFC 7662)
-   * @param data any
+   * introspect
+   * @param data IntrospectRequestDto
    */
-  introspect(data: any): Observable<IntrospectResponseDto> {
+  introspect(data: IntrospectRequestDto): Observable<void> {
     const _url = `/connect/introspect`;
-    return this.request<IntrospectResponseDto>('post', _url, data);
+    return this.request<void>('post', _url, data);
   }
   /**
-   * Token revocation endpoint (RFC 7009)
-   * @param data any
+   * revoke
+   * @param data RevokeRequestDto
    */
-  revoke(data: any): Observable<any> {
+  revoke(data: RevokeRequestDto): Observable<void> {
     const _url = `/connect/revoke`;
-    return this.request<any>('post', _url, data);
+    return this.request<void>('post', _url, data);
   }
   /**
-   * Logout endpoint (OIDC)
-   * @param idTokenHint ID token hint
-   * @param postLogoutRedirectUri Post logout redirect URI
-   * @param state State parameter
+   * logout
+   * @param data LogoutRequestDto
    */
-  logout(idTokenHint: string | null, postLogoutRedirectUri: string | null, state: string | null): Observable<any> {
-    const _url = `/connect/logout?id_token_hint=${idTokenHint ?? ''}&post_logout_redirect_uri=${postLogoutRedirectUri ?? ''}&state=${state ?? ''}`;
-    return this.request<any>('get', _url);
+  logout(data: LogoutRequestDto): Observable<void> {
+    const _url = `/connect/logout`;
+    return this.request<void>('get', _url, data);
   }
   /**
-   * UserInfo endpoint (OIDC)
+   * userInfo
    */
-  userInfo(): Observable<UserInfoDto> {
+  userInfo(): Observable<void> {
     const _url = `/connect/userinfo`;
-    return this.request<UserInfoDto>('get', _url);
+    return this.request<void>('get', _url);
   }
 }

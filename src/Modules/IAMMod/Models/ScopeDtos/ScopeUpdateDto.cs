@@ -5,10 +5,10 @@ namespace IAMMod.Models.ScopeDtos;
 /// </summary>
 public class ScopeUpdateDto
 {
-    [MaxLength(256)]
+    [StringLength(256)]
     public string? DisplayName { get; set; }
 
-    [MaxLength(500)]
+    [StringLength(500)]
     public string? Description { get; set; }
 
     public bool? Required { get; set; }

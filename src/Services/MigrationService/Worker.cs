@@ -1,48 +1,39 @@
-using Microsoft.EntityFrameworkCore;
+using EntityFramework.AppDbFactory;
+using EntityFramework.AppDbContext;
+using IAMMod.Services;
 using System.Diagnostics;
 
 namespace MigrationService;
 
-public class Worker(
-    IServiceProvider serviceProvider,
+public sealed class Worker(
+    AppDbFactory dbFactory,
+    InitHostService seedService,
     IHostApplicationLifetime hostApplicationLifetime,
-    ILogger<Worker> logger
-) : BackgroundService
+    ILogger<Worker> logger) : BackgroundService
 {
-    private readonly ILogger<Worker> _logger = logger;
     public const string ActivitySourceName = "Migrations";
-    private static readonly ActivitySource _activitySource = new(ActivitySourceName);
+    private static readonly ActivitySource ActivitySource = new(ActivitySourceName);
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        using var activity = _activitySource.StartActivity(
-            "Migrating database",
-            ActivityKind.Client
-        );
+        using var activity = ActivitySource.StartActivity("Migrating database", ActivityKind.Client);
         try
         {
-            using var scope = serviceProvider.CreateScope();
-            _logger.LogInformation("migrations {db}", nameof(DefaultDbContext));
-            var dbContext = scope.ServiceProvider.GetRequiredService<DefaultDbContext>();
-            await RunMigrationAsync(dbContext, cancellationToken);
+            await using var dbContext = dbFactory.CreateDbContext();
+            logger.LogInformation("Migrating database with {ContextType}", nameof(DefaultDbContext));
+            await dbContext.MigrateAsync(cancellationToken);
+            await seedService.SeedAsync(dbContext, cancellationToken);
+            logger.LogInformation("Database migration completed.");
         }
-        catch (Exception ex)
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
         {
-            activity?.AddException(ex);
+            activity?.AddException(exception);
+            logger.LogError(exception, "Database migration failed.");
+            Environment.ExitCode = 1;
         }
         finally
         {
             hostApplicationLifetime.StopApplication();
         }
-    }
-
-    private static async Task RunMigrationAsync<T>(T dbContext, CancellationToken cancellationToken)
-        where T : DbContext
-    {
-        var strategy = dbContext.Database.CreateExecutionStrategy();
-        await strategy.ExecuteAsync(async () =>
-        {
-            await dbContext.Database.MigrateAsync(cancellationToken);
-        });
     }
 }

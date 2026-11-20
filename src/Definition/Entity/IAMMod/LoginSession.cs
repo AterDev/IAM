@@ -13,25 +13,25 @@ public class LoginSession : EntityBase
     /// <summary>
     /// Session ID
     /// </summary>
-    [MaxLength(256)]
-    public required string SessionId { get; set; }
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(256)")]
+    public string SessionId { get; set; }
 
     /// <summary>
     /// IP address
     /// </summary>
-    [MaxLength(50)]
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(50)")]
     public string? IpAddress { get; set; }
 
     /// <summary>
     /// User agent
     /// </summary>
-    [MaxLength(500)]
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(500)")]
     public string? UserAgent { get; set; }
 
     /// <summary>
     /// Device info
     /// </summary>
-    [MaxLength(500)]
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(500)")]
     public string? DeviceInfo { get; set; }
 
     /// <summary>

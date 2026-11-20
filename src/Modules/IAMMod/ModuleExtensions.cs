@@ -19,8 +19,6 @@ using System.ComponentModel;
 using System.Net;
 using SysClaimTypes = System.Security.Claims.ClaimTypes;
 using System.Text.Encodings.Web;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Text.Unicode;
 using System.Threading.RateLimiting;
 
@@ -37,14 +35,12 @@ public static class ModuleExtensions
     {
         builder.Services.AddScoped<OAuthService>();
         builder.Services.AddScoped<PermissionManager>();
-        builder.Services.AddHostedService<InitHostService>();
         builder.AddModServices();
         return builder;
     }
 
     private static IHostApplicationBuilder AddModServices(this IHostApplicationBuilder builder)
     {
-        builder.Services.AddSwagger();
         builder.Services.Configure<RiskControlOption>(builder.Configuration.GetSection(RiskControlOption.ConfigPath));
 
         builder.Services.AddScoped<RiskControlService>();
@@ -52,7 +48,7 @@ public static class ModuleExtensions
         builder.Services.AddScoped<MfaTotpService>();
         builder.Services.AddCors(options =>
         {
-            var origins = builder.Configuration.GetSection("Cors").GetValue<string[]>("AllowedOrigins") ?? [];
+            var origins = builder.Configuration.GetSection("Cors").GetSection("AllowedOrigins").Get<string[]>() ?? [];
             var allowWildcardSubdomains = builder.Configuration.GetSection("Cors").GetValue<bool>("AllowedSubdomains");
 
             options.AddPolicy(AppConst.Default, policy =>
@@ -117,19 +113,6 @@ public static class ModuleExtensions
             });
         });
 
-        builder.Services.AddDistributedMemoryCache();
-        builder.Services.AddSession(options =>
-        {
-            options.IdleTimeout = TimeSpan.FromMinutes(30);
-            options.Cookie.HttpOnly = true;
-            options.Cookie.IsEssential = true;
-            options.Cookie.SameSite = SameSiteMode.Lax;
-            options.Cookie.SecurePolicy = builder.Environment.IsProduction()
-                ? CookieSecurePolicy.Always
-                : CookieSecurePolicy.SameAsRequest;
-        });
-
-
         builder.Services.AddAuthentication(options =>
         {
             // 对于 API 默认使用 JWT
@@ -184,15 +167,6 @@ public static class ModuleExtensions
             });
         builder.Services.AddLocalizer();
         builder.Services.AddThirdAuthentication(builder.Configuration);
-        builder.Services.AddControllers()
-            .AddJsonOptions(options =>
-            {
-                options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-                options.JsonSerializerOptions.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
-                options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
-            });
-        // Add Razor Pages for OAuth UI (login, consent, logout)
-        builder.Services.AddRazorPages();
         builder.Services.AddSingleton<SigningKeyResolver>();
         builder.Services.AddSingleton<IConfigureOptions<JwtBearerOptions>>(sp =>
             new ConfigureNamedOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
@@ -247,27 +221,16 @@ public static class ModuleExtensions
                             context.Fail("session_revoked");
                         }
                     },
-                    OnChallenge = async context =>
+                    OnChallenge = context =>
                     {
                         if (!string.Equals(context.AuthenticateFailure?.Message, "session_revoked", StringComparison.Ordinal))
                         {
-                            return;
+                            return Task.CompletedTask;
                         }
 
                         context.HandleResponse();
                         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                        context.Response.ContentType = "application/json";
-                        await context.Response.WriteAsync(
-                            JsonSerializer.Serialize(
-                                new
-                                {
-                                    title = "Unauthorized",
-                                    detail = "session_revoked",
-                                    status = StatusCodes.Status401Unauthorized,
-                                    traceId = context.HttpContext.TraceIdentifier,
-                                }
-                            )
-                        );
+                        return Task.CompletedTask;
                     }
                 };
             })
@@ -278,7 +241,6 @@ public static class ModuleExtensions
     public static WebApplication UseIAMModServices(this WebApplication app)
     {
         app.UseForwardedHeaders();
-        app.UseSession();
         app.UseRouting();
 
         if (app.Environment.IsProduction())
@@ -292,12 +254,9 @@ public static class ModuleExtensions
         app.UseStaticFiles();
         app.UseRequestLocalization();
         app.UseMiddleware<GlobalExceptionMiddleware>();
-        app.MapSwagger();
         app.UseAuthentication();
         app.UseAuthorization();
         app.MapDefaultEndpoints();
-        app.MapControllers();
-        app.MapRazorPages();
         app.MapFallbackToFile("index.html");
         return app;
     }

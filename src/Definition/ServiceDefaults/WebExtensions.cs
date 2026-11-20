@@ -2,9 +2,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi;
 using Perigon.AspNetCore.Converters;
 using Perigon.AspNetCore.Utils;
 using ServiceDefaults.Middleware;
@@ -24,12 +22,11 @@ public static class WebExtensions
     public static IServiceCollection AddMiddlewareServices(this WebApplicationBuilder builder)
     {
         builder.Services.ConfigureWebMiddleware(builder.Configuration);
-        builder.Services.AddControllers()
-            .AddJsonOptions(options =>
+        builder.Services.ConfigureHttpJsonOptions(options =>
             {
-                options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-                options.JsonSerializerOptions.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
-                options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
+                options.SerializerOptions.TypeInfoResolverChain.Add(MiddlewareJsonContext.Default);
+                options.SerializerOptions.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
+                options.SerializerOptions.Converters.Add(new DateOnlyJsonConverter());
             });
         return builder.Services;
     }
@@ -53,8 +50,6 @@ public static class WebExtensions
         {
             options.AddPolicy("openapi", policy => policy.Expire(TimeSpan.FromMinutes(10)));
         });
-
-        services.AddSwagger();
 
         services.AddLocalizer();
         return services;
@@ -83,77 +78,12 @@ public static class WebExtensions
         app.UseStaticFiles();
         app.UseRequestLocalization();
         app.UseOutputCache();
-        app.MapSwagger().CacheOutput("openapi");
-
-        //app.UseMiddleware<JwtMiddleware>();
 
         app.UseMiddleware<GlobalExceptionMiddleware>();
         app.UseAuthentication();
         app.UseAuthorization();
-        app.MapControllers();
         app.MapFallbackToFile("index.html");
         return app;
-    }
-
-    public static IServiceCollection AddSwagger(this IServiceCollection services)
-    {
-        services.AddSwaggerGen(c =>
-        {
-            c.AddSecurityDefinition(
-                "Bearer",
-                new OpenApiSecurityScheme
-                {
-                    In = ParameterLocation.Header,
-                    Description = "Please enter a valid token",
-                    Name = "Authorization",
-                    Type = SecuritySchemeType.Http,
-                    BearerFormat = "JWT",
-                    Scheme = "Bearer",
-                }
-            );
-            // Microsoft.OpenApi 2.0: requirement uses OpenApiSecuritySchemeReference keys
-            c.AddSecurityRequirement(_ => new OpenApiSecurityRequirement
-            {
-                { new OpenApiSecuritySchemeReference("Bearer"), new List<string>() },
-            });
-
-            c.SwaggerDoc(
-                "v1",
-                new OpenApiInfo
-                {
-                    Title = AppDomain.CurrentDomain.FriendlyName,
-                    Description =
-                        "Admin API 文档. 更新时间:" + DateTime.Now.ToString("yyyy-MM-dd H:mm:ss"),
-                    Version = "v1",
-                }
-            );
-
-            var xmlFiles = Directory.GetFiles(
-                AppContext.BaseDirectory,
-                "*.xml",
-                SearchOption.TopDirectoryOnly
-            );
-            foreach (var item in xmlFiles)
-            {
-                try
-                {
-                    c.IncludeXmlComments(item, includeControllerXmlComments: true);
-                }
-                catch (Exception) { }
-            }
-            c.SupportNonNullableReferenceTypes();
-            c.DescribeAllParametersInCamelCase();
-            c.CustomOperationIds(
-                (z) =>
-                {
-                    var descriptor = (ControllerActionDescriptor)z.ActionDescriptor;
-                    return $"{descriptor.ControllerName}_{descriptor.ActionName}";
-                }
-            );
-            c.CustomSchemaIds(type => type.FullName ?? type.Name);
-            c.SchemaFilter<SwaggerSchemaFilter>();
-        });
-        return services;
     }
 
     /// <summary>
@@ -256,7 +186,7 @@ public static class WebExtensions
             // 对于 API 默认使用 JWT
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            // 但对于 Razor Pages 使用 Cookie
+            // 但浏览器登录使用 Cookie
             options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
         })
         .AddJwtBearer(options =>
@@ -375,9 +305,9 @@ public static class WebExtensions
     {
         var section = configuration.GetSection("Cors");
         //get origins array
-        var origins = section?.GetValue<string[]>("AllowedOrigins") ?? [];
+        var origins = section.GetSection("AllowedOrigins").Get<string[]>() ?? [];
 
-        var allowedSubdomains = section?.GetValue<bool>("AllowedSubdomains") ?? false;
+        var allowedSubdomains = section.GetValue<bool>("AllowedSubdomains");
 
         services.AddCors(options =>
         {

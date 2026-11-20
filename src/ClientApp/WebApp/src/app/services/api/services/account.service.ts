@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { RegisterRequestDto } from '../models/iammod/register-request-dto.model';
 import { UserDetailDto } from '../models/iammod/user-detail-dto.model';
 import { ForgotPasswordRequestDto } from '../models/iammod/forgot-password-request-dto.model';
+import { ApiMessageDto } from '../models/api-service/api-message-dto.model';
 import { ResetPasswordRequestDto } from '../models/iammod/reset-password-request-dto.model';
 import { ChangePasswordRequestDto } from '../models/iammod/change-password-request-dto.model';
 import { MfaStatusDto } from '../models/iammod/mfa-status-dto.model';
@@ -13,7 +14,7 @@ import { MfaRecoveryCodesResponseDto } from '../models/iammod/mfa-recovery-codes
 import { DisableMfaRequestDto } from '../models/iammod/disable-mfa-request-dto.model';
 import { RegenerateRecoveryCodesRequestDto } from '../models/iammod/regenerate-recovery-codes-request-dto.model';
 /**
- * Self-service account endpoints for public authentication flows.
+ *
  */
 @Injectable({ providedIn: 'root' })
 export class AccountService extends BaseService {
@@ -29,25 +30,25 @@ export class AccountService extends BaseService {
    * forgotPassword
    * @param data ForgotPasswordRequestDto
    */
-  forgotPassword(data: ForgotPasswordRequestDto): Observable<any> {
+  forgotPassword(data: ForgotPasswordRequestDto): Observable<ApiMessageDto> {
     const _url = `/api/Account/forgot-password`;
-    return this.request<any>('post', _url, data);
+    return this.request<ApiMessageDto>('post', _url, data);
   }
   /**
    * resetPassword
    * @param data ResetPasswordRequestDto
    */
-  resetPassword(data: ResetPasswordRequestDto): Observable<any> {
+  resetPassword(data: ResetPasswordRequestDto): Observable<ApiMessageDto> {
     const _url = `/api/Account/reset-password`;
-    return this.request<any>('post', _url, data);
+    return this.request<ApiMessageDto>('post', _url, data);
   }
   /**
    * changePassword
    * @param data ChangePasswordRequestDto
    */
-  changePassword(data: ChangePasswordRequestDto): Observable<any> {
+  changePassword(data: ChangePasswordRequestDto): Observable<ApiMessageDto> {
     const _url = `/api/Account/change-password`;
-    return this.request<any>('post', _url, data);
+    return this.request<ApiMessageDto>('post', _url, data);
   }
   /**
    * getMfaStatus
@@ -75,9 +76,9 @@ export class AccountService extends BaseService {
    * disableMfa
    * @param data DisableMfaRequestDto
    */
-  disableMfa(data: DisableMfaRequestDto): Observable<any> {
+  disableMfa(data: DisableMfaRequestDto): Observable<ApiMessageDto> {
     const _url = `/api/Account/mfa/disable`;
-    return this.request<any>('post', _url, data);
+    return this.request<ApiMessageDto>('post', _url, data);
   }
   /**
    * regenerateRecoveryCodes

@@ -18,4 +18,17 @@ public class PermissionTreeNodeDto
     public string? OwnedClientCode { get; set; }
     public bool Selected { get; set; }
     public List<PermissionTreeNodeDto> Children { get; set; } = [];
+
+    public static PermissionTreeNodeDto FromEntity(Permission permission) => new()
+    {
+        Id = permission.Id,
+        Code = permission.Code,
+        Name = permission.Name,
+        Description = permission.Description,
+        Type = permission.Type,
+        ParentId = permission.ParentId,
+        Path = permission.Path,
+        OwnedClientId = permission.OwnedClientId,
+        OwnedClientCode = permission.OwnedClient != null ? permission.OwnedClient.ClientId : null,
+    };
 }

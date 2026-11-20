@@ -5,11 +5,11 @@ namespace IAMMod.Models.UserDtos;
 /// </summary>
 public class UserUpdateDto
 {
-    [MaxLength(256)]
+    [StringLength(256)]
     [EmailAddress]
     public string? Email { get; set; }
 
-    [MaxLength(50)]
+    [StringLength(50)]
     [Phone]
     public string? PhoneNumber { get; set; }
 

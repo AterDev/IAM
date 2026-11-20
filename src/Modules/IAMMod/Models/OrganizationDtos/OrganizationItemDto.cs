@@ -12,4 +12,15 @@ public class OrganizationItemDto
     public int DisplayOrder { get; set; }
     public string? Description { get; set; }
     public DateTimeOffset CreatedTime { get; set; }
+
+    public static OrganizationItemDto FromEntity(Organization entity) => new()
+    {
+        Id = entity.Id,
+        Name = entity.Name,
+        ParentId = entity.ParentId,
+        Level = entity.Level,
+        DisplayOrder = entity.DisplayOrder,
+        Description = entity.Description,
+        CreatedTime = entity.CreatedTime,
+    };
 }

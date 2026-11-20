@@ -5,19 +5,19 @@ import { PageList } from '../models/perigon/page-list.model';
 import { UserEntitlementDefinitionItemDto } from '../models/user-center-mod/user-entitlement-definition-item-dto.model';
 import { UserEntitlementDefinitionUpsertDto } from '../models/user-center-mod/user-entitlement-definition-upsert-dto.model';
 /**
- * Administrator API for entitlement definitions.
+ *
  */
 @Injectable({ providedIn: 'root' })
 export class UserEntitlementDefinitionsService extends BaseService {
   /**
    * getPage
    * @param keyword string
-   * @param pageIndex number
-   * @param pageSize number
-   * @param orderBy Record<string, boolean>
+   * @param pageIndex any
+   * @param pageSize any
+   * @param orderBy string
    */
-  getPage(keyword: string | null, pageIndex: number | null, pageSize: number | null, orderBy: Record<string, boolean> | null): Observable<PageList<UserEntitlementDefinitionItemDto>> {
-    const _url = `/api/UserEntitlementDefinitions?keyword=${keyword ?? ''}&pageIndex=${pageIndex ?? ''}&pageSize=${pageSize ?? ''}&orderBy=${orderBy ?? ''}`;
+  getPage(keyword: string | null, pageIndex: any | null, pageSize: any | null, orderBy: string | null): Observable<PageList<UserEntitlementDefinitionItemDto>> {
+    const _url = `/api/UserEntitlementDefinitions?Keyword=${keyword ?? ''}&pageIndex=${pageIndex ?? ''}&pageSize=${pageSize ?? ''}&orderBy=${orderBy ?? ''}`;
     return this.request<PageList<UserEntitlementDefinitionItemDto>>('get', _url);
   }
   /**
@@ -49,8 +49,8 @@ export class UserEntitlementDefinitionsService extends BaseService {
    * delete
    * @param id string
    */
-  delete(id: string): Observable<any> {
+  delete(id: string): Observable<boolean> {
     const _url = `/api/UserEntitlementDefinitions/${id}`;
-    return this.request<any>('delete', _url);
+    return this.request<boolean>('delete', _url);
   }
 }

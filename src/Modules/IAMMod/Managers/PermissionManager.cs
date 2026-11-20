@@ -1,8 +1,10 @@
+using System.Linq.Expressions;
+using Perigon.PostgreSQL;
 using IAMMod.Models.PermissionDtos;
 using IAMMod.Models.RoleDtos;
 using Microsoft.AspNetCore.Http;
 using Share.Exceptions;
-using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace IAMMod.Managers;
 
@@ -10,7 +12,7 @@ namespace IAMMod.Managers;
 /// Manager for the unified permission model.
 /// </summary>
 public class PermissionManager(
-    TenantDbFactory dbContextFactory,
+    AppDbFactory dbContextFactory,
     IUserContext userContext,
     ILogger<PermissionManager> logger,
     AuditLogManager auditLogManager)
@@ -29,26 +31,9 @@ public class PermissionManager(
     public async Task<PageList<PermissionItemDto>> GetPageAsync(PermissionFilterDto filter)
     {
         var clientId = await ResolveClientIdAsync(filter.ClientId, filter.ClientCode);
-        var query = BuildFilteredPermissionQuery(filter, clientId)
-            .Select(permission => new PermissionItemDto
-            {
-                Id = permission.Id,
-                Code = permission.Code,
-                Name = permission.Name,
-                Description = permission.Description,
-                Type = permission.Type,
-                ParentId = permission.ParentId,
-                ParentCode = permission.Parent != null ? permission.Parent.Code : null,
-                Path = permission.Path,
-                OwnedClientId = permission.OwnedClientId,
-                OwnedClientCode = permission.OwnedClient != null ? permission.OwnedClient.ClientId : null,
-                CreatedTime = permission.CreatedTime,
-                UpdatedTime = permission.UpdatedTime,
-            });
+        var query = await BuildFilteredPermissionQueryAsync(filter, clientId);
 
-        query = filter.OrderBy != null && filter.OrderBy.Count > 0
-            ? query.OrderBy(filter.OrderBy)
-            : query.OrderBy(permission => permission.Code);
+        query = OrderPermissions(query, filter.OrderBy);
 
         var count = await query.CountAsync();
         var data = await query
@@ -59,7 +44,7 @@ public class PermissionManager(
         return new PageList<PermissionItemDto>
         {
             Count = count,
-            Data = data,
+            Data = data.Select(PermissionItemDto.FromEntity).ToList(),
             PageIndex = filter.PageIndex,
         };
     }
@@ -69,27 +54,12 @@ public class PermissionManager(
     /// </summary>
     public async Task<PermissionDetailDto?> GetDetailAsync(Guid id)
     {
-        return await _dbContext.Permissions
-            .AsNoTracking()
+        var permission = await _dbContext.Permissions
             .Include(permission => permission.Parent)
             .Include(permission => permission.OwnedClient)
             .Where(permission => permission.Id == id)
-            .Select(permission => new PermissionDetailDto
-            {
-                Id = permission.Id,
-                Code = permission.Code,
-                Name = permission.Name,
-                Description = permission.Description,
-                Type = permission.Type,
-                ParentId = permission.ParentId,
-                ParentCode = permission.Parent != null ? permission.Parent.Code : null,
-                Path = permission.Path,
-                OwnedClientId = permission.OwnedClientId,
-                OwnedClientCode = permission.OwnedClient != null ? permission.OwnedClient.ClientId : null,
-                CreatedTime = permission.CreatedTime,
-                UpdatedTime = permission.UpdatedTime,
-            })
             .FirstOrDefaultAsync();
+        return permission is null ? null : PermissionDetailDto.FromEntity(permission);
     }
 
     /// <summary>
@@ -98,23 +68,11 @@ public class PermissionManager(
     public async Task<List<PermissionTreeNodeDto>> GetTreeAsync(PermissionFilterDto filter)
     {
         var clientId = await ResolveClientIdAsync(filter.ClientId, filter.ClientCode);
-        var items = await BuildFilteredPermissionQuery(filter, clientId)
+        var items = await (await BuildFilteredPermissionQueryAsync(filter, clientId))
             .OrderBy(permission => permission.Code)
-            .Select(permission => new PermissionTreeNodeDto
-            {
-                Id = permission.Id,
-                Code = permission.Code,
-                Name = permission.Name,
-                Description = permission.Description,
-                Type = permission.Type,
-                ParentId = permission.ParentId,
-                Path = permission.Path,
-                OwnedClientId = permission.OwnedClientId,
-                OwnedClientCode = permission.OwnedClient != null ? permission.OwnedClient.ClientId : null,
-            })
             .ToListAsync();
 
-        return BuildTree(items, []);
+        return BuildTree(items.Select(PermissionTreeNodeDto.FromEntity).ToList(), []);
     }
 
     /// <summary>
@@ -122,29 +80,14 @@ public class PermissionManager(
     /// </summary>
     public async Task<List<PermissionTreeNodeDto>> GetRolePermissionTreeAsync(Guid roleId, PermissionFilterDto filter)
     {
-        var selectedCodes = await _dbContext.RolePermissions
-            .Where(item => item.RoleId == roleId)
-            .Select(item => item.Permission.Code)
-            .ToListAsync();
+        var selectedCodes = await GetRolePermissionCodesAsync(roleId);
 
         var clientId = await ResolveClientIdAsync(filter.ClientId, filter.ClientCode);
-        var items = await BuildFilteredPermissionQuery(filter, clientId)
+        var items = await (await BuildFilteredPermissionQueryAsync(filter, clientId))
             .OrderBy(permission => permission.Code)
-            .Select(permission => new PermissionTreeNodeDto
-            {
-                Id = permission.Id,
-                Code = permission.Code,
-                Name = permission.Name,
-                Description = permission.Description,
-                Type = permission.Type,
-                ParentId = permission.ParentId,
-                Path = permission.Path,
-                OwnedClientId = permission.OwnedClientId,
-                OwnedClientCode = permission.OwnedClient != null ? permission.OwnedClient.ClientId : null,
-            })
             .ToListAsync();
 
-        return BuildTree(items, selectedCodes);
+        return BuildTree(items.Select(PermissionTreeNodeDto.FromEntity).ToList(), selectedCodes);
     }
 
     /// <summary>
@@ -154,28 +97,13 @@ public class PermissionManager(
     {
         filter.ClientId = clientId;
 
-        var selectedCodes = await _dbContext.ClientPermissions
-            .Where(item => item.ClientId == clientId)
-            .Select(item => item.Permission.Code)
-            .ToListAsync();
+        var selectedCodes = await GetClientPermissionCodesAsync(clientId);
 
-        var items = await BuildFilteredPermissionQuery(filter, clientId)
+        var items = await (await BuildFilteredPermissionQueryAsync(filter, clientId))
             .OrderBy(permission => permission.Code)
-            .Select(permission => new PermissionTreeNodeDto
-            {
-                Id = permission.Id,
-                Code = permission.Code,
-                Name = permission.Name,
-                Description = permission.Description,
-                Type = permission.Type,
-                ParentId = permission.ParentId,
-                Path = permission.Path,
-                OwnedClientId = permission.OwnedClientId,
-                OwnedClientCode = permission.OwnedClient != null ? permission.OwnedClient.ClientId : null,
-            })
             .ToListAsync();
 
-        return BuildTree(items, selectedCodes);
+        return BuildTree(items.Select(PermissionTreeNodeDto.FromEntity).ToList(), selectedCodes);
     }
 
     /// <summary>
@@ -187,34 +115,24 @@ public class PermissionManager(
             .Where(item => item.UserId == userId)
             .Select(item => item.RoleId)
             .Distinct()
-            .ToListAsync();
+            .ToScalarListAsync();
 
         if (roleIds.Count == 0)
         {
             return [];
         }
 
-        var items = await _dbContext.RolePermissions
-            .AsNoTracking()
-            .Where(item => roleIds.Contains(item.RoleId))
-            .Select(item => new
-            {
-                item.Permission.Code,
-                item.Permission.Type,
-                OwnedClientCode = item.Permission.OwnedClient != null ? item.Permission.OwnedClient.ClientId : null,
-            })
-            .Distinct()
-            .OrderBy(item => item.OwnedClientCode)
-            .ThenBy(item => item.Type)
-            .ThenBy(item => item.Code)
-            .ToListAsync();
-
+        var permissionIds = await _dbContext.RolePermissions
+            .Where(item => Enumerable.Contains(roleIds, item.RoleId))
+            .Select(item => item.PermissionId).Distinct().ToScalarListAsync();
+        var items = await _dbContext.Permissions.Include(item => item.OwnedClient)
+            .Where(item => Enumerable.Contains(permissionIds, item.Id)).ToListAsync();
         return items.Select(item => new UserPermissionDto
         {
             Code = item.Code,
             Type = item.Type,
-            OwnedClientCode = item.OwnedClientCode,
-        }).ToList();
+            OwnedClientCode = item.OwnedClient?.ClientId,
+        }).OrderBy(item => item.OwnedClientCode).ThenBy(item => item.Type).ThenBy(item => item.Code).ToList();
     }
 
     /// <summary>
@@ -230,16 +148,15 @@ public class PermissionManager(
             Name = dto.Name.Trim(),
         };
         ApplyPermissionValues(entity, dto);
-        entity.TenantId = GetTenantId();
 
-        await _dbContext.Permissions.AddAsync(entity);
-
-        if (dto.OwnedClientId.HasValue)
+        await _dbContext.TransactionAsync(async ct =>
         {
-            await EnsureClientPermissionAsync(dto.OwnedClientId.Value, entity);
-        }
-
-        await _dbContext.SaveChangesAsync();
+            await _dbContext.Permissions.InsertAsync(entity, ct);
+            if (dto.OwnedClientId.HasValue)
+            {
+                await EnsureClientPermissionAsync(dto.OwnedClientId.Value, entity);
+            }
+        });
         return await GetDetailAsync(entity.Id);
     }
 
@@ -249,8 +166,7 @@ public class PermissionManager(
     public async Task<PermissionDetailDto?> UpdateAsync(Guid id, PermissionUpsertDto dto)
     {
         var entity = await _dbContext.Permissions
-            .Include(permission => permission.ClientPermissions)
-            .FirstOrDefaultAsync(permission => permission.Id == id);
+            .Where(permission => permission.Id == id).FirstOrDefaultAsync();
 
         if (entity == null)
         {
@@ -263,22 +179,33 @@ public class PermissionManager(
         ApplyPermissionValues(entity, dto);
         entity.UpdatedTime = DateTimeOffset.UtcNow;
 
-        if (oldOwnedClientId != dto.OwnedClientId)
+        await _dbContext.TransactionAsync(async ct =>
         {
-            if (oldOwnedClientId.HasValue)
-            {
-                await _dbContext.ClientPermissions
-                    .Where(item => item.ClientId == oldOwnedClientId.Value && item.PermissionId == entity.Id)
-                    .ExecuteDeleteAsync();
-            }
+            await _dbContext.Permissions.Where(item => item.Id == id).ExecuteUpdateAsync(update => update
+                .Set(item => item.Code, entity.Code)
+                .Set(item => item.Name, entity.Name)
+                .Set(item => item.Type, entity.Type)
+                .Set(item => item.Description, entity.Description)
+                .Set(item => item.ParentId, entity.ParentId)
+                .Set(item => item.Path, entity.Path)
+                .Set(item => item.OwnedClientId, entity.OwnedClientId)
+                .Set(item => item.UpdatedTime, entity.UpdatedTime), cancellationToken: ct);
 
-            if (dto.OwnedClientId.HasValue)
+            if (oldOwnedClientId != dto.OwnedClientId)
             {
-                await EnsureClientPermissionAsync(dto.OwnedClientId.Value, entity);
-            }
-        }
+                if (oldOwnedClientId.HasValue)
+                {
+                    await _dbContext.ClientPermissions
+                        .Where(item => item.ClientId == oldOwnedClientId && item.PermissionId == entity.Id)
+                        .ExecuteDeleteAsync();
+                }
 
-        await _dbContext.SaveChangesAsync();
+                if (dto.OwnedClientId.HasValue)
+                {
+                    await EnsureClientPermissionAsync(dto.OwnedClientId.Value, entity);
+                }
+            }
+        });
         return await GetDetailAsync(id);
     }
 
@@ -294,15 +221,15 @@ public class PermissionManager(
         }
 
         await _dbContext.RolePermissions
-            .Where(item => permissionIds.Contains(item.PermissionId))
+            .Where(item => Enumerable.Contains(permissionIds, item.PermissionId))
             .ExecuteDeleteAsync();
 
         await _dbContext.ClientPermissions
-            .Where(item => permissionIds.Contains(item.PermissionId))
+            .Where(item => Enumerable.Contains(permissionIds, item.PermissionId))
             .ExecuteDeleteAsync();
 
         await _dbContext.Permissions
-            .Where(item => permissionIds.Contains(item.Id))
+            .Where(item => Enumerable.Contains(permissionIds, item.Id))
             .ExecuteDeleteAsync();
 
         return true;
@@ -317,7 +244,7 @@ public class PermissionManager(
         string? ipAddress = null,
         string? userAgent = null)
     {
-        var role = await _dbContext.Roles.FirstOrDefaultAsync(item => item.Id == roleId);
+        var role = await _dbContext.Roles.Where(item => item.Id == roleId).FirstOrDefaultAsync();
         if (role == null)
         {
             throw new BusinessException("RoleNotFound", StatusCodes.Status404NotFound);
@@ -327,8 +254,7 @@ public class PermissionManager(
         var permissions = permissionCodes.Count == 0
             ? []
             : await _dbContext.Permissions
-                .Where(item => permissionCodes.Contains(item.Code))
-                .Select(item => new { item.Id, item.Code })
+                .Where(item => Enumerable.Contains(permissionCodes, item.Code))
                 .ToListAsync();
 
         if (permissions.Count != permissionCodes.Count)
@@ -336,35 +262,32 @@ public class PermissionManager(
             throw new BusinessException("PermissionNotFound", StatusCodes.Status404NotFound);
         }
 
-        await using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
-        await _dbContext.RolePermissions.Where(item => item.RoleId == roleId).ExecuteDeleteAsync();
-
-        if (permissions.Count > 0)
+        await _dbContext.TransactionAsync(async ct =>
         {
-            var entities = permissions.Select(item => new RolePermission
+            await _dbContext.RolePermissions.Where(item => item.RoleId == roleId).ExecuteDeleteAsync();
+
+            if (permissions.Count > 0)
             {
-                RoleId = roleId,
-                PermissionId = item.Id,
-                TenantId = GetTenantId(),
-            }).ToList();
+                var entities = permissions.Select(item => new RolePermission
+                {
+                    RoleId = roleId,
+                    PermissionId = item.Id,
+                }).ToList();
 
-            await _dbContext.RolePermissions.AddRangeAsync(entities);
-        }
-
-        await _dbContext.SaveChangesAsync();
-        await transaction.CommitAsync();
+                await _dbContext.RolePermissions.BulkInsertAsync(entities.ToArray());
+            }
+        });
 
         await _auditLogManager.AddAuditLogAsync(
             category: "Authorization",
             eventName: "RolePermissionsChanged",
             subjectId: roleId.ToString(),
-            payload: JsonSerializer.Serialize(new
+            payload: new JsonObject
             {
-                role.Name,
-                count = permissionCodes.Count,
-                permissionCodes,
-            }),
+                ["Name"] = role.Name,
+                ["count"] = permissionCodes.Count,
+                ["permissionCodes"] = new JsonArray(permissionCodes.Select(code => (JsonNode?)JsonValue.Create(code)).ToArray()),
+            }.ToJsonString(),
             ipAddress: ipAddress,
             userAgent: userAgent);
 
@@ -376,13 +299,10 @@ public class PermissionManager(
     /// </summary>
     public async Task<List<string>> GetRolePermissionCodesAsync(Guid roleId)
     {
-        var permissionCodes = await _dbContext.RolePermissions
-            .Where(item => item.RoleId == roleId)
-            .Select(item => item.Permission.Code)
-            .OrderBy(item => item)
-            .ToListAsync();
-
-        return permissionCodes;
+        var permissionIds = await _dbContext.RolePermissions.Where(item => item.RoleId == roleId)
+            .Select(item => item.PermissionId).ToScalarListAsync();
+        return await _dbContext.Permissions.Where(item => Enumerable.Contains(permissionIds, item.Id))
+            .OrderBy(item => item.Code).Select(item => item.Code).ToScalarListAsync();
     }
 
     /// <summary>
@@ -390,7 +310,7 @@ public class PermissionManager(
     /// </summary>
     public async Task<bool> AssignClientPermissionsAsync(Guid clientId, IEnumerable<string>? permissionCodes)
     {
-        var client = await _dbContext.Clients.FirstOrDefaultAsync(item => item.Id == clientId);
+        var client = await _dbContext.Clients.Where(item => item.Id == clientId).FirstOrDefaultAsync();
         if (client == null)
         {
             throw new BusinessException(Localizer.ClientNotFound, StatusCodes.Status404NotFound);
@@ -400,8 +320,7 @@ public class PermissionManager(
         var permissions = normalizedPermissionCodes.Count == 0
             ? []
             : await _dbContext.Permissions
-                .Where(item => normalizedPermissionCodes.Contains(item.Code))
-                .Select(item => new { item.Id, item.Code })
+                .Where(item => Enumerable.Contains(normalizedPermissionCodes, item.Code))
                 .ToListAsync();
 
         if (permissions.Count != normalizedPermissionCodes.Count)
@@ -409,24 +328,21 @@ public class PermissionManager(
             throw new BusinessException("PermissionNotFound", StatusCodes.Status404NotFound);
         }
 
-        await using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
-        await _dbContext.ClientPermissions.Where(item => item.ClientId == clientId).ExecuteDeleteAsync();
-
-        if (permissions.Count > 0)
+        await _dbContext.TransactionAsync(async ct =>
         {
-            var entities = permissions.Select(item => new ClientPermission
+            await _dbContext.ClientPermissions.Where(item => item.ClientId == clientId).ExecuteDeleteAsync();
+
+            if (permissions.Count > 0)
             {
-                ClientId = clientId,
-                PermissionId = item.Id,
-                TenantId = GetTenantId(),
-            }).ToList();
+                var entities = permissions.Select(item => new ClientPermission
+                {
+                    ClientId = clientId,
+                    PermissionId = item.Id,
+                }).ToList();
 
-            await _dbContext.ClientPermissions.AddRangeAsync(entities);
-        }
-
-        await _dbContext.SaveChangesAsync();
-        await transaction.CommitAsync();
+                await _dbContext.ClientPermissions.BulkInsertAsync(entities.ToArray());
+            }
+        });
         return true;
     }
 
@@ -435,13 +351,10 @@ public class PermissionManager(
     /// </summary>
     public async Task<List<string>> GetClientPermissionCodesAsync(Guid clientId)
     {
-        var permissionCodes = await _dbContext.ClientPermissions
-            .Where(item => item.ClientId == clientId)
-            .Select(item => item.Permission.Code)
-            .OrderBy(item => item)
-            .ToListAsync();
-
-        return permissionCodes;
+        var permissionIds = await _dbContext.ClientPermissions.Where(item => item.ClientId == clientId)
+            .Select(item => item.PermissionId).ToScalarListAsync();
+        return await _dbContext.Permissions.Where(item => Enumerable.Contains(permissionIds, item.Id))
+            .OrderBy(item => item.Code).Select(item => item.Code).ToScalarListAsync();
     }
 
     /// <summary>
@@ -453,7 +366,7 @@ public class PermissionManager(
         string? ipAddress = null,
         string? userAgent = null)
     {
-        var client = await _dbContext.Clients.FirstOrDefaultAsync(item => item.Id == clientId);
+        var client = await _dbContext.Clients.Where(item => item.Id == clientId).FirstOrDefaultAsync();
         if (client == null)
         {
             throw new BusinessException(Localizer.ClientNotFound, StatusCodes.Status404NotFound);
@@ -461,97 +374,93 @@ public class PermissionManager(
 
         ValidateSyncTree(dto.Permissions);
 
-        await using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
-        var ownedPermissionIds = await _dbContext.Permissions
-            .Where(item => item.OwnedClientId == clientId)
-            .Where(item => item.Type == PermissionType.Menu || item.Type == PermissionType.Button)
-            .Select(item => item.Id)
-            .ToListAsync();
-
-        var linkedPermissionIds = await _dbContext.ClientPermissions
-            .Where(item => item.ClientId == clientId)
-            .Where(item => item.Permission.Type == PermissionType.Menu || item.Permission.Type == PermissionType.Button)
-            .Select(item => item.PermissionId)
-            .Distinct()
-            .ToListAsync();
-
-        var scopedPermissionIds = ownedPermissionIds
-            .Concat(linkedPermissionIds)
-            .Distinct()
-            .ToList();
-
-        if (linkedPermissionIds.Count > 0)
+        var createdPermissions = new List<Permission>();
+        await _dbContext.TransactionAsync(async ct =>
         {
-            await _dbContext.ClientPermissions
-                .Where(item => item.ClientId == clientId)
-                .Where(item => linkedPermissionIds.Contains(item.PermissionId))
-                .Where(item => item.Permission.Type == PermissionType.Menu || item.Permission.Type == PermissionType.Button)
-                .ExecuteDeleteAsync();
-        }
-
-        if (scopedPermissionIds.Count > 0)
-        {
-            var orphanPermissionIds = await _dbContext.Permissions
-                .Where(item => scopedPermissionIds.Contains(item.Id))
+            var ownedPermissionIds = await _dbContext.Permissions
+                .Where(item => item.OwnedClientId == clientId)
                 .Where(item => item.Type == PermissionType.Menu || item.Type == PermissionType.Button)
-                .Where(item => !item.ClientPermissions.Any())
                 .Select(item => item.Id)
-                .ToListAsync();
+                .ToScalarListAsync();
 
-            if (orphanPermissionIds.Count > 0)
+            var linkedIds = await _dbContext.ClientPermissions.Where(item => item.ClientId == clientId)
+                .Select(item => item.PermissionId).ToScalarListAsync();
+            var linkedPermissionIds = await _dbContext.Permissions.Where(item => Enumerable.Contains(linkedIds, item.Id))
+                .Where(item => item.Type == PermissionType.Menu || item.Type == PermissionType.Button)
+                .Select(item => item.Id).ToScalarListAsync();
+
+            var scopedPermissionIds = ownedPermissionIds
+                .Concat(linkedPermissionIds)
+                .Distinct()
+                .ToList();
+
+            if (linkedPermissionIds.Count > 0)
             {
-                await _dbContext.RolePermissions
-                    .Where(item => orphanPermissionIds.Contains(item.PermissionId))
+                await _dbContext.ClientPermissions
+                    .Where(item => item.ClientId == clientId)
+                    .Where(item => Enumerable.Contains(linkedPermissionIds, item.PermissionId))
                     .ExecuteDeleteAsync();
+            }
 
-                var deletablePermissionIds = await _dbContext.Permissions
-                    .Where(item => orphanPermissionIds.Contains(item.Id))
-                    .Where(item => item.OwnedClientId == clientId)
+            if (scopedPermissionIds.Count > 0)
+            {
+                var stillLinkedIds = await _dbContext.ClientPermissions
+                    .Where(item => Enumerable.Contains(scopedPermissionIds, item.PermissionId))
+                    .Select(item => item.PermissionId).Distinct().ToScalarListAsync();
+                var orphanPermissionIds = await _dbContext.Permissions
+                    .Where(item => Enumerable.Contains(scopedPermissionIds, item.Id))
+                    .Where(item => item.Type == PermissionType.Menu || item.Type == PermissionType.Button)
+                    .Where(item => !Enumerable.Contains(stillLinkedIds, item.Id))
                     .Select(item => item.Id)
-                    .ToListAsync();
+                    .ToScalarListAsync();
 
-                if (deletablePermissionIds.Count > 0)
+                if (orphanPermissionIds.Count > 0)
                 {
-                    await _dbContext.Permissions
-                        .Where(item => deletablePermissionIds.Contains(item.Id))
+                    await _dbContext.RolePermissions
+                        .Where(item => Enumerable.Contains(orphanPermissionIds, item.PermissionId))
                         .ExecuteDeleteAsync();
+
+                    var deletablePermissionIds = await _dbContext.Permissions
+                        .Where(item => Enumerable.Contains(orphanPermissionIds, item.Id))
+                        .Where(item => item.OwnedClientId == clientId)
+                        .Select(item => item.Id)
+                        .ToScalarListAsync();
+
+                    if (deletablePermissionIds.Count > 0)
+                    {
+                        await _dbContext.Permissions
+                            .Where(item => Enumerable.Contains(deletablePermissionIds, item.Id))
+                            .ExecuteDeleteAsync();
+                    }
                 }
             }
-        }
 
-        if (ownedPermissionIds.Count > 0)
-        {
-            await _dbContext.Permissions
-                .Where(item => ownedPermissionIds.Contains(item.Id))
-                .ExecuteDeleteAsync();
-        }
+            if (ownedPermissionIds.Count > 0)
+            {
+                await _dbContext.Permissions
+                    .Where(item => Enumerable.Contains(ownedPermissionIds, item.Id))
+                    .ExecuteDeleteAsync();
+            }
 
-        var createdPermissions = new List<Permission>();
-        var createdRelations = new List<ClientPermission>();
-        foreach (var node in dto.Permissions.OrderBy(item => item.Code))
-        {
-            await CreateClientPermissionNodeAsync(clientId, node, null, createdPermissions, createdRelations);
-        }
 
-        if (createdPermissions.Count > 0)
-        {
-            await _dbContext.Permissions.AddRangeAsync(createdPermissions);
-            await _dbContext.ClientPermissions.AddRangeAsync(createdRelations);
-        }
+            var createdRelations = new List<ClientPermission>();
+            foreach (var node in dto.Permissions.OrderBy(item => item.Code))
+            {
+                CreateClientPermissionNode(clientId, node, null, createdPermissions, createdRelations);
+            }
 
-        await _dbContext.SaveChangesAsync();
-        await transaction.CommitAsync();
+            if (createdPermissions.Count > 0)
+            {
+                await _dbContext.Permissions.BulkInsertAsync(createdPermissions.ToArray());
+                await _dbContext.ClientPermissions.BulkInsertAsync(createdRelations.ToArray());
+            }
+        });
 
         await _auditLogManager.AddAuditLogAsync(
             category: "Authorization",
             eventName: "ClientMenuPermissionsSynced",
             subjectId: clientId.ToString(),
-            payload: JsonSerializer.Serialize(new
-            {
-                client.ClientId,
-                count = createdPermissions.Count,
-            }),
+            payload: new JsonObject { ["ClientId"] = client.ClientId, ["count"] = createdPermissions.Count }.ToJsonString(),
             ipAddress: ipAddress,
             userAgent: userAgent);
 
@@ -570,27 +479,20 @@ public class PermissionManager(
             return null;
         }
 
-        return await _dbContext.Clients
-            .Where(item => item.ClientId == clientCode)
-            .Select(item => (Guid?)item.Id)
-            .FirstOrDefaultAsync();
+        var client = await _dbContext.Clients.Where(item => item.ClientIdentifier == clientCode).FirstOrDefaultAsync();
+        return client?.Id;
     }
 
-    private IQueryable<Permission> BuildFilteredPermissionQuery(PermissionFilterDto filter, Guid? clientId)
+    private async Task<IQueryable<Permission>> BuildFilteredPermissionQueryAsync(PermissionFilterDto filter, Guid? clientId)
     {
         var query = _dbContext.Permissions
-            .AsNoTracking()
             .Include(permission => permission.Parent)
-            .Include(permission => permission.OwnedClient)
-            .Include(permission => permission.ClientPermissions)
-            .AsQueryable();
+            .Include(permission => permission.OwnedClient);
 
         query = query
             .WhereNotNull(filter.Type, permission => permission.Type == filter.Type)
             .WhereNotNull(filter.ParentId, permission => permission.ParentId == filter.ParentId)
-            .WhereNotNull(
-                filter.OnlyNonBusiness == true,
-                permission => permission.Type == PermissionType.Menu || permission.Type == PermissionType.Button)
+
             .WhereNotNull(
                 filter.Keyword,
                 permission =>
@@ -598,12 +500,47 @@ public class PermissionManager(
                     || permission.Name.Contains(filter.Keyword!)
                     || (permission.Description != null && permission.Description.Contains(filter.Keyword!)));
 
+        if (filter.OnlyNonBusiness == true)
+        {
+            query = query.Where(permission => permission.Type == PermissionType.Menu || permission.Type == PermissionType.Button);
+        }
+
         if (clientId.HasValue)
         {
-            query = query.Where(permission => permission.ClientPermissions.Any(item => item.ClientId == clientId.Value));
+            var linkedIds = await _dbContext.ClientPermissions.Where(item => item.ClientId == clientId)
+                .Select(item => item.PermissionId).ToScalarListAsync();
+            query = query.Where(permission => Enumerable.Contains(linkedIds, permission.Id));
         }
 
         return query;
+    }
+
+    private static IQueryable<Permission> OrderPermissions(IQueryable<Permission> query, Dictionary<string, bool>? orderBy)
+    {
+        IOrderedQueryable<Permission>? ordered = null;
+        foreach (var (field, ascending) in orderBy ?? [])
+        {
+            ordered = field.ToUpperInvariant() switch
+            {
+                "ID" => AddOrder(item => item.Id, ascending),
+                "CODE" => AddOrder(item => item.Code, ascending),
+                "NAME" => AddOrder(item => item.Name, ascending),
+                "DESCRIPTION" => AddOrder(item => item.Description, ascending),
+                "TYPE" => AddOrder(item => item.Type, ascending),
+                "PATH" => AddOrder(item => item.Path, ascending),
+                "PARENTID" => AddOrder(item => item.ParentId, ascending),
+                "OWNEDCLIENTID" => AddOrder(item => item.OwnedClientId, ascending),
+                "CREATEDTIME" => AddOrder(item => item.CreatedTime, ascending),
+                "UPDATEDTIME" => AddOrder(item => item.UpdatedTime, ascending),
+                _ => ordered,
+            };
+        }
+        return ordered ?? query.OrderBy(item => item.Code);
+
+        IOrderedQueryable<Permission> AddOrder<TKey>(Expression<Func<Permission, TKey>> key, bool ascending) =>
+            ordered is null
+                ? (ascending ? query.OrderBy(key) : query.OrderByDescending(key))
+                : (ascending ? ordered.ThenBy(key) : ordered.ThenByDescending(key));
     }
 
     private static List<string> NormalizePermissionCodes(IEnumerable<string>? permissionCodes)
@@ -618,14 +555,14 @@ public class PermissionManager(
 
     private async Task ValidatePermissionUpsertAsync(PermissionUpsertDto dto, Guid? currentId = null)
     {
-        if (await _dbContext.Permissions.AnyAsync(item => item.Code == dto.Code && item.Id != currentId))
+        if (await _dbContext.Permissions.Where(item => item.Code == dto.Code && item.Id != currentId).AnyAsync())
         {
             throw new BusinessException("PermissionCodeExists", StatusCodes.Status400BadRequest);
         }
 
         if (dto.ParentId.HasValue)
         {
-            var parent = await _dbContext.Permissions.FirstOrDefaultAsync(item => item.Id == dto.ParentId.Value);
+            var parent = await _dbContext.Permissions.Where(item => item.Id == dto.ParentId).FirstOrDefaultAsync();
             if (parent == null)
             {
                 throw new BusinessException("PermissionParentNotFound", StatusCodes.Status404NotFound);
@@ -639,7 +576,7 @@ public class PermissionManager(
 
         if (dto.OwnedClientId.HasValue)
         {
-            var clientExists = await _dbContext.Clients.AnyAsync(item => item.Id == dto.OwnedClientId.Value);
+            var clientExists = await _dbContext.Clients.Where(item => item.Id == dto.OwnedClientId).AnyAsync();
             if (!clientExists)
             {
                 throw new BusinessException(Localizer.ClientNotFound, StatusCodes.Status404NotFound);
@@ -660,25 +597,20 @@ public class PermissionManager(
 
     private async Task EnsureClientPermissionAsync(Guid clientId, Permission permission)
     {
-        var exists = permission.ClientPermissions.Any(item => item.ClientId == clientId)
-            || await _dbContext.ClientPermissions.AnyAsync(item => item.ClientId == clientId && item.PermissionId == permission.Id);
-
+        var exists = await _dbContext.ClientPermissions
+            .Where(item => item.ClientId == clientId && item.PermissionId == permission.Id).AnyAsync();
         if (!exists)
         {
-            permission.ClientPermissions.Add(new ClientPermission
+            await _dbContext.ClientPermissions.InsertAsync(new ClientPermission
             {
                 ClientId = clientId,
-                Permission = permission,
-                TenantId = GetTenantId(),
+                PermissionId = permission.Id,
             });
         }
     }
-
     private async Task<List<Guid>> CollectPermissionIdsAsync(Guid rootId)
     {
         var existingIds = await _dbContext.Permissions
-            .AsNoTracking()
-            .Select(item => new { item.Id, item.ParentId })
             .ToListAsync();
 
         if (existingIds.All(item => item.Id != rootId))
@@ -773,7 +705,7 @@ public class PermissionManager(
         }
     }
 
-    private Task CreateClientPermissionNodeAsync(
+    private static void CreateClientPermissionNode(
         Guid clientId,
         PermissionSyncNodeDto node,
         Permission? parent,
@@ -786,30 +718,23 @@ public class PermissionManager(
             Name = node.Name.Trim(),
             Description = node.Description?.Trim(),
             Type = node.Type,
-            Parent = parent,
+            ParentId = parent?.Id,
             Path = node.Path?.Trim(),
             OwnedClientId = clientId,
-            TenantId = GetTenantId(),
         };
 
         createdPermissions.Add(permission);
         createdRelations.Add(new ClientPermission
         {
             ClientId = clientId,
-            Permission = permission,
-            TenantId = GetTenantId(),
+            PermissionId = permission.Id,
         });
 
         foreach (var child in node.Children.OrderBy(item => item.Code))
         {
-            CreateClientPermissionNodeAsync(clientId, child, permission, createdPermissions, createdRelations);
+            CreateClientPermissionNode(clientId, child, permission, createdPermissions, createdRelations);
         }
 
-        return Task.CompletedTask;
     }
 
-    private Guid? GetTenantId()
-    {
-        return _userContext.TenantId == Guid.Empty ? null : _userContext.TenantId;
-    }
 }

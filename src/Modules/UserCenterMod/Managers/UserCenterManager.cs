@@ -10,7 +10,7 @@ namespace UserCenterMod.Managers;
 /// User center business operations.
 /// </summary>
 public class UserCenterManager(
-    TenantDbFactory dbContextFactory,
+    AppDbFactory dbContextFactory,
     IUserContext userContext,
     ILogger<UserCenterManager> logger,
     CacheService cacheService
@@ -35,8 +35,8 @@ public class UserCenterManager(
 
         var normalizedEmail = dto.Email.Trim().ToUpperInvariant();
         var user = await _dbContext.Users
-            .AsNoTracking()
-            .FirstOrDefaultAsync(q => q.NormalizedEmail == normalizedEmail, cancellationToken);
+
+            .Where(q => q.NormalizedEmail == normalizedEmail).FirstOrDefaultAsync(cancellationToken);
 
         if (user is null
             || string.IsNullOrWhiteSpace(user.PasswordHash)
@@ -79,11 +79,8 @@ public class UserCenterManager(
             async ct =>
             {
                 var exists = await _dbContext.Users
-                    .AsNoTracking()
-                    .AnyAsync(
-                        q => q.Id == userId && q.NormalizedEmail == normalizedEmail,
-                        ct
-                    );
+
+                    .Where(q => q.Id == userId && q.NormalizedEmail == normalizedEmail).AnyAsync(ct);
 
                 return exists ? new UserCenterTokenUser(userId, normalizedEmail) : null;
             },

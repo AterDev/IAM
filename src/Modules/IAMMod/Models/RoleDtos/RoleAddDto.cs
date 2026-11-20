@@ -5,9 +5,9 @@ namespace IAMMod.Models.RoleDtos;
 /// </summary>
 public class RoleAddDto
 {
-    [MaxLength(256)]
+    [StringLength(256)]
     public required string Name { get; set; }
 
-    [MaxLength(500)]
+    [StringLength(500)]
     public string? Description { get; set; }
 }

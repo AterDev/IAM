@@ -28,7 +28,7 @@ src/
 ├── Perigon/                 # 基础类库、工具扩展与源生成项目
 ├── Definition/
 │   ├── Entity/              # 实体定义（按模块分文件夹）
-│   ├── EntityFramework/     # EF Core DbContext 与迁移
+│   ├── EntityFramework/     # Perigon.PostgreSQL DbContext 与迁移
 │   ├── Share/               # 共享常量、扩展、服务
 │   └── ServiceDefaults/     # 服务注册与中间件
 ├── Modules/
@@ -59,11 +59,11 @@ Treat these scripts as part of the template workflow; do not reimplement their b
 | Script | Purpose and when to run | Command |
 |---|---|---|
 | `scripts/UpdateMenus.ps1` | Synchronize `src/ClientApp/WebApp/src/assets/menus.json` into the Admin service database. Run after changing frontend menu items, hierarchy, access codes, or menu types; ensure the target Admin service is running first. The default target is `http://localhost:5002`; pass `production` only after confirming the script's production URL is correct. | `pwsh ./scripts/UpdateMenus.ps1`<br>`pwsh ./scripts/UpdateMenus.ps1 production` |
-| `scripts/EFMigrations.ps1` | Build and create an EF Core migration for `DefaultDbContext`, using the database and multi-tenant settings from `src/AppHost/appsettings.Development.json`. Run after a persisted entity, EF mapping, or database schema changes, before committing the migration. Supply a descriptive migration name; omit it only when a timestamp name is acceptable. Use `Remove` only to remove the latest un-applied migration. Migrations are applied by the application at startup. | `pwsh ./scripts/EFMigrations.ps1 -Name AddOrderStatus`<br>`pwsh ./scripts/EFMigrations.ps1 -Name Remove` |
-| `scripts/GenSwagger.ps1` | Build one service and export its OpenAPI document to `src/Services/{ServiceName}/swagger.json`; it also normalizes the document title. Run after changing a service's public endpoints, request/response contracts, or OpenAPI configuration, and before generating or refreshing clients that consume that service's OpenAPI file. | `pwsh ./scripts/GenSwagger.ps1 -ServiceName ApiService`<br>`pwsh ./scripts/GenSwagger.ps1 -ServiceName AdminService -DocumentName v1` |
+| `scripts/Migrations.ps1` | Generate, list or script PostgreSQL migrations. | `pwsh ./scripts/Migrations.ps1 Add AddOrderStatus` |
+| `scripts/GenSwagger.ps1` | Export OpenAPI from the running service before regenerating clients. | `pwsh ./scripts/GenSwagger.ps1 -ServiceName ApiService -BaseUri https://localhost:9900` |
 
 
-`EFMigrations.ps1` restores the local tool manifest automatically. Before running `GenSwagger.ps1`, run `dotnet tool restore` from `ApiStandard` if the local `swagger` command is unavailable. The manifest provides `dotnet-ef` and the `swagger` CLI. Review generated migration and `swagger.json` diffs before committing.
+Run `dotnet tool restore` before generating migrations. Review the generated migration and OpenAPI document.
 
 ## Important rules
 

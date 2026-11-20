@@ -42,6 +42,7 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        EnableSoftDeleteFilter<EntityBase>("SoftDelete", entity => !entity.IsDeleted);
         ConfigureCommonEntities(builder);
         ConfigureIdentityEntities(builder);
         ConfigureAccessEntities(builder);
@@ -54,13 +55,11 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
         {
             entity.HasIndex(e => e.KeyId).IsUnique();
             entity.HasIndex(e => e.IsActive);
-            entity.HasIndex(e => e.TenantId);
         });
 
         // ProxyUsage configuration
         builder.Entity<ProxyUsage>(entity =>
         {
-            entity.HasIndex(e => new { e.UserId, e.Date }).IsUnique();
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.Date);
         });
@@ -72,13 +71,12 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
 
         builder.Entity<UserEntitlement>(entity =>
         {
-            entity.HasIndex(e => new { e.UserId, e.EntitlementDefinitionId }).IsUnique();
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.EntitlementDefinitionId);
             entity.HasOne(e => e.EntitlementDefinition)
                 .WithMany(e => e.UserEntitlements)
                 .HasForeignKey(e => e.EntitlementDefinitionId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(ReferentialAction.Restrict);
         });
     }
 
@@ -89,30 +87,25 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
         {
             entity.HasIndex(e => e.NormalizedUserName);
             entity.HasIndex(e => e.NormalizedEmail).IsUnique();
-            entity.HasIndex(e => e.TenantId);
-            entity.Property(e => e.ConcurrencyStamp).IsConcurrencyToken();
         });
 
         // Role configuration
         builder.Entity<Role>(entity =>
         {
             entity.HasIndex(e => e.NormalizedName).IsUnique();
-            entity.HasIndex(e => e.TenantId);
-            entity.Property(e => e.ConcurrencyStamp).IsConcurrencyToken();
         });
 
         // UserRole configuration
         builder.Entity<UserRole>(entity =>
         {
-            entity.HasIndex(e => new { e.UserId, e.RoleId }).IsUnique();
             entity.HasOne(e => e.User)
                 .WithMany(u => u.UserRoles)
                 .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(ReferentialAction.Cascade);
             entity.HasOne(e => e.Role)
                 .WithMany(r => r.UserRoles)
                 .HasForeignKey(e => e.RoleId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(ReferentialAction.Cascade);
         });
 
         // UserClaim configuration
@@ -122,67 +115,62 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
             entity.HasOne(e => e.User)
                 .WithMany(u => u.UserClaims)
                 .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(ReferentialAction.Cascade);
         });
 
         // RolePermission configuration
         builder.Entity<RolePermission>(entity =>
         {
-            entity.HasIndex(e => new { e.RoleId, e.PermissionId }).IsUnique();
             entity.HasOne(e => e.Role)
                 .WithMany(r => r.RolePermissions)
                 .HasForeignKey(e => e.RoleId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(ReferentialAction.Cascade);
             entity.HasOne(e => e.Permission)
                 .WithMany(p => p.RolePermissions)
                 .HasForeignKey(e => e.PermissionId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(ReferentialAction.Cascade);
         });
 
         // UserLogin configuration
         builder.Entity<UserLogin>(entity =>
         {
-            entity.HasIndex(e => new { e.LoginProvider, e.ProviderKey }).IsUnique();
             entity.HasIndex(e => e.UserId);
             entity.HasOne(e => e.User)
                 .WithMany(u => u.UserLogins)
                 .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(ReferentialAction.Cascade);
         });
 
         // UserToken configuration
         builder.Entity<UserToken>(entity =>
         {
-            entity.HasIndex(e => new { e.UserId, e.LoginProvider, e.Name }).IsUnique();
             entity.HasOne(e => e.User)
                 .WithMany(u => u.UserTokens)
                 .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(ReferentialAction.Cascade);
         });
 
         // Organization configuration
         builder.Entity<Organization>(entity =>
         {
             entity.HasIndex(e => e.ParentId);
-            entity.HasIndex(e => e.TenantId);
             entity.HasOne(e => e.Parent)
                 .WithMany(o => o.Children)
                 .HasForeignKey(e => e.ParentId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(ReferentialAction.Restrict);
         });
 
         // OrganizationUser configuration
         builder.Entity<OrganizationUser>(entity =>
         {
-            entity.HasIndex(e => new { e.OrganizationId, e.UserId }).IsUnique();
             entity.HasOne(e => e.Organization)
                 .WithMany(o => o.OrganizationUsers)
                 .HasForeignKey(e => e.OrganizationId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(ReferentialAction.Cascade);
             entity.HasOne(e => e.User)
                 .WithMany(u => u.OrganizationUsers)
                 .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(ReferentialAction.Cascade);
         });
 
         // LoginSession configuration
@@ -193,7 +181,7 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
             entity.HasOne(e => e.User)
                 .WithMany(u => u.LoginSessions)
                 .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(ReferentialAction.Cascade);
         });
     }
 
@@ -202,8 +190,7 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
         // Client configuration
         builder.Entity<Client>(entity =>
         {
-            entity.HasIndex(e => e.ClientId).IsUnique();
-            entity.HasIndex(e => e.TenantId);
+            entity.HasIndex(e => e.ClientIdentifier).IsUnique();
             entity.HasIndex(e => e.RegistrationStatus);
             entity.HasIndex(e => e.DeveloperUserId);
         });
@@ -214,59 +201,54 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
             entity.HasIndex(e => e.Type);
             entity.HasIndex(e => e.ParentId);
             entity.HasIndex(e => e.OwnedClientId);
-            entity.HasIndex(e => e.TenantId);
             entity.HasOne(e => e.Parent)
                 .WithMany(e => e.Children)
                 .HasForeignKey(e => e.ParentId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(ReferentialAction.Restrict);
             entity.HasOne(e => e.OwnedClient)
                 .WithMany(c => c.OwnedPermissions)
                 .HasForeignKey(e => e.OwnedClientId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(ReferentialAction.Restrict);
         });
 
         builder.Entity<ClientPermission>(entity =>
         {
-            entity.HasIndex(e => new { e.ClientId, e.PermissionId }).IsUnique();
             entity.HasOne(e => e.Client)
                 .WithMany(c => c.ClientPermissions)
                 .HasForeignKey(e => e.ClientId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(ReferentialAction.Cascade);
             entity.HasOne(e => e.Permission)
                 .WithMany(p => p.ClientPermissions)
                 .HasForeignKey(e => e.PermissionId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(ReferentialAction.Cascade);
         });
 
         builder.Entity<ClientSecret>(entity =>
         {
             entity.HasIndex(e => e.ClientId);
-            entity.HasIndex(e => new { e.ClientId, e.RevokedAt });
             entity.HasOne(e => e.Client)
                 .WithMany(c => c.ClientSecrets)
                 .HasForeignKey(e => e.ClientId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(ReferentialAction.Cascade);
         });
 
         // ApiScope configuration
         builder.Entity<ApiScope>(entity =>
         {
             entity.HasIndex(e => e.Name).IsUnique();
-            entity.HasIndex(e => e.TenantId);
         });
 
         // ClientScope configuration
         builder.Entity<ClientScope>(entity =>
         {
-            entity.HasIndex(e => new { e.ClientId, e.ScopeId }).IsUnique();
             entity.HasOne(e => e.Client)
                 .WithMany(c => c.ClientScopes)
                 .HasForeignKey(e => e.ClientId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(ReferentialAction.Cascade);
             entity.HasOne(e => e.Scope)
                 .WithMany(s => s.ClientScopes)
                 .HasForeignKey(e => e.ScopeId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(ReferentialAction.Cascade);
         });
 
         // ScopeClaim configuration
@@ -276,28 +258,26 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
             entity.HasOne(e => e.Scope)
                 .WithMany(s => s.ScopeClaims)
                 .HasForeignKey(e => e.ScopeId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(ReferentialAction.Cascade);
         });
 
         // ApiResource configuration
         builder.Entity<ApiResource>(entity =>
         {
             entity.HasIndex(e => e.Name).IsUnique();
-            entity.HasIndex(e => e.TenantId);
         });
 
         // ClientResource configuration
         builder.Entity<ClientResource>(entity =>
         {
-            entity.HasIndex(e => new { e.ClientId, e.ApiResourceId }).IsUnique();
             entity.HasOne(e => e.Client)
                 .WithMany(c => c.ClientResources)
                 .HasForeignKey(e => e.ClientId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(ReferentialAction.Cascade);
             entity.HasOne(e => e.ApiResource)
                 .WithMany(r => r.ClientResources)
                 .HasForeignKey(e => e.ApiResourceId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(ReferentialAction.Cascade);
         });
 
         // Authorization configuration
@@ -305,11 +285,10 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
         {
             entity.HasIndex(e => e.SubjectId);
             entity.HasIndex(e => e.ClientId);
-            entity.HasIndex(e => e.TenantId);
             entity.HasOne(e => e.Client)
                 .WithMany(c => c.Authorizations)
                 .HasForeignKey(e => e.ClientId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(ReferentialAction.Cascade);
         });
 
         // Token configuration
@@ -317,11 +296,10 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
         {
             entity.HasIndex(e => e.ReferenceId);
             entity.HasIndex(e => e.AuthorizationId);
-            entity.HasIndex(e => e.TenantId);
             entity.HasOne(e => e.Authorization)
                 .WithMany(a => a.Tokens)
                 .HasForeignKey(e => e.AuthorizationId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(ReferentialAction.Cascade);
         });
     }
 }

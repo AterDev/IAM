@@ -5,7 +5,7 @@ namespace IAMMod.Models.AccountDtos;
 /// </summary>
 public class ForgotPasswordRequestDto
 {
-    [MaxLength(256)]
+    [StringLength(256)]
     [EmailAddress]
     public required string Email { get; set; }
 }

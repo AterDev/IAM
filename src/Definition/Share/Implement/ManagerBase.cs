@@ -1,476 +1,91 @@
-using EFCore.BulkExtensions;
-using EntityFramework.Extensions;
-using Mapster;
+using EntityFramework.AppDbContext;
+using EntityFramework.AppDbFactory;
+using Perigon.PostgreSQL;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 namespace Share.Implement;
 
-/// <summary>
-/// Base manager class without dbContext
-/// </summary>
-/// <param name="logger">Logger instance</param>
 public abstract class ManagerBase(ILogger logger)
 {
-    protected ILogger _logger = logger;
+    protected readonly ILogger _logger = logger;
 }
 
-public abstract class ManagerBase<TDbContext>(TDbContext dbContext, ILogger logger)
-    : ManagerBase(logger)
-    where TDbContext : DbContext
+public abstract class ManagerBase<TDbContext>(TDbContext dbContext, ILogger logger) : ManagerBase(logger)
+    where TDbContext : DefaultDbContext
 {
     protected readonly TDbContext _dbContext = dbContext;
 }
 
-/// <summary>
-/// Generic manager base class for entity operations.
-/// </summary>
-/// <typeparam name="TDbContext">Database context type</typeparam>
-/// <typeparam name="TEntity">Entity type</typeparam>
-public abstract class ManagerBase<TDbContext, TEntity>
-    : IDisposable, IAsyncDisposable
-    where TDbContext : DbContext
-    where TEntity : class, IEntityBase
+/// <summary>Database operations without change tracking.</summary>
+public abstract class ManagerBase<TDbContext, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TEntity> : IDisposable
+    where TDbContext : DefaultDbContext
+    where TEntity : class, IEntityBase, new()
 {
     protected IQueryable<TEntity> Queryable { get; set; }
-    protected bool IgnoreQueryFilter { get; set; }
+    private bool _ignoreQueryFilter;
+    protected bool IgnoreQueryFilter
+    {
+        get => _ignoreQueryFilter;
+        set
+        {
+            _ignoreQueryFilter = value;
+            Queryable = value ? _dbContext.SetWithoutFilters<TEntity>("SoftDelete") : _dbSet;
+        }
+    }
+
     protected readonly ILogger _logger;
-    protected readonly TDbContext _dbContext;
-    protected readonly DbSet<TEntity> _dbSet;
+    protected TDbContext _dbContext;
+    protected DbSet<TEntity> _dbSet;
     protected readonly IUserContext _userContext;
-    protected readonly bool _isMultiTenant;
 
-    protected bool IsTenantScoped => typeof(ITenantEntityBase).IsAssignableFrom(typeof(TEntity));
-
-    public ManagerBase(
-        TenantDbFactory dbContextFactory,
-        IUserContext userContext,
-        ILogger logger
-    )
+    protected ManagerBase(AppDbFactory dbContextFactory, IUserContext userContext, ILogger logger)
     {
         _logger = logger;
-        // Note: Using .Result here is safe as this is called during DI container construction
-        // where there's no existing synchronization context that could cause deadlocks
-        _dbContext = (dbContextFactory.CreateDbContextAsync().GetAwaiter().GetResult() as TDbContext)!;
         _userContext = userContext;
-        _isMultiTenant = dbContextFactory.IsMultiTenant;
+        _dbContext = (TDbContext)dbContextFactory.CreateDbContext();
         _dbSet = _dbContext.Set<TEntity>();
-        Queryable = _dbSet.AsNoTracking().AsQueryable();
-
-        if (_isMultiTenant && _userContext.TenantId == Guid.Empty)
-        {
-            _logger.LogWarning("TenantId is empty in UserContext");
-        }
+        Queryable = _dbSet;
     }
 
-    /// <summary>
-    /// Finds and attaches the entity by id for tracking.
-    /// </summary>
-    /// <param name="id">Entity id</param>
-    /// <returns>The entity if found; otherwise, null.</returns>
-    public async Task<TEntity?> FindAsync(Guid id)
-    {
-        var entity = await _dbSet.FindAsync(id);
+    public Task<TEntity?> FindAsync(Guid id, CancellationToken cancellationToken = default) =>
+        _dbSet.Where(entity => entity.Id == id).FirstOrDefaultAsync(cancellationToken);
 
-        if (entity is null)
-        {
-            return null;
-        }
+    public Task<TEntity?> FindEntityAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default) =>
+        _dbSet.Where(predicate).FirstOrDefaultAsync(cancellationToken);
 
-        // Apply tenant filtering for multi-tenant entities
-        if (_isMultiTenant && entity is ITenantEntityBase tenantEntity)
-        {
-            var currentTenantId = _userContext.TenantId;
+    public Task<bool> ExistAsync(Guid id, CancellationToken cancellationToken = default) =>
+        _dbSet.Where(entity => entity.Id == id).AnyAsync(cancellationToken);
 
-            if (currentTenantId != Guid.Empty && tenantEntity.TenantId != currentTenantId)
-            {
-                _logger.LogWarning(
-                    "Attempt to access entity {EntityType} with id {EntityId} from tenant {CurrentTenantId}, but entity belongs to tenant {EntityTenantId}.",
-                    typeof(TEntity).Name,
-                    id,
-                    currentTenantId,
-                    tenantEntity.TenantId);
+    protected Task InsertAsync(TEntity entity, CancellationToken cancellationToken = default) =>
+        _dbSet.InsertAsync(entity, returning: false, cancellationToken: cancellationToken);
 
-                return null;
-            }
-        }
+    protected Task BulkInsertAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default) =>
+        _dbSet.BulkInsertAsync(entities.ToArray(), cancellationToken: cancellationToken);
 
-        return entity;
-    }
-
-    /// <summary>
-    /// Finds a DTO by condition without tracking. If TDto is TEntity, attaches the entity.
-    /// </summary>
-    /// <typeparam name="TDto">DTO type</typeparam>
-    /// <param name="whereExp">Filter expression</param>
-    /// <returns>The DTO if found; otherwise, null.</returns>
-    public async Task<TDto?> FindAsync<TDto>(Expression<Func<TEntity, bool>>? whereExp = null)
-        where TDto : class
-    {
-        var query = _dbSet.AsNoTracking();
-        query = ApplyTenantFilter(query);
-        var model = await query
-            .Where(whereExp ?? (e => true))
-            .ProjectToType<TDto>()
-            .FirstOrDefaultAsync();
-        return model;
-    }
-
-    /// <summary>
-    /// Checks if an entity with the specified id exists.
-    /// </summary>
-    /// <param name="id">Entity id</param>
-    /// <returns>True if exists; otherwise, false.</returns>
-    public async Task<bool> ExistAsync(Guid id)
-    {
-        var query = _dbSet.AsNoTracking();
-        query = ApplyTenantFilter(query);
-        return await query.AnyAsync(q => q.Id == id);
-    }
-
-    /// <summary>
-    /// Gets a list of DTOs matching the condition without tracking.
-    /// </summary>
-    /// <typeparam name="TDto">DTO type</typeparam>
-    /// <param name="whereExp">Filter expression</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>List of DTOs.</returns>
-    protected async Task<List<TDto>> ListAsync<TDto>(
-        Expression<Func<TEntity, bool>>? whereExp = null,
-        CancellationToken cancellationToken = default
-    )
-        where TDto : class
-    {
-        var query = _dbSet.AsNoTracking();
-        if (IgnoreQueryFilter)
-        {
-            query = query.IgnoreQueryFilters();
-        }
-        query = ApplyTenantFilter(query);
-        return await query
-            .Where(whereExp ?? (e => true))
-            .ProjectToType<TDto>()
-            .ToListAsync(cancellationToken);
-    }
-
-    /// <summary>
-    /// Gets a paged list of items based on the filter.
-    /// </summary>
-    /// <typeparam name="TFilter">Filter type</typeparam>
-    /// <typeparam name="TItem">Item type</typeparam>
-    /// <param name="filter">Paging and filter information</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Paged list of items.</returns>
-    public async Task<PageList<TItem>> PageListAsync<TFilter, TItem>(
-        TFilter filter,
-        CancellationToken cancellationToken = default
-    )
-        where TFilter : FilterBase
-        where TItem : class
-    {
-        if (IgnoreQueryFilter)
-        {
-            Queryable = Queryable.IgnoreQueryFilters();
-        }
-
-        Queryable = ApplyTenantFilter(Queryable);
-
-        Queryable = filter.OrderBy != null && filter.OrderBy.Count > 0
-                ? Queryable.OrderBy(filter.OrderBy)
-                : Queryable is IOrderedQueryable<TEntity>
-                    ? Queryable
-                    : Queryable.OrderByDescending(t => t.CreatedTime);
-
-        var count = await Queryable.CountAsync(cancellationToken);
-        List<TItem> data = await Queryable
-            .AsNoTracking()
-            .Skip((filter.PageIndex - 1) * filter.PageSize)
-            .Take(filter.PageSize)
-            .ProjectToType<TItem>()
-            .ToListAsync(cancellationToken);
-
-        ResetQuery();
-        return new PageList<TItem>
-        {
-            Count = count,
-            Data = data,
-            PageIndex = filter.PageIndex,
-        };
-    }
-
-    /// <summary>
-    /// Insert new entity to database
-    /// </summary>
-    /// <param name="entity">The entity to insert. Cannot be null.</param>
-    protected async Task InsertAsync(TEntity entity)
-    {
-        if (_isMultiTenant && IsTenantScoped)
-        {
-            ((ITenantEntityBase)entity).TenantId = _userContext.TenantId;
-        }
-        await _dbSet.AddAsync(entity);
-        await _dbContext.SaveChangesAsync();
-    }
-
-    /// <summary>
-    /// Update entity data to database
-    /// </summary>
-    /// <typeparam name="TUpdateDto">The DTO type that contains the properties to update on the entity.</typeparam>
-    /// <param name="id">The unique identifier of the entity to update.</param>
-    /// <param name="dto">The data transfer object that holds the updated values for the entity.</param>
-    /// <param name="updateTime">Indicates whether the entity's update timestamp should be modified.</param>
-    /// <returns>The number of rows affected by the update operation.</returns>
-    protected async Task<int> UpdateAsync<TUpdateDto>(
-        Guid id,
-        TUpdateDto dto,
-        bool updateTime = true
-    ) where TUpdateDto : class
-    {
-        return await _dbContext.PartialUpdateAsync<TEntity, TUpdateDto>(id, dto, updateTime);
-    }
-
-    protected async Task BulkInsertAsync(
-        IEnumerable<TEntity> entities,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var entityList = entities.ToList();
-        foreach (TEntity entity in entityList)
-        {
-            if (_isMultiTenant && IsTenantScoped)
-            {
-                ((ITenantEntityBase)entity).TenantId = _userContext.TenantId;
-            }
-        }
-        await _dbContext.BulkInsertAsync(entityList, cancellationToken: cancellationToken);
-    }
-
-    /// <summary>
-    /// Deletes a batch of entities by id, with optional soft delete.
-    /// </summary>
-    /// <param name="ids">List of entity ids</param>
-    /// <param name="softDelete">If true, performs soft delete; otherwise, hard delete</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>True if successful; otherwise, false.</returns>
-    protected async Task<int> DeleteOrUpdateAsync(
+    protected Task<int> DeleteOrUpdateAsync(
         IEnumerable<Guid> ids,
         bool softDelete = true,
-        CancellationToken cancellationToken = default
-    )
+        CancellationToken cancellationToken = default)
     {
-        var idsList = ids.ToList();
-        if (idsList.Count == 0)
-        {
-            return 0;
-        }
-
-        var res = softDelete
-            ? await _dbSet
-                .Where(d => idsList.Contains(d.Id))
-                .ExecuteUpdateAsync(d => d.SetProperty(d => d.IsDeleted, true), cancellationToken)
-            : await _dbSet.Where(d => idsList.Contains(d.Id)).ExecuteDeleteAsync(cancellationToken);
-        return res;
+        var keys = ids.Distinct().ToArray();
+        if (keys.Length == 0)
+            return Task.FromResult(0);
+        var query = _dbSet.Where(item => keys.Contains(item.Id));
+        return softDelete
+            ? query.ExecuteUpdateAsync(update => update.Set(item => item.IsDeleted, true), cancellationToken: cancellationToken)
+            : query.ExecuteDeleteAsync(cancellationToken: cancellationToken);
     }
 
-    /// <summary>
-    /// Loads a reference navigation property for the entity.
-    /// </summary>
-    /// <typeparam name="TProperty">Navigation property type</typeparam>
-    /// <param name="entity">Entity instance</param>
-    /// <param name="propertyExpression">Navigation property expression</param>
-    /// <returns>Task representing the asynchronous operation.</returns>
-    protected async Task LoadAsync<TProperty>(
-        TEntity entity,
-        Expression<Func<TEntity, TProperty?>> propertyExpression
-    )
-        where TProperty : class
-    {
-        var entry = _dbContext.Entry(entity);
-        if (entry.State != EntityState.Detached)
-        {
-            await _dbContext.Entry(entity).Reference(propertyExpression).LoadAsync();
-        }
-        else
-        {
-            await _dbContext
-                .Entry(entity)
-                .Reference(propertyExpression)
-                .Query()
-                .AsNoTracking()
-                .LoadAsync();
-        }
-    }
+    protected Task<T> ExecuteInTransactionAsync<T>(Func<Task<T>> operation, CancellationToken cancellationToken = default) =>
+        _dbContext.TransactionAsync(_ => operation(), cancellationToken);
 
-    /// <summary>
-    /// Loads a collection navigation property for the entity.
-    /// </summary>
-    /// <typeparam name="TProperty">Collection property type</typeparam>
-    /// <param name="entity">Entity instance</param>
-    /// <param name="propertyExpression">Collection property expression</param>
-    /// <returns>Task representing the asynchronous operation.</returns>
-    public async Task LoadManyAsync<TProperty>(
-        TEntity entity,
-        Expression<Func<TEntity, IEnumerable<TProperty>>> propertyExpression
-    )
-        where TProperty : class
-    {
-        var entry = _dbContext.Entry(entity);
-        if (entry.State != EntityState.Detached)
-        {
-            await _dbContext.Entry(entity).Collection(propertyExpression).LoadAsync();
-        }
-        else
-        {
-            await _dbContext
-                .Entry(entity)
-                .Collection(propertyExpression)
-                .Query()
-                .AsNoTracking()
-                .LoadAsync();
-        }
-    }
+    protected Task ExecuteInTransactionAsync(Func<Task> operation, CancellationToken cancellationToken = default) =>
+        _dbContext.TransactionAsync(_ => operation(), cancellationToken);
 
-    /// <summary>
-    /// Execute operation within a transaction
-    /// </summary>
-    /// <param name="operation">The operation to execute</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The result of the operation</returns>
-    protected async Task<T> ExecuteInTransactionAsync<T>(
-        Func<Task<T>> operation,
-        CancellationToken cancellationToken = default
-    )
-    {
-        if (operation is null)
-        {
-            throw new ArgumentNullException(nameof(operation));
-        }
-
-        var strategy = _dbContext.Database.CreateExecutionStrategy();
-        return await strategy.ExecuteAsync<T>(async (cancellationToken) =>
-        {
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-            try
-            {
-                var result = await operation();
-                await transaction.CommitAsync(cancellationToken);
-                return result;
-            }
-            catch (Exception ex)
-            {
-                try
-                {
-                    await transaction.RollbackAsync(cancellationToken);
-                }
-                catch
-                {
-                    // ignore rollback failures, original exception is more important
-                }
-                _logger.LogError(ex, "Error occurred while executing transaction operation");
-                throw;
-            }
-        }, cancellationToken);
-    }
-
-    /// <summary>
-    /// Execute operation within a transaction (no return value)
-    /// </summary>
-    /// <param name="operation">The operation to execute</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns></returns>
-    protected async Task ExecuteInTransactionAsync(
-        Func<Task> operation,
-        CancellationToken cancellationToken = default
-    )
-    {
-        if (operation is null)
-        {
-            throw new ArgumentNullException(nameof(operation));
-        }
-
-        var strategy = _dbContext.Database.CreateExecutionStrategy();
-        await strategy.ExecuteAsync(async (cancellationToken) =>
-        {
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-            try
-            {
-                await operation();
-                await transaction.CommitAsync(cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                try
-                {
-                    await transaction.RollbackAsync(cancellationToken);
-                }
-                catch
-                {
-                    // ignore rollback failures
-                }
-                _logger.LogError(ex, "Error occurred while executing transaction operation");
-                throw;
-            }
-        }, cancellationToken);
-    }
+    protected void ResetQuery() => Queryable = IgnoreQueryFilter ? _dbContext.SetWithoutFilters<TEntity>("SoftDelete") : _dbSet;
 
     public abstract Task<bool> HasPermissionAsync(Guid id);
 
-    /// <summary>
-    /// Resets the queryable to its default state, applying or ignoring global query filters.
-    /// </summary>
-    protected void ResetQuery()
-    {
-        Queryable = _dbSet.AsQueryable();
-    }
-
-    protected IQueryable<TEntity> ApplyTenantFilter(IQueryable<TEntity> query)
-    {
-        if (_isMultiTenant && IsTenantScoped)
-        {
-            if (_userContext.TenantId == Guid.Empty)
-            {
-                throw new InvalidOperationException("Multi-tenant mode requires a valid, non-empty TenantId in the current user context.");
-            }
-
-            return query.Where(e => ((ITenantEntityBase)e).TenantId == _userContext.TenantId);
-        }
-        return query;
-    }
-
-    private bool _disposed = false;
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (!_disposed)
-        {
-            if (disposing)
-            {
-                _dbContext?.Dispose();
-            }
-            _disposed = true;
-        }
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (!_disposed)
-        {
-            await DisposeAsyncCore();
-            _disposed = true;
-        }
-        GC.SuppressFinalize(this);
-    }
-
-    protected virtual async ValueTask DisposeAsyncCore()
-    {
-        if (_dbContext is not null)
-        {
-            await _dbContext.DisposeAsync();
-        }
-    }
+    public void Dispose() => _dbContext.Dispose();
 }

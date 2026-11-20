@@ -1,3 +1,5 @@
+using IAMMod.Serialization;
+using System.Text.Json.Nodes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +11,6 @@ using EntityFramework.AppDbContext;
 using EntityFramework.AppDbFactory;
 using IAMMod.Models.AccountDtos;
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Perigon.AspNetCore.Abstraction;
 using Perigon.AspNetCore.Utils;
@@ -22,7 +23,7 @@ namespace IAMMod.Managers;
 /// Handles MFA setup, verification and recovery-code lifecycle.
 /// </summary>
 public class MfaManager(
-    TenantDbFactory dbContextFactory,
+    AppDbFactory dbContextFactory,
     IUserContext userContext,
     ILogger<MfaManager> logger,
     MfaTotpService mfaTotpService,
@@ -60,14 +61,14 @@ public class MfaManager(
         var user = await GetUserAsync(userId);
         var secret = _mfaTotpService.GenerateSecret();
         var accountName = string.IsNullOrWhiteSpace(user.Email) ? user.UserName : user.Email!;
-        var payload = new TotpSecretPayload(secret, issuer, accountName, DateTimeOffset.UtcNow);
+        var payload = new MfaTotpSecretPayload(secret, issuer, accountName, DateTimeOffset.UtcNow);
 
-        await UpsertUserTokenAsync(userId, PendingSecretTokenName, JsonSerializer.Serialize(payload));
+        await UpsertUserTokenAsync(userId, PendingSecretTokenName, JsonSerializer.Serialize(payload, IamModJsonSerializerContext.Default.MfaTotpSecretPayload));
         await _auditLogManager.AddAuditLogAsync(
             category: "Authentication",
             eventName: "MfaSetupStarted",
             subjectId: userId.ToString(),
-            payload: JsonSerializer.Serialize(new { issuer, accountName })
+            payload: new JsonObject { ["issuer"] = issuer, ["accountName"] = accountName }.ToJsonString()
         );
 
         return new MfaSetupResponseDto
@@ -85,7 +86,7 @@ public class MfaManager(
         var pendingToken = await GetUserTokenAsync(userId, PendingSecretTokenName);
         var pendingSecret = pendingToken?.Value == null
             ? null
-            : JsonSerializer.Deserialize<TotpSecretPayload>(pendingToken.Value);
+            : JsonSerializer.Deserialize(pendingToken.Value, IamModJsonSerializerContext.Default.MfaTotpSecretPayload);
 
         if (pendingSecret == null)
         {
@@ -98,13 +99,13 @@ public class MfaManager(
                 category: "Authentication",
                 eventName: "MfaEnableFailed",
                 subjectId: userId.ToString(),
-                payload: JsonSerializer.Serialize(new { reason = "InvalidCode" })
+                payload: new JsonObject { ["reason"] = "InvalidCode" }.ToJsonString()
             );
             throw new BusinessException(Localizer.BadRequest, StatusCodes.Status400BadRequest);
         }
 
         var activeSecret = pendingSecret with { CreatedAt = DateTimeOffset.UtcNow };
-        await UpsertUserTokenAsync(userId, ActiveSecretTokenName, JsonSerializer.Serialize(activeSecret));
+        await UpsertUserTokenAsync(userId, ActiveSecretTokenName, JsonSerializer.Serialize(activeSecret, IamModJsonSerializerContext.Default.MfaTotpSecretPayload));
         await RemoveUserTokenAsync(userId, PendingSecretTokenName);
 
         var recoveryCodes = CreateRecoveryCodes();
@@ -113,13 +114,13 @@ public class MfaManager(
         user.IsTwoFactorEnabled = true;
         user.SecurityStamp = Guid.NewGuid().ToString();
         user.UpdatedTime = DateTime.UtcNow;
-        await _dbContext.SaveChangesAsync();
+        await PersistUserSecurityStateAsync(userId, true, user.SecurityStamp, user.UpdatedTime);
 
         await _auditLogManager.AddAuditLogAsync(
             category: "Authentication",
             eventName: "MfaEnabled",
             subjectId: userId.ToString(),
-            payload: JsonSerializer.Serialize(new { recoveryCodeCount = recoveryCodes.plainCodes.Count })
+            payload: new JsonObject { ["recoveryCodeCount"] = recoveryCodes.plainCodes.Count }.ToJsonString()
         );
 
         return new MfaRecoveryCodesResponseDto
@@ -144,13 +145,13 @@ public class MfaManager(
         user.IsTwoFactorEnabled = false;
         user.SecurityStamp = Guid.NewGuid().ToString();
         user.UpdatedTime = DateTime.UtcNow;
-        await _dbContext.SaveChangesAsync();
+        await PersistUserSecurityStateAsync(userId, false, user.SecurityStamp, user.UpdatedTime);
 
         await _auditLogManager.AddAuditLogAsync(
             category: "Authentication",
             eventName: "MfaDisabled",
             subjectId: userId.ToString(),
-            payload: JsonSerializer.Serialize(new { disabledAt = DateTimeOffset.UtcNow })
+            payload: new JsonObject { ["disabledAt"] = DateTimeOffset.UtcNow }.ToJsonString()
         );
     }
 
@@ -165,13 +166,12 @@ public class MfaManager(
 
         var recoveryCodes = CreateRecoveryCodes();
         await SaveRecoveryCodesAsync(userId, recoveryCodes.entries);
-        await _dbContext.SaveChangesAsync();
 
         await _auditLogManager.AddAuditLogAsync(
             category: "Authentication",
             eventName: "MfaRecoveryCodesRegenerated",
             subjectId: userId.ToString(),
-            payload: JsonSerializer.Serialize(new { recoveryCodeCount = recoveryCodes.plainCodes.Count })
+            payload: new JsonObject { ["recoveryCodeCount"] = recoveryCodes.plainCodes.Count }.ToJsonString()
         );
 
         return new MfaRecoveryCodesResponseDto
@@ -187,7 +187,9 @@ public class MfaManager(
 
     private async Task<User> GetUserAsync(Guid userId)
     {
-        var user = await _dbContext.Users.FirstOrDefaultAsync(q => q.Id == userId && !q.IsDeleted);
+        var user = await _dbContext.Users
+            .Where(q => q.Id == userId && !q.IsDeleted)
+            .FirstOrDefaultAsync();
         return user ?? throw new BusinessException(Localizer.UserNotFound, StatusCodes.Status404NotFound);
     }
 
@@ -196,7 +198,7 @@ public class MfaManager(
         var activeToken = await GetUserTokenAsync(userId, ActiveSecretTokenName);
         var activeSecret = activeToken?.Value == null
             ? null
-            : JsonSerializer.Deserialize<TotpSecretPayload>(activeToken.Value);
+            : JsonSerializer.Deserialize(activeToken.Value, IamModJsonSerializerContext.Default.MfaTotpSecretPayload);
 
         if (activeSecret != null && _mfaTotpService.ValidateCode(activeSecret.Secret, code))
         {
@@ -225,19 +227,18 @@ public class MfaManager(
 
         matched.UsedAt = DateTimeOffset.UtcNow;
         await SaveRecoveryCodesAsync(userId, recoveryCodes);
-        await _dbContext.SaveChangesAsync();
 
         await _auditLogManager.AddAuditLogAsync(
             category: "Authentication",
             eventName: "MfaRecoveryCodeUsed",
             subjectId: userId.ToString(),
-            payload: JsonSerializer.Serialize(new { remaining = recoveryCodes.Count(entry => !entry.UsedAt.HasValue) })
+            payload: new JsonObject { ["remaining"] = recoveryCodes.Count(entry => !entry.UsedAt.HasValue) }.ToJsonString()
         );
 
         return true;
     }
 
-    private async Task<List<RecoveryCodeEntry>> ReadRecoveryCodesAsync(Guid userId)
+    private async Task<List<MfaRecoveryCodeEntry>> ReadRecoveryCodesAsync(Guid userId)
     {
         var token = await GetUserTokenAsync(userId, RecoveryCodesTokenName);
         if (string.IsNullOrWhiteSpace(token?.Value))
@@ -245,18 +246,18 @@ public class MfaManager(
             return [];
         }
 
-        return JsonSerializer.Deserialize<List<RecoveryCodeEntry>>(token.Value) ?? [];
+        return JsonSerializer.Deserialize(token.Value, IamModJsonSerializerContext.Default.ListMfaRecoveryCodeEntry) ?? [];
     }
 
-    private async Task SaveRecoveryCodesAsync(Guid userId, List<RecoveryCodeEntry> entries)
+    private async Task SaveRecoveryCodesAsync(Guid userId, List<MfaRecoveryCodeEntry> entries)
     {
-        await UpsertUserTokenAsync(userId, RecoveryCodesTokenName, JsonSerializer.Serialize(entries));
+        await UpsertUserTokenAsync(userId, RecoveryCodesTokenName, JsonSerializer.Serialize(entries, IamModJsonSerializerContext.Default.ListMfaRecoveryCodeEntry));
     }
 
-    private (List<string> plainCodes, List<RecoveryCodeEntry> entries) CreateRecoveryCodes()
+    private (List<string> plainCodes, List<MfaRecoveryCodeEntry> entries) CreateRecoveryCodes()
     {
         var plainCodes = new List<string>();
-        var entries = new List<RecoveryCodeEntry>();
+        var entries = new List<MfaRecoveryCodeEntry>();
 
         for (var i = 0; i < 10; i++)
         {
@@ -265,7 +266,7 @@ public class MfaManager(
 
             var normalizedCode = MfaTotpService.NormalizeCode(plainCode);
             var salt = HashCrypto.BuildSalt();
-            entries.Add(new RecoveryCodeEntry(
+            entries.Add(new MfaRecoveryCodeEntry(
                 HashCrypto.GeneratePwd(normalizedCode, salt),
                 salt,
                 null,
@@ -286,8 +287,9 @@ public class MfaManager(
 
     private async Task<UserToken?> GetUserTokenAsync(Guid userId, string name)
     {
-        return await _dbContext.UserTokens.FirstOrDefaultAsync(q =>
-            q.UserId == userId && q.LoginProvider == LoginProvider && q.Name == name);
+        return await _dbContext.UserTokens
+            .Where(q => q.UserId == userId && q.LoginProvider == LoginProvider && q.Name == name)
+            .FirstOrDefaultAsync();
     }
 
     private async Task UpsertUserTokenAsync(Guid userId, string name, string value)
@@ -302,15 +304,16 @@ public class MfaManager(
                 Name = name,
                 Value = value,
             };
-            await _dbContext.UserTokens.AddAsync(token);
+            await _dbContext.UserTokens.InsertAsync(token, returning: false);
         }
         else
         {
-            token.Value = value;
-            token.UpdatedTime = DateTime.UtcNow;
+            await _dbContext.UserTokens
+                .Where(item => item.Id == token.Id)
+                .ExecuteUpdateAsync(update => update
+                    .Set(item => item.Value, value)
+                    .Set(item => item.UpdatedTime, DateTime.UtcNow));
         }
-
-        await _dbContext.SaveChangesAsync();
     }
 
     private async Task RemoveUserTokenAsync(Guid userId, string name)
@@ -321,33 +324,19 @@ public class MfaManager(
             return;
         }
 
-        _dbContext.UserTokens.Remove(token);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.UserTokens
+            .Where(item => item.Id == token.Id)
+            .ExecuteDeleteAsync();
     }
 
-    private sealed record TotpSecretPayload(
-        string Secret,
-        string Issuer,
-        string AccountName,
-        DateTimeOffset CreatedAt
-    );
+    private Task PersistUserSecurityStateAsync(Guid userId, bool isTwoFactorEnabled, string? securityStamp, DateTimeOffset updatedTime) =>
+        _dbContext.Users
+            .Where(item => item.Id == userId)
+            .ExecuteUpdateAsync(update => update
+                .Set(item => item.IsTwoFactorEnabled, isTwoFactorEnabled)
+                .Set(item => item.SecurityStamp, securityStamp)
+                .Set(item => item.UpdatedTime, updatedTime));
 
-    private sealed class RecoveryCodeEntry
-    {
-        public RecoveryCodeEntry(string hash, string salt, DateTimeOffset? usedAt, string suffix)
-        {
-            Hash = hash;
-            Salt = salt;
-            UsedAt = usedAt;
-            Suffix = suffix;
-        }
 
-        public string Hash { get; set; }
 
-        public string Salt { get; set; }
-
-        public DateTimeOffset? UsedAt { get; set; }
-
-        public string Suffix { get; set; }
-    }
 }

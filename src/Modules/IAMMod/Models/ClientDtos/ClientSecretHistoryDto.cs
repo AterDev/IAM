@@ -7,7 +7,7 @@ public class ClientSecretHistoryDto
 {
     public Guid Id { get; set; }
 
-    public required string LastFour { get; set; }
+    public string LastFour { get; set; } = string.Empty;
 
     public DateTimeOffset IssuedTime { get; set; }
 

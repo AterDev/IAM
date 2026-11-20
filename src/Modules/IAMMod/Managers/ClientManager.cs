@@ -2,9 +2,9 @@ using IAMMod.Models.AuthorizationDtos;
 using IAMMod.Models.ClientDtos;
 using IAMMod.Models.ResourceDtos;
 using IAMMod.Models.ScopeDtos;
+using IAMMod.Serialization;
 using Microsoft.AspNetCore.Http;
 using System.Security.Cryptography;
-using System.Text.Json;
 using Share;
 using Share.Exceptions;
 
@@ -14,7 +14,7 @@ namespace IAMMod.Managers;
 /// Manager for OAuth/OIDC client operations
 /// </summary>
 public class ClientManager(
-    TenantDbFactory dbContextFactory,
+    AppDbFactory dbContextFactory,
     IUserContext userContext,
     ILogger<ClientManager> logger,
     AuditLogManager auditLogManager
@@ -36,7 +36,27 @@ public class ClientManager(
             .WhereNotNull(filter.Type, q => q.Type == filter.Type)
             .WhereNotNull(filter.ApplicationType, q => q.ApplicationType == filter.ApplicationType);
 
-        return await PageListAsync<ClientFilterDto, ClientItemDto>(filter);
+        var ordered = Queryable.OrderByDescending(item => item.CreatedTime);
+        var count = await ordered.CountAsync();
+        var clients = await ordered
+            .Skip((filter.PageIndex - 1) * filter.PageSize)
+            .Take(filter.PageSize)
+            .ToListAsync();
+        ResetQuery();
+        return new PageList<ClientItemDto>
+        {
+            Count = count,
+            PageIndex = filter.PageIndex,
+            Data = clients.Select(item => new ClientItemDto
+            {
+                Id = item.Id,
+                ClientId = item.ClientIdentifier,
+                DisplayName = item.DisplayName,
+                Type = item.Type,
+                ApplicationType = item.ApplicationType,
+                CreatedTime = item.CreatedTime,
+            }).ToList(),
+        };
     }
 
     /// <summary>
@@ -51,7 +71,9 @@ public class ClientManager(
             return true;
         }
 
-        return await _dbSet.AnyAsync(q => q.Id == id && q.DeveloperUserId == _userContext.UserId);
+        return await _dbSet
+            .Where(q => q.Id == id && q.DeveloperUserId == _userContext.UserId)
+            .AnyAsync();
     }
 
     /// <summary>
@@ -61,19 +83,27 @@ public class ClientManager(
     /// <returns>Client detail or null</returns>
     public async Task<ClientDetailDto?> GetDetailAsync(Guid id)
     {
-        var client = await Queryable
-            .Include(c => c.ClientScopes)
-                .ThenInclude(cs => cs.Scope)
-            .Include(c => c.ClientResources)
-                .ThenInclude(cr => cr.ApiResource)
-            .Include(c => c.ClientSecrets)
-            .Where(c => c.Id == id)
-            .FirstOrDefaultAsync();
+        var client = await Queryable.Where(c => c.Id == id).FirstOrDefaultAsync();
 
         if (client == null)
         {
             return null;
         }
+
+        var clientScopes = await _dbContext.ClientScopes.Where(item => item.ClientId == id).ToListAsync();
+        var scopeIds = clientScopes.Select(item => item.ScopeId).ToArray();
+        var scopes = scopeIds.Length == 0
+            ? []
+            : await _dbContext.ApiScopes.Where(item => Enumerable.Contains(scopeIds, item.Id)).ToListAsync();
+        var clientResources = await _dbContext.ClientResources.Where(item => item.ClientId == id).ToListAsync();
+        var resourceIds = clientResources.Select(item => item.ApiResourceId).ToArray();
+        var resources = resourceIds.Length == 0
+            ? []
+            : await _dbContext.ApiResources.Where(item => Enumerable.Contains(resourceIds, item.Id)).ToListAsync();
+        var secrets = await _dbContext.ClientSecrets
+            .Where(item => item.ClientId == id)
+            .OrderByDescending(item => item.CreatedTime)
+            .ToListAsync();
 
         return new ClientDetailDto
         {
@@ -93,24 +123,23 @@ public class ClientManager(
             SecretExpiresAt = client.SecretExpiresAt,
             RedirectUris = client.RedirectUris,
             PostLogoutRedirectUris = client.PostLogoutRedirectUris,
-            Scopes = client.ClientScopes.Select(cs => new ScopeItemDto
+            Scopes = scopes.Select(scope => new ScopeItemDto
             {
-                Id = cs.Scope.Id,
-                Name = cs.Scope.Name,
-                DisplayName = cs.Scope.DisplayName,
-                Required = cs.Scope.Required,
-                CreatedTime = cs.Scope.CreatedTime
+                Id = scope.Id,
+                Name = scope.Name,
+                DisplayName = scope.DisplayName,
+                Required = scope.Required,
+                CreatedTime = scope.CreatedTime
             }).ToList(),
-            Resources = client.ClientResources.Select(cr => new ClientResourceDto
+            Resources = resources.Select(resource => new ClientResourceDto
             {
-                Id = cr.ApiResource.Id,
-                Name = cr.ApiResource.Name,
-                DisplayName = cr.ApiResource.DisplayName,
-                Description = cr.ApiResource.Description,
-                CreatedTime = cr.ApiResource.CreatedTime
+                Id = resource.Id,
+                Name = resource.Name,
+                DisplayName = resource.DisplayName,
+                Description = resource.Description,
+                CreatedTime = resource.CreatedTime
             }).ToList(),
-            Secrets = client.ClientSecrets
-                .OrderByDescending(s => s.CreatedTime)
+            Secrets = secrets
                 .Select(s => new ClientSecretHistoryDto
                 {
                     Id = s.Id,
@@ -133,12 +162,23 @@ public class ClientManager(
     /// <returns>Created client detail with secret or null</returns>
     public async Task<string?> AddAsync(ClientAddDto dto)
     {
-        if (await _dbSet.AnyAsync(q => q.ClientId == dto.ClientId))
+        if (await _dbSet.Where(q => q.ClientIdentifier == dto.ClientId).AnyAsync())
         {
             throw new BusinessException(Localizer.EntityNotFound, StatusCodes.Status400BadRequest);
         }
 
-        var entity = dto.MapTo<Client>();
+        var entity = new Client
+        {
+            ClientIdentifier = dto.ClientId,
+            DisplayName = dto.DisplayName,
+            Description = dto.Description,
+            Type = dto.Type,
+            RequirePkce = dto.RequirePkce,
+            ConsentType = dto.ConsentType,
+            ApplicationType = dto.ApplicationType,
+            RedirectUris = dto.RedirectUris,
+            PostLogoutRedirectUris = dto.PostLogoutRedirectUris,
+        };
         entity.RegistrationStatus = ClientRegistrationStatus.Approved;
         var issuedSecret = IssueClientSecret(entity, DefaultSecretExpirationDays);
 
@@ -146,16 +186,24 @@ public class ClientManager(
         {
             await ApplyScopesAndResourcesAsync(entity, dto.ScopeIds, dto.ResourceIds);
             await InsertAsync(entity);
+            if (entity.ClientScopes.Count > 0)
+            {
+                await _dbContext.ClientScopes.BulkInsertAsync(entity.ClientScopes);
+            }
+            if (entity.ClientResources.Count > 0)
+            {
+                await _dbContext.ClientResources.BulkInsertAsync(entity.ClientResources);
+            }
 
             await _auditLogManager.AddAuditLogAsync(
                 category: "OAuth",
                 eventName: "ClientCreated",
                 subjectId: entity.Id.ToString(),
-                payload: JsonSerializer.Serialize(new
+                payload: IamJson.Serialize(new IamAuditPayload
                 {
-                    entity.ClientId,
-                    entity.DisplayName,
-                    entity.RegistrationStatus,
+                    ClientIdentifier = entity.ClientIdentifier,
+                    DisplayName = entity.DisplayName,
+                    RegistrationStatus = entity.RegistrationStatus,
                 })
             );
 
@@ -173,12 +221,23 @@ public class ClientManager(
             throw new BusinessException("Forbidden", StatusCodes.Status403Forbidden);
         }
 
-        if (await _dbSet.AnyAsync(q => q.ClientId == dto.ClientId))
+        if (await _dbSet.Where(q => q.ClientIdentifier == dto.ClientId).AnyAsync())
         {
             throw new BusinessException(Localizer.EntityNotFound, StatusCodes.Status400BadRequest);
         }
 
-        var entity = dto.MapTo<Client>();
+        var entity = new Client
+        {
+            ClientIdentifier = dto.ClientId,
+            DisplayName = dto.DisplayName,
+            Description = dto.Description,
+            Type = dto.Type,
+            RequirePkce = dto.RequirePkce,
+            ConsentType = dto.ConsentType,
+            ApplicationType = dto.ApplicationType,
+            RedirectUris = dto.RedirectUris,
+            PostLogoutRedirectUris = dto.PostLogoutRedirectUris,
+        };
         entity.RegistrationStatus = ClientRegistrationStatus.Pending;
         entity.DeveloperUserId = _userContext.UserId;
         entity.RequestedTime = DateTimeOffset.UtcNow;
@@ -187,16 +246,24 @@ public class ClientManager(
         {
             await ApplyScopesAndResourcesAsync(entity, dto.ScopeIds, dto.ResourceIds);
             await InsertAsync(entity);
+            if (entity.ClientScopes.Count > 0)
+            {
+                await _dbContext.ClientScopes.BulkInsertAsync(entity.ClientScopes);
+            }
+            if (entity.ClientResources.Count > 0)
+            {
+                await _dbContext.ClientResources.BulkInsertAsync(entity.ClientResources);
+            }
 
             await _auditLogManager.AddAuditLogAsync(
                 category: "OAuth",
                 eventName: "ClientRegistrationRequested",
                 subjectId: entity.Id.ToString(),
-                payload: JsonSerializer.Serialize(new
+                payload: IamJson.Serialize(new IamAuditPayload
                 {
-                    entity.ClientId,
-                    entity.DisplayName,
-                    entity.DeveloperUserId,
+                    ClientIdentifier = entity.ClientIdentifier,
+                    DisplayName = entity.DisplayName,
+                    DeveloperUserId = entity.DeveloperUserId,
                 })
             );
 
@@ -247,18 +314,27 @@ public class ClientManager(
         entity.ReviewedTime = DateTimeOffset.UtcNow;
         entity.ReviewedBy = _userContext.UserId == Guid.Empty ? null : _userContext.UserId.ToString();
         entity.UpdatedTime = DateTime.UtcNow;
-        await _dbContext.SaveChangesAsync();
+        await _dbSet
+            .Where(item => item.Id == id)
+            .ExecuteUpdateAsync(update => update
+                .Set(item => item.SecretHash, entity.SecretHash)
+                .Set(item => item.SecretSalt, entity.SecretSalt)
+                .Set(item => item.SecretExpiresAt, entity.SecretExpiresAt)
+                .Set(item => item.RegistrationStatus, entity.RegistrationStatus)
+                .Set(item => item.ReviewedTime, entity.ReviewedTime)
+                .Set(item => item.ReviewedBy, entity.ReviewedBy)
+                .Set(item => item.UpdatedTime, entity.UpdatedTime));
 
         await _auditLogManager.AddAuditLogAsync(
             category: "OAuth",
             eventName: "ClientRegistrationApproved",
             subjectId: entity.Id.ToString(),
-            payload: JsonSerializer.Serialize(new
+            payload: IamJson.Serialize(new IamAuditPayload
             {
-                entity.ClientId,
-                entity.DeveloperUserId,
-                entity.Type,
-                entity.SecretExpiresAt,
+                ClientId = entity.ClientId,
+                DeveloperUserId = entity.DeveloperUserId,
+                Type = entity.Type,
+                SecretExpiresAt = entity.SecretExpiresAt,
             })
         );
 
@@ -281,7 +357,7 @@ public class ClientManager(
     {
         if (_userContext.IsAdmin)
         {
-            var allIds = await _dbSet.OrderByDescending(q => q.UpdatedTime).Select(q => q.Id).ToListAsync();
+            var allIds = await _dbSet.OrderByDescending(q => q.UpdatedTime).Select(q => q.Id).ToScalarListAsync();
             var results = new List<ClientDetailDto>();
             foreach (var clientId in allIds)
             {
@@ -299,7 +375,7 @@ public class ClientManager(
             .Where(q => q.DeveloperUserId == _userContext.UserId)
             .OrderByDescending(q => q.UpdatedTime)
             .Select(q => q.Id)
-            .ToListAsync();
+            .ToScalarListAsync();
 
         var items = new List<ClientDetailDto>();
         foreach (var clientId in ids)
@@ -323,7 +399,7 @@ public class ClientManager(
             .Where(q => q.RegistrationStatus == ClientRegistrationStatus.Pending)
             .OrderBy(q => q.RequestedTime)
             .Select(q => q.Id)
-            .ToListAsync();
+            .ToScalarListAsync();
 
         var items = new List<ClientDetailDto>();
         foreach (var clientId in ids)
@@ -347,7 +423,8 @@ public class ClientManager(
     public async Task<ClientDetailDto?> UpdateAsync(Guid id, ClientUpdateDto dto)
     {
         var entity = await _dbContext.Set<Client>()
-            .FirstOrDefaultAsync(c => c.Id == id);
+            .Where(c => c.Id == id)
+            .FirstOrDefaultAsync();
 
         if (entity == null)
         {
@@ -406,7 +483,7 @@ public class ClientManager(
                         ScopeId = scopeId
                     }).ToList();
 
-                    await _dbContext.ClientScopes.AddRangeAsync(clientScopes);
+                    await _dbContext.ClientScopes.BulkInsertAsync(clientScopes);
                 }
             }
 
@@ -427,7 +504,7 @@ public class ClientManager(
                         ApiResourceId = resourceId
                     }).ToList();
 
-                    await _dbContext.ClientResources.AddRangeAsync(clientResources);
+                    await _dbContext.ClientResources.BulkInsertAsync(clientResources);
                 }
             }
 
@@ -437,27 +514,39 @@ public class ClientManager(
                 entity.SecretSalt = null;
                 entity.SecretExpiresAt = null;
 
-                foreach (var secret in await _dbContext.ClientSecrets
+                await _dbContext.ClientSecrets
                     .Where(q => q.ClientId == id && !q.RevokedAt.HasValue)
-                    .ToListAsync())
-                {
-                    secret.RevokedAt = DateTimeOffset.UtcNow;
-                    secret.UpdatedTime = DateTime.UtcNow;
-                }
+                    .ExecuteUpdateAsync(update => update
+                        .Set(item => item.RevokedAt, DateTimeOffset.UtcNow)
+                        .Set(item => item.UpdatedTime, DateTimeOffset.UtcNow));
             }
 
             entity.UpdatedTime = DateTime.UtcNow;
-            await _dbContext.SaveChangesAsync();
+            await _dbSet
+                .Where(item => item.Id == id)
+                .ExecuteUpdateAsync(update => update
+                    .Set(item => item.DisplayName, entity.DisplayName)
+                    .Set(item => item.Description, entity.Description)
+                    .Set(item => item.Type, entity.Type)
+                    .Set(item => item.RequirePkce, entity.RequirePkce)
+                    .Set(item => item.ConsentType, entity.ConsentType)
+                    .Set(item => item.ApplicationType, entity.ApplicationType)
+                    .Set(item => item.RedirectUriValues, entity.RedirectUriValues)
+                    .Set(item => item.PostLogoutRedirectUriValues, entity.PostLogoutRedirectUriValues)
+                    .Set(item => item.SecretHash, entity.SecretHash)
+                    .Set(item => item.SecretSalt, entity.SecretSalt)
+                    .Set(item => item.SecretExpiresAt, entity.SecretExpiresAt)
+                    .Set(item => item.UpdatedTime, entity.UpdatedTime));
 
             await _auditLogManager.AddAuditLogAsync(
                 category: "OAuth",
                 eventName: "ClientUpdated",
                 subjectId: entity.Id.ToString(),
-                payload: JsonSerializer.Serialize(new
+                payload: IamJson.Serialize(new IamAuditPayload
                 {
-                    entity.ClientId,
-                    entity.Type,
-                    entity.ApplicationType,
+                    ClientId = entity.ClientId,
+                    Type = entity.Type,
+                    ApplicationType = entity.ApplicationType,
                 })
             );
 
@@ -505,22 +594,27 @@ public class ClientManager(
             throw new BusinessException(Localizer.BadRequest, StatusCodes.Status400BadRequest);
         }
 
-        foreach (var secret in await _dbContext.ClientSecrets.Where(q => q.ClientId == id && !q.RevokedAt.HasValue).ToListAsync())
-        {
-            secret.RevokedAt = DateTimeOffset.UtcNow;
-            secret.UpdatedTime = DateTime.UtcNow;
-        }
+        await _dbContext.ClientSecrets
+            .Where(q => q.ClientId == id && !q.RevokedAt.HasValue)
+            .ExecuteUpdateAsync(update => update
+                .Set(item => item.RevokedAt, DateTimeOffset.UtcNow)
+                .Set(item => item.UpdatedTime, DateTimeOffset.UtcNow));
 
         var newSecret = IssueClientSecret(entity, DefaultSecretExpirationDays);
         entity.UpdatedTime = DateTime.UtcNow;
-
-        await _dbContext.SaveChangesAsync();
+        await _dbSet
+            .Where(item => item.Id == id)
+            .ExecuteUpdateAsync(update => update
+                .Set(item => item.SecretHash, entity.SecretHash)
+                .Set(item => item.SecretSalt, entity.SecretSalt)
+                .Set(item => item.SecretExpiresAt, entity.SecretExpiresAt)
+                .Set(item => item.UpdatedTime, entity.UpdatedTime));
 
         await _auditLogManager.AddAuditLogAsync(
             category: "OAuth",
             eventName: "ClientSecretRotated",
             subjectId: entity.Id.ToString(),
-            payload: JsonSerializer.Serialize(new { entity.ClientId, entity.SecretExpiresAt })
+            payload: IamJson.Serialize(new IamAuditPayload { ClientId = entity.ClientId, SecretExpiresAt = entity.SecretExpiresAt })
         );
 
         return newSecret;
@@ -536,10 +630,10 @@ public class ClientManager(
             throw new BusinessException("Forbidden", StatusCodes.Status403Forbidden);
         }
 
-        return await _dbContext.ClientSecrets
+        var secrets = await _dbContext.ClientSecrets
             .Where(q => q.ClientId == id)
-            .OrderByDescending(q => q.CreatedTime)
-            .Select(q => new ClientSecretHistoryDto
+            .OrderByDescending(q => q.CreatedTime).ToListAsync();
+        return secrets.Select(q => new ClientSecretHistoryDto
             {
                 Id = q.Id,
                 LastFour = q.LastFour,
@@ -547,8 +641,7 @@ public class ClientManager(
                 ExpiresAt = q.ExpiresAt,
                 RevokedAt = q.RevokedAt,
                 IsActive = !q.RevokedAt.HasValue && (!q.ExpiresAt.HasValue || q.ExpiresAt > DateTimeOffset.UtcNow),
-            })
-            .ToListAsync();
+            }).ToList();
     }
 
     /// <summary>
@@ -560,7 +653,7 @@ public class ClientManager(
     public async Task<bool> AssignScopesAsync(Guid id, List<Guid> scopeIds)
     {
         // Verify client exists
-        if (!await _dbSet.AnyAsync(c => c.Id == id))
+        if (!await _dbSet.Where(c => c.Id == id).AnyAsync())
         {
             throw new BusinessException(Localizer.ClientNotFound, StatusCodes.Status404NotFound);
         }
@@ -581,8 +674,7 @@ public class ClientManager(
                     ScopeId = scopeId
                 }).ToList();
 
-                await _dbContext.ClientScopes.AddRangeAsync(clientScopes);
-                await _dbContext.SaveChangesAsync();
+                await _dbContext.ClientScopes.BulkInsertAsync(clientScopes);
             }
 
             return true;
@@ -598,7 +690,7 @@ public class ClientManager(
     public async Task<bool> AssignResourcesAsync(Guid id, List<Guid> resourceIds)
     {
         // Verify client exists
-        if (!await _dbSet.AnyAsync(c => c.Id == id))
+        if (!await _dbSet.Where(c => c.Id == id).AnyAsync())
         {
             throw new BusinessException(Localizer.ClientNotFound, StatusCodes.Status404NotFound);
         }
@@ -619,8 +711,7 @@ public class ClientManager(
                     ApiResourceId = resourceId
                 }).ToList();
 
-                await _dbContext.ClientResources.AddRangeAsync(clientResources);
-                await _dbContext.SaveChangesAsync();
+                await _dbContext.ClientResources.BulkInsertAsync(clientResources);
             }
 
             return true;
@@ -636,53 +727,30 @@ public class ClientManager(
     {
         var authorizations = await _dbContext.Set<Authorization>()
             .Where(a => a.ClientId == id)
-            .OrderByDescending(a => a.CreationDate)
-            .Select(a => new AuthorizationItemDto
+            .OrderByDescending(a => a.CreationDate).ToListAsync();
+        return authorizations.Select(a => new AuthorizationItemDto
             {
                 Id = a.Id,
                 SubjectId = a.SubjectId,
                 ClientId = a.ClientId,
                 Status = a.Status,
                 CreationDate = a.CreationDate
-            })
-            .ToListAsync();
-
-        return authorizations;
+            }).ToList();
     }
 
     private async Task ApplyScopesAndResourcesAsync(Client entity, List<Guid> scopeIds, List<Guid> resourceIds)
     {
-        if (scopeIds.Count > 0)
+        entity.ClientScopes = scopeIds.Distinct().Select(scopeId => new ClientScope
         {
-            var scopes = await _dbContext.ApiScopes
-                .Where(s => scopeIds.Contains(s.Id))
-                .ToListAsync();
-
-            foreach (var scope in scopes)
-            {
-                entity.ClientScopes.Add(new ClientScope
-                {
-                    Client = entity,
-                    Scope = scope,
-                });
-            }
-        }
-
-        if (resourceIds.Count > 0)
+            ClientId = entity.Id,
+            ScopeId = scopeId,
+        }).ToList();
+        entity.ClientResources = resourceIds.Distinct().Select(resourceId => new ClientResource
         {
-            var resources = await _dbContext.ApiResources
-                .Where(r => resourceIds.Contains(r.Id))
-                .ToListAsync();
-
-            foreach (var resource in resources)
-            {
-                entity.ClientResources.Add(new ClientResource
-                {
-                    Client = entity,
-                    ApiResource = resource,
-                });
-            }
-        }
+            ClientId = entity.Id,
+            ApiResourceId = resourceId,
+        }).ToList();
+        await Task.CompletedTask;
     }
 
     private static string IssueClientSecret(Client entity, int expirationDays)

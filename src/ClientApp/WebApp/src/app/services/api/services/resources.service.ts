@@ -7,31 +7,31 @@ import { ResourceAddDto } from '../models/iammod/resource-add-dto.model';
 import { ResourceDetailDto } from '../models/iammod/resource-detail-dto.model';
 import { ResourceUpdateDto } from '../models/iammod/resource-update-dto.model';
 /**
- * API resource management controller
+ *
  */
 @Injectable({ providedIn: 'root' })
 export class ResourcesService extends BaseService {
   /**
-   * Get all resources (for dropdown/selection)
+   * getAll
    */
   getAll(): Observable<ResourceItemDto[]> {
     const _url = `/api/Resources/all`;
     return this.request<ResourceItemDto[]>('get', _url);
   }
   /**
-   * Get paged resources
+   * getResources
    * @param name Resource name filter
    * @param displayName Display name filter
-   * @param pageIndex number
-   * @param pageSize number
-   * @param orderBy Record<string, boolean>
+   * @param pageIndex any
+   * @param pageSize any
+   * @param orderBy string
    */
-  getResources(name: string | null, displayName: string | null, pageIndex: number | null, pageSize: number | null, orderBy: Record<string, boolean> | null): Observable<PageList<ResourceItemDto>> {
-    const _url = `/api/Resources?name=${name ?? ''}&displayName=${displayName ?? ''}&pageIndex=${pageIndex ?? ''}&pageSize=${pageSize ?? ''}&orderBy=${orderBy ?? ''}`;
+  getResources(name: string | null, displayName: string | null, pageIndex: any | null, pageSize: any | null, orderBy: string | null): Observable<PageList<ResourceItemDto>> {
+    const _url = `/api/Resources?Name=${name ?? ''}&DisplayName=${displayName ?? ''}&pageIndex=${pageIndex ?? ''}&pageSize=${pageSize ?? ''}&orderBy=${orderBy ?? ''}`;
     return this.request<PageList<ResourceItemDto>>('get', _url);
   }
   /**
-   * Create new resource
+   * createResource
    * @param data ResourceAddDto
    */
   createResource(data: ResourceAddDto): Observable<ResourceDetailDto> {
@@ -39,16 +39,16 @@ export class ResourcesService extends BaseService {
     return this.request<ResourceDetailDto>('post', _url, data);
   }
   /**
-   * Get resource detail by id
-   * @param id Resource id
+   * getDetail
+   * @param id string
    */
   getDetail(id: string): Observable<ResourceDetailDto> {
     const _url = `/api/Resources/${id}`;
     return this.request<ResourceDetailDto>('get', _url);
   }
   /**
-   * Update resource
-   * @param id Resource id
+   * updateResource
+   * @param id string
    * @param data ResourceUpdateDto
    */
   updateResource(id: string, data: ResourceUpdateDto): Observable<ResourceDetailDto> {
@@ -56,11 +56,11 @@ export class ResourcesService extends BaseService {
     return this.request<ResourceDetailDto>('put', _url, data);
   }
   /**
-   * Delete resource
-   * @param id Resource id
+   * deleteResource
+   * @param id string
    */
-  deleteResource(id: string): Observable<any> {
+  deleteResource(id: string): Observable<boolean> {
     const _url = `/api/Resources/${id}`;
-    return this.request<any>('delete', _url);
+    return this.request<boolean>('delete', _url);
   }
 }

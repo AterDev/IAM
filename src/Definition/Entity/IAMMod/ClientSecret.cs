@@ -3,6 +3,7 @@ namespace Entity.IAMMod;
 /// <summary>
 /// Historical client secret record used for rotation and audit.
 /// </summary>
+[Perigon.PostgreSQL.Attributes.Index(nameof(ClientSecret.ClientId), nameof(ClientSecret.RevokedAt))]
 public class ClientSecret : EntityBase
 {
     /// <summary>
@@ -13,20 +14,20 @@ public class ClientSecret : EntityBase
     /// <summary>
     /// Secret hash.
     /// </summary>
-    [MaxLength(200)]
-    public required string SecretHash { get; set; }
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(200)")]
+    public string SecretHash { get; set; }
 
     /// <summary>
     /// Secret salt.
     /// </summary>
-    [MaxLength(100)]
-    public required string SecretSalt { get; set; }
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(100)")]
+    public string SecretSalt { get; set; }
 
     /// <summary>
     /// Last four characters of the plain secret for UI identification.
     /// </summary>
-    [MaxLength(16)]
-    public required string LastFour { get; set; }
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(16)")]
+    public string LastFour { get; set; }
 
     /// <summary>
     /// Secret expiration time.

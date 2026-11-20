@@ -9,4 +9,12 @@ public class RoleItemDto
     public required string Name { get; set; }
     public string? Description { get; set; }
     public DateTimeOffset CreatedTime { get; set; }
+
+    public static RoleItemDto FromEntity(Role entity) => new()
+    {
+        Id = entity.Id,
+        Name = entity.Name,
+        Description = entity.Description,
+        CreatedTime = entity.CreatedTime,
+    };
 }

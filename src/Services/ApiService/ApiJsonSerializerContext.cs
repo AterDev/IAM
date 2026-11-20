@@ -1,0 +1,182 @@
+using System.Text.Json.Serialization;
+using IAMMod.Models.AccountDtos;
+using IAMMod.Models.AdminAuthDtos;
+using IAMMod.Models.AuditLogDtos;
+using IAMMod.Models.AuthorizationDtos;
+using IAMMod.Models.ClientDtos;
+using IAMMod.Models.LoginSessionDtos;
+using IAMMod.Models.OAuthDtos;
+using IAMMod.Models.OrganizationDtos;
+using IAMMod.Models.PermissionDtos;
+using IAMMod.Models.ResourceDtos;
+using IAMMod.Models.RoleDtos;
+using IAMMod.Models.ScopeDtos;
+using IAMMod.Models.TokenDtos;
+using IAMMod.Models.UserDtos;
+using Microsoft.AspNetCore.Mvc;
+using Perigon.AspNetCore.Models;
+using UserCenterMod.Models;
+using ApiService.Models;
+
+// <perigon-aot-json:usings>
+using ApiService.Browser;
+using EntityFramework.AppDbContext;
+using Share;
+using System.Collections.Generic;
+using System;
+// </perigon-aot-json:usings>
+
+namespace ApiService;
+
+// <perigon-aot-json:generated>
+[JsonSerializable(typeof(ApiService.Models.ApiMessageDto))]
+[JsonSerializable(typeof(BrowserFlowState))]
+[JsonSerializable(typeof(DefaultDbContext))]
+[JsonSerializable(typeof(AuthorizationItemDto))]
+[JsonSerializable(typeof(Localizer))]
+[JsonSerializable(typeof(List<AuthorizationItemDto>))]
+[JsonSerializable(typeof(DateTimeOffset))]
+// </perigon-aot-json:generated>
+[JsonSerializable(typeof(ProblemDetails))]
+[JsonSerializable(typeof(ErrorResult))]
+[JsonSerializable(typeof(OAuthErrorDto))]
+[JsonSerializable(typeof(bool))]
+[JsonSerializable(typeof(bool?))]
+[JsonSerializable(typeof(int))]
+[JsonSerializable(typeof(long))]
+[JsonSerializable(typeof(string))]
+[JsonSerializable(typeof(Guid))]
+[JsonSerializable(typeof(Guid?))]
+[JsonSerializable(typeof(DateTimeOffset?))]
+[JsonSerializable(typeof(List<Guid>))]
+[JsonSerializable(typeof(List<string>))]
+[JsonSerializable(typeof(Dictionary<string, string>))]
+[JsonSerializable(typeof(RegisterRequestDto))]
+[JsonSerializable(typeof(ForgotPasswordRequestDto))]
+[JsonSerializable(typeof(ResetPasswordRequestDto))]
+[JsonSerializable(typeof(ChangePasswordRequestDto))]
+[JsonSerializable(typeof(EnableMfaRequestDto))]
+[JsonSerializable(typeof(DisableMfaRequestDto))]
+[JsonSerializable(typeof(RegenerateRecoveryCodesRequestDto))]
+[JsonSerializable(typeof(MfaStatusDto))]
+[JsonSerializable(typeof(MfaSetupResponseDto))]
+[JsonSerializable(typeof(MfaRecoveryCodesResponseDto))]
+[JsonSerializable(typeof(AdminLoginDto))]
+[JsonSerializable(typeof(AdminLoginResponseDto))]
+[JsonSerializable(typeof(AdminUserInfo))]
+[JsonSerializable(typeof(AuditLogFilterDto))]
+[JsonSerializable(typeof(AuditLogItemDto))]
+[JsonSerializable(typeof(AuditLogDetailDto))]
+[JsonSerializable(typeof(UserAuthorizationDto))]
+[JsonSerializable(typeof(List<UserAuthorizationDto>))]
+[JsonSerializable(typeof(ClientAddDto))]
+[JsonSerializable(typeof(ClientApprovalDto))]
+[JsonSerializable(typeof(ClientDetailDto))]
+[JsonSerializable(typeof(ClientFilterDto))]
+[JsonSerializable(typeof(ClientItemDto))]
+[JsonSerializable(typeof(ClientRegistrationRequestDto))]
+[JsonSerializable(typeof(ClientRegistrationResultDto))]
+[JsonSerializable(typeof(ClientScopeAssignDto))]
+[JsonSerializable(typeof(ClientSecretDto))]
+[JsonSerializable(typeof(ClientSecretHistoryDto))]
+[JsonSerializable(typeof(ClientUpdateDto))]
+[JsonSerializable(typeof(LoginSessionAddDto))]
+[JsonSerializable(typeof(LoginSessionDetailDto))]
+[JsonSerializable(typeof(LoginSessionFilterDto))]
+[JsonSerializable(typeof(LoginSessionItemDto))]
+[JsonSerializable(typeof(AuthorizeInteractionContextDto))]
+[JsonSerializable(typeof(AuthorizeInteractionDecisionDto))]
+[JsonSerializable(typeof(AuthorizeInteractionDecisionResponseDto))]
+[JsonSerializable(typeof(AuthorizeRequestDto))]
+[JsonSerializable(typeof(AuthorizeResponseDto))]
+[JsonSerializable(typeof(DeviceAuthorizationDecisionDto))]
+[JsonSerializable(typeof(DeviceAuthorizationInteractionDto))]
+[JsonSerializable(typeof(DeviceAuthorizationRequestDto))]
+[JsonSerializable(typeof(DeviceAuthorizationResponseDto))]
+[JsonSerializable(typeof(IntrospectRequestDto))]
+[JsonSerializable(typeof(IntrospectResponseDto))]
+[JsonSerializable(typeof(JwksDto))]
+[JsonSerializable(typeof(JsonWebKeyDto))]
+[JsonSerializable(typeof(LogoutRequestDto))]
+[JsonSerializable(typeof(OAuthInteractionScopeDto))]
+[JsonSerializable(typeof(OidcConfigurationDto))]
+[JsonSerializable(typeof(RevokeRequestDto))]
+[JsonSerializable(typeof(TokenRequestDto))]
+[JsonSerializable(typeof(TokenResponseDto))]
+[JsonSerializable(typeof(UserInfoDto))]
+[JsonSerializable(typeof(AddressClaimDto))]
+[JsonSerializable(typeof(OrganizationAddDto))]
+[JsonSerializable(typeof(OrganizationDetailDto))]
+[JsonSerializable(typeof(OrganizationFilterDto))]
+[JsonSerializable(typeof(OrganizationItemDto))]
+[JsonSerializable(typeof(OrganizationTreeDto))]
+[JsonSerializable(typeof(OrganizationUpdateDto))]
+[JsonSerializable(typeof(ClientPermissionSyncDto))]
+[JsonSerializable(typeof(PermissionDetailDto))]
+[JsonSerializable(typeof(PermissionFilterDto))]
+[JsonSerializable(typeof(PermissionItemDto))]
+[JsonSerializable(typeof(PermissionSyncNodeDto))]
+[JsonSerializable(typeof(PermissionTreeNodeDto))]
+[JsonSerializable(typeof(PermissionUpsertDto))]
+[JsonSerializable(typeof(UserPermissionDto))]
+[JsonSerializable(typeof(ClientResourceDto))]
+[JsonSerializable(typeof(ResourceAddDto))]
+[JsonSerializable(typeof(ResourceDetailDto))]
+[JsonSerializable(typeof(ResourceFilterDto))]
+[JsonSerializable(typeof(ResourceItemDto))]
+[JsonSerializable(typeof(ResourceUpdateDto))]
+[JsonSerializable(typeof(RoleAddDto))]
+[JsonSerializable(typeof(RoleDetailDto))]
+[JsonSerializable(typeof(RoleFilterDto))]
+[JsonSerializable(typeof(RoleGrantPermissionDto))]
+[JsonSerializable(typeof(RoleItemDto))]
+[JsonSerializable(typeof(RoleUpdateDto))]
+[JsonSerializable(typeof(ScopeAddDto))]
+[JsonSerializable(typeof(ScopeDetailDto))]
+[JsonSerializable(typeof(ScopeFilterDto))]
+[JsonSerializable(typeof(ScopeItemDto))]
+[JsonSerializable(typeof(ScopeUpdateDto))]
+[JsonSerializable(typeof(TokenDetailDto))]
+[JsonSerializable(typeof(TokenFilterDto))]
+[JsonSerializable(typeof(TokenItemDto))]
+[JsonSerializable(typeof(UserAddDto))]
+[JsonSerializable(typeof(UserDetailDto))]
+[JsonSerializable(typeof(UserFilterDto))]
+[JsonSerializable(typeof(UserItemDto))]
+[JsonSerializable(typeof(UserUpdateDto))]
+[JsonSerializable(typeof(ProxyUsageAddDto))]
+[JsonSerializable(typeof(ProxyUsageFilterDto))]
+[JsonSerializable(typeof(ProxyUsageItemDto))]
+[JsonSerializable(typeof(UserCenterLoginDto))]
+[JsonSerializable(typeof(UserEntitlementDefinitionFilterDto))]
+[JsonSerializable(typeof(UserEntitlementDefinitionUpsertDto))]
+[JsonSerializable(typeof(UserEntitlementDefinitionItemDto))]
+[JsonSerializable(typeof(UserEntitlementFilterDto))]
+[JsonSerializable(typeof(UserEntitlementAddDto))]
+[JsonSerializable(typeof(UserEntitlementUpdateDto))]
+[JsonSerializable(typeof(UserEntitlementDetailDto))]
+[JsonSerializable(typeof(PageList<AuditLogItemDto>))]
+[JsonSerializable(typeof(PageList<ClientItemDto>))]
+[JsonSerializable(typeof(PageList<LoginSessionItemDto>))]
+[JsonSerializable(typeof(PageList<OrganizationItemDto>))]
+[JsonSerializable(typeof(PageList<PermissionItemDto>))]
+[JsonSerializable(typeof(PageList<ResourceItemDto>))]
+[JsonSerializable(typeof(PageList<RoleItemDto>))]
+[JsonSerializable(typeof(PageList<ScopeItemDto>))]
+[JsonSerializable(typeof(PageList<TokenItemDto>))]
+[JsonSerializable(typeof(PageList<UserItemDto>))]
+[JsonSerializable(typeof(PageList<ProxyUsageItemDto>))]
+[JsonSerializable(typeof(PageList<UserEntitlementDefinitionItemDto>))]
+[JsonSerializable(typeof(PageList<UserEntitlementDetailDto>))]
+[JsonSerializable(typeof(List<AuditLogItemDto>))]
+[JsonSerializable(typeof(List<AuditLogDetailDto>))]
+[JsonSerializable(typeof(List<ClientDetailDto>))]
+[JsonSerializable(typeof(List<ClientSecretHistoryDto>))]
+[JsonSerializable(typeof(List<PermissionTreeNodeDto>))]
+[JsonSerializable(typeof(List<ResourceItemDto>))]
+[JsonSerializable(typeof(List<RoleItemDto>))]
+[JsonSerializable(typeof(List<OrganizationTreeDto>))]
+[JsonSerializable(typeof(List<UserPermissionDto>))]
+public partial class ApiJsonSerializerContext : JsonSerializerContext
+{
+}

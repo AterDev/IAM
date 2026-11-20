@@ -8,7 +8,7 @@ public class ExternalLoginResolutionResultDto
     /// <summary>
     /// Resolution status.
     /// </summary>
-    public required string Status { get; set; }
+    public string Status { get; set; } = string.Empty;
 
     /// <summary>
     /// Local user id when resolution succeeds.

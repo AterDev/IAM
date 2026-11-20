@@ -21,7 +21,7 @@ export interface UserDetailDto {
   /** lockoutEnabled */
   lockoutEnabled: boolean;
   /** accessFailedCount */
-  accessFailedCount: number;
+  accessFailedCount: any;
   /** createdTime */
   createdTime: Date;
   /** updatedTime */

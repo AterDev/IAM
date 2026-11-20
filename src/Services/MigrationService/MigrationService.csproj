@@ -1,23 +1,25 @@
 <Project Sdk="Microsoft.NET.Sdk.Worker">
     <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFramework>net11.0</TargetFramework>
+        <IsAotCompatible>true</IsAotCompatible>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <UserSecretsId>dotnet-MigrationService-a6847709-48df-4a73-8a2f-60d08c2f943f</UserSecretsId>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+        <PublishAot>true</PublishAot>
+        <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">linux-x64</RuntimeIdentifier>
+        <SelfContained>true</SelfContained>
+    </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="Aspire.Microsoft.EntityFrameworkCore.SqlServer" />
-        <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
         <PackageReference Include="Microsoft.Extensions.Hosting" />
+        <PackageReference Include="Perigon.PostgreSQL" PrivateAssets="analyzers" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\Definition\ServiceDefaults\ServiceDefaults.csproj" />
         <ProjectReference Include="..\..\Definition\EntityFramework\EntityFramework.csproj" />
         <ProjectReference Include="..\..\Definition\Share\Share.csproj" />
+        <ProjectReference Include="..\..\Modules\IAMMod\IAMMod.csproj" />
         <ProjectReference Include="..\..\Perigon\Perigon.AspNetCore\Perigon.AspNetCore.csproj" />
     </ItemGroup>
 </Project>

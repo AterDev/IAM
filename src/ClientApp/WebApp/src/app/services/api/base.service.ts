@@ -19,7 +19,7 @@ export class BaseService {
   }
 
   protected request<T = any>(method: string, path: string, body?: any): Observable<T> {
-    const url = this.baseUrl + path;
+    const url = this.baseUrl + this.omitEmptyQueryValues(path);
     return this.http.request(method, url, {
       headers: this.getHeaders(),
       body,
@@ -48,6 +48,21 @@ export class BaseService {
         );
       })
     );
+  }
+
+  private omitEmptyQueryValues(path: string): string {
+    const queryIndex = path.indexOf('?');
+    if (queryIndex < 0) {
+      return path;
+    }
+
+    // Generated clients use empty values for omitted optional arguments.
+    const query = path.slice(queryIndex + 1)
+      .split('&')
+      .filter(parameter => parameter.length > 0 && !parameter.endsWith('='))
+      .join('&');
+    const route = path.slice(0, queryIndex);
+    return query.length > 0 ? route + '?' + query : route;
   }
 
   private parseAuto<T>(text: string, contentType: string): T {

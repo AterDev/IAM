@@ -4,8 +4,8 @@ namespace Share.Models.Auth;
 /// </summary>
 public class AccessTokenDto
 {
-    public required string AccessToken { get; set; }
-    public required string RefreshToken { get; set; }
+    public string AccessToken { get; set; } = string.Empty;
+    public string RefreshToken { get; set; } = string.Empty;
     /// <summary>
     /// 过期时间秒
     /// </summary>

@@ -7,13 +7,13 @@ namespace IAMMod.Models.ClientDtos;
 /// </summary>
 public class ClientRegistrationRequestDto
 {
-    [MaxLength(256)]
+    [StringLength(256)]
     public required string ClientId { get; set; }
 
-    [MaxLength(256)]
+    [StringLength(256)]
     public required string DisplayName { get; set; }
 
-    [MaxLength(500)]
+    [StringLength(500)]
     public string? Description { get; set; }
 
     public ClientType? Type { get; set; }

@@ -30,11 +30,15 @@ public class AuthorizationManagerTests
             ],
         };
 
-        dbContext.ApiScopes.Add(scope);
-        dbContext.Clients.Add(client);
-        await dbContext.SaveChangesAsync();
+        await dbContext.ApiScopes.InsertAsync(scope, false, CancellationToken.None);
+        await dbContext.Clients.InsertAsync(client, false, CancellationToken.None);
+        await dbContext.ClientScopes.InsertAsync(new ClientScope
+        {
+            ClientId = client.Id,
+            ScopeId = scope.Id,
+        }, false, CancellationToken.None);
 
-        var manager = new AuthorizationManager(dbContext, NullLogger<AuthorizationManager>.Instance);
+        var manager = ManagerTestFactory.Create<AuthorizationManager, Authorization>(dbContext);
 
         var result = await manager.ValidateAuthorizationRequestAsync(new AuthorizeRequestDto
         {
@@ -61,10 +65,9 @@ public class AuthorizationManagerTests
             RequirePkce = true,
             RedirectUris = ["https://app.example.com/callback"],
         };
-        dbContext.Clients.Add(client);
-        await dbContext.SaveChangesAsync();
+        await dbContext.Clients.InsertAsync(client, false, CancellationToken.None);
 
-        var manager = new AuthorizationManager(dbContext, NullLogger<AuthorizationManager>.Instance);
+        var manager = ManagerTestFactory.Create<AuthorizationManager, Authorization>(dbContext);
         var verifier = "abcdefghijklmnopqrstuvwxyz123456";
         var challenge = ToBase64Url(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(verifier)));
 

@@ -6,7 +6,7 @@ namespace IAMMod.Models.UserDtos;
 public class UserDetailDto
 {
     public Guid Id { get; set; }
-    public required string UserName { get; set; }
+    public string UserName { get; set; } = string.Empty;
     public string? Email { get; set; }
     public bool EmailConfirmed { get; set; }
     public string? PhoneNumber { get; set; }
@@ -17,4 +17,20 @@ public class UserDetailDto
     public int AccessFailedCount { get; set; }
     public DateTimeOffset CreatedTime { get; set; }
     public DateTimeOffset UpdatedTime { get; set; }
+
+    public static UserDetailDto FromEntity(User user) => new()
+    {
+        Id = user.Id,
+        UserName = user.UserName,
+        Email = user.Email,
+        EmailConfirmed = user.EmailConfirmed,
+        PhoneNumber = user.PhoneNumber,
+        PhoneNumberConfirmed = user.PhoneNumberConfirmed,
+        IsTwoFactorEnabled = user.IsTwoFactorEnabled,
+        LockoutEnd = user.LockoutEnd,
+        LockoutEnabled = user.LockoutEnabled,
+        AccessFailedCount = user.AccessFailedCount,
+        CreatedTime = user.CreatedTime,
+        UpdatedTime = user.UpdatedTime,
+    };
 }

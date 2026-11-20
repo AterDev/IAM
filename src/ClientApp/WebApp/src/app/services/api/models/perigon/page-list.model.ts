@@ -1,8 +1,8 @@
 export interface PageList<T1> {
   /** count */
-  count: number;
+  count: any;
   /** data */
   data: T1[];
   /** pageIndex */
-  pageIndex: number;
+  pageIndex: any;
 }

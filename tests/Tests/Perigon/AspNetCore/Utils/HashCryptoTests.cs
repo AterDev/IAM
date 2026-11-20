@@ -55,7 +55,7 @@ public class HashCryptoTests
         var (_, privateKey) = HashCrypto.GenerateRsaKeyPair();
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => 
+        Assert.Throws<ArgumentNullException>(() =>
             HashCrypto.SignWithRsa(null!, privateKey)
         );
     }
@@ -64,7 +64,7 @@ public class HashCryptoTests
     public void SignWithRsa_NullPrivateKey_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => 
+        Assert.Throws<ArgumentNullException>(() =>
             HashCrypto.SignWithRsa("test data", null!)
         );
     }

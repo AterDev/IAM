@@ -5,9 +5,9 @@ namespace IAMMod.Models.AccountDtos;
 /// </summary>
 public class ChangePasswordRequestDto
 {
-    [MaxLength(100)]
+    [StringLength(100)]
     public required string CurrentPassword { get; set; }
 
-    [MaxLength(100)]
+    [StringLength(100)]
     public required string NewPassword { get; set; }
 }

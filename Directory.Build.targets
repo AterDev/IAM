@@ -1,0 +1,9 @@
+<Project>
+  <!-- Only the database project owns generated entity and migration metadata. -->
+  <Target Name="LimitPostgreSqlGeneratorsToDbContextProject" AfterTargets="ResolveLockFileAnalyzers"
+          Condition="'$(MSBuildProjectName)' != 'EntityFramework'">
+    <ItemGroup>
+      <Analyzer Remove="@(Analyzer->WithMetadataValue('Filename', 'Perigon.PostgreSQL.SourceGeneration'));@(Analyzer->WithMetadataValue('Filename', 'Perigon.PostgreSQL.Analyzers'))" />
+    </ItemGroup>
+  </Target>
+</Project>

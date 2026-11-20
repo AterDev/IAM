@@ -13,7 +13,7 @@ internal static class ManagerTestFactory
         IReadOnlyDictionary<string, object?>? managerFields = null
     )
         where TManager : ManagerBase<DefaultDbContext, TEntity>
-        where TEntity : class, IEntityBase
+        where TEntity : class, IEntityBase, new()
     {
         var manager = (TManager)RuntimeHelpers.GetUninitializedObject(typeof(TManager));
         var baseType = typeof(ManagerBase<DefaultDbContext, TEntity>);
@@ -22,10 +22,8 @@ internal static class ManagerTestFactory
         SetField(baseType, manager, "_dbContext", dbContext);
         SetField(baseType, manager, "_dbSet", dbContext.Set<TEntity>());
         SetField(baseType, manager, "_userContext", CreateAdminUserContext());
-        SetField(baseType, manager, "_isMultiTenant", false);
-
         var queryableProperty = baseType.GetProperty("Queryable", BindingFlags.Instance | BindingFlags.NonPublic);
-        queryableProperty?.SetValue(manager, dbContext.Set<TEntity>().AsNoTracking().AsQueryable());
+        queryableProperty?.SetValue(manager, dbContext.Set<TEntity>().AsQueryable());
 
         if (managerFields is not null)
         {

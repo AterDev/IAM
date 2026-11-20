@@ -17,4 +17,20 @@ public class LoginSessionDetailDto
     public bool IsActive { get; set; }
     public DateTimeOffset CreatedTime { get; set; }
     public DateTimeOffset UpdatedTime { get; set; }
+
+    public static LoginSessionDetailDto FromEntity(LoginSession entity) => new()
+    {
+        Id = entity.Id,
+        UserId = entity.UserId,
+        SessionId = entity.SessionId,
+        IpAddress = entity.IpAddress,
+        UserAgent = entity.UserAgent,
+        DeviceInfo = entity.DeviceInfo,
+        LoginTime = entity.LoginTime,
+        LastActivityTime = entity.LastActivityTime,
+        ExpirationTime = entity.ExpirationTime,
+        IsActive = entity.IsActive,
+        CreatedTime = entity.CreatedTime,
+        UpdatedTime = entity.UpdatedTime,
+    };
 }

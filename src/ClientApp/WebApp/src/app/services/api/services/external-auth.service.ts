@@ -2,33 +2,33 @@ import { BaseService } from '../base.service';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 /**
- * 
+ *
  */
 @Injectable({ providedIn: 'root' })
 export class ExternalAuthService extends BaseService {
   /**
-   * Microsft login
-   * @param returnUrl
+   * signInMicrosoft
+   * @param returnUrl string
    */
-  signInMicrosoft(returnUrl: string | null): Observable<any> {
+  signInMicrosoft(returnUrl: string | null): Observable<void> {
     const _url = `/api/ExternalAuth/signin-microsoft?returnUrl=${returnUrl ?? ''}`;
-    return this.request<any>('get', _url);
+    return this.request<void>('get', _url);
   }
   /**
-   * Google login
-   * @param returnUrl
+   * signInGoogle
+   * @param returnUrl string
    */
-  signInGoogle(returnUrl: string | null): Observable<any> {
+  signInGoogle(returnUrl: string | null): Observable<void> {
     const _url = `/api/ExternalAuth/signin-google?returnUrl=${returnUrl ?? ''}`;
-    return this.request<any>('get', _url);
+    return this.request<void>('get', _url);
   }
   /**
-   *
-   * @param type
-   * @param returnUrl
+   * getToken
+   * @param type string
+   * @param returnUrl string
    */
-  getToken(type: string | null, returnUrl: string | null): Observable<any> {
+  getToken(type: string, returnUrl: string | null): Observable<void> {
     const _url = `/api/ExternalAuth/getToken?type=${type ?? ''}&returnUrl=${returnUrl ?? ''}`;
-    return this.request<any>('get', _url);
+    return this.request<void>('get', _url);
   }
 }

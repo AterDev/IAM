@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFramework>net11.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
         <IsAspireSharedProject>true</IsAspireSharedProject>
     </PropertyGroup>
     <ItemGroup>
@@ -19,14 +20,12 @@
         <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
         <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
         <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
-        <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
-        <PackageReference Include="Aspire.Microsoft.EntityFrameworkCore.SqlServer" />
+        <PackageReference Include="Perigon.PostgreSQL" PrivateAssets="analyzers" />
         <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" />
         <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
-        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" />
     </ItemGroup>
     <ItemGroup>
-        <!--<ProjectReference Include="..\EntityFramework\EntityFramework.csproj" />-->
+        <ProjectReference Include="..\EntityFramework\EntityFramework.csproj" />
         <ProjectReference Include="..\..\Perigon\Perigon.AspNetCore.Toolkit\Perigon.AspNetCore.Toolkit.csproj" />
         <ProjectReference Include="..\..\Perigon\Perigon.AspNetCore\Perigon.AspNetCore.csproj" />
         <ProjectReference Include="..\Share\Share.csproj" />

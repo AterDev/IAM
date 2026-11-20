@@ -19,11 +19,10 @@ public class DeviceFlowManagerTests
             Description = "TV App",
         };
 
-        dbContext.ApiScopes.Add(scope);
-        dbContext.Clients.Add(client);
-        await dbContext.SaveChangesAsync();
+        await dbContext.ApiScopes.InsertAsync(scope, false, CancellationToken.None);
+        await dbContext.Clients.InsertAsync(client, false, CancellationToken.None);
 
-        var manager = new DeviceFlowManager(dbContext, NullLogger<DeviceFlowManager>.Instance);
+        var manager = ManagerTestFactory.Create<DeviceFlowManager, Authorization>(dbContext);
         var initiation = await manager.InitiateDeviceAuthorizationAsync(new DeviceAuthorizationRequestDto
         {
             ClientId = client.ClientId,
@@ -51,10 +50,9 @@ public class DeviceFlowManagerTests
             DisplayName = "Device Client Approve",
         };
 
-        dbContext.Clients.Add(client);
-        await dbContext.SaveChangesAsync();
+        await dbContext.Clients.InsertAsync(client, false, CancellationToken.None);
 
-        var manager = new DeviceFlowManager(dbContext, NullLogger<DeviceFlowManager>.Instance);
+        var manager = ManagerTestFactory.Create<DeviceFlowManager, Authorization>(dbContext);
         var initiation = await manager.InitiateDeviceAuthorizationAsync(new DeviceAuthorizationRequestDto
         {
             ClientId = client.ClientId,
@@ -79,10 +77,9 @@ public class DeviceFlowManagerTests
             DisplayName = "Device Client Deny",
         };
 
-        dbContext.Clients.Add(client);
-        await dbContext.SaveChangesAsync();
+        await dbContext.Clients.InsertAsync(client, false, CancellationToken.None);
 
-        var manager = new DeviceFlowManager(dbContext, NullLogger<DeviceFlowManager>.Instance);
+        var manager = ManagerTestFactory.Create<DeviceFlowManager, Authorization>(dbContext);
         var initiation = await manager.InitiateDeviceAuthorizationAsync(new DeviceAuthorizationRequestDto
         {
             ClientId = client.ClientId,

@@ -1,5 +1,7 @@
 namespace Entity.IAMMod;
 
+using System.ComponentModel.DataAnnotations.Schema;
+
 /// <summary>
 /// OAuth/OIDC client entity
 /// </summary>
@@ -8,28 +10,37 @@ public class Client : EntityBase
     /// <summary>
     /// Client identifier
     /// </summary>
-    [MaxLength(100)]
-    public required string ClientId { get; set; }
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(100)")]
+    [Column("ClientId")]
+    public string ClientIdentifier { get; set; } = string.Empty;
+
+    /// <summary>OAuth client identifier exposed by the domain API.</summary>
+    [NotMapped]
+    public string ClientId
+    {
+        get => ClientIdentifier;
+        set => ClientIdentifier = value;
+    }
 
     /// <summary>
     /// Client secret hash
     /// </summary>
-    [MaxLength(200)]
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(200)")]
     public string? SecretHash { get; set; }
 
-    [MaxLength(100)]
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(100)")]
     public string? SecretSalt { get; set; }
 
     /// <summary>
     /// Display name
     /// </summary>
-    [MaxLength(256)]
-    public required string DisplayName { get; set; }
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(256)")]
+    public string DisplayName { get; set; }
 
     /// <summary>
     /// Description
     /// </summary>
-    [MaxLength(500)]
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(500)")]
     public string? Description { get; set; }
 
     /// <summary>
@@ -75,7 +86,7 @@ public class Client : EntityBase
     /// <summary>
     /// Reviewer identifier.
     /// </summary>
-    [MaxLength(100)]
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(100)")]
     public string? ReviewedBy { get; set; }
 
     /// <summary>
@@ -86,12 +97,30 @@ public class Client : EntityBase
     /// <summary>
     /// Redirect URIs
     /// </summary>
-    public List<string> RedirectUris { get; set; } = [];
+    [Perigon.PostgreSQL.Attributes.Column("RedirectUris", IsArray = true)]
+    public string[] RedirectUriValues { get; set; } = [];
+
+    /// <summary>Redirect URIs exposed as a mutable domain collection.</summary>
+    [NotMapped]
+    public List<string> RedirectUris
+    {
+        get => [.. RedirectUriValues];
+        set => RedirectUriValues = [.. value];
+    }
 
     /// <summary>
     /// Post logout redirect URIs 
     /// </summary>
-    public List<string> PostLogoutRedirectUris { get; set; } = [];
+    [Perigon.PostgreSQL.Attributes.Column("PostLogoutRedirectUris", IsArray = true)]
+    public string[] PostLogoutRedirectUriValues { get; set; } = [];
+
+    /// <summary>Post-logout redirect URIs exposed as a mutable domain collection.</summary>
+    [NotMapped]
+    public List<string> PostLogoutRedirectUris
+    {
+        get => [.. PostLogoutRedirectUriValues];
+        set => PostLogoutRedirectUriValues = [.. value];
+    }
 
     /// <summary>
     /// Client scopes

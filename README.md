@@ -1,6 +1,6 @@
 # IAM 身份与访问管理中心
 
-基于 **.NET 10 / ASP.NET Core / EF Core / Angular 20 / .NET Aspire** 的集中式身份认证与授权中心，目标是为多个业务系统提供统一的登录、授权、令牌签发与管理能力。
+基于 **.NET 11 / ASP.NET Core Minimal API / Perigon.PostgreSQL / Angular 20 / .NET Aspire** 的集中式身份认证与授权中心，目标是为多个业务系统提供统一的登录、授权、令牌签发与管理能力。
 
 ## 文档导航
 
@@ -44,11 +44,15 @@
 - 登出端点：`/connect/logout`
 - UserInfo：`/connect/userinfo`
 
-## 单镜像部署（外部数据库 / 缓存）
+## 本地构建与验证
+
+使用 .NET SDK 11.0.100。Perigon.PostgreSQL 的 0.3.8 运行时包和工具包来自同一上游提交 `7be2053`。将打包目录配置为 NuGet 源后运行 `dotnet tool restore` 和 `dotnet build IAM.slnx`。集成测试通过 `IAM_TEST_POSTGRES` 接入隔离的 PostgreSQL 实例，测试账号需要创建和删除测试数据库的权限。
+
+## 容器部署（外部 PostgreSQL / 缓存）
 
 此模式下：
 
-- **只运行一个应用镜像**
+- 先运行一次迁移镜像，再启动 API 镜像
 - **数据库与缓存由用户自己准备**
 - **不要求使用 Docker Compose**
 - 应用通过环境变量或挂载配置文件读取连接串
@@ -58,17 +62,17 @@
 在仓库根目录执行：
 
 ```powershell
-.\scripts\Publish-LocalContainerImage.ps1 -Tag latest
+pwsh ./scripts/PublishIAMImage.ps1 -Tag latest -Local
 ```
 
 默认会完成以下步骤：
 
 - 构建 Angular 管理后台并同步到 `ApiService/wwwroot`
-- 发布 `ApiService` 容器镜像到本地运行时（Alpine extra 运行时变体，保留本地化支持）
+- 发布 `ApiService` 容器镜像到本地运行时（.NET 11 Linux x64 Native AOT，保留本地化支持）
 - 本地镜像名为 `niltor/iam:<tag>`
 
 > 这一步由 .NET SDK 的 `dotnet publish /t:PublishContainer` 完成，不再依赖 `Dockerfile`、`docker build` 或 `docker push`。
-> Alpine extra 变体会保留 globalization 支持，否则 `zh-CN` 等区域设置无法正常加载。
+> 发布需要 Linux x64 Native AOT 工具链。Windows 上可使用带 AOT 工具链的 Linux 构建容器。
 
 ### 使用本地镜像进行验证
 
@@ -89,14 +93,13 @@ docker run -d --name iam-redis \
   redis:7.4-alpine
 ```
 
-然后启动本地镜像：
+使用同一 PostgreSQL 连接串和 `Authentication__Issuer` 先运行 `MigrationService`。等待退出码为 0，然后启动 API 镜像。
 
 ```bash
 docker run -d --name iam-app \
   --network iam-test-net \
   -p 8080:8080 \
   -e ASPNETCORE_ENVIRONMENT=Production \
-  -e Components__Database=PostgreSQL \
   -e Components__Cache=Redis \
   -e ConnectionStrings__Default="Host=iam-db;Port=5432;Database=IAM;Username=iam;Password=iam_test_pwd;Include Error Detail=true" \
   -e ConnectionStrings__Cache="iam-redis:6379" \
@@ -112,7 +115,6 @@ docker run -d --name iam-app \
 ```json
 {
   "Components": {
-    "Database": "PostgreSQL",
     "Cache": "Memory"
   },
   "Authentication": {
@@ -148,7 +150,6 @@ docker run -d --name iam \
   -e ASPNETCORE_ENVIRONMENT=Production \
   -e Authentication__Issuer="https://auth.xxx.co" \
   -e Authentication__DisplayName="YouName" \
-  -e Components__Database=PostgreSQL \
   -e Components__Cache=Memory \
   -e ConnectionStrings__Default="Server=host.docker.internal;Port=5432;Database=IAM;User Id=niltor;Password=n0th1ngisNULL;" \
   niltor/iam:latest
@@ -165,18 +166,14 @@ docker run -d --name iam \
 
 ### 启动行为
 
-生产环境下，`ApiService` 启动后会：
-
-1. 自动执行 `MigrateAsync()`
-2. 幂等初始化签名密钥、默认管理员、默认客户端、默认作用域、默认 API 资源与权限种子
-3. 正常启动 HTTP 服务
+`MigrationService` 在配置的 PostgreSQL 空库上执行初始迁移并初始化签名密钥、默认管理员、客户端和权限。部署编排在迁移进程退出码为 0 后启动 `ApiService`。升级现有 IAM 安装时，请为此版本提供新的 PostgreSQL 数据库。
 
 ### 访问地址
 
 默认容器端口为 `8080`，如果使用上面的示例命令，可访问：
 
 - `http://localhost:8080/`
-- `http://localhost:8080/swagger`
+- `http://localhost:8080/openapi/v1.json`
 
 ### 日志查看
 
@@ -187,7 +184,7 @@ docker logs -f iam-app
 如果启动迁移与初始化成功，日志中会看到类似输出：
 
 - `Starting application initialization...`
-- `Running startup database migrations...`
+- `Database migration completed.`
 - `Application initialization completed successfully`
 
 ## Docker Compose 部署

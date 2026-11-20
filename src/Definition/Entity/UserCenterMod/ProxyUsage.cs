@@ -1,8 +1,11 @@
 namespace Entity.UserCenterMod;
 
+using System.ComponentModel.DataAnnotations.Schema;
+
 /// <summary>
 /// Daily proxy traffic usage for a user.
 /// </summary>
+[Perigon.PostgreSQL.Attributes.Index(nameof(ProxyUsage.UserId), nameof(ProxyUsage.Date), IsUnique = true)]
 public class ProxyUsage : EntityBase
 {
     /// <summary>
@@ -13,6 +16,7 @@ public class ProxyUsage : EntityBase
     /// <summary>
     /// Usage date in server local date.
     /// </summary>
+    [Column(TypeName = "date")]
     public DateOnly Date { get; set; }
 
     /// <summary>

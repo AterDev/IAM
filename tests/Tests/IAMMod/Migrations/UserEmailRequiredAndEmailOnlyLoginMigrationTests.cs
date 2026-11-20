@@ -1,38 +1,44 @@
-using EntityFramework.Migrations;
-using Microsoft.EntityFrameworkCore.Migrations;
-using Microsoft.EntityFrameworkCore.Migrations.Operations;
+using Npgsql;
 
 namespace Tests.IAMMod.Migrations;
 
 public class UserEmailRequiredAndEmailOnlyLoginMigrationTests
 {
     [Fact]
-    public void Up_ShouldCreateCoreIamTablesAndIndexes()
+    public async Task EnsureCreated_ShouldCreateCoreIamTablesAndIndexes()
     {
-        var operations = TestInitMigration.BuildUpOperations();
+        await using var dbContext = TestDbContextFactory.Create(nameof(EnsureCreated_ShouldCreateCoreIamTablesAndIndexes));
+        await using var connection = new NpgsqlConnection(dbContext.ConnectionString);
+        await connection.OpenAsync();
 
-        var createTables = operations.OfType<CreateTableOperation>().ToList();
-        Assert.Contains(createTables, operation => operation.Name == "ApiResources");
-        Assert.Contains(createTables, operation => operation.Name == "Clients");
-        Assert.Contains(createTables, operation => operation.Name == "Users");
+        var tables = await ReadStringsAsync(
+            connection,
+            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'");
+        Assert.Contains("ApiResources", tables);
+        Assert.Contains("Clients", tables);
+        Assert.Contains("Users", tables);
 
-        var indexOperations = operations.OfType<CreateIndexOperation>().ToList();
-        Assert.Contains(indexOperations, operation => operation.Table == "ApiResources"
-            && operation.Name == "IX_ApiResources_Name"
-            && operation.IsUnique);
-        Assert.Contains(indexOperations, operation => operation.Table == "Clients"
-            && operation.Name == "IX_Clients_ClientId"
-            && operation.IsUnique);
+        var indexes = await ReadStringsAsync(
+            connection,
+            "SELECT indexdef FROM pg_indexes WHERE schemaname = 'public'");
+        Assert.Contains(indexes, index => index.Contains("ApiResources", StringComparison.Ordinal)
+            && index.Contains("Name", StringComparison.Ordinal)
+            && index.Contains("UNIQUE", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(indexes, index => index.Contains("Clients", StringComparison.Ordinal)
+            && (index.Contains("ClientId", StringComparison.Ordinal)
+                || index.Contains("ClientIdentifier", StringComparison.Ordinal))
+            && index.Contains("UNIQUE", StringComparison.OrdinalIgnoreCase));
     }
 
-    private sealed class TestInitMigration : Init
+    private static async Task<List<string>> ReadStringsAsync(NpgsqlConnection connection, string sql)
     {
-        public static IReadOnlyList<MigrationOperation> BuildUpOperations()
+        await using var command = new NpgsqlCommand(sql, connection);
+        await using var reader = await command.ExecuteReaderAsync();
+        var values = new List<string>();
+        while (await reader.ReadAsync())
         {
-            var migration = new TestInitMigration();
-            var migrationBuilder = new MigrationBuilder("Npgsql.EntityFrameworkCore.PostgreSQL");
-            migration.Up(migrationBuilder);
-            return migrationBuilder.Operations;
+            values.Add(reader.GetString(0));
         }
+        return values;
     }
 }

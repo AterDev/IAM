@@ -7,7 +7,7 @@ export interface MfaStatusDto {
   /** Whether there is a pending setup secret waiting to be verified. */
   hasPendingSetup: boolean;
   /** Number of remaining unused recovery codes. */
-  recoveryCodesRemaining: number;
+  recoveryCodesRemaining: any;
   /** Whether recovery codes can currently be regenerated. */
   canRegenerateRecoveryCodes: boolean;
 }

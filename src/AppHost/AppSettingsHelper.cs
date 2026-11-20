@@ -7,7 +7,6 @@ namespace AppHost;
 /// </summary>
 public class AspireSetting
 {
-    public string DatabaseType { get; set; } = "PostgreSQL";
     public string CacheType { get; set; } = "Hybrid";
     public string DevPassword { get; set; } =
         "IAM_Dev@" + DateOnly.FromDateTime(DateTime.UtcNow).ToString("yyyy");
@@ -31,19 +30,11 @@ public static class AppSettingsHelper
     public static AspireSetting LoadAspireSettings(IConfiguration config)
     {
         var components = config.GetSection("Components");
-        var databaseType = components["Database"] ?? "PostgreSQL";
         var cacheType = components["Cache"] ?? "Memory";
 
         return new AspireSetting
         {
-            DatabaseType = databaseType,
             CacheType = cacheType,
-            DbPort = databaseType.ToLowerInvariant() switch
-            {
-                "postgresql" => 15432,
-                "sqlserver" => 11433,
-                _ => 13306,
-            },
             EnableNats = components.GetValue<bool>("EnableNats"),
             EnableQdrant = components.GetValue<bool>("EnableQdrant"),
         };

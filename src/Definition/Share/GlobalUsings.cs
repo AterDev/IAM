@@ -1,7 +1,9 @@
 global using System;
 global using EntityFramework.AppDbContext;
 global using EntityFramework.AppDbFactory;
-global using Microsoft.EntityFrameworkCore;
+global using Perigon.PostgreSQL;
+global using Perigon.PostgreSQL.Metadata;
+global using Perigon.PostgreSQL.Options;
 global using Microsoft.Extensions.Logging;
 global using Perigon.AspNetCore.Abstraction;
 global using Perigon.AspNetCore.Constants;

@@ -5,17 +5,17 @@ namespace IAMMod.Models.AccountDtos;
 /// </summary>
 public class RegisterRequestDto
 {
-    [MaxLength(256)]
+    [StringLength(256)]
     public required string UserName { get; set; }
 
-    [MaxLength(256)]
+    [StringLength(256)]
     [EmailAddress]
     public required string Email { get; set; }
 
-    [MaxLength(50)]
+    [StringLength(50)]
     [Phone]
     public string? PhoneNumber { get; set; }
 
-    [MaxLength(100)]
+    [StringLength(100)]
     public required string Password { get; set; }
 }

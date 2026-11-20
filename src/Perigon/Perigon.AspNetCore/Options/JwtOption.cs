@@ -4,8 +4,8 @@ public class JwtOption
 {
     public const string ConfigPath = "Authentication:Jwt";
 
-    public required string ValidAudiences { get; set; }
-    public required string Sign { get; set; }
+    public string ValidAudiences { get; set; } = string.Empty;
+    public string Sign { get; set; } = string.Empty;
 
     /// <summary>
     /// 过期时间:秒

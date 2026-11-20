@@ -1,3 +1,4 @@
+using Perigon.PostgreSQL;
 using IAMMod.Models.AuditLogDtos;
 
 namespace IAMMod.Managers;
@@ -6,7 +7,7 @@ namespace IAMMod.Managers;
 /// Manager for audit log operations
 /// </summary>
 public class AuditLogManager(
-    TenantDbFactory dbContextFactory,
+    AppDbFactory dbContextFactory,
     IUserContext userContext,
     ILogger<AuditLogManager> logger
 ) : ManagerBase<DefaultDbContext, AuditLog>(dbContextFactory, userContext, logger)
@@ -18,14 +19,17 @@ public class AuditLogManager(
     /// <returns>Paged list of audit logs</returns>
     public async Task<PageList<AuditLogItemDto>> GetPageAsync(AuditLogFilterDto filter)
     {
-        Queryable = Queryable
+        var query = _dbSet
             .WhereNotNull(filter.Category, q => q.Category == filter.Category)
             .WhereNotNull(filter.Event, q => q.Event == filter.Event)
             .WhereNotNull(filter.SubjectId, q => q.SubjectId == filter.SubjectId)
             .WhereNotNull(filter.StartDate, q => q.CreatedTime >= filter.StartDate)
             .WhereNotNull(filter.EndDate, q => q.CreatedTime <= filter.EndDate);
 
-        return await PageListAsync<AuditLogFilterDto, AuditLogItemDto>(filter);
+        var count = await query.CountAsync();
+        var rows = await query.OrderByDescending(item => item.CreatedTime).Skip((filter.PageIndex - 1) * filter.PageSize)
+            .Take(filter.PageSize).ToListAsync();
+        return new PageList<AuditLogItemDto> { Count = count, PageIndex = filter.PageIndex, Data = rows.Select(AuditLogItemDto.FromEntity).ToList() };
     }
 
     /// <summary>
@@ -45,7 +49,8 @@ public class AuditLogManager(
     /// <returns>Audit log detail or null</returns>
     public async Task<AuditLogDetailDto?> GetDetailAsync(Guid id)
     {
-        return await FindAsync<AuditLogDetailDto>(q => q.Id == id);
+        var entity = await FindAsync(id);
+        return entity is null ? null : AuditLogDetailDto.FromEntity(entity);
     }
 
     /// <summary>

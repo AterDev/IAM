@@ -3,6 +3,7 @@ namespace Entity.UserCenterMod;
 /// <summary>
 /// A user's assigned entitlement.
 /// </summary>
+[Perigon.PostgreSQL.Attributes.Index(nameof(UserEntitlement.UserId), nameof(UserEntitlement.EntitlementDefinitionId), IsUnique = true)]
 public class UserEntitlement : EntityBase
 {
     public Guid UserId { get; set; }

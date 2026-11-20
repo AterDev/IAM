@@ -13,13 +13,13 @@ public class UserClaim : EntityBase
     /// <summary>
     /// Claim type
     /// </summary>
-    [MaxLength(256)]
-    public required string ClaimType { get; set; }
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(256)")]
+    public string ClaimType { get; set; }
 
     /// <summary>
     /// Claim value
     /// </summary>
-    [MaxLength(500)]
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(500)")]
     public string? ClaimValue { get; set; }
 
     /// <summary>

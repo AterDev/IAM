@@ -20,6 +20,16 @@ public class SessionValidationServiceTests
             ExpirationTime = DateTimeOffset.UtcNow.AddHours(1),
             IsActive = true,
         };
+        await dbContext.Users.InsertAsync(new User
+        {
+            Id = session.UserId,
+            UserName = "session-user-recent",
+            NormalizedUserName = "SESSION-USER-RECENT",
+            Email = "session-user-recent@example.com",
+            NormalizedEmail = "SESSION-USER-RECENT@EXAMPLE.COM",
+            PasswordSalt = "test-salt",
+            PasswordHash = HashCrypto.GeneratePwd("test-password", "test-salt"),
+        }, false, CancellationToken.None);
         dbContext.LoginSessions.Add(session);
         await dbContext.SaveChangesAsync();
 
@@ -28,13 +38,17 @@ public class SessionValidationServiceTests
 
         var isValid = await service.ValidateAsync(session.UserId, session.SessionId);
 
-        dbContext.ChangeTracker.Clear();
         var storedSession = await dbContext.LoginSessions
             .AsNoTracking()
             .SingleAsync((LoginSession q) => q.SessionId == session.SessionId);
 
         Assert.True(isValid);
-        Assert.Equal(originalLastActivity, storedSession.LastActivityTime);
+        // PostgreSQL stores timestamps at microsecond precision, while the
+        // in-memory value can retain sub-microsecond ticks.
+        Assert.InRange(
+            (storedSession.LastActivityTime - originalLastActivity).Duration(),
+            TimeSpan.Zero,
+            TimeSpan.FromMicroseconds(1));
     }
 
     [Fact]
@@ -50,6 +64,16 @@ public class SessionValidationServiceTests
             ExpirationTime = DateTimeOffset.UtcNow.AddHours(1),
             IsActive = true,
         };
+        await dbContext.Users.InsertAsync(new User
+        {
+            Id = session.UserId,
+            UserName = "session-user-stale",
+            NormalizedUserName = "SESSION-USER-STALE",
+            Email = "session-user-stale@example.com",
+            NormalizedEmail = "SESSION-USER-STALE@EXAMPLE.COM",
+            PasswordSalt = "test-salt",
+            PasswordHash = HashCrypto.GeneratePwd("test-password", "test-salt"),
+        }, false, CancellationToken.None);
         dbContext.LoginSessions.Add(session);
         await dbContext.SaveChangesAsync();
 
@@ -58,7 +82,6 @@ public class SessionValidationServiceTests
 
         var isValid = await service.ValidateAsync(session.UserId, session.SessionId);
 
-        dbContext.ChangeTracker.Clear();
         var storedSession = await dbContext.LoginSessions
             .AsNoTracking()
             .SingleAsync((LoginSession q) => q.SessionId == session.SessionId);
@@ -80,6 +103,16 @@ public class SessionValidationServiceTests
             ExpirationTime = DateTimeOffset.UtcNow.AddHours(1),
             IsActive = true,
         };
+        await dbContext.Users.InsertAsync(new User
+        {
+            Id = session.UserId,
+            UserName = "session-user-revoked",
+            NormalizedUserName = "SESSION-USER-REVOKED",
+            Email = "session-user-revoked@example.com",
+            NormalizedEmail = "SESSION-USER-REVOKED@EXAMPLE.COM",
+            PasswordSalt = "test-salt",
+            PasswordHash = HashCrypto.GeneratePwd("test-password", "test-salt"),
+        }, false, CancellationToken.None);
         dbContext.LoginSessions.Add(session);
         await dbContext.SaveChangesAsync();
 

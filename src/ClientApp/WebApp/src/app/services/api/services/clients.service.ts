@@ -19,43 +19,43 @@ import { PermissionTreeNodeDto } from '../models/iammod/permission-tree-node-dto
 import { PermissionType } from '../models/entity/permission-type.model';
 import { ClientPermissionSyncDto } from '../models/iammod/client-permission-sync-dto.model';
 /**
- * OAuth/OIDC client management controller
+ *
  */
 @Injectable({ providedIn: 'root' })
 export class ClientsService extends BaseService {
   /**
-   * Get paged clients
+   * getClients
    * @param clientId Filter by client ID
    * @param displayName Filter by display name
    * @param type Filter by client type
    * @param applicationType Filter by application type
-   * @param pageIndex number
-   * @param pageSize number
-   * @param orderBy Record<string, boolean>
+   * @param pageIndex any
+   * @param pageSize any
+   * @param orderBy string
    */
-  getClients(clientId: string | null, displayName: string | null, type: ClientType | null, applicationType: ApplicationType | null, pageIndex: number | null, pageSize: number | null, orderBy: Record<string, boolean> | null): Observable<PageList<ClientItemDto>> {
-    const _url = `/api/Clients?clientId=${clientId ?? ''}&displayName=${displayName ?? ''}&type=${type ?? ''}&applicationType=${applicationType ?? ''}&pageIndex=${pageIndex ?? ''}&pageSize=${pageSize ?? ''}&orderBy=${orderBy ?? ''}`;
+  getClients(clientId: string | null, displayName: string | null, type: ClientType | null, applicationType: ApplicationType | null, pageIndex: any | null, pageSize: any | null, orderBy: string | null): Observable<PageList<ClientItemDto>> {
+    const _url = `/api/Clients?ClientId=${clientId ?? ''}&DisplayName=${displayName ?? ''}&Type=${type ?? ''}&ApplicationType=${applicationType ?? ''}&pageIndex=${pageIndex ?? ''}&pageSize=${pageSize ?? ''}&orderBy=${orderBy ?? ''}`;
     return this.request<PageList<ClientItemDto>>('get', _url);
   }
   /**
-   * Create new client
+   * createClient
    * @param data ClientAddDto
    */
-  createClient(data: ClientAddDto): Observable<string> {
+  createClient(data: ClientAddDto): Observable<any> {
     const _url = `/api/Clients`;
-    return this.request<string>('post', _url, data);
+    return this.request<any>('post', _url, data);
   }
   /**
-   * Get client detail by id
-   * @param id Client id
+   * getDetail
+   * @param id string
    */
   getDetail(id: string): Observable<ClientDetailDto> {
     const _url = `/api/Clients/${id}`;
     return this.request<ClientDetailDto>('get', _url);
   }
   /**
-   * Update client
-   * @param id Client id
+   * updateClient
+   * @param id string
    * @param data ClientUpdateDto
    */
   updateClient(id: string, data: ClientUpdateDto): Observable<ClientDetailDto> {
@@ -63,15 +63,15 @@ export class ClientsService extends BaseService {
     return this.request<ClientDetailDto>('put', _url, data);
   }
   /**
-   * Delete client
-   * @param id Client id
+   * deleteClient
+   * @param id string
    */
-  deleteClient(id: string): Observable<any> {
+  deleteClient(id: string): Observable<boolean> {
     const _url = `/api/Clients/${id}`;
-    return this.request<any>('delete', _url);
+    return this.request<boolean>('delete', _url);
   }
   /**
-   * Register a new client for developer self-service review.
+   * registerClient
    * @param data ClientRegistrationRequestDto
    */
   registerClient(data: ClientRegistrationRequestDto): Observable<ClientRegistrationResultDto> {
@@ -79,38 +79,38 @@ export class ClientsService extends BaseService {
     return this.request<ClientRegistrationResultDto>('post', _url, data);
   }
   /**
-   * Get clients visible to the current developer portal user.
+   * getMyClients
    */
   getMyClients(): Observable<ClientDetailDto[]> {
     const _url = `/api/Clients/my-clients`;
     return this.request<ClientDetailDto[]>('get', _url);
   }
   /**
-   * Get pending client registration requests.
+   * getPendingRegistrations
    */
   getPendingRegistrations(): Observable<ClientDetailDto[]> {
     const _url = `/api/Clients/pending-registrations`;
     return this.request<ClientDetailDto[]>('get', _url);
   }
   /**
-   * Approve a pending client registration.
+   * approveClient
    * @param id string
-   * @param data ClientApprovalDto
+   * @param data any
    */
-  approveClient(id: string, data: ClientApprovalDto): Observable<ClientRegistrationResultDto> {
+  approveClient(id: string, data: any): Observable<ClientRegistrationResultDto> {
     const _url = `/api/Clients/${id}/approve`;
     return this.request<ClientRegistrationResultDto>('post', _url, data);
   }
   /**
-   * Rotate client secret
-   * @param id Client unique identifier
+   * rotateSecret
+   * @param id string
    */
   rotateSecret(id: string): Observable<ClientSecretDto> {
     const _url = `/api/Clients/${id}/secret:rotate`;
     return this.request<ClientSecretDto>('post', _url);
   }
   /**
-   * Get client secret history metadata.
+   * getSecrets
    * @param id string
    */
   getSecrets(id: string): Observable<ClientSecretHistoryDto[]> {
@@ -118,33 +118,33 @@ export class ClientsService extends BaseService {
     return this.request<ClientSecretHistoryDto[]>('get', _url);
   }
   /**
-   * Assign scopes to client
-   * @param id Client id
+   * assignScopes
+   * @param id string
    * @param data ClientScopeAssignDto
    */
-  assignScopes(id: string, data: ClientScopeAssignDto): Observable<any> {
+  assignScopes(id: string, data: ClientScopeAssignDto): Observable<boolean> {
     const _url = `/api/Clients/${id}/scopes`;
-    return this.request<any>('post', _url, data);
+    return this.request<boolean>('post', _url, data);
   }
   /**
-   * Get client authorizations
-   * @param id Client id
+   * getAuthorizations
+   * @param id string
    */
   getAuthorizations(id: string): Observable<AuthorizationItemDto[]> {
     const _url = `/api/Clients/${id}/authorizations`;
     return this.request<AuthorizationItemDto[]>('get', _url);
   }
   /**
-   * Replace client permission relations.
+   * assignPermissions
    * @param id string
    * @param data string[]
    */
-  assignPermissions(id: string, data: string[]): Observable<any> {
+  assignPermissions(id: string, data: string[]): Observable<boolean> {
     const _url = `/api/Clients/${id}/permissions`;
-    return this.request<any>('post', _url, data);
+    return this.request<boolean>('post', _url, data);
   }
   /**
-   * Get client permission codes.
+   * getPermissions
    * @param id string
    */
   getPermissions(id: string): Observable<string[]> {
@@ -152,7 +152,7 @@ export class ClientsService extends BaseService {
     return this.request<string[]>('get', _url);
   }
   /**
-   * Get client permission tree.
+   * getPermissionTree
    * @param id string
    * @param clientId Filter by database client id.
    * @param clientCode Filter by public client identifier.
@@ -160,21 +160,21 @@ export class ClientsService extends BaseService {
    * @param parentId Filter by parent permission id.
    * @param keyword Filter by keyword.
    * @param onlyNonBusiness Whether to include only menu and button permissions.
-   * @param pageIndex number
-   * @param pageSize number
-   * @param orderBy Record<string, boolean>
+   * @param pageIndex any
+   * @param pageSize any
+   * @param orderBy string
    */
-  getPermissionTree(id: string, clientId: string | null, clientCode: string | null, type: PermissionType | null, parentId: string | null, keyword: string | null, onlyNonBusiness: boolean | null, pageIndex: number | null, pageSize: number | null, orderBy: Record<string, boolean> | null): Observable<PermissionTreeNodeDto[]> {
-    const _url = `/api/Clients/${id}/permission-tree?clientId=${clientId ?? ''}&clientCode=${clientCode ?? ''}&type=${type ?? ''}&parentId=${parentId ?? ''}&keyword=${keyword ?? ''}&onlyNonBusiness=${onlyNonBusiness ?? ''}&pageIndex=${pageIndex ?? ''}&pageSize=${pageSize ?? ''}&orderBy=${orderBy ?? ''}`;
+  getPermissionTree(id: string, clientId: string | null, clientCode: string | null, type: PermissionType | null, parentId: string | null, keyword: string | null, onlyNonBusiness: boolean | null, pageIndex: any | null, pageSize: any | null, orderBy: string | null): Observable<PermissionTreeNodeDto[]> {
+    const _url = `/api/Clients/${id}/permission-tree?ClientId=${clientId ?? ''}&ClientCode=${clientCode ?? ''}&Type=${type ?? ''}&ParentId=${parentId ?? ''}&Keyword=${keyword ?? ''}&OnlyNonBusiness=${onlyNonBusiness ?? ''}&pageIndex=${pageIndex ?? ''}&pageSize=${pageSize ?? ''}&orderBy=${orderBy ?? ''}`;
     return this.request<PermissionTreeNodeDto[]>('get', _url);
   }
   /**
-   * Full replacement synchronization for client menu/button permissions.
+   * syncMenuPermissions
    * @param id string
    * @param data ClientPermissionSyncDto
    */
-  syncMenuPermissions(id: string, data: ClientPermissionSyncDto): Observable<any> {
+  syncMenuPermissions(id: string, data: ClientPermissionSyncDto): Observable<boolean> {
     const _url = `/api/Clients/${id}/menu-permissions:sync`;
-    return this.request<any>('post', _url, data);
+    return this.request<boolean>('post', _url, data);
   }
 }

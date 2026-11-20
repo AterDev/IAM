@@ -18,9 +18,9 @@ export interface UserEntitlementDetailDto {
   /** unit */
   unit: string;
   /** valueLimit */
-  valueLimit: number;
+  valueLimit: any;
   /** currentValue */
-  currentValue: number;
+  currentValue: any;
   /** expirationDate */
   expirationDate?: Date | null;
   /** startDate */

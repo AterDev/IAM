@@ -11,4 +11,14 @@ public class AuditLogItemDto
     public string? SubjectId { get; set; }
     public string? IpAddress { get; set; }
     public DateTimeOffset CreatedTime { get; set; }
+
+    public static AuditLogItemDto FromEntity(AuditLog entity) => new()
+    {
+        Id = entity.Id,
+        Category = entity.Category,
+        Event = entity.Event,
+        SubjectId = entity.SubjectId,
+        IpAddress = entity.IpAddress,
+        CreatedTime = entity.CreatedTime,
+    };
 }

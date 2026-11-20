@@ -7,7 +7,7 @@ export interface OrganizationUpdateDto {
   /** parentId */
   parentId?: string | null;
   /** displayOrder */
-  displayOrder?: number | null;
+  displayOrder?: any | null;
   /** description */
   description?: string | null;
 }

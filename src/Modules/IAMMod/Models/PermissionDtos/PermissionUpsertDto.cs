@@ -7,19 +7,19 @@ namespace IAMMod.Models.PermissionDtos;
 /// </summary>
 public class PermissionUpsertDto
 {
-    [MaxLength(200)]
+    [StringLength(200)]
     public required string Code { get; set; }
 
-    [MaxLength(200)]
+    [StringLength(200)]
     public required string Name { get; set; }
 
-    [MaxLength(1000)]
+    [StringLength(1000)]
     public string? Description { get; set; }
 
     public PermissionType Type { get; set; }
     public Guid? ParentId { get; set; }
 
-    [MaxLength(500)]
+    [StringLength(500)]
     public string? Path { get; set; }
     public Guid? OwnedClientId { get; set; }
 }

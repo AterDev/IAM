@@ -5,12 +5,12 @@ namespace IAMMod.Models.ResourceDtos;
 /// </summary>
 public class ResourceAddDto
 {
-    [MaxLength(256)]
+    [StringLength(256)]
     public required string Name { get; set; }
 
-    [MaxLength(256)]
+    [StringLength(256)]
     public required string DisplayName { get; set; }
 
-    [MaxLength(500)]
+    [StringLength(500)]
     public string? Description { get; set; }
 }

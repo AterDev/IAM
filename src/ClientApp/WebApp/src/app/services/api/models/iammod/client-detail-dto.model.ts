@@ -1,6 +1,3 @@
-import { ClientType } from '../entity/client-type.model';
-import { ConsentType } from '../entity/consent-type.model';
-import { ApplicationType } from '../entity/application-type.model';
 import { ClientRegistrationStatus } from '../entity/client-registration-status.model';
 import { ScopeItemDto } from '../iammod/scope-item-dto.model';
 import { ClientResourceDto } from '../iammod/client-resource-dto.model';
@@ -18,14 +15,14 @@ export interface ClientDetailDto {
   displayName: string;
   /** description */
   description?: string | null;
-  /** OAuth 2.0 client types */
-  type: ClientType;
+  /** type */
+  type?: number | null;
   /** requirePkce */
   requirePkce: boolean;
-  /** OAuth 2.0 consent prompt types */
-  consentType: ConsentType;
-  /** OAuth 2.0 application types */
-  applicationType: ApplicationType;
+  /** consentType */
+  consentType?: number | null;
+  /** applicationType */
+  applicationType?: number | null;
   /** Lifecycle status for client self-service registration. */
   registrationStatus: ClientRegistrationStatus;
   /** developerUserId */

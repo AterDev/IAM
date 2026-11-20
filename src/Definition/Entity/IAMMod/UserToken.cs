@@ -3,6 +3,7 @@ namespace Entity.IAMMod;
 /// <summary>
 /// User token entity for storing authentication tokens
 /// </summary>
+[Perigon.PostgreSQL.Attributes.Index(nameof(UserToken.UserId), nameof(UserToken.LoginProvider), nameof(UserToken.Name), IsUnique = true)]
 public class UserToken : EntityBase
 {
     /// <summary>
@@ -13,14 +14,14 @@ public class UserToken : EntityBase
     /// <summary>
     /// Login provider
     /// </summary>
-    [MaxLength(128)]
-    public required string LoginProvider { get; set; }
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(128)")]
+    public string LoginProvider { get; set; }
 
     /// <summary>
     /// Token name
     /// </summary>
-    [MaxLength(128)]
-    public required string Name { get; set; }
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(128)")]
+    public string Name { get; set; }
 
     /// <summary>
     /// Token value

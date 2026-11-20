@@ -1,7 +1,7 @@
+using Perigon.PostgreSQL;
 using EntityFramework.AppDbFactory;
 using Share.Exceptions;
 using Microsoft.AspNetCore.Http;
-using Mapster;
 using Entity.IAMMod;
 using IAMMod.Models.OrganizationDtos;
 
@@ -11,7 +11,7 @@ namespace IAMMod.Managers;
 /// Manager for organization operations
 /// </summary>
 public class OrganizationManager(
-    TenantDbFactory dbContextFactory,
+    AppDbFactory dbContextFactory,
     IUserContext userContext,
     ILogger<OrganizationManager> logger
 ) : ManagerBase<DefaultDbContext, Organization>(dbContextFactory, userContext, logger)
@@ -23,12 +23,15 @@ public class OrganizationManager(
     /// <returns>Paged list of organizations</returns>
     public async Task<PageList<OrganizationItemDto>> GetPageAsync(OrganizationFilterDto filter)
     {
-        Queryable = Queryable
+        var query = _dbSet
             .WhereNotNull(filter.Name != null, q => q.Name.Contains(filter.Name!))
             .WhereNotNull(filter.ParentId != null, q => q.ParentId == filter.ParentId)
             .WhereNotNull(filter.Level != null, q => q.Level == filter.Level);
 
-        return await PageListAsync<OrganizationFilterDto, OrganizationItemDto>(filter);
+        var count = await query.CountAsync();
+        var rows = await query.OrderByDescending(item => item.CreatedTime)
+            .Skip((filter.PageIndex - 1) * filter.PageSize).Take(filter.PageSize).ToListAsync();
+        return new PageList<OrganizationItemDto> { Count = count, PageIndex = filter.PageIndex, Data = rows.Select(OrganizationItemDto.FromEntity).ToList() };
     }
 
     /// <summary>
@@ -48,7 +51,8 @@ public class OrganizationManager(
     /// <returns>Organization detail or null</returns>
     public async Task<OrganizationDetailDto?> GetDetailAsync(Guid id)
     {
-        return await FindAsync<OrganizationDetailDto>(q => q.Id == id);
+        var entity = await _dbSet.Where(q => q.Id == id).FirstOrDefaultAsync();
+        return entity is null ? null : OrganizationDetailDto.FromEntity(entity);
     }
 
     /// <summary>
@@ -59,7 +63,7 @@ public class OrganizationManager(
     public async Task<OrganizationDetailDto?> AddAsync(OrganizationAddDto dto)
     {
         // Check if name already exists under same parent
-        if (await _dbSet.AnyAsync(q => q.Name == dto.Name && q.ParentId == dto.ParentId))
+        if (await _dbSet.Where(q => q.Name == dto.Name && q.ParentId == dto.ParentId).AnyAsync())
         {
             throw new BusinessException("OrganizationNameExists", StatusCodes.Status400BadRequest);
         }
@@ -69,8 +73,6 @@ public class OrganizationManager(
             // Get parent info if parent exists
             Organization? parent = null;
             int level = 0;
-            string path = "/";
-
             if (dto.ParentId.HasValue)
             {
                 parent = await FindAsync(dto.ParentId.Value);
@@ -79,19 +81,12 @@ public class OrganizationManager(
                     throw new BusinessException("ParentOrganizationNotFound", StatusCodes.Status404NotFound);
                 }
                 level = parent.Level + 1;
-                path = $"{parent.Path}{parent.Id}/";
             }
 
-            var entity = dto.MapTo<Organization>();
+            var entity = new Organization { Name = dto.Name, ParentId = dto.ParentId, DisplayOrder = dto.DisplayOrder, Description = dto.Description };
             entity.Level = level;
-            entity.Path = path;
-
+            entity.Path = parent is null ? $"/{entity.Id}/" : $"{parent.Path}{entity.Id}/";
             await InsertAsync(entity);
-
-            // Update path with actual ID
-            entity.Path = dto.ParentId.HasValue ? $"{parent!.Path}{entity.Id}/" : $"/{entity.Id}/";
-            entity.UpdatedTime = DateTime.UtcNow;
-            await _dbContext.SaveChangesAsync();
 
             return await GetDetailAsync(entity.Id);
         });
@@ -118,7 +113,7 @@ public class OrganizationManager(
         var parentChanged = dto.ParentId.HasValue && dto.ParentId != entity.ParentId;
 
         if ((nameChanged || parentChanged)
-            && await _dbSet.AnyAsync(q => q.Name == targetName && q.ParentId == targetParentId && q.Id != id))
+            && await _dbSet.Where(q => q.Name == targetName && q.ParentId == targetParentId && q.Id != id).AnyAsync())
         {
             throw new BusinessException("OrganizationNameExists", StatusCodes.Status400BadRequest);
         }
@@ -147,8 +142,6 @@ public class OrganizationManager(
             entity.Level = parent.Level + 1;
             entity.Path = $"{parent.Path}{entity.Id}/";
 
-            // Update all children paths recursively
-            await UpdateChildrenPathsAsync(entity);
         }
 
         if (dto.DisplayOrder.HasValue)
@@ -162,7 +155,21 @@ public class OrganizationManager(
         }
 
         entity.UpdatedTime = DateTime.UtcNow;
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.TransactionAsync(async ct =>
+        {
+            await _dbSet.Where(item => item.Id == entity.Id).ExecuteUpdateAsync(update => update
+                .Set(item => item.Name, entity.Name)
+                .Set(item => item.ParentId, entity.ParentId)
+                .Set(item => item.Level, entity.Level)
+                .Set(item => item.Path, entity.Path)
+                .Set(item => item.DisplayOrder, entity.DisplayOrder)
+                .Set(item => item.Description, entity.Description)
+                .Set(item => item.UpdatedTime, entity.UpdatedTime), cancellationToken: ct);
+            if (parentChanged)
+            {
+                await UpdateChildrenPathsAsync(entity);
+            }
+        });
         return await GetDetailAsync(id);
     }
 
@@ -181,14 +188,12 @@ public class OrganizationManager(
         }
 
         // Check if has children
-        if (await _dbSet.AnyAsync(q => q.ParentId == id))
+        if (await _dbSet.Where(q => q.ParentId == id).AnyAsync())
         {
             throw new BusinessException("OrganizationHasChildren", StatusCodes.Status400BadRequest);
         }
 
-        // Check if has users
-        await LoadManyAsync(entity, o => o.OrganizationUsers);
-        if (entity.OrganizationUsers.Count > 0)
+        if (await _dbContext.OrganizationUsers.Where(item => item.OrganizationId == id).AnyAsync())
         {
             throw new BusinessException("OrganizationHasUsers", StatusCodes.Status400BadRequest);
         }
@@ -244,23 +249,16 @@ public class OrganizationManager(
             throw new BusinessException("OrganizationNotFound", StatusCodes.Status404NotFound);
         }
 
-        // Load current users
-        await LoadManyAsync(organization, o => o.OrganizationUsers);
-
-        // Add new users
-        var existingUserIds = organization.OrganizationUsers.Select(ou => ou.UserId).ToList();
-        var toAdd = userIds.Where(uid => !existingUserIds.Contains(uid)).ToList();
-
-        foreach (var userId in toAdd)
+        var existing = await _dbContext.OrganizationUsers
+            .Where(item => item.OrganizationId == organizationId).Select(item => item.UserId).ToScalarListAsync();
+        var additions = userIds.Distinct().Except(existing)
+            .Select(userId => new OrganizationUser { OrganizationId = organizationId, UserId = userId }).ToArray();
+        if (additions.Length == 0)
         {
-            organization.OrganizationUsers.Add(new OrganizationUser
-            {
-                OrganizationId = organizationId,
-                UserId = userId
-            });
+            return false;
         }
-
-        return await _dbContext.SaveChangesAsync() > 0;
+        await _dbContext.OrganizationUsers.BulkInsertAsync(additions);
+        return true;
     }
 
     /// <summary>
@@ -277,20 +275,9 @@ public class OrganizationManager(
             throw new BusinessException("OrganizationNotFound", StatusCodes.Status404NotFound);
         }
 
-        // Load current users
-        await LoadManyAsync(organization, o => o.OrganizationUsers);
-
-        // Remove users
-        var toRemove = organization.OrganizationUsers
-            .Where(ou => userIds.Contains(ou.UserId))
-            .ToList();
-
-        foreach (var orgUser in toRemove)
-        {
-            _dbContext.Set<OrganizationUser>().Remove(orgUser);
-        }
-
-        return await _dbContext.SaveChangesAsync() > 0;
+        return await _dbContext.OrganizationUsers
+            .Where(item => item.OrganizationId == organizationId && Enumerable.Contains(userIds, item.UserId))
+            .ExecuteDeleteAsync() > 0;
     }
 
     /// <summary>
@@ -329,12 +316,10 @@ public class OrganizationManager(
         {
             child.Level = organization.Level + 1;
             child.Path = $"{organization.Path}{child.Id}/";
+            await _dbSet.Where(item => item.Id == child.Id).ExecuteUpdateAsync(update => update
+                .Set(item => item.Level, child.Level).Set(item => item.Path, child.Path));
             await UpdateChildrenPathsAsync(child);
         }
 
-        if (children.Count > 0)
-        {
-            await _dbContext.SaveChangesAsync();
-        }
     }
 }

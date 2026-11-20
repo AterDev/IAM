@@ -28,7 +28,7 @@ public class DiscoveryManager(
             .Where(s => !s.IsDeleted)
             .OrderBy(s => s.Name)
             .Select(s => s.Name)
-            .ToListAsync();
+            .ToScalarListAsync();
 
         return new OidcConfigurationDto
         {

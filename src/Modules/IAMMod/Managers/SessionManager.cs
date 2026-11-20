@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using IAMMod.Models.LoginSessionDtos;
 using Microsoft.AspNetCore.Http;
 using Share.Exceptions;
@@ -9,7 +10,7 @@ namespace IAMMod.Managers;
 /// Manager for login session operations
 /// </summary>
 public class SessionManager(
-    TenantDbFactory dbContextFactory,
+    AppDbFactory dbContextFactory,
     IUserContext userContext,
     ILogger<SessionManager> logger,
     AuditLogManager auditLogManager,
@@ -26,7 +27,7 @@ public class SessionManager(
     /// <returns>Paged list of login sessions</returns>
     public async Task<PageList<LoginSessionItemDto>> GetPageAsync(LoginSessionFilterDto filter)
     {
-        Queryable = Queryable
+        var query = _dbSet
             .WhereNotNull(filter.UserId, q => q.UserId == filter.UserId)
             .WhereNotNull(filter.SessionId, q => q.SessionId == filter.SessionId)
             .WhereNotNull(
@@ -37,7 +38,10 @@ public class SessionManager(
             .WhereNotNull(filter.StartDate, q => q.LoginTime >= filter.StartDate)
             .WhereNotNull(filter.EndDate, q => q.LoginTime <= filter.EndDate);
 
-        return await PageListAsync<LoginSessionFilterDto, LoginSessionItemDto>(filter);
+        var count = await query.CountAsync();
+        var sessions = await query.OrderByDescending(item => item.CreatedTime)
+            .Skip((filter.PageIndex - 1) * filter.PageSize).Take(filter.PageSize).ToListAsync();
+        return new PageList<LoginSessionItemDto> { Count = count, PageIndex = filter.PageIndex, Data = sessions.Select(LoginSessionItemDto.FromEntity).ToList() };
     }
 
     /// <summary>
@@ -57,7 +61,8 @@ public class SessionManager(
     /// <returns>Login session detail or null</returns>
     public async Task<LoginSessionDetailDto?> GetDetailAsync(Guid id)
     {
-        return await FindAsync<LoginSessionDetailDto>(q => q.Id == id);
+        var session = await _dbSet.Where(q => q.Id == id).FirstOrDefaultAsync();
+        return session is null ? null : LoginSessionDetailDto.FromEntity(session);
     }
 
     /// <summary>
@@ -67,7 +72,8 @@ public class SessionManager(
     /// <returns>Login session detail or null</returns>
     public async Task<LoginSessionDetailDto?> GetBySessionIdAsync(string sessionId)
     {
-        return await FindAsync<LoginSessionDetailDto>(q => q.SessionId == sessionId);
+        var session = await _dbSet.Where(q => q.SessionId == sessionId).FirstOrDefaultAsync();
+        return session is null ? null : LoginSessionDetailDto.FromEntity(session);
     }
 
     /// <summary>
@@ -84,7 +90,15 @@ public class SessionManager(
     )
     {
         var loginTime = DateTimeOffset.UtcNow;
-        var loginSession = dto.MapTo<LoginSession>();
+        var loginSession = new LoginSession
+        {
+            UserId = dto.UserId,
+            SessionId = dto.SessionId,
+            IpAddress = dto.IpAddress,
+            UserAgent = dto.UserAgent,
+            DeviceInfo = dto.DeviceInfo,
+            ExpirationTime = dto.ExpirationTime,
+        };
         loginSession.LoginTime = loginTime;
         loginSession.LastActivityTime = loginTime;
         loginSession.IsActive = true;
@@ -97,9 +111,7 @@ public class SessionManager(
             category: "Authentication",
             eventName: "SessionCreated",
             subjectId: dto.UserId.ToString(),
-            payload: JsonSerializer.Serialize(
-                new { sessionId = dto.SessionId, ipAddress = dto.IpAddress }
-            ),
+            payload: new JsonObject { ["sessionId"] = dto.SessionId, ["ipAddress"] = dto.IpAddress }.ToJsonString(),
             ipAddress: ipAddress ?? dto.IpAddress,
             userAgent: userAgent ?? dto.UserAgent
         );
@@ -130,7 +142,8 @@ public class SessionManager(
 
         session.IsActive = false;
         session.UpdatedTime = DateTime.UtcNow;
-        await _dbContext.SaveChangesAsync();
+        await _dbSet.Where(item => item.Id == id).ExecuteUpdateAsync(update => update
+            .Set(item => item.IsActive, false).Set(item => item.UpdatedTime, session.UpdatedTime));
         await _sessionValidationService.SetStateAsync(session);
 
         // Write audit log for session revocation
@@ -138,9 +151,7 @@ public class SessionManager(
             category: "Authentication",
             eventName: "SessionRevoked",
             subjectId: session.UserId.ToString(),
-            payload: JsonSerializer.Serialize(
-                new { sessionId = session.SessionId, revokedBy = revokedBy ?? "system" }
-            ),
+            payload: new JsonObject { ["sessionId"] = session.SessionId, ["revokedBy"] = revokedBy ?? "system" }.ToJsonString(),
             ipAddress: ipAddress,
             userAgent: userAgent
         );
@@ -172,8 +183,9 @@ public class SessionManager(
             query = query.Where(q => q.SessionId != exceptSessionId);
         }
 
-        var affectedSessions = await query
-            .AsNoTracking()
+        var sessions = await query.ToListAsync();
+        var affectedSessions = sessions
+
             .Select(q => new SessionValidationCacheEntry
             {
                 UserId = q.UserId,
@@ -182,12 +194,11 @@ public class SessionManager(
                 LastActivityTime = q.LastActivityTime,
                 LastPersistedActivityTime = q.LastActivityTime,
                 ExpirationTime = q.ExpirationTime,
-            })
-            .ToListAsync();
+            }).ToList();
 
         var count = await query.ExecuteUpdateAsync(setters => setters
-            .SetProperty(s => s.IsActive, false)
-            .SetProperty(s => s.UpdatedTime, DateTime.UtcNow));
+            .Set(s => s.IsActive, false)
+            .Set(s => s.UpdatedTime, DateTimeOffset.UtcNow));
 
         foreach (var affectedSession in affectedSessions)
         {
@@ -201,7 +212,7 @@ public class SessionManager(
                 category: "Authentication",
                 eventName: "BulkSessionRevoked",
                 subjectId: userId.ToString(),
-                payload: JsonSerializer.Serialize(new { count, revokedBy = revokedBy ?? "system" }),
+                payload: new JsonObject { ["count"] = count, ["revokedBy"] = revokedBy ?? "system" }.ToJsonString(),
                 ipAddress: ipAddress,
                 userAgent: userAgent
             );

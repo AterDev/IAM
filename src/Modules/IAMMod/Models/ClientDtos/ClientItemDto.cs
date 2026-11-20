@@ -8,8 +8,8 @@ namespace IAMMod.Models.ClientDtos;
 public class ClientItemDto
 {
     public Guid Id { get; set; }
-    public required string ClientId { get; set; }
-    public required string DisplayName { get; set; }
+    public string ClientId { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
     public ClientType? Type { get; set; }
     public ApplicationType? ApplicationType { get; set; }
     public DateTimeOffset CreatedTime { get; set; }

@@ -1,41 +1,10 @@
 using System.Collections;
 using System.Data;
-using Mapster;
 
 namespace Perigon.AspNetCore.Utils;
 
 public static class Extensions
 {
-    extension<TSource>(TSource source)
-    {
-        /// <summary>
-        /// 将被合并对象中非空属性值，合并到源对象
-        /// </summary>
-        /// <typeparam name="TSource">源对象</typeparam>
-        /// <param name="source"></param>
-        /// <param name="merge"></param>
-        /// <returns></returns>
-        public TSource Merge<TMerge>(TMerge merge)
-        {
-            return merge.Adapt(source);
-        }
-    }
-
-    extension(object source)
-    {
-        /// <summary>
-        /// convert to TDestination
-        /// </summary>
-        /// <typeparam name="TDestination"></typeparam>
-        /// <param name="source"></param>
-        /// <returns></returns>
-        public TDestination MapTo<TDestination>()
-            where TDestination : class
-        {
-            return source.Adapt<TDestination>();
-        }
-    }
-
     extension<TSource>(IQueryable<TSource> source)
     {
         /// <summary>

@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Perigon.AspNetCore.Services;
 
@@ -48,9 +47,9 @@ public class SessionValidationService(
 
         if (now - state.LastPersistedActivityTime >= ActivitySyncInterval)
         {
-            var session = await _dbContext.LoginSessions.FirstOrDefaultAsync(
-                q => q.UserId == userId && q.SessionId == sessionId,
-                cancellationToken);
+            var session = await _dbContext.LoginSessions
+                .Where(q => q.UserId == userId && q.SessionId == sessionId)
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (session is null)
             {
@@ -64,7 +63,12 @@ public class SessionValidationService(
                 {
                     session.IsActive = false;
                     session.UpdatedTime = DateTime.UtcNow;
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _dbContext.LoginSessions
+                        .Where(item => item.Id == session.Id)
+                        .ExecuteUpdateAsync(update => update
+                            .Set(item => item.IsActive, false)
+                            .Set(item => item.UpdatedTime, session.UpdatedTime),
+                            cancellationToken: cancellationToken);
                 }
 
                 state.IsActive = false;
@@ -76,7 +80,12 @@ public class SessionValidationService(
 
             session.LastActivityTime = now;
             session.UpdatedTime = DateTime.UtcNow;
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _dbContext.LoginSessions
+                .Where(item => item.Id == session.Id)
+                .ExecuteUpdateAsync(update => update
+                    .Set(item => item.LastActivityTime, session.LastActivityTime)
+                    .Set(item => item.UpdatedTime, session.UpdatedTime),
+                    cancellationToken: cancellationToken);
             state.LastPersistedActivityTime = now;
         }
 
@@ -106,19 +115,20 @@ public class SessionValidationService(
     {
         return _cacheService.GetOrCreateWithExpirationAsync<SessionValidationCacheEntry?>(
             GetCacheKey(userId, sessionId),
-            async ct => await _dbContext.LoginSessions
-                .AsNoTracking()
-                .Where(q => q.UserId == userId && q.SessionId == sessionId)
-                .Select(q => new SessionValidationCacheEntry
+            async ct =>
+            {
+                var session = await _dbContext.LoginSessions
+                    .Where(item => item.UserId == userId && item.SessionId == sessionId).FirstOrDefaultAsync(ct);
+                return session is null ? null : new SessionValidationCacheEntry
                 {
-                    UserId = q.UserId,
-                    SessionId = q.SessionId,
-                    IsActive = q.IsActive,
-                    LastActivityTime = q.LastActivityTime,
-                    LastPersistedActivityTime = q.LastActivityTime,
-                    ExpirationTime = q.ExpirationTime,
-                })
-                .FirstOrDefaultAsync(ct),
+                    UserId = session.UserId,
+                    SessionId = session.SessionId,
+                    IsActive = session.IsActive,
+                    LastActivityTime = session.LastActivityTime,
+                    LastPersistedActivityTime = session.LastActivityTime,
+                    ExpirationTime = session.ExpirationTime,
+                };
+            },
             expiration: _jwtOptions.ExpiredSecond,
             cancellation: cancellationToken);
     }
@@ -128,9 +138,9 @@ public class SessionValidationService(
         string sessionId,
         CancellationToken cancellationToken)
     {
-        var session = await _dbContext.LoginSessions.FirstOrDefaultAsync(
-            q => q.UserId == userId && q.SessionId == sessionId,
-            cancellationToken);
+        var session = await _dbContext.LoginSessions
+            .Where(q => q.UserId == userId && q.SessionId == sessionId)
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (session is null || !session.IsActive)
         {
@@ -139,7 +149,12 @@ public class SessionValidationService(
 
         session.IsActive = false;
         session.UpdatedTime = DateTime.UtcNow;
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _dbContext.LoginSessions
+            .Where(item => item.Id == session.Id)
+            .ExecuteUpdateAsync(update => update
+                .Set(item => item.IsActive, false)
+                .Set(item => item.UpdatedTime, session.UpdatedTime),
+                cancellationToken: cancellationToken);
     }
 
     private Task SetStateAsync(
@@ -177,7 +192,7 @@ public class SessionValidationCacheEntry
 {
     public Guid UserId { get; set; }
 
-    public required string SessionId { get; set; }
+    public string SessionId { get; set; } = string.Empty;
 
     public bool IsActive { get; set; }
 

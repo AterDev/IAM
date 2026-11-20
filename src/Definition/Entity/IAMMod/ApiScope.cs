@@ -8,19 +8,19 @@ public class ApiScope : EntityBase
     /// <summary>
     /// Scope name
     /// </summary>
-    [MaxLength(256)]
-    public required string Name { get; set; }
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(256)")]
+    public string Name { get; set; }
 
     /// <summary>
     /// Display name
     /// </summary>
-    [MaxLength(256)]
-    public required string DisplayName { get; set; }
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(256)")]
+    public string DisplayName { get; set; }
 
     /// <summary>
     /// Description
     /// </summary>
-    [MaxLength(500)]
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(500)")]
     public string? Description { get; set; }
 
     /// <summary>

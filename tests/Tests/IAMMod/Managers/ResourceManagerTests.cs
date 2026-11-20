@@ -1,5 +1,3 @@
-using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using IAMMod.Models.ResourceDtos;
 
@@ -10,8 +8,7 @@ public class ResourceManagerTests
     [Fact]
     public async Task AddAsync_WithUniqueName_PersistsResource()
     {
-        await using var connection = await CreateSqliteConnectionAsync();
-        await using var dbContext = CreateSqliteDbContext(connection);
+        await using var dbContext = TestDbContextFactory.Create(nameof(AddAsync_WithUniqueName_PersistsResource));
         var manager = CreateManager(dbContext);
 
         var result = await manager.AddAsync(new ResourceAddDto
@@ -33,8 +30,7 @@ public class ResourceManagerTests
     [Fact]
     public async Task AddAsync_WithDuplicateName_ThrowsBusinessException()
     {
-        await using var connection = await CreateSqliteConnectionAsync();
-        await using var dbContext = CreateSqliteDbContext(connection);
+        await using var dbContext = TestDbContextFactory.Create(nameof(AddAsync_WithDuplicateName_ThrowsBusinessException));
         dbContext.ApiResources.Add(new ApiResource
         {
             Name = "orders-api",
@@ -57,8 +53,7 @@ public class ResourceManagerTests
     [Fact]
     public async Task UpdateAsync_WithExistingResource_UpdatesValues()
     {
-        await using var connection = await CreateSqliteConnectionAsync();
-        await using var dbContext = CreateSqliteDbContext(connection);
+        await using var dbContext = TestDbContextFactory.Create(nameof(UpdateAsync_WithExistingResource_UpdatesValues));
         var resource = new ApiResource
         {
             Name = "orders-api",
@@ -88,8 +83,7 @@ public class ResourceManagerTests
     [Fact]
     public async Task DeleteAsync_WithExistingResource_SoftDeletesResource()
     {
-        await using var connection = await CreateSqliteConnectionAsync();
-        await using var dbContext = CreateSqliteDbContext(connection);
+        await using var dbContext = TestDbContextFactory.Create(nameof(DeleteAsync_WithExistingResource_SoftDeletesResource));
         var resource = new ApiResource
         {
             Name = "orders-api",
@@ -104,7 +98,6 @@ public class ResourceManagerTests
 
         Assert.True(deleted);
 
-        dbContext.ChangeTracker.Clear();
         var entity = await dbContext.ApiResources.IgnoreQueryFilters().SingleAsync(r => r.Id == resource.Id);
         Assert.True(entity.IsDeleted);
     }
@@ -112,33 +105,13 @@ public class ResourceManagerTests
     [Fact]
     public async Task DeleteAsync_WithMissingResource_ThrowsBusinessException()
     {
-        await using var connection = await CreateSqliteConnectionAsync();
-        await using var dbContext = CreateSqliteDbContext(connection);
+        await using var dbContext = TestDbContextFactory.Create(nameof(DeleteAsync_WithMissingResource_ThrowsBusinessException));
         var manager = CreateManager(dbContext);
 
         var exception = await Assert.ThrowsAsync<BusinessException>(() => manager.DeleteAsync(Guid.NewGuid()));
 
         Assert.Equal("ResourceNotFound", exception.LanguageKey);
         Assert.Equal(StatusCodes.Status404NotFound, exception.StatusCodes);
-    }
-
-    private static async Task<SqliteConnection> CreateSqliteConnectionAsync()
-    {
-        var connection = new SqliteConnection("Data Source=:memory:");
-        await connection.OpenAsync();
-        return connection;
-    }
-
-    private static DefaultDbContext CreateSqliteDbContext(SqliteConnection connection)
-    {
-        var options = new DbContextOptionsBuilder<DefaultDbContext>()
-            .UseSqlite(connection)
-            .EnableSensitiveDataLogging()
-            .Options;
-
-        var dbContext = new DefaultDbContext(options);
-        dbContext.Database.EnsureCreated();
-        return dbContext;
     }
 
     private static ResourceManager CreateManager(DefaultDbContext dbContext)

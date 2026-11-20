@@ -102,9 +102,9 @@ $publishArguments = @(
     '--os', 'linux',
     '--arch', 'x64',
     '/t:PublishContainer',
-    '/p:UseAppHost=false',
+    '/p:PublishAot=true',
     '/p:InvariantGlobalization=false',
-    '/p:ContainerBaseImage=mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra'
+    '/p:ContainerBaseImage=mcr.microsoft.com/dotnet/runtime-deps:11.0-resolute'
     '/p:ContainerEnvironmentVariable=DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false',
     '/p:ContainerRepository=niltor/iam',
     "/p:ContainerImageTag=$Tag",

@@ -7,5 +7,5 @@ namespace Share.Models.Auth;
 public class TokenRefreshDto
 {
     [JsonPropertyName("refresh_token")]
-    public required string RefreshToken { get; set; }
+    public string RefreshToken { get; set; } = string.Empty;
 }

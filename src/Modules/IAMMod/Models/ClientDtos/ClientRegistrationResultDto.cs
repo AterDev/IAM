@@ -7,7 +7,7 @@ public class ClientRegistrationResultDto
 {
     public Guid Id { get; set; }
 
-    public required string ClientId { get; set; }
+    public string ClientId { get; set; } = string.Empty;
 
     public ClientRegistrationStatus RegistrationStatus { get; set; }
 

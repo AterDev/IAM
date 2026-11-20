@@ -5,13 +5,13 @@ namespace IAMMod.Models.OrganizationDtos;
 /// </summary>
 public class OrganizationAddDto
 {
-    [MaxLength(256)]
+    [StringLength(256)]
     public required string Name { get; set; }
 
     public Guid? ParentId { get; set; }
 
     public int DisplayOrder { get; set; }
 
-    [MaxLength(500)]
+    [StringLength(500)]
     public string? Description { get; set; }
 }

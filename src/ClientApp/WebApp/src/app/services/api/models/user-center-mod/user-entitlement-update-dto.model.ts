@@ -1,6 +1,6 @@
 export interface UserEntitlementUpdateDto {
   /** valueLimit */
-  valueLimit?: number | null;
+  valueLimit?: any | null;
   /** expirationDate */
   expirationDate?: Date | null;
   /** startDate */

@@ -3,5 +3,5 @@
  */
 export interface ClientApprovalDto {
   /** Secret validity period in days. */
-  secretExpirationDays: number;
+  secretExpirationDays: any;
 }

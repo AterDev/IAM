@@ -6,7 +6,7 @@ namespace IAMMod.Models.UserDtos;
 public class UserItemDto
 {
     public Guid Id { get; set; }
-    public required string UserName { get; set; }
+    public string UserName { get; set; } = string.Empty;
     public string? Email { get; set; }
     public string? PhoneNumber { get; set; }
     public bool LockoutEnabled { get; set; }
@@ -15,4 +15,15 @@ public class UserItemDto
     /// </summary>
     public DateTimeOffset? LockoutEnd { get; set; }
     public DateTimeOffset CreatedTime { get; set; }
+
+    public static UserItemDto FromEntity(User user) => new()
+    {
+        Id = user.Id,
+        UserName = user.UserName,
+        Email = user.Email,
+        PhoneNumber = user.PhoneNumber,
+        LockoutEnabled = user.LockoutEnabled,
+        LockoutEnd = user.LockoutEnd,
+        CreatedTime = user.CreatedTime,
+    };
 }

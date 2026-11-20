@@ -14,4 +14,17 @@ public class LoginSessionItemDto
     public DateTimeOffset LastActivityTime { get; set; }
     public DateTimeOffset? ExpirationTime { get; set; }
     public bool IsActive { get; set; }
+
+    public static LoginSessionItemDto FromEntity(LoginSession entity) => new()
+    {
+        Id = entity.Id,
+        UserId = entity.UserId,
+        SessionId = entity.SessionId,
+        IpAddress = entity.IpAddress,
+        UserAgent = entity.UserAgent,
+        LoginTime = entity.LoginTime,
+        LastActivityTime = entity.LastActivityTime,
+        ExpirationTime = entity.ExpirationTime,
+        IsActive = entity.IsActive,
+    };
 }

@@ -1,5 +1,5 @@
+using Perigon.PostgreSQL;
 using EntityFramework.AppDbFactory;
-using Mapster;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
@@ -17,18 +17,15 @@ public static class FrameworkExtensions
 {
     public static IHostApplicationBuilder AddFrameworkServices(this IHostApplicationBuilder builder)
     {
-        TypeAdapterConfig.GlobalSettings.Default.IgnoreNullValues(true);
-
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<IUserContext, UserContext>();
-        builder.Services.AddScoped<ITenantContext, TenantContext>();
 
         var components = builder.Configuration.GetSection(ComponentOption.ConfigPath)
             .Get<ComponentOption>() ?? new ComponentOption();
         builder.AddOptions();
         builder.AddCache(components);
-        builder.AddDbFactory(components);
-        builder.AddDbContext(components);
+        builder.AddDbFactory();
+        builder.AddDbContext();
 
         // 注册 JWT 服务（基础 token 操作）
         builder.Services.AddScoped<JwtService>();
@@ -61,13 +58,9 @@ public static class FrameworkExtensions
     /// </summary>
     /// <param name="services"></param>
     /// <returns></returns>
-    public static IHostApplicationBuilder AddDbFactory(
-        this IHostApplicationBuilder builder,
-        ComponentOption components
-    )
+    public static IHostApplicationBuilder AddDbFactory(this IHostApplicationBuilder builder)
     {
-        builder.Services.AddSingleton<UniversalDbFactory>();
-        builder.Services.AddScoped<TenantDbFactory>();
+        builder.Services.AddSingleton<AppDbFactory>();
         return builder;
     }
 
@@ -75,21 +68,14 @@ public static class FrameworkExtensions
     /// 添加数据库上下文
     /// </summary>
     /// <returns></returns>
-    public static IHostApplicationBuilder AddDbContext(
-        this IHostApplicationBuilder builder,
-        ComponentOption components
-    )
+    public static IHostApplicationBuilder AddDbContext(this IHostApplicationBuilder builder)
     {
-        switch (components.Database)
+        builder.Services.AddDbContextPool<DefaultDbContext>(options =>
         {
-            case DatabaseType.SqlServer:
-                builder.AddSqlServerDbContext<DefaultDbContext>(AppConst.Default);
-                break;
-
-            case DatabaseType.PostgreSql:
-                builder.AddNpgsqlDbContext<DefaultDbContext>(AppConst.Default);
-                break;
-        }
+            var connection = builder.Configuration.GetConnectionString(AppConst.Default)
+                ?? throw new InvalidOperationException("The default database connection is missing.");
+            options.UsePostgres(connection);
+        });
         return builder;
     }
 
@@ -116,6 +102,7 @@ public static class FrameworkExtensions
         var cacheOption = builder
             .Configuration.GetSection(CacheOption.ConfigPath)
             .Get<CacheOption>();
+        builder.Services.AddSingleton<IHybridCacheSerializerFactory, RejectUnknownCacheSerializerFactory>();
         builder.Services.AddHybridCache(options =>
         {
             HybridCacheEntryFlags? flags = components.Cache switch

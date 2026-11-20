@@ -12,7 +12,6 @@ public class UserContext : IUserContext
 
     public Guid? GroupId { get; init; }
 
-    public Guid TenantId { get; init; }
 
     public string? UserName { get; init; }
     public string? Email { get; set; }
@@ -42,12 +41,6 @@ public class UserContext : IUserContext
             && groupId != Guid.Empty)
         {
             GroupId = groupId;
-        }
-
-        if (Guid.TryParse(principal?.FindFirstValue(CustomClaimTypes.TenantId), out var tenantId)
-            && tenantId != Guid.Empty)
-        {
-            TenantId = tenantId;
         }
 
         UserName = principal?.FindFirstValue(ClaimTypes.Name)

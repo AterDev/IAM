@@ -9,9 +9,9 @@ export interface AdminLoginResponseDto {
   /** Token type (Bearer) */
   tokenType: string;
   /** Token expiration in seconds */
-  expiresIn: number;
+  expiresIn: any;
   /** Unified session identifier */
   sessionId: string;
-  /** Admin user information */
+  /** User information */
   user: AdminUserInfo;
 }

@@ -8,8 +8,8 @@ public class Authorization : EntityBase
     /// <summary>
     /// Subject identifier (user ID)
     /// </summary>
-    [MaxLength(256)]
-    public required string SubjectId { get; set; }
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(256)")]
+    public string SubjectId { get; set; }
 
     /// <summary>
     /// Client ID
@@ -19,13 +19,13 @@ public class Authorization : EntityBase
     /// <summary>
     /// Authorization type (permanent, ad-hoc)
     /// </summary>
-    [MaxLength(50)]
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(50)")]
     public string? Type { get; set; }
 
     /// <summary>
     /// Status (valid, revoked)
     /// </summary>
-    [MaxLength(50)]
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(50)")]
     public string? Status { get; set; }
 
     /// <summary>

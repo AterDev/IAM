@@ -1,7 +1,3 @@
-import { ClientType } from '../entity/client-type.model';
-import { ConsentType } from '../entity/consent-type.model';
-import { ApplicationType } from '../entity/application-type.model';
-
 /**
  * Client update DTO
  */
@@ -10,14 +6,14 @@ export interface ClientUpdateDto {
   displayName?: string | null;
   /** description */
   description?: string | null;
-  /** OAuth 2.0 client types */
-  type?: ClientType | null;
+  /** type */
+  type?: number | null;
   /** requirePkce */
   requirePkce?: boolean | null;
-  /** OAuth 2.0 consent prompt types */
-  consentType?: ConsentType | null;
-  /** OAuth 2.0 application types */
-  applicationType?: ApplicationType | null;
+  /** consentType */
+  consentType?: number | null;
+  /** applicationType */
+  applicationType?: number | null;
   /** redirectUris */
   redirectUris?: string[] | null;
   /** postLogoutRedirectUris */

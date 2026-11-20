@@ -7,7 +7,7 @@ namespace UserCenterMod.Managers;
 /// Manages entitlement definitions available for user assignment.
 /// </summary>
 public class UserEntitlementDefinitionManager(
-    TenantDbFactory dbContextFactory,
+    AppDbFactory dbContextFactory,
     IUserContext userContext,
     ILogger<UserEntitlementDefinitionManager> logger
 ) : ManagerBase<DefaultDbContext, UserEntitlementDefinition>(dbContextFactory, userContext, logger)
@@ -18,11 +18,10 @@ public class UserEntitlementDefinitionManager(
         UserEntitlementDefinitionFilterDto filter,
         CancellationToken cancellationToken = default)
     {
-        var query = _dbContext.UserEntitlementDefinitions.AsNoTracking()
+        var query = _dbContext.UserEntitlementDefinitions
             .WhereNotNull(filter.Keyword, item =>
                 item.DisplayName.Contains(filter.Keyword!) || item.EntitlementCode.Contains(filter.Keyword!))
-            .OrderBy(item => item.EntitlementCode)
-            .Select(ToItem());
+            .OrderBy(item => item.EntitlementCode);
 
         var count = await query.CountAsync(cancellationToken);
         var data = await query.Skip((filter.PageIndex - 1) * filter.PageSize)
@@ -32,21 +31,23 @@ public class UserEntitlementDefinitionManager(
         return new PageList<UserEntitlementDefinitionItemDto>
         {
             Count = count,
-            Data = data,
+            Data = data.Select(ToItem).ToList(),
             PageIndex = filter.PageIndex,
         };
     }
 
-    public Task<UserEntitlementDefinitionItemDto?> GetDetailAsync(Guid id, CancellationToken cancellationToken = default) =>
-        _dbContext.UserEntitlementDefinitions.AsNoTracking().Where(item => item.Id == id)
-            .Select(ToItem()).FirstOrDefaultAsync(cancellationToken);
+    public async Task<UserEntitlementDefinitionItemDto?> GetDetailAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var entity = await _dbSet.Where(item => item.Id == id).FirstOrDefaultAsync(cancellationToken);
+        return entity is null ? null : ToItem(entity);
+    }
 
     public async Task<UserEntitlementDefinitionItemDto> AddAsync(
         UserEntitlementDefinitionUpsertDto dto,
         CancellationToken cancellationToken = default)
     {
         var values = Normalize(dto);
-        if (await _dbSet.AnyAsync(item => item.EntitlementCode == values.Code, cancellationToken))
+        if (await _dbSet.Where(item => item.EntitlementCode == values.Code).AnyAsync(cancellationToken))
         {
             throw new BusinessException(Localizer.BadRequest, StatusCodes.Status400BadRequest);
         }
@@ -59,8 +60,7 @@ public class UserEntitlementDefinitionManager(
             EntitlementType = dto.EntitlementType,
             Unit = values.Unit,
         };
-        await _dbSet.AddAsync(entity, cancellationToken);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _dbSet.InsertAsync(entity, cancellationToken);
         return (await GetDetailAsync(entity.Id, cancellationToken))!;
     }
 
@@ -69,38 +69,39 @@ public class UserEntitlementDefinitionManager(
         UserEntitlementDefinitionUpsertDto dto,
         CancellationToken cancellationToken = default)
     {
-        var entity = await _dbSet.FirstOrDefaultAsync(item => item.Id == id, cancellationToken)
+        var entity = await _dbSet.Where(item => item.Id == id).FirstOrDefaultAsync(cancellationToken)
             ?? throw new BusinessException("NotFound", StatusCodes.Status404NotFound);
         var values = Normalize(dto);
-        if (await _dbSet.AnyAsync(item => item.Id != id && item.EntitlementCode == values.Code, cancellationToken))
+        if (await _dbSet.Where(item => item.Id != id && item.EntitlementCode == values.Code).AnyAsync(cancellationToken))
         {
             throw new BusinessException(Localizer.BadRequest, StatusCodes.Status400BadRequest);
         }
 
-        entity.DisplayName = values.DisplayName;
-        entity.Description = values.Description;
-        entity.EntitlementCode = values.Code;
-        entity.EntitlementType = dto.EntitlementType;
-        entity.Unit = values.Unit;
-        entity.UpdatedTime = DateTimeOffset.UtcNow;
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        var updatedAt = DateTimeOffset.UtcNow;
+        await _dbSet.Where(item => item.Id == entity.Id)
+            .ExecuteUpdateAsync(update => update
+                .Set(item => item.DisplayName, values.DisplayName)
+                .Set(item => item.Description, values.Description)
+                .Set(item => item.EntitlementCode, values.Code)
+                .Set(item => item.EntitlementType, dto.EntitlementType)
+                .Set(item => item.Unit, values.Unit)
+                .Set(item => item.UpdatedTime, updatedAt), cancellationToken: cancellationToken);
         return (await GetDetailAsync(id, cancellationToken))!;
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var entity = await _dbSet.FirstOrDefaultAsync(item => item.Id == id, cancellationToken)
+        var entity = await _dbSet.Where(item => item.Id == id).FirstOrDefaultAsync(cancellationToken)
             ?? throw new BusinessException("NotFound", StatusCodes.Status404NotFound);
-        if (await _dbContext.UserEntitlements.AnyAsync(item => item.EntitlementDefinitionId == id, cancellationToken))
+        if (await _dbContext.UserEntitlements.Where(item => item.EntitlementDefinitionId == id).AnyAsync(cancellationToken))
         {
             throw new BusinessException(Localizer.BadRequest, StatusCodes.Status400BadRequest);
         }
 
-        _dbSet.Remove(entity);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _dbSet.Where(item => item.Id == entity.Id).ExecuteDeleteAsync(cancellationToken: cancellationToken);
     }
 
-    private static Expression<Func<UserEntitlementDefinition, UserEntitlementDefinitionItemDto>> ToItem() => item => new()
+    private static UserEntitlementDefinitionItemDto ToItem(UserEntitlementDefinition item) => new()
     {
         Id = item.Id, DisplayName = item.DisplayName, Description = item.Description,
         EntitlementCode = item.EntitlementCode, EntitlementType = item.EntitlementType,

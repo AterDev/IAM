@@ -8,7 +8,7 @@ namespace IAMMod.Managers;
 /// 负责密钥的获取、生成、轮转等维护任务
 /// </summary>
 public class SigningKeyManager(
-    TenantDbFactory dbContextFactory,
+    AppDbFactory dbContextFactory,
     IUserContext userContext,
     CacheService cacheService,
     ILogger<SigningKeyManager> logger
@@ -82,9 +82,9 @@ public class SigningKeyManager(
             UpdatedTime = DateTimeOffset.UtcNow,
         };
 
-        await _dbSet.AddAsync(signingKey, cancellationToken);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await InsertAsync(signingKey, cancellationToken);
         await _cacheService.RemoveAsync(OAuthConst.SigningKeyCacheKey);
+        await _cacheService.RemoveAsync(OAuthConst.SigningActiveKeyCacheKey);
 
         return signingKey;
     }
@@ -94,16 +94,17 @@ public class SigningKeyManager(
     /// </summary>
     public async Task<bool> RevokeKeyAsync(Guid keyId, CancellationToken cancellationToken = default)
     {
-        var key = await _dbSet.FindAsync([keyId], cancellationToken);
+        var key = await _dbSet.Where(item => item.Id == keyId).FirstOrDefaultAsync(cancellationToken);
         if (key == null)
         {
             return false;
         }
 
-        key.IsActive = false;
-        key.IsDeleted = true;
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _dbSet.Where(item => item.Id == keyId).ExecuteUpdateAsync(update => update
+            .Set(item => item.IsActive, false)
+            .Set(item => item.IsDeleted, true), cancellationToken: cancellationToken);
         await _cacheService.RemoveAsync(OAuthConst.SigningKeyCacheKey);
+        await _cacheService.RemoveAsync(OAuthConst.SigningActiveKeyCacheKey);
 
         return true;
     }

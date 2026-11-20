@@ -79,6 +79,7 @@ public class UserCenterManagerTests
         await using var dbContext = TestDbContextFactory.Create(nameof(AddProxyUsageAsync_OnSameDate_AccumulatesIntoOneRecord));
         var manager = CreateProxyUsageManager(dbContext);
         var userId = Guid.CreateVersion7();
+        await InsertUserAsync(dbContext, userId, "proxy-usage@example.com");
 
         var firstUsage = await manager.AddProxyUsageAsync(userId, 128);
         var secondUsage = await manager.AddProxyUsageAsync(userId, 64);
@@ -96,6 +97,7 @@ public class UserCenterManagerTests
     {
         await using var dbContext = TestDbContextFactory.Create(nameof(AddProxyUsageAsync_IncrementsActiveHttpProxyEntitlement));
         var userId = Guid.CreateVersion7();
+        await InsertUserAsync(dbContext, userId, "proxy-entitlement@example.com");
         var definition = new UserEntitlementDefinition
         {
             DisplayName = "HTTP Proxy",
@@ -103,21 +105,25 @@ public class UserCenterManagerTests
             EntitlementType = UserEntitlementType.ProxyUsage,
             Unit = "bytes",
         };
+        await dbContext.UserEntitlementDefinitions.InsertAsync(definition, false, CancellationToken.None);
         var entitlement = new UserEntitlement
         {
             UserId = userId,
-            EntitlementDefinition = definition,
+            EntitlementDefinitionId = definition.Id,
             ValueLimit = 1024,
             StartDate = DateTimeOffset.UtcNow.AddMinutes(-1),
         };
-        dbContext.UserEntitlements.Add(entitlement);
-        await dbContext.SaveChangesAsync();
+        await dbContext.UserEntitlements.InsertAsync(entitlement, false, CancellationToken.None);
 
         var manager = CreateProxyUsageManager(dbContext);
 
         await manager.AddProxyUsageAsync(userId, 128);
 
-        Assert.Equal(128, entitlement.CurrentValue);
+        var storedEntitlement = await dbContext.UserEntitlements
+            .Where(item => item.Id == entitlement.Id)
+            .FirstOrDefaultAsync();
+        Assert.NotNull(storedEntitlement);
+        Assert.Equal(128, storedEntitlement.CurrentValue);
         Assert.Equal(128, (await dbContext.ProxyUsages.SingleAsync()).Usage);
     }
 
@@ -128,6 +134,8 @@ public class UserCenterManagerTests
         var manager = CreateProxyUsageManager(dbContext);
         var userId = Guid.CreateVersion7();
         var otherUserId = Guid.CreateVersion7();
+        await InsertUserAsync(dbContext, userId, "proxy-page@example.com");
+        await InsertUserAsync(dbContext, otherUserId, "proxy-page-other@example.com");
 
         dbContext.ProxyUsages.AddRange(
             new ProxyUsage { UserId = userId, Date = new DateOnly(2026, 7, 9), Usage = 256 },
@@ -193,6 +201,21 @@ public class UserCenterManagerTests
         dbContext.Users.Add(user);
         dbContext.SaveChanges();
         return user;
+    }
+
+    private static Task InsertUserAsync(DefaultDbContext dbContext, Guid id, string email)
+    {
+        var salt = HashCrypto.BuildSalt();
+        return dbContext.Users.InsertAsync(new User
+        {
+            Id = id,
+            UserName = email,
+            NormalizedUserName = email.ToUpperInvariant(),
+            Email = email,
+            NormalizedEmail = email.ToUpperInvariant(),
+            PasswordSalt = salt,
+            PasswordHash = HashCrypto.GeneratePwd("P@ssw0rd!", salt),
+        }, false, CancellationToken.None);
     }
 
     private static string CreateToken(User user, DateTimeOffset timestamp)

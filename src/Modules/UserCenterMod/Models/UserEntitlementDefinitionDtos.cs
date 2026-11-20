@@ -7,18 +7,18 @@ public class UserEntitlementDefinitionFilterDto : FilterBase
 
 public class UserEntitlementDefinitionUpsertDto
 {
-    [Required, MaxLength(200)]
+    [Required, StringLength(200)]
     public required string DisplayName { get; set; }
 
-    [MaxLength(1000)]
+    [StringLength(1000)]
     public string? Description { get; set; }
 
-    [Required, MaxLength(100)]
+    [Required, StringLength(100)]
     public required string EntitlementCode { get; set; }
 
     public UserEntitlementType EntitlementType { get; set; }
 
-    [Required, MaxLength(50)]
+    [Required, StringLength(50)]
     public required string Unit { get; set; }
 }
 

@@ -1,7 +1,6 @@
 global using Xunit;
 global using Moq;
 global using Microsoft.Extensions.Options;
-global using Microsoft.EntityFrameworkCore;
 global using Microsoft.Extensions.Caching.Memory;
 global using Microsoft.Extensions.Logging;
 global using Microsoft.Extensions.Logging.Abstractions;
@@ -24,6 +23,8 @@ global using IAMMod.Services;
 global using Perigon.AspNetCore.Abstraction;
 global using Perigon.AspNetCore.Options;
 global using Perigon.AspNetCore.Utils;
+global using Perigon.PostgreSQL;
+global using Perigon.PostgreSQL.Options;
 global using Share;
 global using Share.Constants;
 global using Share.Exceptions;

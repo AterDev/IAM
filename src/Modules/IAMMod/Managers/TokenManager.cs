@@ -1,11 +1,12 @@
 using IAMMod.Services;
+using IAMMod.Serialization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Share;
 using Share.Exceptions;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text.Json;
+using System.Linq.Expressions;
 
 namespace IAMMod.Managers;
 
@@ -72,14 +73,10 @@ public class TokenManager(
         );
 
         // Validate authorization code
-        var token = await _dbContext
-            .Tokens.Include(t => t.Authorization)
-            .ThenInclude(a => a!.Client)
-            .FirstOrDefaultAsync(t =>
+        var token = await FindTokenGraphAsync(t =>
                 t.ReferenceId == request.Code
                 && t.Type == TokenTypes.AuthorizationCode
-                && t.Status == TokenStatuses.Valid
-            );
+                && t.Status == TokenStatuses.Valid);
 
         if (token == null || token.Authorization == null)
         {
@@ -99,9 +96,7 @@ public class TokenManager(
         }
 
         // Validate redirect URI
-        var properties = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(
-            token.Authorization.Properties ?? "{}"
-        );
+        var properties = IamJson.DeserializeDictionary(token.Authorization.Properties ?? "{}");
         if (properties?.GetValueOrDefault(OpenIdConnectParameterNames.RedirectUri) != request.RedirectUri)
         {
             throw new BusinessException(Localizer.OAuthInvalidRedirectUri);
@@ -134,7 +129,11 @@ public class TokenManager(
         // Mark code as redeemed
         token.Status = TokenStatuses.Redeemed;
         token.RedemptionDate = DateTimeOffset.UtcNow;
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.Tokens
+            .Where(item => item.Id == token.Id)
+            .ExecuteUpdateAsync(update => update
+                .Set(item => item.Status, TokenStatuses.Redeemed)
+                .Set(item => item.RedemptionDate, token.RedemptionDate));
 
         var authorization = token.Authorization;
 
@@ -172,13 +171,9 @@ public class TokenManager(
         }
 
         // Find refresh token
-        var tokenEntity = await _dbContext
-            .Tokens.Include(t => t.Authorization)
-            .ThenInclude(a => a!.Client)
-            .FirstOrDefaultAsync(t =>
+        var tokenEntity = await FindTokenGraphAsync(t =>
                 t.ReferenceId == request.RefreshToken
-                && t.Type == TokenTypes.RefreshToken
-            );
+                && t.Type == TokenTypes.RefreshToken);
 
         if (tokenEntity == null || tokenEntity.Authorization == null)
         {
@@ -267,8 +262,7 @@ public class TokenManager(
             ExpirationDate = expirationDate,
         };
 
-        await _dbContext.Authorizations.AddAsync(authorization, cancellationToken);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _dbContext.Authorizations.InsertAsync(authorization, returning: false, cancellationToken);
         return authorization.Id;
     }
 
@@ -306,10 +300,24 @@ public class TokenManager(
             return null;
         }
 
-        return await _dbContext.Users
-            .Include(u => u.UserRoles)
-            .ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(u => u.Id == userId);
+        var user = await _dbContext.Users.Where(u => u.Id == userId).FirstOrDefaultAsync();
+        if (user is null)
+        {
+            return null;
+        }
+
+        var userRoles = await _dbContext.UserRoles.Where(item => item.UserId == userId).ToListAsync();
+        var roleIds = userRoles.Select(item => item.RoleId).ToArray();
+        var roles = roleIds.Length == 0
+            ? []
+            : await _dbContext.Roles.Where(item => Enumerable.Contains(roleIds, item.Id)).ToListAsync();
+        foreach (var userRole in userRoles)
+        {
+            userRole.User = user;
+            userRole.Role = roles.FirstOrDefault(role => role.Id == userRole.RoleId)!;
+        }
+        user.UserRoles = userRoles;
+        return user;
     }
 
     /// <summary>
@@ -360,8 +368,7 @@ public class TokenManager(
             ExpirationDate = DateTimeOffset.UtcNow.AddHours(1),
         };
 
-        await _dbContext.Tokens.AddAsync(token);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.Tokens.InsertAsync(token, returning: false);
 
         return new TokenResponseDto
         {
@@ -396,10 +403,10 @@ public class TokenManager(
             category: "Authentication",
             eventName: "PasswordGrantRejected",
             subjectId: client.Id.ToString(),
-            payload: JsonSerializer.Serialize(new
+            payload: IamJson.Serialize(new IamAuditPayload
             {
-                client.ClientId,
-                reason = "password_grant_removed",
+                ClientId = client.ClientId,
+                Reason = "password_grant_removed",
             })
         );
 
@@ -436,12 +443,12 @@ public class TokenManager(
             await WriteAuditAsync(
                 category: "DeviceFlow",
                 eventName: "DeviceCodePollingThrottled",
-                payload: JsonSerializer.Serialize(new
+                payload: IamJson.Serialize(new IamAuditPayload
                 {
-                    request.ClientId,
-                    request.DeviceCode,
-                    devicePollingAssessment.AttemptCount,
-                    devicePollingAssessment.BlockedUntil,
+                    ClientId = request.ClientId,
+                    DeviceCode = request.DeviceCode,
+                    AttemptCount = devicePollingAssessment.AttemptCount,
+                    BlockedUntil = devicePollingAssessment.BlockedUntil,
                 })
             );
 
@@ -449,12 +456,8 @@ public class TokenManager(
         }
 
         // Find device code
-        var tokenEntity = await _dbContext
-            .Tokens.Include(t => t.Authorization)
-            .ThenInclude(a => a!.Client)
-            .FirstOrDefaultAsync(t =>
-                t.ReferenceId == request.DeviceCode && t.Type == TokenTypes.DeviceCode
-            );
+        var tokenEntity = await FindTokenGraphAsync(t =>
+            t.ReferenceId == request.DeviceCode && t.Type == TokenTypes.DeviceCode);
 
         if (tokenEntity == null || tokenEntity.Authorization == null)
         {
@@ -630,9 +633,7 @@ public class TokenManager(
             rotatedRefreshToken.Properties = SerializeTokenProperties(rotatedProperties);
         }
 
-        await _dbContext.Tokens.AddAsync(accessTokenEntity);
-        await _dbContext.Tokens.AddAsync(refreshTokenEntity);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.Tokens.BulkInsertAsync([accessTokenEntity, refreshTokenEntity]);
 
         if (rotatedRefreshToken != null)
         {
@@ -640,14 +641,12 @@ public class TokenManager(
                 category: "Authentication",
                 eventName: "RefreshTokenRotated",
                 subjectId: user.Id.ToString(),
-                payload: JsonSerializer.Serialize(
-                    new
-                    {
-                        authorizationId,
-                        previousRefreshToken = rotatedRefreshToken.ReferenceId,
-                        newRefreshToken = refreshTokenValue,
-                    }
-                )
+                payload: IamJson.Serialize(new IamAuditPayload
+                {
+                    AuthorizationId = authorizationId,
+                    PreviousRefreshToken = rotatedRefreshToken.ReferenceId,
+                    NewRefreshToken = refreshTokenValue,
+                })
             );
         }
 
@@ -700,17 +699,16 @@ public class TokenManager(
             return null;
         }
 
-        var client = await _dbContext
-            .Clients.Include(c => c.ClientScopes)
-            .ThenInclude(cs => cs.Scope)
-            .Include(c => c.ClientResources)
-            .ThenInclude(cr => cr.ApiResource)
-            .FirstOrDefaultAsync(c => c.ClientId == clientId);
+        var client = await _dbContext.Clients
+            .Where(c => c.ClientIdentifier == clientId)
+            .FirstOrDefaultAsync();
 
         if (client == null)
         {
             return null;
         }
+
+        await LoadClientGraphAsync(client);
 
         if (client.Type == ClientType.Public)
         {
@@ -740,10 +738,7 @@ public class TokenManager(
     /// </summary>
     public async Task<bool> RevokeTokenAsync(string token, string? tokenTypeHint, Guid requestingClientId)
     {
-        var tokenEntity = await _dbContext.Tokens
-            .Include(t => t.Authorization)
-            .ThenInclude(a => a!.Client)
-            .FirstOrDefaultAsync(t => t.ReferenceId == token || t.Payload == token);
+        var tokenEntity = await FindTokenGraphAsync(t => t.ReferenceId == token || t.Payload == token);
 
         if (tokenEntity == null)
         {
@@ -756,26 +751,26 @@ public class TokenManager(
                 category: "Authentication",
                 eventName: "TokenRevocationDenied",
                 subjectId: requestingClientId.ToString(),
-                payload: JsonSerializer.Serialize(new { tokenTypeHint, tokenType = tokenEntity.Type })
+                payload: IamJson.Serialize(new IamAuditPayload { TokenTypeHint = tokenTypeHint, TokenType = tokenEntity.Type })
             );
             return true;
         }
 
         tokenEntity.Status = TokenStatuses.Revoked;
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.Tokens
+            .Where(item => item.Id == tokenEntity.Id)
+            .ExecuteUpdateAsync(update => update.Set(item => item.Status, TokenStatuses.Revoked));
 
         await WriteAuditAsync(
             category: "Authentication",
             eventName: "TokenRevoked",
             subjectId: tokenEntity.SubjectId ?? requestingClientId.ToString(),
-            payload: JsonSerializer.Serialize(
-                new
-                {
-                    tokenTypeHint,
-                    tokenType = tokenEntity.Type,
-                    requestingClientId,
-                }
-            )
+            payload: IamJson.Serialize(new IamAuditPayload
+            {
+                TokenTypeHint = tokenTypeHint,
+                TokenType = tokenEntity.Type,
+                RequestingClientId = requestingClientId,
+            })
         );
 
         return true;
@@ -814,12 +809,19 @@ public class TokenManager(
             token.Properties = SerializeTokenProperties(properties);
         }
 
-        await _dbContext.SaveChangesAsync();
+        foreach (var token in activeRefreshTokens)
+        {
+            await _dbContext.Tokens
+                .Where(item => item.Id == token.Id)
+                .ExecuteUpdateAsync(update => update
+                    .Set(item => item.Status, token.Status)
+                    .Set(item => item.Properties, token.Properties));
+        }
         await WriteAuditAsync(
             category: "Authentication",
             eventName: "AuthorizationChainRevoked",
             subjectId: userId.ToString(),
-            payload: JsonSerializer.Serialize(new { count = activeRefreshTokens.Count, sessionId }),
+            payload: IamJson.Serialize(new IamAuditPayload { Count = activeRefreshTokens.Count, SessionId = sessionId }),
             ipAddress: ipAddress,
             userAgent: userAgent
         );
@@ -836,10 +838,7 @@ public class TokenManager(
         Guid requestingClientId
     )
     {
-        var tokenEntity = await _dbContext
-            .Tokens.Include(t => t.Authorization)
-            .ThenInclude(a => a!.Client)
-            .FirstOrDefaultAsync(t => t.ReferenceId == token || t.Payload == token);
+        var tokenEntity = await FindTokenGraphAsync(t => t.ReferenceId == token || t.Payload == token);
 
         if (tokenEntity == null || tokenEntity.Status != TokenStatuses.Valid)
         {
@@ -847,7 +846,7 @@ public class TokenManager(
                 category: "Authentication",
                 eventName: "TokenIntrospectionMiss",
                 subjectId: requestingClientId.ToString(),
-                payload: JsonSerializer.Serialize(new { tokenTypeHint })
+                payload: IamJson.Serialize(new IamAuditPayload { TokenTypeHint = tokenTypeHint })
             );
             return new IntrospectResponseDto { Active = false };
         }
@@ -858,7 +857,7 @@ public class TokenManager(
                 category: "Authentication",
                 eventName: "TokenIntrospectionDenied",
                 subjectId: requestingClientId.ToString(),
-                payload: JsonSerializer.Serialize(new { tokenTypeHint, tokenType = tokenEntity.Type })
+                payload: IamJson.Serialize(new IamAuditPayload { TokenTypeHint = tokenTypeHint, TokenType = tokenEntity.Type })
             );
             return new IntrospectResponseDto { Active = false };
         }
@@ -888,14 +887,12 @@ public class TokenManager(
             category: "Authentication",
             eventName: "TokenIntrospected",
             subjectId: tokenEntity.SubjectId ?? requestingClientId.ToString(),
-            payload: JsonSerializer.Serialize(
-                new
-                {
-                    tokenTypeHint,
-                    tokenType = tokenEntity.Type,
-                    requestingClientId,
-                }
-            )
+            payload: IamJson.Serialize(new IamAuditPayload
+            {
+                TokenTypeHint = tokenTypeHint,
+                TokenType = tokenEntity.Type,
+                RequestingClientId = requestingClientId,
+            })
         );
 
         return response;
@@ -929,28 +926,51 @@ public class TokenManager(
                 token.Status = TokenStatuses.Revoked;
             }
 
-            var authorization = await _dbContext.Authorizations.FirstOrDefaultAsync(a =>
-                a.Id == reusedToken.AuthorizationId.Value
-            );
+            var authorization = await _dbContext.Authorizations
+                .Where(a => a.Id == reusedToken.AuthorizationId)
+                .FirstOrDefaultAsync();
             if (authorization != null)
             {
                 authorization.Status = AuthorizationStatuses.Revoked;
             }
         }
 
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.Tokens
+            .Where(item => item.Id == reusedToken.Id)
+            .ExecuteUpdateAsync(update => update
+                .Set(item => item.Properties, reusedToken.Properties)
+                .Set(item => item.Status, reusedToken.Status));
+        if (reusedToken.AuthorizationId.HasValue)
+        {
+            foreach (var token in await _dbContext.Tokens
+                .Where(item => item.AuthorizationId == reusedToken.AuthorizationId
+                    && item.Type == TokenTypes.RefreshToken
+                    && item.Status == TokenStatuses.Valid)
+                .ToListAsync())
+            {
+                var tokenProperties = ReadTokenProperties(token);
+                tokenProperties["revoked_reason"] = "refresh_token_reuse";
+                tokenProperties["revoked_at"] = now.ToString("O");
+                await _dbContext.Tokens
+                    .Where(item => item.Id == token.Id)
+                    .ExecuteUpdateAsync(update => update
+                        .Set(item => item.Properties, SerializeTokenProperties(tokenProperties))
+                        .Set(item => item.Status, TokenStatuses.Revoked));
+            }
+            await _dbContext.Authorizations
+                .Where(item => item.Id == reusedToken.AuthorizationId)
+                .ExecuteUpdateAsync(update => update.Set(item => item.Status, AuthorizationStatuses.Revoked));
+        }
 
         await WriteAuditAsync(
             category: "Authentication",
             eventName: "RefreshTokenReuseDetected",
             subjectId: reusedToken.SubjectId,
-            payload: JsonSerializer.Serialize(
-                new
-                {
-                    authorizationId = reusedToken.AuthorizationId,
-                    refreshToken = reusedToken.ReferenceId,
-                }
-            )
+            payload: IamJson.Serialize(new IamAuditPayload
+            {
+                AuthorizationId = reusedToken.AuthorizationId,
+                RefreshToken = reusedToken.ReferenceId,
+            })
         );
     }
 
@@ -961,44 +981,84 @@ public class TokenManager(
             return [];
         }
 
-        return JsonSerializer.Deserialize<Dictionary<string, string>>(token.Properties) ?? [];
+        return IamJson.DeserializeDictionary(token.Properties) ?? [];
+    }
+
+    private async Task<Token?> FindTokenGraphAsync(Expression<Func<Token, bool>> predicate)
+    {
+        var token = await _dbContext.Tokens.Where(predicate).FirstOrDefaultAsync();
+        if (token?.AuthorizationId is not Guid authorizationId)
+        {
+            return token;
+        }
+
+        var authorization = await _dbContext.Authorizations
+            .Where(item => item.Id == authorizationId)
+            .FirstOrDefaultAsync();
+        if (authorization is null)
+        {
+            return token;
+        }
+
+        var client = await _dbContext.Clients
+            .Where(item => item.Id == authorization.ClientId)
+            .FirstOrDefaultAsync();
+        if (client is not null)
+        {
+            await LoadClientGraphAsync(client);
+            authorization.Client = client;
+        }
+
+        token.Authorization = authorization;
+        return token;
+    }
+
+    private async Task LoadClientGraphAsync(Client client)
+    {
+        var clientScopes = await _dbContext.ClientScopes
+            .Where(item => item.ClientId == client.Id)
+            .ToListAsync();
+        var scopeIds = clientScopes.Select(item => item.ScopeId).ToArray();
+        var scopes = scopeIds.Length == 0
+            ? []
+            : await _dbContext.ApiScopes.Where(item => Enumerable.Contains(scopeIds, item.Id)).ToListAsync();
+        foreach (var clientScope in clientScopes)
+        {
+            clientScope.Client = client;
+            clientScope.Scope = scopes.FirstOrDefault(scope => scope.Id == clientScope.ScopeId)!;
+        }
+        client.ClientScopes = clientScopes;
+
+        var clientResources = await _dbContext.ClientResources
+            .Where(item => item.ClientId == client.Id)
+            .ToListAsync();
+        var resourceIds = clientResources.Select(item => item.ApiResourceId).ToArray();
+        var resources = resourceIds.Length == 0
+            ? []
+            : await _dbContext.ApiResources.Where(item => Enumerable.Contains(resourceIds, item.Id)).ToListAsync();
+        foreach (var clientResource in clientResources)
+        {
+            clientResource.Client = client;
+            clientResource.ApiResource = resources.FirstOrDefault(resource => resource.Id == clientResource.ApiResourceId)!;
+        }
+        client.ClientResources = clientResources;
     }
 
     private async Task<bool> TryRedeemDeviceCodeAsync(Token token, DateTimeOffset redeemedAt)
     {
-        if (_dbContext.Database.IsRelational())
-        {
-            var updated = await _dbContext.Tokens
-                .Where(t =>
-                    t.Id == token.Id
-                    && t.Type == TokenTypes.DeviceCode
-                    && t.Status == TokenStatuses.Valid)
-                .ExecuteUpdateAsync(setters => setters
-                    .SetProperty(t => t.Status, TokenStatuses.Redeemed)
-                    .SetProperty(t => t.RedemptionDate, redeemedAt));
-
-            if (updated != 1)
-            {
-                return false;
-            }
-
-            // ExecuteUpdate bypasses the change tracker; keep the tracked instance aligned
-            // before GenerateTokensAsync persists the newly issued tokens.
-            token.Status = TokenStatuses.Redeemed;
-            token.RedemptionDate = redeemedAt;
-            _dbContext.Entry(token).State = EntityState.Unchanged;
-            return true;
-        }
-
-        // The in-memory provider does not offer a database-side conditional update.
-        if (token.Status != TokenStatuses.Valid)
+        var updated = await _dbContext.Tokens
+            .Where(t => t.Id == token.Id
+                && t.Type == TokenTypes.DeviceCode
+                && t.Status == TokenStatuses.Valid)
+            .ExecuteUpdateAsync(setters => setters
+                .Set(t => t.Status, TokenStatuses.Redeemed)
+                .Set(t => t.RedemptionDate, redeemedAt));
+        if (updated != 1)
         {
             return false;
         }
-
         token.Status = TokenStatuses.Redeemed;
         token.RedemptionDate = redeemedAt;
-        await _dbContext.SaveChangesAsync();
         return true;
     }
 
@@ -1008,7 +1068,7 @@ public class TokenManager(
             .Where(static pair => !string.IsNullOrWhiteSpace(pair.Value))
             .ToDictionary(static pair => pair.Key, static pair => pair.Value);
 
-        return JsonSerializer.Serialize(sanitized);
+        return IamJson.Serialize(sanitized);
     }
 
     private static bool HasScope(string? scopes, string requiredScope)

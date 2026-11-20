@@ -43,7 +43,7 @@ public enum ApplicationType
 public enum ConsentType
 {
     /// <summary>
-    /// Explicit consent required every time
+    /// Explicit consent every time
     /// </summary>
     Explicit,
 

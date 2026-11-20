@@ -1,0 +1,91 @@
+name: Native AOT
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  linux-x64:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: iam_verify
+          POSTGRES_PASSWORD: iam-ci-verification
+          POSTGRES_DB: iam_verify
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U iam_verify -d iam_verify"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+    env:
+      IAM_TEST_POSTGRES: Host=localhost;Database=iam_verify;Username=iam_verify;Password=iam-ci-verification
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+        with:
+          repository: AterDev/Perigon.PostgreSQL
+          ref: 7be2053ec493b45fb89904eecf05189eb6329f16
+          path: .dependencies/Perigon.PostgreSQL
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            10.0.x
+            11.0.100
+      - name: Install Native AOT toolchain
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+      - name: Build pinned PostgreSQL packages
+        shell: pwsh
+        run: |
+          ./.dependencies/Perigon.PostgreSQL/scripts/pack.ps1
+          dotnet nuget add source .dependencies/Perigon.PostgreSQL/artifacts/packages --name Perigon.PostgreSQL.Local
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build and test
+        run: dotnet test IAM.slnx
+      - name: Publish and verify native executables
+        shell: bash
+        run: |
+          set -euo pipefail
+          for service in ApiService MigrationService ApiSampleService; do
+            output="artifacts/aot/$service"
+            dotnet publish "src/Services/$service/$service.csproj" -c Release -r linux-x64 \
+              --self-contained true -p:PublishAot=true -p:PublishTrimmed=true -p:ILLinkTreatWarningsAsErrors=true -p:WarningsAsErrors=RDG001%3BRDG002%3BRDG003 -o "$output"
+            file "$output/$service" | grep 'ELF 64-bit'
+            test ! -e "$output/$service.dll"
+          done
+
+      - name: Run native database migration and HTTP checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          export ConnectionStrings__Default="$IAM_TEST_POSTGRES"
+          export Authentication__Issuer=http://127.0.0.1:4081
+          export Components__Cache=Memory
+          (cd artifacts/aot/MigrationService && ./MigrationService)
+          (cd artifacts/aot/MigrationService && ./MigrationService)
+          export ASPNETCORE_ENVIRONMENT=Development
+          export ASPNETCORE_URLS=http://127.0.0.1:4080
+          (cd artifacts/aot/ApiSampleService && exec ./ApiSampleService) > /tmp/iam-sample.log 2>&1 &
+          sample_pid=$!
+          trap 'kill "$sample_pid" 2>/dev/null || true' EXIT
+          curl --retry 10 --retry-connrefused --retry-delay 1 --fail --silent --show-error http://127.0.0.1:4080/api/public
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:4080/api/protected)" = 401
+
+      - name: Run native IAM API checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          export ConnectionStrings__Default="$IAM_TEST_POSTGRES"
+          export Components__Cache=Memory
+          export Authentication__Issuer=http://127.0.0.1:4081
+          export ASPNETCORE_ENVIRONMENT=Development
+          export ASPNETCORE_URLS=http://127.0.0.1:4081
+          (cd artifacts/aot/ApiService && exec ./ApiService) >/tmp/iam-api.log 2>&1 &
+          api_pid=$!
+          trap 'kill "$api_pid" 2>/dev/null || true' EXIT
+          for path in /health /.well-known/openid-configuration /.well-known/jwks /Account/Login /openapi/v1.json; do
+            curl --retry 10 --retry-connrefused --retry-delay 1 --fail --silent --show-error               -o /dev/null "http://127.0.0.1:4081$path" || { cat /tmp/iam-api.log; exit 1; }
+          done

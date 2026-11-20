@@ -10,4 +10,13 @@ public class RoleDetailDto
     public string? Description { get; set; }
     public DateTimeOffset CreatedTime { get; set; }
     public DateTimeOffset UpdatedTime { get; set; }
+
+    public static RoleDetailDto FromEntity(Role entity) => new()
+    {
+        Id = entity.Id,
+        Name = entity.Name,
+        Description = entity.Description,
+        CreatedTime = entity.CreatedTime,
+        UpdatedTime = entity.UpdatedTime,
+    };
 }

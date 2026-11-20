@@ -8,12 +8,12 @@ public class AuditLog : EntityBase
     /// <summary>
     /// Event category
     /// </summary>
-    public required string Category { get; set; }
+    public string Category { get; set; }
 
     /// <summary>
     /// Event name or action
     /// </summary>
-    public required string Event { get; set; }
+    public string Event { get; set; }
 
     /// <summary>
     /// Subject identifier (user id or system)

@@ -13,12 +13,12 @@ public class ClientResourceDto
     /// <summary>
     /// Resource name
     /// </summary>
-    public required string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>
     /// Resource display name
     /// </summary>
-    public required string DisplayName { get; set; }
+    public string DisplayName { get; set; } = string.Empty;
 
     /// <summary>
     /// Resource description

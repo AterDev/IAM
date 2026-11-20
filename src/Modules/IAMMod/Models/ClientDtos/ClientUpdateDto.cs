@@ -7,10 +7,10 @@ namespace IAMMod.Models.ClientDtos;
 /// </summary>
 public class ClientUpdateDto
 {
-    [MaxLength(256)]
+    [StringLength(256)]
     public string? DisplayName { get; set; }
 
-    [MaxLength(500)]
+    [StringLength(500)]
     public string? Description { get; set; }
 
     public ClientType? Type { get; set; }

@@ -22,7 +22,10 @@ public class UserCredentialRevocationTests
 
         var item = Assert.Single(page.Data);
         Assert.True(item.LockoutEnabled);
-        Assert.Equal(user.LockoutEnd, item.LockoutEnd);
+        Assert.InRange(
+            (item.LockoutEnd!.Value - user.LockoutEnd!.Value).Duration(),
+            TimeSpan.Zero,
+            TimeSpan.FromMicroseconds(1));
     }
 
     [Theory]
@@ -62,17 +65,30 @@ public class UserCredentialRevocationTests
         var manager = CreateManager(dbContext, validator);
         Assert.True(await manager.ChangePasswordAsync(user.Id, "New-password-2026!"));
 
-        Assert.True(HashCrypto.Validate("New-password-2026!", user.PasswordSalt, user.PasswordHash));
-        Assert.All(tokens, token => Assert.Equal(OAuthConst.TokenStatuses.Revoked, token.Status));
+        var storedUser = await dbContext.Users
+            .Where(item => item.Id == user.Id)
+            .FirstOrDefaultAsync();
+        Assert.NotNull(storedUser);
+        Assert.True(HashCrypto.Validate("New-password-2026!", storedUser.PasswordSalt, storedUser.PasswordHash));
+        var tokenIds = tokens.Select(token => token.Id).ToArray();
+        var storedTokens = await dbContext.Tokens
+            .Where(item => tokenIds.Contains(item.Id))
+            .ToListAsync();
+        Assert.Equal(tokens.Length, storedTokens.Count);
+        Assert.All(storedTokens, token => Assert.Equal(OAuthConst.TokenStatuses.Revoked, token.Status));
         foreach (var session in sessions)
         {
             Assert.False(await validator.ValidateAsync(user.Id, session.SessionId));
         }
         Assert.True(await validator.ValidateAsync(otherUser.Id, otherSession.SessionId));
-        Assert.Equal(OAuthConst.TokenStatuses.Valid, otherToken.Status);
-        dbContext.ChangeTracker.Clear();
+        var storedOtherToken = await dbContext.Tokens
+            .Where(item => item.Id == otherToken.Id)
+            .FirstOrDefaultAsync();
+        Assert.NotNull(storedOtherToken);
+        Assert.Equal(OAuthConst.TokenStatuses.Valid, storedOtherToken.Status);
         Assert.False(await dbContext.LoginSessions.AnyAsync(s => s.UserId == user.Id && s.IsActive));
-        Assert.False(await dbContext.Tokens.AnyAsync(t => t.SubjectId == user.Id.ToString()
+        var userSubjectId = user.Id.ToString();
+        Assert.False(await dbContext.Tokens.AnyAsync(t => t.SubjectId == userSubjectId
             && t.Status == OAuthConst.TokenStatuses.Valid));
     }
 
@@ -94,12 +110,20 @@ public class UserCredentialRevocationTests
 
         await manager.SetLockoutAsync(user.Id, DateTimeOffset.UtcNow.AddHours(1));
         Assert.False(await validator.ValidateAsync(user.Id, session.SessionId));
-        Assert.Equal(OAuthConst.TokenStatuses.Revoked, token.Status);
+        var storedToken = await dbContext.Tokens
+            .Where(item => item.Id == token.Id)
+            .FirstOrDefaultAsync();
+        Assert.NotNull(storedToken);
+        Assert.Equal(OAuthConst.TokenStatuses.Revoked, storedToken.Status);
 
         await manager.SetLockoutAsync(user.Id, null);
         Assert.Null(user.LockoutEnd);
         Assert.False(await validator.ValidateAsync(user.Id, session.SessionId));
-        Assert.Equal(OAuthConst.TokenStatuses.Revoked, token.Status);
+        storedToken = await dbContext.Tokens
+            .Where(item => item.Id == token.Id)
+            .FirstOrDefaultAsync();
+        Assert.NotNull(storedToken);
+        Assert.Equal(OAuthConst.TokenStatuses.Revoked, storedToken.Status);
     }
 
     [Fact]

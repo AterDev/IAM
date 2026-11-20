@@ -13,8 +13,8 @@ public class ScopeClaim : EntityBase
     /// <summary>
     /// Claim type
     /// </summary>
-    [MaxLength(256)]
-    public required string Type { get; set; }
+    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(256)")]
+    public string Type { get; set; }
 
     /// <summary>
     /// Scope navigation

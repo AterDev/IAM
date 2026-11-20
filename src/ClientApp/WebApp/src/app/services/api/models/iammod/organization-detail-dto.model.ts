@@ -11,9 +11,9 @@ export interface OrganizationDetailDto {
   /** path */
   path?: string | null;
   /** level */
-  level: number;
+  level: any;
   /** displayOrder */
-  displayOrder: number;
+  displayOrder: any;
   /** description */
   description?: string | null;
   /** createdTime */

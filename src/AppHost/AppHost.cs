@@ -38,20 +38,11 @@ var devPassword = builder.AddParameter(
 
 if (database is null)
 {
-    _ = aspireSetting.DatabaseType?.ToLowerInvariant() switch
-    {
-        "postgresql" => database = builder
-            .AddPostgres(name: "db", password: devPassword, port: aspireSetting.DbPort)
-            .WithImageTag("18.1-alpine")
-            .WithDataVolume()
-            .AddDatabase(AppConst.Default, databaseName: defaultName),
-        "sqlserver" => database = builder
-            .AddSqlServer(name: "db", password: devPassword, port: aspireSetting.DbPort)
-            .WithImageTag("2025-latest")
-            .WithDataVolume()
-            .AddDatabase(AppConst.Default, databaseName: defaultName),
-        _ => null,
-    };
+    database = builder
+        .AddPostgres(name: "db", password: devPassword, port: aspireSetting.DbPort)
+        .WithImageTag("18.1-alpine")
+        .WithDataVolume()
+        .AddDatabase(AppConst.Default, databaseName: defaultName);
 }
 
 if (cache is null)
@@ -76,11 +67,14 @@ var apiService = builder.AddProject<Projects.ApiService>("ApiService")
 
 if (builder.ExecutionContext.IsRunMode)
 {
-    apiService.WithEnvironment("Authentication__Issuer", apiService.GetEndpoint("https"));
+    var issuer = apiService.GetEndpoint("https");
+    apiService.WithEnvironment("Authentication__Issuer", issuer);
+    migration.WithEnvironment("Authentication__Issuer", issuer);
 }
 else
 {
     apiService.WithEnvironment("Authentication__Issuer", publicOrigin);
+    migration.WithEnvironment("Authentication__Issuer", publicOrigin);
 }
 
 var adminApp = builder.AddJavaScriptApp("AdminApp", "../ClientApp/WebApp", "start")
