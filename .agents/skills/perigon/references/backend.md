@@ -8,7 +8,7 @@
 - 实体索引及其他可用映射优先使用 Perigon.PostgreSQL 特性；默认表名由约定生成，无需标记表名。仅在约定不满足需求时显式配置表名。
 - 不要在 `OnModelCreating` 重复配置实体特性或默认约定已经表达的表名、索引等内容；特殊映射才使用 Fluent 配置。
 - 新增实体后，在 `DefaultDbContext` 声明 `public DbSet<TEntity> Entities { get; set; }`。源生成器会初始化这些属性。泛型数据访问可直接调用 `Set<TEntity>()`，并按需传递其裁剪标注。
-- IAM 由 MigrationService 迁移并初始化 PostgreSQL。AppHost 等待该任务成功后启动 API。使用 scripts/Migrations.ps1 管理迁移。
+- MiniApi 不内置 AppHost migration 资源。数据库 schema 的生成、部署顺序、失败恢复和回滚责任必须在计划与部署管线中明确。
 
 ## 请求/响应模型
 

@@ -1,76 +1,50 @@
 ---
 name: perigon
-description: >-
-  Perigon 主入口技能：用于基于 Perigon CLI/MCP 进行项目脚手架、模块与服务生成、DTO/Manager/Controller/Request 客户端生成、MCP 配置与 Studio 操作，以及日常后端/前端开发中的代码生成与模板化工作。Use when: any Perigon-based development task, scaffolding, code generation, module/service creation, API client generation, MCP setup, Studio usage, backend/frontend implementation that should follow Perigon conventions.
+description: MiniApi 项目开发入口。用于 Perigon CLI/MCP、Minimal API Endpoint、Manager、模型、Angular 客户端、Native AOT、测试和发布验证；普通非 Perigon 项目或 ApiStandard 专属 Controller/模块工作流不要使用。
 ---
 
-# Perigon Skill
+# Perigon
 
-This repository uses `Perigon.CLI` for scaffolding, code generation, and MCP integration.
-This is now the single top-level Perigon skill. Framework-specific guidance for Angular, backend, testing, and code review is kept as project-local references under this folder.
+当前模板是 `MiniApi`：ASP.NET Core Minimal API + Native AOT + PostgreSQL。以当前仓库代码、CLI 实时帮助和脚本实现为准；不要套用 ApiStandard 的 Controller、AdminService、多数据库或迁移资源约定。
 
-## When to use this skill
+## 核心原则
 
-Use this skill for nearly all Perigon-related development work, especially when the task involves:
-- 创建新解决方案、模块、服务，或启动 Studio；
-- 生成或更新 DTO、Manager、Controller、Entity、Request Client、前端请求模型；
-- 按照 Perigon 约定完成后端/前端代码骨架与业务代码生成；
-- 安装、列出、打包模块包，或初始化/启动 MCP 服务；
-- 需要先查看 CLI 帮助再执行命令，避免猜测参数；
-- 任何涉及“优先使用 Perigon 生成而不是手写模板代码”的开发任务。
+- 追求通用、简捷、灵活：优先官方和主流技术，避免为设计模式而设计、过度抽象、过度封装第三方库。
+- Perigon 负责脚手架、模块和代码生成；构建、测试、运行和分布式编排分别使用 `dotnet`、项目包管理器和 Aspire。
+- 先生成骨架，再审查业务语义。生成结果必须检查 endpoint 静态绑定、请求/响应边界、授权、查询规模、OpenAPI 契约和 AOT/Trim 兼容，不能把生成成功当作完成。
+- 先复用 `src/Perigon`、`Definition/Share`、`ServiceDefaults` 与现有模块能力，再增加新的封装或依赖。
+- 变更后按影响面验证；涉及 endpoint、JSON、反射、依赖、数据库、鉴权或发布时，必须执行 AOT 和对应专项检查。
 
-In short: if the work is about implementing or extending a Perigon-based project, this skill should be the default entry point.
+## 模板边界
 
-## Project structure
-
-```sh
-src/
-├── Perigon/                 # 基础类库、工具扩展与源生成项目
-├── Definition/
-│   ├── Entity/              # 实体定义（按模块分文件夹）
-│   ├── EntityFramework/     # Perigon.PostgreSQL DbContext 与迁移
-│   ├── Share/               # 共享常量、扩展、服务
-│   └── ServiceDefaults/     # 服务注册与中间件
-├── Modules/
-│   └── {ModuleName}/
-│       ├── Managers/        # 业务逻辑层
-│       ├── Models/          # DTO 定义
-│       └── Services/        # 模块内服务（可选）
-└── Services/
-    ├── ApiService/          # 公共 API
-    ├── AdminService/        # 管理后台 API
-    └── MigrationService/    # 数据库迁移服务
-```
+- 业务逻辑和 DTO 位于 `src/Modules/<Module>`；ApiService 的 `Endpoints` 负责 HTTP 接口。模板使用 PostgreSQL，且不含内置 EF migration 资源。
+- Endpoint group 继承 `RestEndpointBase` 并声明静态 `MapEndpoints`；Manager 和 Endpoint 注册由源码生成器完成。
+- 不要假设存在 `AdminService`、Controller、Standard 生成器或多数据库切换。
+- 新增能力必须检查 Request Delegate Generator、AOT、Trim、反射、依赖和序列化兼容性。
 
 ## Reference routing
 
-| Task area | Reference |
+| 任务 | 必读 reference |
 |---|---|
-| Perigon CLI / MCP / Studio commands | [references/perigon-cli.md](references/perigon-cli.md) |
-| Angular frontend development | [references/angular.md](references/angular.md) |
-| Backend architecture and service patterns | [references/backend.md](references/backend.md) |
+| CLI、MCP、Studio、代码生成、模块安装/打包 | [references/perigon-cli.md](references/perigon-cli.md) |
+| 选择模板、理解目录、服务注入、配置与 AppHost 边界 | [references/architecture.md](references/architecture.md) |
+| 实体、DbContext、模型、Manager、Endpoint、缓存/日志/鉴权 | [references/backend.md](references/backend.md) |
+| 安装外部业务模块（确认其支持 MiniApi/AOT 时） | [references/module.md](references/module.md) |
+| Angular 页面、菜单、i18n 与生成客户端 | [references/angular.md](references/angular.md) |
+| 清理、迁移、OpenAPI、菜单和镜像脚本 | [references/scripts.md](references/scripts.md) |
+| 单元/集成测试、验证矩阵、发布与生产检查 | [references/testing-operations.md](references/testing-operations.md) |
 
-## Project scripts
+只读取当前任务需要的 reference。涉及 Aspire 生命周期、资源、日志或部署时使用环境中可用的 Aspire skill；涉及测试时读取 `test`；涉及 endpoint、JSON、反射、依赖或发布时读取 `native-aot`。
 
-Run project scripts when needed ,Use PowerShell 7 (`pwsh`) when available.
+## 默认工作流
 
-Treat these scripts as part of the template workflow; do not reimplement their behavior manually.
+1. 识别受影响的 Endpoint/Manager/Model/Service、数据与授权边界，以及 AOT 影响。
+2. 检查现有实现和 Perigon 实时帮助；可生成的骨架优先由 CLI/MCP 生成。
+3. 按 Minimal API 架构边界补齐业务代码，并审查静态绑定、公开契约和所有生成内容。
+4. 若实体或公开接口变化，依次处理迁移/OpenAPI/客户端，不跳过契约同步。
+5. 运行最小充分验证；AOT-sensitive 变更必须包含 Native AOT publish 和必要的运行验证，报告任何未执行项。
+6. 任何 AI coding 后使用 `docs` 和 `delivery-loop` 同步当前 PT 的实现结果、验证/AOT 证据、当前个人月度进度和受影响 PD；文档未同步不属于完成。
 
-| Script | Purpose and when to run | Command |
-|---|---|---|
-| `scripts/UpdateMenus.ps1` | Synchronize `src/ClientApp/WebApp/src/assets/menus.json` into the Admin service database. Run after changing frontend menu items, hierarchy, access codes, or menu types; ensure the target Admin service is running first. The default target is `http://localhost:5002`; pass `production` only after confirming the script's production URL is correct. | `pwsh ./scripts/UpdateMenus.ps1`<br>`pwsh ./scripts/UpdateMenus.ps1 production` |
-| `scripts/Migrations.ps1` | Generate, list or script PostgreSQL migrations. | `pwsh ./scripts/Migrations.ps1 Add AddOrderStatus` |
-| `scripts/GenSwagger.ps1` | Export OpenAPI from the running service before regenerating clients. | `pwsh ./scripts/GenSwagger.ps1 -ServiceName ApiService -BaseUri https://localhost:9900` |
+## 后台任务与初始化
 
-
-Run `dotnet tool restore` before generating migrations. Review the generated migration and OpenAPI document.
-
-## Important rules
-
-- **Use Perigon for scaffolding and code generation**, not for build/test/run.
-- **Prefer generated code over hand-written boilerplate** for modules, services, DTOs, managers, controllers, and request clients.
-- **For frontend API clients, prefer `perigon generate request`** and keep generated contracts consistent with backend OpenAPI definitions.
-- **Do not manually edit generated request contracts unless necessary**; regenerate when the backend changes.
-- **Check help before guessing options** with `perigon -h` or `perigon <command> -h`.
-- **Prefer the current subcommand form** (`perigon module ...`) over older shorthand aliases when the help output is ambiguous.
-- **Enforce the DTO layout and naming rule**: module DTOs belong under `Models/{Entity}Dtos`, one type per file, and every data-transfer type ends in `Dto`; use `{Entity}AddDto`, `{Entity}UpdateDto`, `{Entity}FilterDto`, `{Entity}DetailDto`, and `{Entity}ItemDto` where applicable. Do not introduce `Input`, `Request`, or `Response` DTO names.
+- 模块提供可调用的执行方法。实际发布的宿主实现并注册后台任务，负责调度、日志和取消。数据库种子数据统一在模块根目录 `InitModule.cs` 的 `InitModule` 静态类中定义，种子方法接收现有 DbContext 与 CancellationToken，宿主在数据库结构就绪后调用。
