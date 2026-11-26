@@ -1,9 +1,14 @@
 <Project>
-  <!-- Only the database project owns generated entity and migration metadata. -->
+  <!-- The PostgreSQL metadata generator belongs to the DbContext project. -->
   <Target Name="LimitPostgreSqlGeneratorsToDbContextProject" AfterTargets="ResolveLockFileAnalyzers"
           Condition="'$(MSBuildProjectName)' != 'EntityFramework'">
     <ItemGroup>
       <Analyzer Remove="@(Analyzer->WithMetadataValue('Filename', 'Perigon.PostgreSQL.SourceGeneration'));@(Analyzer->WithMetadataValue('Filename', 'Perigon.PostgreSQL.Analyzers'))" />
     </ItemGroup>
   </Target>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net11.0' and '$(UseRuntimeAsync)' != 'false'">
+    <!-- Runtime Async is a .NET 11 preview feature; set UseRuntimeAsync=false to opt out per project. -->
+    <Features>$(Features);runtime-async=on</Features>
+  </PropertyGroup>
 </Project>
