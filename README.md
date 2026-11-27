@@ -1,6 +1,6 @@
 # IAM 身份与访问管理中心
 
-基于 **.NET 11 / ASP.NET Core Minimal API / Perigon.PostgreSQL / Angular 20 / .NET Aspire** 的集中式身份认证与授权中心，目标是为多个业务系统提供统一的登录、授权、令牌签发与管理能力。
+基于 **.NET 11 / ASP.NET Core Minimal API / Perigon.PostgreSQL / Angular 22 / Aspire 17** 的集中式身份认证与授权中心，为多个业务系统提供统一的登录、授权、令牌签发与管理能力。
 
 ## 文档导航
 
@@ -26,7 +26,7 @@
 - `src/Services/FrontSampleService`：示例前端 OIDC 客户端
 - `src/Modules/IAMMod`：IAM 领域模块（Manager、服务、初始化种子）
 - `src/Definition/Entity` / `src/Definition/EntityFramework`：实体与持久化层
-- `tests/Tests`：测试工程
+- `tests`：旧测试工程已移除，后续重构重建
 
 > 当前可运行的示例程序以 `src/Services/FrontSampleService` 与 `src/Services/ApiSampleService` 为准。
 > `samples/` 目录中的内容不作为当前 Aspire 编排验证入口。
@@ -46,7 +46,11 @@
 
 ## 本地构建与验证
 
-使用 .NET SDK 11.0.100。Perigon.PostgreSQL 的 0.3.8 运行时包和工具包来自同一上游提交 `7be2053`。将打包目录配置为 NuGet 源后运行 `dotnet tool restore` 和 `dotnet build IAM.slnx`。集成测试通过 `IAM_TEST_POSTGRES` 接入隔离的 PostgreSQL 实例，测试账号需要创建和删除测试数据库的权限。
+使用 .NET SDK 11.0.100、Aspire 17.0.0、Perigon.PostgreSQL 0.4.0 和 SourceGeneration 1.1.5。运行 `dotnet tool restore` 恢复同版本的 PostgreSQL 迁移工具，再运行 `dotnet build IAM.slnx`。可用 `pwsh ./scripts/Migrations.ps1 List` 检查迁移清单。
+
+管理前端使用 Angular 22.3.0、TypeScript 6.0.3 和 pnpm 10.33.2。Node.js 版本范围见 `src/ClientApp/WebApp/package.json`。在该目录运行 `pnpm install --frozen-lockfile` 和 `pnpm build`。
+
+`src/Services/FrontSampleService` 使用相同的 Angular、TypeScript 和 pnpm 版本，可用同样的命令构建 OIDC 示例。
 
 ## 容器部署（外部 PostgreSQL / 缓存）
 

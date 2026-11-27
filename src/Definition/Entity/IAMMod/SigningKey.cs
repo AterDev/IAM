@@ -8,19 +8,16 @@ public class SigningKey : EntityBase
     /// <summary>
     /// Key identifier
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(256)")]
     public string KeyId { get; set; }
 
     /// <summary>
     /// Algorithm (e.g., RS256, ES256)
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(50)")]
     public string Algorithm { get; set; }
 
     /// <summary>
     /// Key type (RSA, EC, etc.)
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(50)")]
     public string KeyType { get; set; }
 
     /// <summary>
@@ -36,7 +33,6 @@ public class SigningKey : EntityBase
     /// <summary>
     /// Key usage (signing, encryption)
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(50)")]
     public string? Usage { get; set; }
 
     /// <summary>

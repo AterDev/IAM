@@ -5,7 +5,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 /// <summary>
 /// Daily proxy traffic usage for a user.
 /// </summary>
-[Perigon.PostgreSQL.Attributes.Index(nameof(ProxyUsage.UserId), nameof(ProxyUsage.Date), IsUnique = true)]
 public class ProxyUsage : EntityBase
 {
     /// <summary>

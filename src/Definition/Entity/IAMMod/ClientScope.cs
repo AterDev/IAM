@@ -3,7 +3,6 @@ namespace Entity.IAMMod;
 /// <summary>
 /// Client scope relationship entity
 /// </summary>
-[Perigon.PostgreSQL.Attributes.Index(nameof(ClientScope.ClientId), nameof(ClientScope.ScopeId), IsUnique = true)]
 public class ClientScope : EntityBase
 {
     /// <summary>

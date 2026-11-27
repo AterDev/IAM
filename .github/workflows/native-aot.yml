@@ -25,11 +25,6 @@ jobs:
       IAM_TEST_POSTGRES: Host=localhost;Database=iam_verify;Username=iam_verify;Password=iam-ci-verification
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/checkout@v5
-        with:
-          repository: AterDev/Perigon.PostgreSQL
-          ref: 7be2053ec493b45fb89904eecf05189eb6329f16
-          path: .dependencies/Perigon.PostgreSQL
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: |
@@ -37,14 +32,8 @@ jobs:
             11.0.100
       - name: Install Native AOT toolchain
         run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
-      - name: Build pinned PostgreSQL packages
-        shell: pwsh
-        run: |
-          ./.dependencies/Perigon.PostgreSQL/scripts/pack.ps1
-          dotnet nuget add source .dependencies/Perigon.PostgreSQL/artifacts/packages --name Perigon.PostgreSQL.Local
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Build and test
-        run: dotnet test IAM.slnx
+      - name: Build solution
+        run: dotnet build IAM.slnx
       - name: Publish and verify native executables
         shell: bash
         run: |

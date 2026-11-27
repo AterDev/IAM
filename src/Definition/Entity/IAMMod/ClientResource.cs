@@ -8,7 +8,6 @@ namespace Entity.IAMMod;
 /// When a client requests a token with a specific resource,
 /// the authorization server verifies the client has access via this relationship.
 /// </remarks>
-[Perigon.PostgreSQL.Attributes.Index(nameof(ClientResource.ClientId), nameof(ClientResource.ApiResourceId), IsUnique = true)]
 public class ClientResource : EntityBase
 {
     /// <summary>

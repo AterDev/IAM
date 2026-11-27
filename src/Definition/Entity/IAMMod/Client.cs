@@ -10,7 +10,6 @@ public class Client : EntityBase
     /// <summary>
     /// Client identifier
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(100)")]
     [Column("ClientId")]
     public string ClientIdentifier { get; set; } = string.Empty;
 
@@ -25,22 +24,18 @@ public class Client : EntityBase
     /// <summary>
     /// Client secret hash
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(200)")]
     public string? SecretHash { get; set; }
 
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(100)")]
     public string? SecretSalt { get; set; }
 
     /// <summary>
     /// Display name
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(256)")]
     public string DisplayName { get; set; }
 
     /// <summary>
     /// Description
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(500)")]
     public string? Description { get; set; }
 
     /// <summary>
@@ -86,7 +81,6 @@ public class Client : EntityBase
     /// <summary>
     /// Reviewer identifier.
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(100)")]
     public string? ReviewedBy { get; set; }
 
     /// <summary>
@@ -97,7 +91,6 @@ public class Client : EntityBase
     /// <summary>
     /// Redirect URIs
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column("RedirectUris", IsArray = true)]
     public string[] RedirectUriValues { get; set; } = [];
 
     /// <summary>Redirect URIs exposed as a mutable domain collection.</summary>
@@ -111,7 +104,6 @@ public class Client : EntityBase
     /// <summary>
     /// Post logout redirect URIs 
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column("PostLogoutRedirectUris", IsArray = true)]
     public string[] PostLogoutRedirectUriValues { get; set; } = [];
 
     /// <summary>Post-logout redirect URIs exposed as a mutable domain collection.</summary>

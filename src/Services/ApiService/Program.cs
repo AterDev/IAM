@@ -13,6 +13,7 @@ builder.AddFrameworkServices();
 builder.Services.AddIamCacheSerializers();
 builder.Services.AddOpenApi(options =>
 {
+    options.OpenApiVersion = Microsoft.OpenApi.OpenApiSpecVersion.OpenApi3_1;
     options.AddSchemaTransformer<ApiService.OpenApi.EnumSchemaTransformer>();
     options.CreateSchemaReferenceId = typeInfo =>
         Nullable.GetUnderlyingType(typeInfo.Type) is not null

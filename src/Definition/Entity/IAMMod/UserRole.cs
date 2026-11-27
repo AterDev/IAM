@@ -3,7 +3,6 @@ namespace Entity.IAMMod;
 /// <summary>
 /// User role relationship entity
 /// </summary>
-[Perigon.PostgreSQL.Attributes.Index(nameof(UserRole.UserId), nameof(UserRole.RoleId), IsUnique = true)]
 public class UserRole : EntityBase
 {
     /// <summary>

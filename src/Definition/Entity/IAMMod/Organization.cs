@@ -8,7 +8,6 @@ public class Organization : EntityBase
     /// <summary>
     /// Organization name
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(256)")]
     public string Name { get; set; }
 
     /// <summary>
@@ -19,7 +18,6 @@ public class Organization : EntityBase
     /// <summary>
     /// Hierarchical path (e.g., /1/2/3/)
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(1000)")]
     public string? Path { get; set; }
 
     /// <summary>
@@ -35,7 +33,6 @@ public class Organization : EntityBase
     /// <summary>
     /// Description
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(500)")]
     public string? Description { get; set; }
 
     /// <summary>

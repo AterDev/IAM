@@ -21,6 +21,10 @@ public class GlobalExceptionMiddleware(RequestDelegate next, Localizer localizer
         {
             await WriteErrorAsync(context, ex.StatusCodes, localizer.Get(ex.LanguageKey));
         }
+        catch (BadHttpRequestException ex) when (!context.Response.HasStarted && !context.RequestAborted.IsCancellationRequested)
+        {
+            await WriteErrorAsync(context, ex.StatusCode, ex.Message);
+        }
         catch (Exception ex) when (!context.Response.HasStarted && !context.RequestAborted.IsCancellationRequested)
         {
             logger.LogError(ex, "Unhandled request failure. Trace identifier: {TraceIdentifier}", context.TraceIdentifier);

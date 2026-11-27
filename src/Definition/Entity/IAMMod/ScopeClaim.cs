@@ -13,7 +13,6 @@ public class ScopeClaim : EntityBase
     /// <summary>
     /// Claim type
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(256)")]
     public string Type { get; set; }
 
     /// <summary>

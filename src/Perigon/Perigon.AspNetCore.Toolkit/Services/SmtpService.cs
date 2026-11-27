@@ -1,3 +1,4 @@
+using MailKit;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
@@ -31,7 +32,7 @@ public class SmtpService
             SecureSocketOptions.StartTls
         );
         smtp.Authenticate(this.options.Value.Username, this.options.Value.Password);
-        await smtp.SendAsync(message);
+        await smtp.SendAsync(new SendRequest(message));
         smtp.Disconnect(true);
     }
 }

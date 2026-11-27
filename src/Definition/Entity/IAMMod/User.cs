@@ -10,25 +10,21 @@ public class User : EntityBase
     /// <summary>
     /// User name
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(256)")]
     public string UserName { get; set; }
 
     /// <summary>
     /// Normalized user name for search and filtering
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(256)")]
     public string NormalizedUserName { get; set; }
 
     /// <summary>
     /// Email address
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(256)")]
     public string Email { get; set; }
 
     /// <summary>
     /// Normalized email for case-insensitive unique lookup
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(256)")]
     public string NormalizedEmail { get; set; }
 
     /// <summary>
@@ -40,29 +36,24 @@ public class User : EntityBase
     /// Password hash
     /// </summary>
     [JsonIgnore]
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(100)")]
     public string PasswordHash { get; set; } = default!;
 
     [JsonIgnore]
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(100)")]
     public string PasswordSalt { get; set; } = default!;
 
     /// <summary>
     /// Security stamp for password reset
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(100)")]
     public string? SecurityStamp { get; set; }
 
     /// <summary>
     /// Concurrency stamp
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(100)")]
     public string? ConcurrencyStamp { get; set; }
 
     /// <summary>
     /// Phone number
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(50)")]
     public string? PhoneNumber { get; set; }
 
     /// <summary>

@@ -3,7 +3,6 @@ namespace Entity.IAMMod;
 /// <summary>
 /// Organization user relationship entity
 /// </summary>
-[Perigon.PostgreSQL.Attributes.Index(nameof(OrganizationUser.OrganizationId), nameof(OrganizationUser.UserId), IsUnique = true)]
 public class OrganizationUser : EntityBase
 {
     /// <summary>

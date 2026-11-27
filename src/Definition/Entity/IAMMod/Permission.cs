@@ -8,19 +8,16 @@ public class Permission : EntityBase
     /// <summary>
     /// Stable external permission code.
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(200)")]
     public string Code { get; set; }
 
     /// <summary>
     /// Internal permission name.
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(200)")]
     public string Name { get; set; }
 
     /// <summary>
     /// Description.
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(1000)")]
     public string? Description { get; set; }
 
     /// <summary>
@@ -36,7 +33,6 @@ public class Permission : EntityBase
     /// <summary>
     /// Optional route path when used as a menu.
     /// </summary>
-    [Perigon.PostgreSQL.Attributes.Column(TypeName = "character varying(500)")]
     public string? Path { get; set; }
 
     /// <summary>

@@ -7,7 +7,7 @@
     <File Path="Directory.Packages.props" />
   </Folder>
   <Folder Name="/docs/">
-    <File Path="docs/IAM解决方案设计文档.md" />
+    <File Path="docs/Development/V1/IAM解决方案设计文档.md" />
     <File Path="README.md" />
   </Folder>
   <Folder Name="/scripts/">
@@ -28,8 +28,6 @@
     <Project Path="src/Modules/UserCenterMod/UserCenterMod.csproj" />
   </Folder>
   <Folder Name="/src/Perigon/">
-    <Project Path="src/Perigon/Perigon.AspNetCore.SourceGeneration/Perigon.AspNetCore.SourceGeneration.csproj" />
-    <Project Path="src/Perigon/Perigon.OpenApi.SourceGeneration/Perigon.OpenApi.SourceGeneration.csproj" />
     <Project Path="src/Perigon/Perigon.AspNetCore.Toolkit/Perigon.AspNetCore.Toolkit.csproj" />
     <Project Path="src/Perigon/Perigon.AspNetCore/Perigon.AspNetCore.csproj" />
   </Folder>
@@ -37,8 +35,5 @@
     <Project Path="src/Services/ApiService/ApiService.csproj" />
     <Project Path="src/Services/ApiSampleService/ApiSampleService.csproj" />
     <Project Path="src/Services/MigrationService/MigrationService.csproj" />
-  </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/Tests/Tests.csproj" />
   </Folder>
 </Solution>

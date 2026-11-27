@@ -70,12 +70,14 @@ public static class FrameworkExtensions
     /// <returns></returns>
     public static IHostApplicationBuilder AddDbContext(this IHostApplicationBuilder builder)
     {
-        builder.Services.AddDbContextPool<DefaultDbContext>(options =>
-        {
-            var connection = builder.Configuration.GetConnectionString(AppConst.Default)
-                ?? throw new InvalidOperationException("The default database connection is missing.");
-            options.UsePostgres(connection);
-        });
+        builder.Services.AddDbContextPool<DefaultDbContext>(
+            options =>
+            {
+                var connection = builder.Configuration.GetConnectionString(AppConst.Default)
+                    ?? throw new InvalidOperationException($"Connection string '{AppConst.Default}' was not configured.");
+                options.UseNpgsql(connection).EnableConnectionPooling();
+            },
+            registration => registration.EnableOpenTelemetry = true);
         return builder;
     }
 

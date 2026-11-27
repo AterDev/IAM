@@ -7,6 +7,7 @@ namespace EntityFramework.AppDbContext;
 public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options)
     : ContextBase(options)
 {
+#pragma warning disable CS8618 // The PostgreSQL source generator initializes these DbSet properties.
     // Common entities
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<SigningKey> SigningKeys { get; set; }
@@ -38,6 +39,7 @@ public partial class DefaultDbContext(DbContextOptions<DefaultDbContext> options
     public DbSet<ClientResource> ClientResources { get; set; }
     public DbSet<Authorization> Authorizations { get; set; }
     public DbSet<Token> Tokens { get; set; }
+#pragma warning restore CS8618
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

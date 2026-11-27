@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -71,7 +72,7 @@ public sealed class BrowserFlowState(
         }
     }
 
-    internal bool TryConsume(string? protectedState, out PendingMfaState? state)
+    internal bool TryConsume(string? protectedState, [NotNullWhen(true)] out PendingMfaState? state)
     {
         state = null;
         if (string.IsNullOrWhiteSpace(protectedState))

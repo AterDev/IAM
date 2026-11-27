@@ -3,7 +3,6 @@ namespace Entity.IAMMod;
 /// <summary>
 /// Role-permission relation.
 /// </summary>
-[Perigon.PostgreSQL.Attributes.Index(nameof(RolePermission.RoleId), nameof(RolePermission.PermissionId), IsUnique = true)]
 public class RolePermission : EntityBase
 {
     /// <summary>

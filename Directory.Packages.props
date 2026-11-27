@@ -4,11 +4,16 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Aspire Packages -->
+    <PackageVersion Include="Aspire.Hosting.AppHost" Version="17.0.0" />
+    <PackageVersion Include="Aspire.Hosting.Dotnet" Version="17.0.0" />
     <PackageVersion Include="Aspire.Hosting.JavaScript" Version="17.0.0" />
     <PackageVersion Include="Aspire.Hosting.Docker" Version="17.0.0" />
     <PackageVersion Include="Aspire.Hosting.Redis" Version="17.0.0" />
     <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="17.0.0" />
     <PackageVersion Include="Aspire.StackExchange.Redis.DistributedCaching" Version="17.0.0" />
+    <!-- Test Packages -->
+    <PackageVersion Include="Aspire.Hosting.Testing" Version="17.0.0" />
+    <PackageVersion Include="TUnit" Version="1.87.12" />
     <!-- Microsoft ASP.NET Core Packages -->
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.Google" Version="11.0.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="11.0.0" />
@@ -33,21 +38,15 @@
     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.21.0" />
     <PackageVersion Include="Perigon.PostgreSQL" Version="0.4.0" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="11.0.0" />
-    <PackageVersion Include="Perigon.AspNetCore.SourceGeneration" Version="1.1.1" />
+    <PackageVersion Include="Perigon.AspNetCore.SourceGeneration" Version="1.1.5" />
     <!-- Security & Authentication -->
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.23.0" />
     <PackageVersion Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.23.0" />
     <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.23.0" />
     <!-- Third-party Packages -->
-    <PackageVersion Include="AWSSDK.S3" Version="4.0.100.3" />
-    <PackageVersion Include="MailKit" Version="4.17.0" />
-    <PackageVersion Include="MiniExcel" Version="2.0.0-preview.4" />
-    <!-- Test Packages -->
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
-    <PackageVersion Include="xunit" Version="2.9.3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
-    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
-    <PackageVersion Include="Moq" Version="4.20.72" />
-    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="11.0.0" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.1.0" />
+    <PackageVersion Include="MailKit" Version="5.0.0" />
+    <PackageVersion Include="MiniExcel" Version="2.0.0" />
+    <PackageVersion Include="Swashbuckle.AspNetCore.SwaggerUI" Version="11.0.1" />
   </ItemGroup>
 </Project>

@@ -3,7 +3,6 @@ namespace Entity.IAMMod;
 /// <summary>
 /// Client-permission relation.
 /// </summary>
-[Perigon.PostgreSQL.Attributes.Index(nameof(ClientPermission.ClientId), nameof(ClientPermission.PermissionId), IsUnique = true)]
 public class ClientPermission : EntityBase
 {
     /// <summary>

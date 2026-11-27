@@ -60,8 +60,8 @@ if (cache is null)
 
 #endregion
 
-var migration = builder.AddProject<Projects.MigrationService>("MigrationService");
-var apiService = builder.AddProject<Projects.ApiService>("ApiService")
+var migration = builder.AddDotnetProject("MigrationService", "../Services/MigrationService/MigrationService.csproj");
+var apiService = builder.AddDotnetProject("ApiService", "../Services/ApiService/ApiService.csproj")
     .WaitForCompletion(migration)
     .WithExternalHttpEndpoints();
 
@@ -86,7 +86,7 @@ apiService.PublishWithContainerFiles(adminApp, "./wwwroot");
 
 if (builder.ExecutionContext.IsRunMode)
 {
-    var apiSampleService = builder.AddProject<Projects.ApiSampleService>("ApiSampleService")
+    var apiSampleService = builder.AddDotnetProject("ApiSampleService", "../Services/ApiSampleService/ApiSampleService.csproj")
         .WaitForCompletion(migration)
         .WithReference(apiService)
         .WithEnvironment("Authentication__OAuth__Authority", apiService.GetEndpoint("https"));
